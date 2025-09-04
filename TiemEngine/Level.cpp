@@ -19,6 +19,7 @@ void Level::LevelInit()
 {
 	GameObject * obj = new GameObject();
 	obj->SetColor(1.0, 0.0, 0.0);
+	obj->SetSize(200.0, 200.0);
 	objectsList.push_back(obj);
 
 	GameObject* obj2 = new GameObject();
@@ -29,7 +30,7 @@ void Level::LevelInit()
 	player = obj;
 
 	ImageObject * img = new ImageObject();
-	img->SetSize(2.0f, -2.0f);
+	img->SetSize(200.0f, -200.0f);
 	img->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
 	img->SetTexture("../Resource/Texture/penguin.png");
 	objectsList.push_back(img);
@@ -137,19 +138,22 @@ void Level::HandleMouse(int type, int x, int y)
 {
 	float realX, realY;
 
-	// Calculate Real X Y 
-	realX = (x/100.0)-3.0;
-	realY = ((y/100.0)-3.0)*(-1.0);
+	int winW = GameEngine::GetInstance()->GetWindowWidth();
+	int winH = GameEngine::GetInstance()->GetWindowHeight();
+
+	realX = ((x - winW)+(winW/2));
+	realY = (((y-winH)*-1)-(winH/2));
+	
 
 	GameEngine::GetInstance()->GetWindowHeight();
 	GameEngine::GetInstance()->GetWindowWidth();
 
-	if (realX >= -2 && realX <= 0 && realY <= 1 && realY >= -1) {
+	/*if (realX >= -2 && realX <= 0 && realY <= 1 && realY >= -1) {
 		cout << "Penguin" << endl;
 	}
 	if (realX >= -3 && realX <= -1.5 && realY <= -1.5 && realY >= -2.5) {
 		cout << "Doro" << endl;
-	}
+	}*/
 	cout << "X : " << x << "	Y" << y << endl;
 	cout << "real X : " << realX << "	real Y" << realY << endl;
 
@@ -176,7 +180,7 @@ void Level::CreateCard(int cardCount, vector<DrawableObject*>& objectsList) {
 		GameObject* card = new GameObject();
 		card->SetPosition(glm::vec3(x, y, 0.0f));
 		card->SetRotate(rot);
-		card->SetSize(1.0f, 1.6f);
+		card->SetSize(1.0f, 1.6f); //Don't for got to fix
 
 	
 		card->SetColor((i % 3 == 0) ? 5.0f : 0.0f,(i % 3 == 1) ? 5.0f : 0.0f,(i % 3 == 2) ? 5.0f : 0.0f);
