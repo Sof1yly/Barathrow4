@@ -1,6 +1,7 @@
 #include "Level.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
+#include "Button.h"
 
 void Level::LevelLoad()
 {
@@ -24,8 +25,9 @@ void Level::LevelInit()
 
 	GameObject* obj2 = new GameObject();
 	obj2->SetColor(0.0, 1.0, 0.0);
+	obj2->SetSize(50.0, 50.0);
 	objectsList.push_back(obj2);
-	obj2->SetPosition(glm::vec3(2.5f, 2.5f, 0.0f));
+	obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
 
 	player = obj;
 
@@ -95,6 +97,13 @@ void Level::LevelUpdate()
 	for (DrawableObject* obj : objectsList) {
 		obj->Update(deltaTime);
 	}
+
+	if(Button::getMenu()==true) {
+		cout << "Go to Menu" << endl;
+	}
+	else {
+		cout << "Not Go to Menu" << endl;
+	}
 	
 }
 
@@ -148,9 +157,16 @@ void Level::HandleMouse(int type, int x, int y)
 	GameEngine::GetInstance()->GetWindowHeight();
 	GameEngine::GetInstance()->GetWindowWidth();
 
-	/*if (realX >= -2 && realX <= 0 && realY <= 1 && realY >= -1) {
-		cout << "Penguin" << endl;
+	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470) {
+		cout << "MenuButton Down" << endl;
+		if (Button::getMenu() == false) {
+			Button::setMenu(true);
+		}
+		else {
+			Button::setMenu(false);
+		}
 	}
+	/*
 	if (realX >= -3 && realX <= -1.5 && realY <= -1.5 && realY >= -2.5) {
 		cout << "Doro" << endl;
 	}*/
