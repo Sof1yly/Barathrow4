@@ -32,10 +32,20 @@ void Level::LevelInit()
 	player = obj;
 
 	ImageObject * img = new ImageObject();
-	img->SetSize(200.0f, -200.0f);
-	img->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
-	img->SetTexture("../Resource/Texture/penguin.png");
+	img->SetSize(50.0f, -50.0f);
+	img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+	img->SetTexture("../Resource/Texture/menu.png");
 	objectsList.push_back(img);
+
+	ImageObject * MenuUI = new ImageObject();
+	MenuUI->SetSize(1000.0f, -400.0f);
+	MenuUI->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f));
+	MenuUI->SetTexture("../Resource/Texture/MainMenu.png");
+	objectsList.push_back(MenuUI);
+	
+	mainMenu = MenuUI;
+
+	//mainMenu = MenuUI;
 
 	CreateCard(7, objectsList);
 
@@ -143,9 +153,11 @@ void Level::HandleMouse(int type, int x, int y)
 		cout << "MenuButton Down" << endl;
 		if (Button::getMenu() == false) {
 			Button::setMenu(true);
+			mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 		}
 		else {
 			Button::setMenu(false);
+			mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
 		}
 	}
 	/*

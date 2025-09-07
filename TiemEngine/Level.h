@@ -11,6 +11,7 @@ class Level
 private:
 	vector<DrawableObject*> objectsList;
 	GameObject * player;
+	ImageObject* mainMenu;
 
 public:
 	virtual void LevelLoad();
