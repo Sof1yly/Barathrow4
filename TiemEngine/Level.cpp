@@ -91,10 +91,10 @@ void Level::LevelUpdate()
 	}
 
 	if(Button::getMenu()==true) {
-		cout << "Go to Menu" << endl;
+		//cout << "Go to Menu" << endl; // Test Mouse Click
 	}
 	else {
-		cout << "Not Go to Menu" << endl;
+		//cout << "Not Go to Menu" << endl;
 	}
 	
 }
