@@ -37,42 +37,24 @@ void Level::LevelInit()
 	img->SetTexture("../Resource/Texture/penguin.png");
 	objectsList.push_back(img);
 
-	CreateCard(5, objectsList);
+	CreateCard(7, objectsList);
+
+
+	
 
 	//GameObject* obj7 = new GameObject(); //1
 	//obj7->SetColor(0.0, 5.0, 5.0);
-	//obj7->SetPosition(glm::vec3(1.25f, -2.45f, 0.0f));
-	//obj7->SetSize(1.0f, 1.6f);
+	//obj7->SetPosition(glm::vec3(125.0f, -245.0f, 0.0f));
+	//obj7->SetSize(220.0f, 335.0f);
 	//obj7->SetRotate(-23.5f);
 	//objectsList.push_back(obj7);
 
 	//GameObject* obj4 = new GameObject();//2
 	//obj4->SetColor(0.0, 5.0, 0.0);
 	//obj4->SetPosition(glm::vec3(0.80f, -2.25f, 0.0f));
-	//obj4->SetSize(1.0f, 1.6f);
+	//obj4->SetSize(100.0f, 160.0f);
 	//obj4->SetRotate(-15.0f);
 	//objectsList.push_back(obj4);
-
-	//GameObject* obj3 = new GameObject(); //3
-	//obj3->SetColor(0.0, 0.0, 5.0);
-	//obj3->SetPosition(glm::vec3(0.0f, -2.15f, 0.0f));
-	//obj3->SetSize(1.0f, 1.6f);
-	//obj3->SetRotate(0.0f);
-	//objectsList.push_back(obj3);
-
-	//GameObject* obj6 = new GameObject();//4
-	//obj6->SetColor(5.0, 5.0, 0.0);
-	//obj6->SetPosition(glm::vec3(-1.25f, -2.45f, 0.0f));
-	//obj6->SetSize(1.0f, 1.6f);
-	//obj6->SetRotate(23.5f);
-	//objectsList.push_back(obj6);
-
-	//GameObject* obj5 = new GameObject();//5
-	//obj5->SetColor(5.0, 0.0, 0.0);
-	//obj5->SetPosition(glm::vec3(-0.80f, -2.25f, 0.0f));
-	//obj5->SetSize(1.0f, 1.6f);
-	//obj5->SetRotate(15.0f);
-	//objectsList.push_back(obj5);
 
 
 	//ImageObject* img2 = new ImageObject();
@@ -81,11 +63,11 @@ void Level::LevelInit()
 	//img2->SetTexture("../Resource/Texture/doro.png");
 	//objectsList.push_back(img2);
 
-	SpriteObject * sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
-	sprite->SetSize(2.0f, -2.0f);
-	sprite->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
-	sprite->SetAnimationLoop(0, 0, 27, 50);
-	objectsList.push_back(sprite);
+	//SpriteObject * sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
+	//sprite->SetSize(2.0f, -2.0f);
+	//sprite->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
+	//sprite->SetAnimationLoop(0, 0, 27, 50);
+	//objectsList.push_back(sprite);
 
 	cout << "Init Level" << endl;
 }
@@ -176,30 +158,90 @@ void Level::HandleMouse(int type, int x, int y)
 	player->SetPosition(glm::vec3(realX, realY, 0));
 }
 
-void Level::CreateCard(int cardCount, vector<DrawableObject*>& objectsList) {
-	float baseY = -2.0f;  
-	float dx = 0.8f;    
-	float curve = 0.1f;    
-	float rotStep = 7.5f;    
+void Level::CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList)
+{
+	if (cardCount <= 0) return;
 
-	float center = (cardCount - 1) / 2.0f;
+	const float cardW = 220.0f, cardH = 335.0f;
+	const float handY = -540.0f;
 
-	for (int i = 0; i < cardCount; i++) {
-		float offset = i - center;
+	// Circle controls
+	const float baseRadius = 1000.0f;              // bigger = flatter arc
+	const float centerDrop = 120.0f;              // pushes the middle further down
+	const float R = baseRadius + centerDrop;
 
-		float x = offset * (dx + 0.1f * fabs(offset));
-		float y = baseY - curve * (offset * offset);
+	// Circle center -> lowest rim point sits at 'handY'
+	const float Cx = 0.0f;
+	const float Cy = handY - R;
 
-		float rot = -(offset * rotStep);
+	float sepFactor = 0.65f;                      // around 0.5 - 0.7 is good
 
-	
+	// Optional clamp of total span in arc-length pixels (0=off)
+	const float maxArcSpanPixels = 0.0f;          // e.g., 1400.0f to cap width
+
+	// Fan rotation:
+	const float fanStrength = 1.0f;               // 1 = fully tangent, 0 = upright, 0.5 = half
+	const float baseTiltDeg = 0.0f;               // constant offset if you want a slight lean
+
+	const float sink = 4.0f;                      // sink the bottom a few pixels past the rim
+	const float PI = 3.1415926535f;
+	const float RAD2DEG = 180.0f / PI;
+
+	// --------- Spacing as ARC LENGTH -> angle step ---------
+	float arcSpacing = cardW * sepFactor;                   // pixels per neighbor along arc
+	if (maxArcSpanPixels > 0.0f && cardCount > 1) {
+		float needed = arcSpacing * float(cardCount - 1);
+		if (needed > maxArcSpanPixels) {
+			arcSpacing = maxArcSpanPixels / float(cardCount - 1);
+		}
+	}
+	float stepDeg = (arcSpacing / R) * RAD2DEG;
+
+
+	float spanDeg = (cardCount > 1) ? stepDeg * float(cardCount - 1) : 0.0f;
+	float startAngleDeg = -0.5f * spanDeg;
+
+	// Build left -> right; newest gets drawn on top
+	for (int i = 0; i < cardCount; ++i)
+	{
+
+		float angleDeg = startAngleDeg + float(i) * stepDeg;
+		float theta = angleDeg * (PI / 180.0f);
+
+		// Rim point (where the card bottom touches)
+		float rimX = Cx + std::sinf(theta) * R;
+		float rimY = Cy + std::cosf(theta) * R;
+
+		// Radial normal (from center -> rim) and tangent (fan direction)
+		float nx = std::sinf(theta);
+		float ny = std::cosf(theta);
+		float tx = ny;
+		float ty = -nx;
+
+		// Place sprite center: move half card height outward from the rim (minus sink)
+		float px = rimX + nx * (cardH * 0.5f - sink);
+		float py = rimY + ny * (cardH * 0.5f - sink);
+
+		// Fan rotation: interpolate between upright (0) and tangent (atan2 of tangent)
+		float tangentDeg = std::atan2f(ty, tx) * RAD2DEG;  // angle facing along the arc
+		float rotDeg = baseTiltDeg + fanStrength * tangentDeg;
+
+		// Create & push
 		GameObject* card = new GameObject();
-		card->SetPosition(glm::vec3(x, y, 0.0f));
-		card->SetRotate(rot);
-		card->SetSize(1.0f, 1.6f); //Don't for got to fix
+		card->SetSize(cardW, cardH);
+		card->SetPosition(glm::vec3(px, py, 0.0f));
+		card->SetRotate(rotDeg); // radians? -> rotDeg * (PI/180)
 
-	
-		card->SetColor((i % 3 == 0) ? 5.0f : 0.0f,(i % 3 == 1) ? 5.0f : 0.0f,(i % 3 == 2) ? 5.0f : 0.0f);
+		// debug tint
+		if (i % 3 == 0) {
+			card->SetColor(5.0f, 0.0f, 0.0f);
+		}
+		else if (i % 3 == 1) {
+			card->SetColor(0.0f, 5.0f, 0.0f);
+		}
+		else {
+			card->SetColor(0.0f, 0.0f, 5.0f);
+		}
 
 		objectsList.push_back(card);
 	}
