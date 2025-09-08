@@ -47,7 +47,7 @@ void Level::LevelInit()
 
 	//mainMenu = MenuUI;
 
-	CreateCard(7, objectsList);
+	CreateCard(5, objectsList);
 
 
 	
