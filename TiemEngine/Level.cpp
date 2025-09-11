@@ -149,7 +149,15 @@ void Level::HandleMouse(int type, int x, int y)
 	GameEngine::GetInstance()->GetWindowHeight();
 	GameEngine::GetInstance()->GetWindowWidth();
 
-	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470) {
+	if (type == 0) {
+		std::cout << "Mouse Pressed\n";
+	}
+	else if (type == 1) {
+		std::cout << "Mouse Holding\n";
+	}
+	
+
+	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470 && type == 0 ) {
 		cout << "MenuButton Down" << endl;
 		if (Button::getMenu() == false) {
 			Button::setMenu(true);
