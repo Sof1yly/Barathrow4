@@ -1,31 +1,36 @@
 #include "Action.h"
 
-string Action::getDes()
+Deck* Action::getDeck() const
 {
-    return description;
+	return deck;
 }
 
-int Action::getValue()
+int Action::getValue() const
 {
-    return value;
+	return value;
 }
 
-float Action::rotation()
+int Action::getRotation() const
 {
-    
+	return rotation;
 }
-
-int Action::damage_action()
+int Action::getMove() const
 {
-    return damage;
+	return move;
 }
-
+ActionType Action::getType() const
+{
+	return type;
+}
+string Action::getDescription()
+{
+	return "";
+}
 int Action::move_action()
 {
-    return move;
+	return 0;
 }
-
-
-
-
-
+int Action::damage_action()
+{
+	return 0;
+}

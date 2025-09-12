@@ -7,10 +7,11 @@ using namespace std;
 class Card {
 private:
 	string name;
-	vector<Action> actions;
+	vector<Action*> actions;
 
 
 public:
-	string getName();
+	const string& getName()const;
+	const vector<Action*>& getActions()const;
 
 };

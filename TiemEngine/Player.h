@@ -1,14 +1,24 @@
 #pragma once
+#include "Card.h"
+#include "Deck.h"
+#include "Hand.h"
+#include "Modify.h"
 
 class Player {
 private:
 	int hp;
 	int armor;
-	//card
-	//desk
-	//hand
+	vector<Card>cards;
+	Deck deck;
+	Hand hand;
+	vector<Modify>modifyAttack;
+
 public:
-	int getHp();
-	int getArmor();
-	void modifyAttack();
+	int getHp()const;
+	int getArmor()const;
+	const vector<Card>& getCards()const;
+	Deck& getDeck();
+	Hand& getHand();
+	const vector<Modify>& getModifyAttack()const;
+	
 };

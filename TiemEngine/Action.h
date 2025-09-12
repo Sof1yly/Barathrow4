@@ -4,24 +4,35 @@
 
 using namespace std;
 
-enum class type {
-	attack,move,energy,buff,deBuff
+class Deck;
+
+enum class ActionType {
+	Attack,Move,Energy,Buff,Debuff
 };
 class Action {
 private:
-	string description;
+	Deck* deck;
 	int value;
-	int damage;
+	int rotation;
 	int move;
-	//vector<tile> tiles;
-	enum type;
+	ActionType type;
 	
 
 public:
-	string getDes();
-	int getValue();
-	float rotation();
-	int damage_action();
+	Deck* getDeck()const;
+	int getValue()const;
+	int getRotation()const;
+	int getMove()const;
+	ActionType getType()const;
+
+	string getDescription();
+
 	int move_action();
+	int damage_action();
+	
 
 };
+
+class Move_Action :public Action {};
+
+class Damage_Action :public Action {};
