@@ -11,8 +11,11 @@ class Level
 private:
 	vector<DrawableObject*> objectsList;
 	GameObject * player;
+	GameObject* testMove;
 	ImageObject* mainMenu;
-	
+
+	glm::vec3 testMoveTarget;
+	bool testMoveMoving = false;
 
 public:
 	virtual void LevelLoad();

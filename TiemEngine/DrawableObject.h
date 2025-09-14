@@ -23,6 +23,8 @@ public:
 	void Translate(glm::vec3 moveDistance);
 	void SetRotate(float angle);
 
+	glm::vec3 GetPosition() const { return pos; }
+
 	//Rotate, Scale ???
 
 };

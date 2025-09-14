@@ -31,6 +31,16 @@ void Level::LevelInit()
 
 	player = obj;
 
+	GameObject* obj3 = new GameObject();
+	obj3->SetColor(0.0, 0.0, 1.0);
+	obj3->SetSize(100.0, 100.0);
+	objectsList.push_back(obj3);
+	obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	testMove = obj3;
+
+	testMoveTarget = testMove->GetPosition();
+
 	ImageObject * img = new ImageObject();
 	img->SetSize(50.0f, -50.0f);
 	img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
@@ -88,6 +98,24 @@ void Level::LevelUpdate()
 	int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 	for (DrawableObject* obj : objectsList) {
 		obj->Update(deltaTime);
+	}
+
+	if (testMoveMoving) {
+		glm::vec3 currentPos = testMove->GetPosition();
+
+		// Direction toward target
+		glm::vec3 dir = testMoveTarget - currentPos;
+		float dist = glm::length(dir);
+
+		if (dist > 1.0f) { // still far away
+			dir = glm::normalize(dir);
+			float speed = 0.5f * deltaTime; // adjust speed
+			testMove->Translate(dir * speed);
+		}
+		else {
+			testMove->SetPosition(testMoveTarget); // snap to target
+			testMoveMoving = false; // stop moving
+		}
 	}
 
 	if(Button::getMenu()==true) {
@@ -154,6 +182,11 @@ void Level::HandleMouse(int type, int x, int y)
 	}
 	else if (type == 1) {
 		std::cout << "Mouse Holding\n";
+	}
+
+	if (type == 0||type ==1) {
+		testMoveTarget = glm::vec3(realX, realY, 0.0f);
+		testMoveMoving = true;
 	}
 	
 
