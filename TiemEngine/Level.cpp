@@ -39,6 +39,16 @@ void Level::LevelInit()
 
 	testMove = obj3;
 
+	GameObject* obj4 = new GameObject();
+	obj4->SetColor(1.0, 1.0, 0.0);
+	obj4->SetSize(75.0, 75.0);
+	objectsList.push_back(obj4);
+	obj4->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	draggableObject = obj4;
+	grabbedObject = nullptr;
+
+
 	testMoveTarget = testMove->GetPosition();
 
 	ImageObject * img = new ImageObject();
@@ -100,6 +110,24 @@ void Level::LevelUpdate()
 		obj->Update(deltaTime);
 	}
 
+	if (isDragging && grabbedObject && !isHolding) {
+		glm::vec3 current = grabbedObject->GetPosition();
+		glm::vec3 diff = grabbedTarget - current;
+		float dist = glm::length(diff);
+
+		if (dist > 1.0f) {
+			glm::vec3 dir = glm::normalize(diff);
+			float speedPixelsPerSecond = 600.0f;
+			float step = speedPixelsPerSecond * (deltaTime / 1000.0f);
+			grabbedObject->Translate(dir * step);
+		}
+		else {
+			grabbedObject->SetPosition(grabbedTarget);
+			isDragging = false;
+			grabbedObject = nullptr;
+		}
+	}
+
 	if (testMoveMoving) {
 		glm::vec3 currentPos = testMove->GetPosition();
 
@@ -114,7 +142,7 @@ void Level::LevelUpdate()
 		}
 		else {
 			testMove->SetPosition(testMoveTarget); // snap to target
-			testMoveMoving = false; // stop moving
+			testMoveMoving = false;
 		}
 	}
 
@@ -177,14 +205,45 @@ void Level::HandleMouse(int type, int x, int y)
 	GameEngine::GetInstance()->GetWindowHeight();
 	GameEngine::GetInstance()->GetWindowWidth();
 
+	glm::vec3 mousePos(realX, realY, 0.0f);
+	const float grabPadding = 20.0f;
+
 	if (type == 0) {
-		std::cout << "Mouse Pressed\n";
+		cout << "Mouse Pressed\n";
+		if (draggableObject) {
+			glm::vec3 pos = draggableObject->GetPosition();
+			glm::vec2 s = draggableObject->GetSize();
+			float halfW = s.x * 0.5f;
+			float halfH = s.y * 0.5f;
+
+			if (mousePos.x >= pos.x - halfW && mousePos.x <= pos.x + halfW &&
+				mousePos.y >= pos.y - halfH && mousePos.y <= pos.y + halfH)
+			{
+				grabbedObject = draggableObject;
+				grabbedTarget = mousePos;
+				isDragging = true;
+				isHolding = false;
+			}
+			else {
+				isDragging = false;
+				grabbedObject = nullptr;
+			}
+		}
 	}
 	else if (type == 1) {
-		std::cout << "Mouse Holding\n";
+		if (isDragging && grabbedObject == draggableObject) {
+			isHolding = true;
+			grabbedObject->SetPosition(mousePos);
+		}
+	}
+	else if (type == 2) {
+		std::cout << "Mouse Released\n";
+		isDragging = false;
+		isHolding = false;
+		grabbedObject = nullptr;
 	}
 
-	if (type == 0||type ==1) {
+	if (type == 0 || type == 1) {
 		testMoveTarget = glm::vec3(realX, realY, 0.0f);
 		testMoveMoving = true;
 	}

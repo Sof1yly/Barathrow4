@@ -13,9 +13,15 @@ private:
 	GameObject * player;
 	GameObject* testMove;
 	ImageObject* mainMenu;
+	GameObject* grabbedObject = nullptr;
+	GameObject* draggableObject = nullptr;
 
 	glm::vec3 testMoveTarget;
+	glm::vec3 grabbedTarget = glm::vec3(0.0f);
+	glm::vec3 grabOffset = glm::vec3(0.0f);
 	bool testMoveMoving = false;
+	bool isDragging = false;
+	bool isHolding = false;
 
 public:
 	virtual void LevelLoad();
