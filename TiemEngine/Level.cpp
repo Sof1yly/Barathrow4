@@ -206,7 +206,7 @@ void Level::HandleMouse(int type, int x, int y)
 	GameEngine::GetInstance()->GetWindowWidth();
 
 	glm::vec3 mousePos(realX, realY, 0.0f);
-	const float grabPadding = 20.0f;
+	
 
 	if (type == 0) {
 		cout << "Mouse Pressed\n";
@@ -216,13 +216,14 @@ void Level::HandleMouse(int type, int x, int y)
 			float halfW = s.x * 0.5f;
 			float halfH = s.y * 0.5f;
 
-			if (mousePos.x >= pos.x - halfW && mousePos.x <= pos.x + halfW &&
-				mousePos.y >= pos.y - halfH && mousePos.y <= pos.y + halfH)
+			const float grabPadding = 20.0f;
+
+			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
+				mousePos.y >= pos.y - halfH - grabPadding && mousePos.y <= pos.y + halfH + grabPadding)
 			{
 				grabbedObject = draggableObject;
 				grabbedTarget = mousePos;
 				isDragging = true;
-				isHolding = false;
 			}
 			else {
 				isDragging = false;
@@ -230,13 +231,20 @@ void Level::HandleMouse(int type, int x, int y)
 			}
 		}
 	}
-	else if (type == 1) {
+
+	if (type == 1) {
 		if (isDragging && grabbedObject == draggableObject) {
 			isHolding = true;
-			grabbedObject->SetPosition(mousePos);
+
+			glm::vec3 current = grabbedObject->GetPosition();
+			glm::vec3 diff = mousePos - current;
+
+			float followSpeed = 0.3f;
+			grabbedObject->Translate(diff * followSpeed);
 		}
 	}
-	else if (type == 2) {
+
+	if (type == 2) {
 		std::cout << "Mouse Released\n";
 		isDragging = false;
 		isHolding = false;
