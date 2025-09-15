@@ -11,6 +11,8 @@ class GameEngine
 	static GameEngine* instance;
 	int winWidth, winHeight;
 	int deltaTime;
+
+	float areaW, areaH;
 	
 	GLRenderer *renderer;
 	GameEngine();
@@ -19,6 +21,8 @@ public:
 	GLRenderer * GetRenderer();
 	void Init(int width, int height);
 	void SetDrawArea(float left, float right, float bottom, float top);
+	float GetDrawAreaWidth();
+	float GetDrawAreaHeight();
 	void SetBackgroundColor(float r, float g, float b);
 	void AddMesh(string name, MeshVbo* mesh);
 	void ClearMesh();

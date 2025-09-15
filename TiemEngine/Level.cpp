@@ -198,8 +198,12 @@ void Level::HandleMouse(int type, int x, int y)
 	int winW = GameEngine::GetInstance()->GetWindowWidth();
 	int winH = GameEngine::GetInstance()->GetWindowHeight();
 
-	realX = ((x - winW)+(winW/2));
-	realY = (((y-winH)*-1)-(winH/2));
+	float scaleW = GameEngine::GetInstance()-> GetDrawAreaWidth();
+	float scaleH = GameEngine::GetInstance()-> GetDrawAreaHeight();
+
+
+	realX = (x - winW / 2) * (scaleW / winW);
+	realY = (winH / 2 - y) * (scaleH / winH);
 	
 
 	GameEngine::GetInstance()->GetWindowHeight();
