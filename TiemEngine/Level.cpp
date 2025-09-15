@@ -2,6 +2,10 @@
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "Button.h"
+#include "Card.h"
+#include "Action.h"
+#include "MoveAction.h"
+#include "AttackAction.h"
 
 void Level::LevelLoad()
 {
@@ -14,6 +18,9 @@ void Level::LevelLoad()
 	GameEngine::GetInstance()->AddMesh(SpriteMeshVbo::MESH_NAME, sprite);
 
 	cout << "Load Level" << endl;
+
+
+	
 }
 
 void Level::LevelInit()
@@ -68,6 +75,32 @@ void Level::LevelInit()
 	//mainMenu = MenuUI;
 
 	CreateCard(5, objectsList);
+
+	
+	Card* moveCard = new Card();
+	Card* atkCard = new Card();
+	Card* flexCard = new Card();
+	Action* move = new MoveAction();
+	Action* attack = new AttackAction();
+
+	move->setValue(2);
+	moveCard->addAction(move);
+	moveCard->do_action();
+
+	attack->setValue(5);
+	atkCard->addAction(attack);
+	atkCard->do_action();
+
+	move->setValue(1);
+	attack->setValue(3);
+	flexCard->addAction(move);
+	flexCard->addAction(attack);
+	flexCard->do_action();
+	
+
+
+	
+
 
 
 	

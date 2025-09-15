@@ -4,7 +4,7 @@
 
 class AttackAction :public Action {
 	public:
-		void do_action() {
-			cout << "attack " << getValue();
+		void do_action(){
+			cout << "attack " << getValue() << endl;
 		}
 };

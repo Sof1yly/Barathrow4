@@ -12,8 +12,8 @@ void Deck::addCard(const Card& card)
 
 void Deck::removeCard(const Card& card)
 {
-	auto it = find(cards.begin(), cards.end(), card);
+	/*auto it = find(cards.begin(), cards.end(), card);
 	if (it != cards.end()) {
 		cards.erase(it);
-	}
+	}*/
 }

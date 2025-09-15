@@ -19,12 +19,13 @@ private:
 public:
 
 	int getValue()const;
+	void setValue(int v);
 	int getRotation()const;
 	ActionType getType()const;
 
 	string getDescription();
 
-	virtual void do_action();
+	virtual void do_action() = 0;
 	
 	
 

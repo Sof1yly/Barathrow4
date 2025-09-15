@@ -13,5 +13,7 @@ private:
 public:
 	const string& getName()const;
 	const vector<Action*>& getActions()const;
+	void addAction(Action* action);
 	void do_action();
+
 };
