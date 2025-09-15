@@ -40,6 +40,7 @@
     <ClCompile Include="TriangleMeshVbo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AttackAction.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="CombineObject.h" />
     <ClInclude Include="DrawableObject.h" />
@@ -50,6 +51,7 @@
     <ClInclude Include="GameStateList.h" />
     <ClInclude Include="GLRenderer.h" />
     <ClInclude Include="Level3.h" />
+    <ClInclude Include="MoveAction.h" />
     <ClInclude Include="SpriteMeshVbo.h" />
     <ClInclude Include="ImageObject.h" />
     <ClInclude Include="Level.h" />
