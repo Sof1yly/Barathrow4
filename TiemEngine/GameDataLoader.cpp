@@ -143,3 +143,64 @@ bool GameDataLoader::parseCardRow(const vector<string>& cols, string* error) {
 	return true;
 }
 
+
+bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
+	for (Card* c : cards) { delete c; } cards.clear();
+	for (Action* a : actions_list) { delete a; } actions_list.clear(); actions.clear();
+
+
+	ifstream file(filename);
+	if (!file.is_open()) {
+		if (outError) {
+			*outError = "Failed to open file: " + filename;
+		}
+		return false;
+	}
+	enum Section { NONE, ACTIONS, CARDS };
+	Section currentSection = NONE;
+
+	string line;
+	while (getline(file, line)) {
+		if (line.empty()) continue;
+		if (line[0] == '#') continue;
+		if (line.size() > 1 && line[0] == '/' && line[1] == '/') continue;
+
+		if (line == "[Action]") {
+			currentSection = ACTIONS;
+			continue;
+		}
+		else if (line == "[Card]") {
+			currentSection = CARDS;
+			continue;
+		}
+
+		if (line.rfind("Name", 0) == 0) continue; //skip header
+
+		vector<string>cols;
+		string token;
+		stringstream ss(line);
+
+		while (getline(ss, token, ',')) {
+			cols.push_back(token);
+		}
+		bool ok = false;
+		if (currentSection == ACTIONS) {
+			ok = parseActionRow(cols, outError);
+		}
+		else if (currentSection == CARDS) {
+			ok = parseCardRow(cols, outError);
+		}
+		else {
+			if (outError) {
+				cout << "Data outside of section: " << line << endl;
+			}
+			ok = false;
+		}
+		if (!ok)
+		{
+			return false;
+		}
+		return true;
+	}
+}
+
