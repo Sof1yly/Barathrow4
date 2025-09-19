@@ -17,6 +17,7 @@ private:
 	
 
 public:
+	virtual ~Action();
 
 	int getValue()const;
 	void setValue(int v);

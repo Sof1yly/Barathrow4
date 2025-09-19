@@ -11,6 +11,7 @@ private:
 	
 
 public:
+	Card(const string& n) :name(n){}
 	const string& getName()const;
 	const vector<Action*>& getActions()const;
 	void addAction(Action* action);

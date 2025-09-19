@@ -23,5 +23,8 @@ string Action::getDescription()
 	return "";
 }
 
+Action::~Action()
+{
 
+}
 
