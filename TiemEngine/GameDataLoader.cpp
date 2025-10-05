@@ -63,7 +63,8 @@ bool GameDataLoader::parseActionRow(const vector<string>& cols, string* error) {
     const string& sMove = cols[2];
 
     if (name.empty()) 
-    { if (error) 
+    { 
+        if (error) 
         *error = "Action name is empty"; 
         return false; 
     }
@@ -74,18 +75,48 @@ bool GameDataLoader::parseActionRow(const vector<string>& cols, string* error) {
     }
 
     int damage = 0, move = 0;
-    try { if (!sDmg.empty()) 
+    try 
+    { 
+        if (!sDmg.empty()) 
         damage = stoi(sDmg); 
     }
-    catch (...) { if (error) *error = "Invalid damage: " + sDmg; return false; }
-    try { if (!sMove.empty()) move = stoi(sMove); }
-    catch (...) { if (error) *error = "Invalid move: " + sMove; return false; }
+    catch (...) 
+    { 
+        if (error) 
+            *error = "Invalid damage: " + sDmg; 
+        return false; 
+    }
+    try 
+    { 
+        if (!sMove.empty()) 
+        move = stoi(sMove); 
+    }
+    catch (...) { 
+        if (error) 
+        *error = "Invalid move: " + sMove; 
+        return false; 
+    }
 
-    if (damage > 0 && move > 0) { if (error) *error = "Action has both damage and move: " + name; return false; }
-    if (damage <= 0 && move <= 0) { if (error) *error = "Action must have either damage or move: " + name; return false; }
+    if (damage > 0 && move > 0) 
+    { 
+        if (error) 
+        *error = "Action has both damage and move: " + name; 
+        return false; 
+    }
+    if (damage <= 0 && move <= 0) 
+    { 
+        if (error) 
+        *error = "Action must have either damage or move: " + name; 
+        return false; 
+    }
 
     Action* a = nullptr;
-    if (damage > 0) { auto* aa = new AttackAction(); aa->setValue(damage); a = aa; }
+    if (damage > 0) 
+    { 
+        auto* aa = new AttackAction(); 
+        aa->setValue(damage); 
+        a = aa; 
+    }
     else { auto* ma = new MoveAction();   ma->setValue(move);   a = ma; }
 
     actions.push_back({ name, a });
@@ -93,7 +124,6 @@ bool GameDataLoader::parseActionRow(const vector<string>& cols, string* error) {
     return true;
 }
 
-// unchanged
 bool GameDataLoader::parseCardRow(const vector<string>& cols, string* error) {
     if (cols.empty() || cols[0].empty()) { if (error) *error = "Card name is empty"; return false; }
 
@@ -116,10 +146,9 @@ bool GameDataLoader::parseCardRow(const vector<string>& cols, string* error) {
             size_t comma = cell.find(',', pos);
             string namePart = (comma == string::npos) ? cell.substr(pos) : cell.substr(pos, comma - pos);
 
-            // trim spaces around each action name
             size_t i = 0, j = namePart.size();
-            while (i < j && isspace(static_cast<unsigned char>(namePart[i]))) ++i;
-            while (j > i && isspace(static_cast<unsigned char>(namePart[j - 1]))) --j;
+            while (i < j && isspace(static_cast<unsigned char>(namePart[i]))) i++;
+            while (j > i && isspace(static_cast<unsigned char>(namePart[j - 1]))) j--;
             namePart = namePart.substr(i, j - i);
 
             if (!namePart.empty()) {
@@ -142,7 +171,6 @@ bool GameDataLoader::parseCardRow(const vector<string>& cols, string* error) {
 }
 
 bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
-    // cleanup any previous load
     for (Card* c : cards) delete c; cards.clear();
     for (Action* a : actions_list) delete a; actions_list.clear();
     actions.clear();
@@ -164,21 +192,17 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
     while (getline(file, line)) {
         if (line.empty()) continue;
 
-        // Split entire CSV row respecting quotes
         vector<string> cells = splitCsvRowRespectQuotes_(line);
-
-        // Detect and skip the two header rows:
         // Row 0: Action,,,,,Card,
         // Row 1: Name,Damage,Move,,,Name,Action
         if (!skippedHeaderRow0) {
-            // First row must contain "Action" and "Card" somewhere
+            // First row must contain "Action" and "Card" 
             bool hasAction = false, hasCard = false;
             for (const auto& c : cells) {
                 if (c == "Action") hasAction = true;
                 if (c == "Card")   hasCard = true;
             }
             if (hasAction && hasCard) { skippedHeaderRow0 = true; continue; }
-            // If it's not the header, fall through (some users may not export headers)
         }
         if (!skippedHeaderRow1) {
             bool looksLikeHeader1 = (cells.size() >= 7 &&
@@ -199,19 +223,23 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
 
         // Card part is columns 5,6
         string cName = getCell(5);
-        string cActs = getCell(6); // may be "B,C" (already one cell due to quote handling)
+        string cActs = getCell(6); 
 
         // If there is an action row on this line, store it
         if (!aName.empty() || !aDmg.empty() || !aMove.empty()) {
             // Only push if it looks like a valid action row (has a name at least)
-            if (!aName.empty())
+            if (!aName.empty()) {
                 actionRows.push_back({ aName, aDmg, aMove });
+            }
+                
         }
 
         // If there is a card row on this line, store it
         if (!cName.empty() || !cActs.empty()) {
-            if (!cName.empty())
+            if (!cName.empty()) {
                 cardRows.emplace_back(cName, cActs);
+            }
+                
         }
     }
 
