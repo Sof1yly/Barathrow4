@@ -6,6 +6,7 @@
 #include "Action.h"
 #include "MoveAction.h"
 #include "AttackAction.h"
+#include "GameDataLoader.h"
 
 void Level::LevelLoad()
 {
@@ -93,32 +94,22 @@ void Level::LevelInit()
 
 	CreateCard(5, objectsList);
 
-	
-	Card* moveCard = new Card();
-	Card* atkCard = new Card();
-	Card* flexCard = new Card();
-	Action* move = new MoveAction();
-	Action* attack = new AttackAction();
+	GameDataLoader loader;
 
-	move->setValue(2);
-	moveCard->addAction(move);
-	moveCard->do_action();
+	string error;
 
-	attack->setValue(5);
-	atkCard->addAction(attack);
-	atkCard->do_action();
+	bool loaded = loader.loadFromFile("D:/Assignment/Y2_2026/Y2_Project/ActionTest.txt", &error);
 
-	move->setValue(1);
-	attack->setValue(3);
-	flexCard->addAction(move);
-	flexCard->addAction(attack);
-	flexCard->do_action();
-	
-
-
-	
-
-
+	if (!loaded) {
+		cerr << "Error: " << error << endl;
+		return;
+	}
+	cout << "Loaded card: " << endl;
+	for (Card* card : loader.getCards()) {
+		cout << "Card: " << card->getName() << endl;
+		card->do_action();
+		
+	}
 
 	
 
