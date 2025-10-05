@@ -25,6 +25,23 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	// Create a grid
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 5; j++) {
+			GameObject* tile = new GameObject();
+			if ((i + j) % 2 == 0) {
+				tile->SetColor(0.8f, 0.8f, 0.8f);
+			}
+			else {
+				tile->SetColor(0.2f, 0.2f, 0.2f);
+			}
+			tile->SetSize(100.0f, 100.0f);
+			tile->SetPosition(glm::vec3(i * 100.0f - 200.0f, j * -100.0f + 300.0f, 0.0f)); //Set distance between tiles
+			objectsList.push_back(tile);
+		}
+	}
+	//End of grid
+
 	GameObject * obj = new GameObject();
 	obj->SetColor(1.0, 0.0, 0.0);
 	obj->SetSize(200.0, 200.0);
