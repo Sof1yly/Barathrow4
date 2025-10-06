@@ -79,9 +79,6 @@
     <None Include="..\Resource\Shader\fragment.shd" />
     <None Include="..\Resource\Shader\vertext.shd" />
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\ActionTest.txt" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{27F83C21-D849-4121-ACC9-5EABAECE4AC5}</ProjectGuid>

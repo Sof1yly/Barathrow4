@@ -98,7 +98,7 @@ void Level::LevelInit()
 
 	string error;
 
-	bool loaded = loader.loadFromFile("D:/Assignment/Y2_2026/Y2_Project/ActionTest.txt", &error);
+	bool loaded = loader.loadFromFile("../Resource/GameData/ActionTest.txt", &error);
 
 	if (!loaded) {
 		cerr << "Error: " << error << endl;
