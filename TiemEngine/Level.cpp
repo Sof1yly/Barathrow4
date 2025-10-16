@@ -285,7 +285,7 @@ void Level::HandleMouse(int type, int x, int y)
 			float halfW = s.x * 0.5f;
 			float halfH = s.y * 0.5f;
 
-			const float grabPadding = 20.0f;
+			const float grabPadding = 30.0f;
 
 			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
 				mousePos.y >= pos.y - halfH - grabPadding && mousePos.y <= pos.y + halfH + grabPadding)
