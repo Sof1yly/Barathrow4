@@ -12,6 +12,7 @@ private:
 	vector<DrawableObject*> objectsList;
 	GameObject * player;
 	GameObject* testMove;
+	GameObject* testGrid;
 	ImageObject* mainMenu;
 	GameObject* grabbedObject = nullptr;
 	GameObject* draggableObject = nullptr;
@@ -22,6 +23,9 @@ private:
 	bool testMoveMoving = false;
 	bool isDragging = false;
 	bool isHolding = false;
+
+	int nowRow = 0;
+	int nowCol = 0;
 
 public:
 	virtual void LevelLoad();

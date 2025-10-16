@@ -43,6 +43,14 @@ void Level::LevelInit()
 	}
 	//End of grid
 
+	GameObject* testgrid = new GameObject();
+	testgrid->SetColor(1.0f, 0.5f, 1.0f);
+	testgrid->SetSize(100.0f, 100.0f);
+	testgrid->SetPosition(glm::vec3(-200.0f, 300.0f, 0.0f));
+	objectsList.push_back(testgrid);
+
+	testGrid = testgrid;
+
 	GameObject * obj = new GameObject();
 	obj->SetColor(1.0, 0.0, 0.0);
 	obj->SetSize(200.0, 200.0);
@@ -222,13 +230,29 @@ void Level::HandleKey(char key)
 
 	switch (key)
 	{
-		case 'w': player->Translate(glm::vec3(0, 0.3, 0)); break;
-		case 's': player->Translate(glm::vec3(0, -0.3, 0)); break;
-		case 'a': player->Translate(glm::vec3(-0.3, 0, 0)); break;
-		case 'd': player->Translate(glm::vec3(0.3, 0, 0)); break;
-		case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT; ; break;
-		case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; ; break;
-		case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break; 
+		//case 'w': testGrid->Translate(glm::vec3(0, 100.0, 0)); break;
+		//case 's': testGrid->Translate(glm::vec3(0, -100.0, 0)); break;
+		//case 'a': testGrid->Translate(glm::vec3(-100.0, 0, 0)); break;
+		//case 'd': testGrid->Translate(glm::vec3(100.0, 0, 0)); break;
+	case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT; ; break;
+	case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; ; break;
+	case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break;
+	}
+	if (key == 'w' && nowCol != 0) {
+		testGrid->Translate(glm::vec3(0, 100.0, 0));
+		nowCol--;
+	}
+	else if (key == 's' && nowCol != 4) {
+		testGrid->Translate(glm::vec3(0, -100.0, 0));
+		nowCol++;
+	}
+	else if (key == 'a'&&nowRow!=0) {
+		testGrid->Translate(glm::vec3(-100.0, 0, 0));
+		nowRow--;
+	}
+	else if (key == 'd'&&nowRow!=4) {
+		testGrid->Translate(glm::vec3(100.0, 0, 0));
+		nowRow++;
 	}
 }
 
