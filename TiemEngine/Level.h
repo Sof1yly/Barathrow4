@@ -56,6 +56,7 @@ public:
 	virtual void HandleMouse(int type, int x, int y);
 
 	void InitDropZones();
+	void CreateZoneFromRect(const Rect& rect,glm::vec3 color);
 	void LayoutHand();
 	void RemoveCardFromHand(GameObject* card);
 	void BringToFront(DrawableObject* obj);
