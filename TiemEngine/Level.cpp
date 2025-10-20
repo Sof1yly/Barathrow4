@@ -8,6 +8,7 @@
 #include "AttackAction.h"
 #include "GameDataLoader.h"
 
+
 void Level::LevelLoad()
 {
 	SquareMeshVbo * square = new SquareMeshVbo();
@@ -99,8 +100,16 @@ void Level::LevelInit()
 	mainMenu = MenuUI;
 
 	//mainMenu = MenuUI;
-
+	size_t before = objectsList.size();
 	CreateCard(5, objectsList);
+	size_t after = objectsList.size();
+
+	for (size_t i = before; i < after; i++) {
+		handCards.push_back(static_cast<GameObject*>(objectsList[i]));
+	}
+
+	InitDropZones();
+	LayoutHand();
 
 	GameDataLoader loader;
 
@@ -119,14 +128,6 @@ void Level::LevelInit()
 		
 	}
 
-	
-
-	//GameObject* obj7 = new GameObject(); //1
-	//obj7->SetColor(0.0, 5.0, 5.0);
-	//obj7->SetPosition(glm::vec3(125.0f, -245.0f, 0.0f));
-	//obj7->SetSize(220.0f, 335.0f);
-	//obj7->SetRotate(-23.5f);
-	//objectsList.push_back(obj7);
 
 	//GameObject* obj4 = new GameObject();//2
 	//obj4->SetColor(0.0, 5.0, 0.0);
@@ -260,31 +261,44 @@ void Level::HandleMouse(int type, int x, int y)
 {
 	float realX, realY;
 
-	int winW = GameEngine::GetInstance()->GetWindowWidth();
-	int winH = GameEngine::GetInstance()->GetWindowHeight();
+	int   winW = GameEngine::GetInstance()->GetWindowWidth();
+	int   winH = GameEngine::GetInstance()->GetWindowHeight();
+	float scaleW = GameEngine::GetInstance()->GetDrawAreaWidth();
+	float scaleH = GameEngine::GetInstance()->GetDrawAreaHeight();
 
-	float scaleW = GameEngine::GetInstance()-> GetDrawAreaWidth();
-	float scaleH = GameEngine::GetInstance()-> GetDrawAreaHeight();
-
-
+	// screen -> world
 	realX = (x - winW / 2) * (scaleW / winW);
 	realY = (winH / 2 - y) * (scaleH / winH);
-	
-
-	GameEngine::GetInstance()->GetWindowHeight();
-	GameEngine::GetInstance()->GetWindowWidth();
-
 	glm::vec3 mousePos(realX, realY, 0.0f);
-	
 
-	if (type == 0) {
-		cout << "Mouse Pressed\n";
-		if (draggableObject) {
+	// helper to know if a GameObject* is one of the hand cards
+	auto isHandCard = [&](GameObject* g)->bool {
+		return std::find(handCards.begin(), handCards.end(), g) != handCards.end();
+	};
+
+	if (type == 0)
+	{
+		std::cout << "Mouse Pressed\n";
+
+		bool cardGrabbed = false;
+		if (!isDragging) {
+			if (GameObject* picked = PickTopHandCard(mousePos)) {
+				draggableObject = picked;       // reuse existing fields
+				grabbedObject = picked;
+				isDragging = true;
+				isHolding = false;
+				grabOffset = mousePos - picked->GetPosition(); // keep cursor offset
+				grabbedTarget = mousePos;
+				BringToFront(draggableObject);
+				cardGrabbed = true;
+			}
+		}
+
+		if (!cardGrabbed && draggableObject) {
 			glm::vec3 pos = draggableObject->GetPosition();
 			glm::vec2 s = draggableObject->GetSize();
 			float halfW = s.x * 0.5f;
 			float halfH = s.y * 0.5f;
-
 			const float grabPadding = 30.0f;
 
 			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
@@ -301,33 +315,55 @@ void Level::HandleMouse(int type, int x, int y)
 		}
 	}
 
-	if (type == 1) {
-		if (isDragging && grabbedObject == draggableObject) {
-			isHolding = true;
-
-			glm::vec3 current = grabbedObject->GetPosition();
-			glm::vec3 diff = mousePos - current;
-
-			float followSpeed = 0.3f;
-			grabbedObject->Translate(diff * followSpeed);
+	if (type == 1)
+	{
+		if (isDragging && grabbedObject)
+		{
+			if (isHandCard(grabbedObject)) {
+				// Cards follow the mouse exactly, keeping the initial offset
+				grabbedObject->SetPosition(mousePos - grabOffset);
+			}
+			else if (grabbedObject == draggableObject) {
+				// Your original smooth-follow drag for non-card object(s)
+				isHolding = true;
+				glm::vec3 current = grabbedObject->GetPosition();
+				glm::vec3 diff = mousePos - current;
+				float followSpeed = 0.3f;
+				grabbedObject->Translate(diff * followSpeed);
+			}
 		}
 	}
 
-	if (type == 2) {
+	if (type == 2)
+	{
 		std::cout << "Mouse Released\n";
+
+		if (isDragging && grabbedObject && isHandCard(grabbedObject)) {
+			bool inDrop =
+				dzLeft.contains(mousePos) ||dzRight.contains(mousePos) ||dzTop.contains(mousePos) ||dzBottom.contains(mousePos);
+			if (inDrop) {
+				RemoveCardFromHand(grabbedObject);
+				draggableObject = nullptr;  // card no longer exists
+				LayoutHand();
+			}
+			else {
+				LayoutHand();
+			}
+		}
+
 		isDragging = false;
 		isHolding = false;
 		grabbedObject = nullptr;
+		return;
 	}
 
 	if (type == 0 || type == 1) {
 		testMoveTarget = glm::vec3(realX, realY, 0.0f);
 		testMoveMoving = true;
 	}
-	
 
-	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470 && type == 0 ) {
-		cout << "MenuButton Down" << endl;
+	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470 && type == 0) {
+		std::cout << "MenuButton Down" << std::endl;
 		if (Button::getMenu() == false) {
 			Button::setMenu(true);
 			mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -337,15 +373,13 @@ void Level::HandleMouse(int type, int x, int y)
 			mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
 		}
 	}
-	/*
-	if (realX >= -3 && realX <= -1.5 && realY <= -1.5 && realY >= -2.5) {
-		cout << "Doro" << endl;
-	}*/
-	cout << "X : " << x << "	Y" << y << endl;
-	cout << "real X : " << realX << "	real Y" << realY << endl;
+
+	std::cout << "X : " << x << "    Y" << y << std::endl;
+	std::cout << "real X : " << realX << "    real Y" << realY << std::endl;
 
 	player->SetPosition(glm::vec3(realX, realY, 0));
 }
+
 
 void Level::CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList)
 {
@@ -433,5 +467,82 @@ void Level::CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList)
 		}
 
 		objectsList.push_back(card);
+	}
+}
+
+void Level::InitDropZones()
+{
+	// World-space rectangles; tweak to match your pink mock overlay.
+	dzLeft = Rect{ -960.0f, -520.0f, -140.0f,  380.0f };
+	dzRight = Rect{ 520.0f,  960.0f, -140.0f,  380.0f };
+	dzTop = Rect{ -360.0f,  360.0f,   80.0f,  380.0f };
+	dzBottom = Rect{ -360.0f,  360.0f, -300.0f,  -40.0f };
+}
+
+void Level::BringToFront(DrawableObject* obj)
+{
+	auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+	if (it != objectsList.end()) { objectsList.erase(it); objectsList.push_back(obj); }
+}
+
+void Level::RemoveCardFromHand(GameObject* card)
+{
+	auto it = std::find(handCards.begin(), handCards.end(), card);
+	if (it != handCards.end()) handCards.erase(it);
+
+	auto it2 = std::find(objectsList.begin(), objectsList.end(),
+		static_cast<DrawableObject*>(card));
+	if (it2 != objectsList.end()) objectsList.erase(it2);
+
+	delete card;
+}
+
+GameObject* Level::PickTopHandCard(const glm::vec3& p)
+{
+	auto inside = [](GameObject* c, const glm::vec3& pt) {
+		glm::vec3 pos = c->GetPosition();
+		glm::vec2 s = c->GetSize();
+		float hx = s.x * 0.5f, hy = s.y * 0.5f;
+		// simple AABB pick (rotation ignored; fine for fanned look)
+		return pt.x >= pos.x - hx && pt.x <= pos.x + hx &&
+			pt.y >= pos.y - hy && pt.y <= pos.y + hy;
+		};
+	for (int i = (int)handCards.size() - 1; i >= 0; --i)
+		if (inside(handCards[i], p)) return handCards[i];
+	return nullptr;
+}
+
+// Re-fan cards (same geometry as in CreateCard)
+void Level::LayoutHand()
+{
+	const int n = (int)handCards.size();
+	if (n <= 0) return;
+
+	const float cardW = 220.0f, cardH = 335.0f;
+	const float handY = -540.0f;
+	const float baseRadius = 1000.0f, centerDrop = 120.0f;
+	const float R = baseRadius + centerDrop;
+	const float Cx = 0.0f, Cy = handY - R;
+	const float sink = 4.0f, sep = 0.65f;
+	const float PI = 3.1415926535f, RAD2DEG = 180.0f / PI;
+
+	float arcSpacing = cardW * sep;
+	float stepDeg = (arcSpacing / R) * RAD2DEG;
+	float spanDeg = (n > 1 ? stepDeg * float(n - 1) : 0.0f);
+	float startDeg = -0.5f * spanDeg;
+
+	for (int i = 0; i < n; ++i) {
+		float a = (startDeg + i * stepDeg) * (PI / 180.0f);
+		float nx = std::sinf(a), ny = std::cosf(a);
+		float rimX = Cx + nx * R, rimY = Cy + ny * R;
+		float px = rimX + nx * (cardH * 0.5f - sink);
+		float py = rimY + ny * (cardH * 0.5f - sink);
+		float tx = ny, ty = -nx;
+		float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
+
+		auto* c = handCards[i];
+		c->SetSize(cardW, cardH);
+		c->SetPosition(glm::vec3(px, py, 0));
+		c->SetRotate(rotDeg);
 	}
 }
