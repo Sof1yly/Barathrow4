@@ -108,7 +108,7 @@ void Level::LevelInit()
 		handCards.push_back(static_cast<GameObject*>(objectsList[i]));
 	}
 
-	InitDropZones();
+	
 	LayoutHand();
 
 	GameDataLoader loader;
@@ -291,6 +291,7 @@ void Level::HandleMouse(int type, int x, int y)
 				grabbedTarget = mousePos;
 				BringToFront(draggableObject);
 				cardGrabbed = true;
+				
 			}
 		}
 
@@ -307,6 +308,7 @@ void Level::HandleMouse(int type, int x, int y)
 				grabbedObject = draggableObject;
 				grabbedTarget = mousePos;
 				isDragging = true;
+				InitDropZones();
 			}
 			else {
 				isDragging = false;
@@ -339,8 +341,7 @@ void Level::HandleMouse(int type, int x, int y)
 		std::cout << "Mouse Released\n";
 
 		if (isDragging && grabbedObject && isHandCard(grabbedObject)) {
-			bool inDrop =
-				dzLeft.contains(mousePos) ||dzRight.contains(mousePos) ||dzTop.contains(mousePos) ||dzBottom.contains(mousePos);
+			bool inDrop = dzLeft.contains(mousePos) ||dzRight.contains(mousePos) ||dzTop.contains(mousePos) ||dzBottom.contains(mousePos);
 			if (inDrop) {
 				RemoveCardFromHand(grabbedObject);
 				draggableObject = nullptr;  // card no longer exists
@@ -472,11 +473,29 @@ void Level::CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList)
 
 void Level::InitDropZones()
 {
-	// World-space rectangles; tweak to match your pink mock overlay.
+
 	dzLeft = Rect{ -960.0f, -520.0f, -140.0f,  380.0f };
 	dzRight = Rect{ 520.0f,  960.0f, -140.0f,  380.0f };
 	dzTop = Rect{ -360.0f,  360.0f,   80.0f,  380.0f };
 	dzBottom = Rect{ -360.0f,  360.0f, -300.0f,  -40.0f };
+
+	CreateZoneFromRect(dzLeft,glm::vec3(0.0f,1.0f,1.0f));
+	CreateZoneFromRect(dzRight,glm::vec3(0.0f,1.0f,1.0f));
+	CreateZoneFromRect(dzTop,glm::vec3(0.0f,1.0f,1.0f));
+	CreateZoneFromRect(dzBottom,glm::vec3(0.0f,1.0f,1.0f));
+}
+
+void Level::CreateZoneFromRect(const Rect& rect,glm::vec3 color) {
+	GameObject* zone = new GameObject();
+	float width = rect.xmax - rect.xmin;
+	float height = rect.ymax - rect.ymin;
+	float centerX = (rect.xmax + rect.xmin) / 2.0f;
+	float centerY = (rect.ymax + rect.ymin) / 2.0f;
+
+	zone->SetSize(width, height);
+	zone->SetPosition(glm::vec3(centerX, centerY, 0.0f));
+	zone->SetColor(color.r, color.b, color.g);
+	objectsList.push_back(zone);
 }
 
 void Level::BringToFront(DrawableObject* obj)
@@ -488,11 +507,11 @@ void Level::BringToFront(DrawableObject* obj)
 void Level::RemoveCardFromHand(GameObject* card)
 {
 	auto it = std::find(handCards.begin(), handCards.end(), card);
-	if (it != handCards.end()) handCards.erase(it);
+	if (it != handCards.end()) { handCards.erase(it); }
 
 	auto it2 = std::find(objectsList.begin(), objectsList.end(),
 		static_cast<DrawableObject*>(card));
-	if (it2 != objectsList.end()) objectsList.erase(it2);
+	if (it2 != objectsList.end()) { objectsList.erase(it2); }
 
 	delete card;
 }
@@ -507,8 +526,10 @@ GameObject* Level::PickTopHandCard(const glm::vec3& p)
 		return pt.x >= pos.x - hx && pt.x <= pos.x + hx &&
 			pt.y >= pos.y - hy && pt.y <= pos.y + hy;
 		};
-	for (int i = (int)handCards.size() - 1; i >= 0; --i)
-		if (inside(handCards[i], p)) return handCards[i];
+	for (int i = (int)handCards.size() - 1; i >= 0; --i){
+		if (inside(handCards[i], p)) { return handCards[i]; }
+	}
+		
 	return nullptr;
 }
 
