@@ -5,6 +5,9 @@
 #include "ImageObject.h"
 #include "SpriteObject.h"
 #include "Button.h"
+#include <algorithm>
+#include <cmath>
+
 
 class Level
 {
@@ -27,6 +30,19 @@ private:
 	int nowRow = 0;
 	int nowCol = 0;
 
+
+	struct Rect {
+		float xmin, xmax, ymin, ymax;
+		bool contains(const glm::vec3& p) const {
+			return p.x >= xmin && p.x <= xmax && p.y >= ymin && p.y <= ymax;
+		}
+	};
+
+	std::vector<GameObject*> handCards;
+	Rect dzLeft{}, dzRight{}, dzTop{}, dzBottom{};
+
+
+
 public:
 	virtual void LevelLoad();
 	virtual void LevelInit();
@@ -38,4 +54,10 @@ public:
 	virtual void CreateCard(int cardCount, vector<DrawableObject*>& objectsList);
 	virtual void HandleKey(char key);
 	virtual void HandleMouse(int type, int x, int y);
+
+	void InitDropZones();
+	void LayoutHand();
+	void RemoveCardFromHand(GameObject* card);
+	void BringToFront(DrawableObject* obj);
+	GameObject* PickTopHandCard(const glm::vec3& worldPt);
 };
