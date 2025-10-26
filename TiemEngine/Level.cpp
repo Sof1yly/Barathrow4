@@ -284,12 +284,9 @@ void Level::HandleMouse(int type, int x, int y)
 			glm::vec2 s = draggableObject->GetSize();
 			float halfW = s.x * 0.5f;
 			float halfH = s.y * 0.5f;
-<<<<<<< HEAD
-			const float grabPadding = 50.0f;
-=======
 
-			const float grabPadding = 30.0f;
->>>>>>> parent of 32bc491 (Draggable card and drop card zone)
+			const float grabPadding = 50.0f;
+
 
 			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
 				mousePos.y >= pos.y - halfH - grabPadding && mousePos.y <= pos.y + halfH + grabPadding)
