@@ -5,6 +5,8 @@
 #include "ImageObject.h"
 #include "SpriteObject.h"
 #include "Button.h"
+#include "GameDataLoader.h"
+#include "Hand.h"
 
 class Level
 {
@@ -16,6 +18,9 @@ private:
 	ImageObject* mainMenu;
 	GameObject* grabbedObject = nullptr;
 	GameObject* draggableObject = nullptr;
+
+	GameDataLoader dataLoader;
+	Hand hand;
 
 	glm::vec3 testMoveTarget;
 	glm::vec3 grabbedTarget = glm::vec3(0.0f);
@@ -34,8 +39,6 @@ public:
 	virtual void LevelDraw();
 	virtual void LevelFree();
 	virtual void LevelUnload();
-
-	virtual void CreateCard(int cardCount, vector<DrawableObject*>& objectsList);
 	virtual void HandleKey(char key);
 	virtual void HandleMouse(int type, int x, int y);
 };
