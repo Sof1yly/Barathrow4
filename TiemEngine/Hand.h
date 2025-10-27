@@ -4,18 +4,27 @@
 #include "DrawableObject.h"
 #include "GameObject.h"
 
-
 class Hand {
-private:
-	vector<Card*> deck;
-	unordered_map<GameObject*, Card*> viewToData;
+	private:
+		struct CardHand {
+			GameObject* view=nullptr;
 
-public:
-	//void SetCards(const vector<Card*>& cards);
+			float homeX = 0.0f, homeY = 0.0f, homeRotDeg = 0.0f;
+		};
+		vector<CardHand> cardsIn;
 
-	void CreateVisualHand(int cardCount, vector<DrawableObject*>& objectsList);
+		void computeLayout(int idx, int N, float& outX, float& outY, float& outRotDeg) const;
+		void applyHome(const CardHand& c)const;
 
-	//Card* GetCardByView(GameObject* view)const;
+	public:
+		bool GetHomeFor(class GameObject* view, glm::vec3& outPos, float& outRotDeg) const;
+		void CreateVisualHand(int cardCount, vector<DrawableObject*>& objectsList);
+		bool Owns(GameObject* view)const;
+		void SnapBack(GameObject* view);
 
-	int LogicalCount()const { return (int)deck.size(); }
+		void UseCardAndRefan(GameObject* view);
+
+		void Refan();
+
+		
 };

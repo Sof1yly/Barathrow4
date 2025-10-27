@@ -1,4 +1,4 @@
-#include "Level.h"
+﻿#include "Level.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "Button.h"
@@ -7,6 +7,8 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "GameDataLoader.h"
+#include "Hand.h"
+#include "DropZones.h"
 
 void Level::LevelLoad()
 {
@@ -101,6 +103,11 @@ void Level::LevelInit()
 	//mainMenu = MenuUI;
 
 	hand.CreateVisualHand(5, objectsList);
+
+	zones.UpdateFromViewport(
+		GameEngine::GetInstance()->GetDrawAreaWidth(),
+		GameEngine::GetInstance()->GetDrawAreaHeight()
+	);
 
 	GameDataLoader loader;
 
@@ -227,95 +234,166 @@ void Level::HandleKey(char key)
 	}
 }
 
-void Level::HandleMouse(int type, int x, int y)
-{
-	float realX, realY;
-
-	int winW = GameEngine::GetInstance()->GetWindowWidth();
-	int winH = GameEngine::GetInstance()->GetWindowHeight();
-
-	float scaleW = GameEngine::GetInstance()-> GetDrawAreaWidth();
-	float scaleH = GameEngine::GetInstance()-> GetDrawAreaHeight();
-
-
-	realX = (x - winW / 2) * (scaleW / winW);
-	realY = (winH / 2 - y) * (scaleH / winH);
-	
-
-	GameEngine::GetInstance()->GetWindowHeight();
-	GameEngine::GetInstance()->GetWindowWidth();
-
-	glm::vec3 mousePos(realX, realY, 0.0f);
-	
-
-	if (type == 0) {
-		cout << "Mouse Pressed\n";
-		if (draggableObject) {
-			glm::vec3 pos = draggableObject->GetPosition();
-			glm::vec2 s = draggableObject->GetSize();
-			float halfW = s.x * 0.5f;
-			float halfH = s.y * 0.5f;
-
-			const float grabPadding = 50.0f;
-
-
-			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
-				mousePos.y >= pos.y - halfH - grabPadding && mousePos.y <= pos.y + halfH + grabPadding)
-			{
-				grabbedObject = draggableObject;
-				grabbedTarget = mousePos;
-				isDragging = true;
-			}
-			else {
-				isDragging = false;
-				grabbedObject = nullptr;
-			}
-		}
-	}
-
-	if (type == 1) {
-		if (isDragging && grabbedObject == draggableObject) {
-			isHolding = true;
-
-			glm::vec3 current = grabbedObject->GetPosition();
-			glm::vec3 diff = mousePos - current;
-
-			float followSpeed = 0.3f;
-			grabbedObject->Translate(diff * followSpeed);
-		}
-	}
-
-	if (type == 2) {
-		std::cout << "Mouse Released\n";
-		isDragging = false;
-		isHolding = false;
-		grabbedObject = nullptr;
-	}
-
-	if (type == 0 || type == 1) {
-		testMoveTarget = glm::vec3(realX, realY, 0.0f);
-		testMoveMoving = true;
-	}
-	
-
-	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470 && type == 0 ) {
-		cout << "MenuButton Down" << endl;
-		if (Button::getMenu() == false) {
-			Button::setMenu(true);
-			mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-		}
-		else {
-			Button::setMenu(false);
-			mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
-		}
-	}
-	/*
-	if (realX >= -3 && realX <= -1.5 && realY <= -1.5 && realY >= -2.5) {
-		cout << "Doro" << endl;
-	}*/
-	cout << "X : " << x << "	Y" << y << endl;
-	cout << "real X : " << realX << "	real Y" << realY << endl;
-
-	player->SetPosition(glm::vec3(realX, realY, 0));
+static inline bool InRect(const Rect& r, float x, float y) {
+	return x >= r.xmin && x <= r.xmax && y >= r.ymin && y <= r.ymax;
 }
 
+
+
+void Level::HandleMouse(int type, int x, int y)
+{
+	// --- screen -> draw coords (origin center)
+	const int   winW = GameEngine::GetInstance()->GetWindowWidth();
+	const int   winH = GameEngine::GetInstance()->GetWindowHeight();
+	const float drawW = GameEngine::GetInstance()->GetDrawAreaWidth();
+	const float drawH = GameEngine::GetInstance()->GetDrawAreaHeight();
+
+	const float realX = (x - winW * 0.5f) * (drawW / winW);
+	const float realY = (winH * 0.5f - y) * (drawH / winH);
+	const glm::vec3 mousePos(realX, realY, 0.0f);
+
+	// keep drop-zone math up to date
+	zones.UpdateFromViewport(drawW, drawH);
+	if (dropZonesVisible) UpdateDropZoneVisuals();
+
+	// -------- mouse down --------
+	if (type == 0) {
+		grabbedObject = nullptr;
+
+		// pick top-most hand card
+		for (int i = (int)objectsList.size() - 1; i >= 0; --i) {
+			auto* go = dynamic_cast<GameObject*>(objectsList[i]);
+			if (!go) continue;
+			if (!hand.Owns(go)) continue;
+			if (!HitTestGO(go, realX, realY)) continue;
+
+			grabbedObject = go;
+			isDragging = true;
+			isHolding = true;
+
+			// Cache the card's home NOW. If Owns fails later, we still snap back.
+			if (!hand.GetHomeFor(go, grabbedHomePos, grabbedHomeRotDeg)) {
+				// fallback: current transform
+				grabbedHomePos = go->GetPosition();
+				grabbedHomeRotDeg = 0.0f; // or go->GetRotationDeg() if you have it
+			}
+
+			ShowDropZones();
+			break;
+		}
+	}
+
+	// -------- mouse move --------
+	if (type == 1) {
+		if (isDragging && grabbedObject) {
+			// move exactly with cursor for reliable drop
+			grabbedObject->SetPosition(mousePos);
+		}
+	}
+
+	// -------- mouse up --------
+	if (type == 2) {
+		// stop drag first so nothing fights snapback
+		isDragging = false;
+		isHolding = false;
+
+		GameObject* released = grabbedObject;
+		grabbedObject = nullptr;
+
+		if (released) {
+			// Decide drop by CARD center (not cursor)
+			const glm::vec3 p = released->GetPosition();
+			DropZone which = zones.Classify(p.x, p.y);
+
+			// fallback rect checks if Classify is off
+			if (which == DropZone::None) {
+				if (DropZones::PointIn(zones.left, p.x, p.y)) which = DropZone::Left;
+				else if (DropZones::PointIn(zones.right, p.x, p.y)) which = DropZone::Right;
+				else if (DropZones::PointIn(zones.top, p.x, p.y)) which = DropZone::Top;
+				else if (DropZones::PointIn(zones.bottom, p.x, p.y)) which = DropZone::Bottom;
+			}
+
+			if (which == DropZone::None) {
+				// FORCE snapback using cached home, even if Hand::Owns failed
+				released->SetPosition(grabbedHomePos);
+				// If you have rotation API: released->SetRotation(grabbedHomeRotDeg);
+				hand.Refan(); // re-layout the fan to be safe
+			}
+			else {
+				// valid zone -> consume and re-fan
+				if (hand.Owns(released)) {
+					hand.UseCardAndRefan(released);
+				}
+				auto it = std::find(objectsList.begin(), objectsList.end(),
+					static_cast<DrawableObject*>(released));
+				if (it != objectsList.end()) objectsList.erase(it);
+				delete released;
+			}
+		}
+
+		// Zones ALWAYS disappear on mouse-up
+		HideDropZones();
+	}
+
+	// (keep your menu/debug/etc. if needed)
+}
+
+
+
+
+bool Level::HitTestGO(GameObject* go, float x, float y) {
+	if (!go) return false;
+	glm::vec3 pos = go->GetPosition();
+	glm::vec2 s = go->GetSize();
+	float halfW = s.x * 0.5f, halfH = s.y * 0.5f;
+	const float pad = 50.0f; // make grabbing easier
+	return (x >= pos.x - halfW - pad && x <= pos.x + halfW + pad &&y >= pos.y - halfH - pad && y <= pos.y + halfH + pad);
+}
+
+GameObject* Level::CreateZoneFromRect(const Rect& r, glm::vec3 color) {
+	auto* go = new GameObject();
+	const float w = r.xmax - r.xmin, h = r.ymax - r.ymin;
+	const float cx = (r.xmax + r.xmin) * 0.5f, cy = (r.ymax + r.ymin) * 0.5f;
+	go->SetSize(w, h);
+	go->SetPosition({ cx, cy, 0 });
+	go->SetColor(color.r, color.g, color.b); // r,g,b
+	return go;
+}
+
+void Level::ShowDropZones() {
+	if (dropZonesVisible) return;
+	dropZonesVisible = true;
+	dropZoneGOs = {
+		CreateZoneFromRect(zones.left,   {0,1,1}),
+		CreateZoneFromRect(zones.right,  {0,1,1}),
+		CreateZoneFromRect(zones.top,    {0,1,1}),
+		CreateZoneFromRect(zones.bottom, {0,1,1})
+	};
+	for (auto* go : dropZoneGOs) objectsList.push_back(go);
+}
+
+void Level::HideDropZones() {
+	if (!dropZonesVisible) return;
+	dropZonesVisible = false;
+	for (auto* go : dropZoneGOs) {
+		auto it = std::find(objectsList.begin(), objectsList.end(),
+			static_cast<DrawableObject*>(go));
+		if (it != objectsList.end()) objectsList.erase(it);
+		delete go;
+	}
+	dropZoneGOs.clear();
+}
+
+void Level::UpdateDropZoneVisuals() {
+	if (!dropZonesVisible || dropZoneGOs.size() != 4) return;
+	auto apply = [](GameObject* go, const Rect& r) {
+		const float w = r.xmax - r.xmin, h = r.ymax - r.ymin;
+		const float cx = (r.xmax + r.xmin) * 0.5f, cy = (r.ymax + r.ymin) * 0.5f;
+		go->SetSize(w, h);
+		go->SetPosition({ cx, cy, 0 });
+		};
+	apply(dropZoneGOs[0], zones.left);
+	apply(dropZoneGOs[1], zones.right);
+	apply(dropZoneGOs[2], zones.top);
+	apply(dropZoneGOs[3], zones.bottom);
+}
