@@ -236,10 +236,10 @@ void Level::HandleKey(char key)
 		//case 'd': testGrid->Translate(glm::vec3(100.0, 0, 0)); break;
 	case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT; ; break;
 	case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; ; break;
-	//case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break;
+	case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break;
 	
 	}
-	if (key == 'e') {
+	if (key == ' ') {
 		int startRow = nowRow;
 		int startCol = nowCol;
 		//For testing will delete the loop and call attack action function later
