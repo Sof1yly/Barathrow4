@@ -54,7 +54,6 @@
     <ClInclude Include="CombineObject.h" />
     <ClInclude Include="Deck.h" />
     <ClInclude Include="DrawableObject.h" />
-    <ClInclude Include="DropZones.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="GameDataLoader.h" />
     <ClInclude Include="GameEngine.h" />
