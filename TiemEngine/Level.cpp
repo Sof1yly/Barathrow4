@@ -250,6 +250,7 @@ void Level::HandleMouse(int type, int x, int y)
 
 	if (type == 0) {
 		cout << "Mouse Pressed\n";
+		hand.TrySelectAt(mousePos);
 		if (draggableObject) {
 			glm::vec3 pos = draggableObject->GetPosition();
 			glm::vec2 s = draggableObject->GetSize();

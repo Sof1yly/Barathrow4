@@ -25,6 +25,7 @@ public:
 
 	glm::vec3 GetPosition() const { return pos; }
 	glm::vec2 GetSize() const { return size; }
+	float GetRotate() const { return angle; }
 
 	//Rotate, Scale ???
 
