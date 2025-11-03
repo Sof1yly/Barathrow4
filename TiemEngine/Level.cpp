@@ -7,6 +7,8 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "GameDataLoader.h"
+#include "AttackPattern.h"
+
 
 void Level::LevelLoad()
 {
@@ -43,6 +45,36 @@ void Level::LevelInit()
 	}
 	//End of grid
 
+	patterns = {
+		AttackPattern::fromGrid({
+			".X.",
+			"XXX",
+			".X."
+		}, 'X'),
+
+		AttackPattern::fromGrid({
+			"XXX",
+			"XXX",
+			"XXX"
+		}, 'X'),
+
+		AttackPattern::fromGrid({
+			"..X..",
+			".XXX.",
+			"XXXXX",
+			".XXX.",
+			"..X.."
+		}, 'X'),
+		AttackPattern::fromGrid({
+			"...XX",
+		}, 'X'),
+	};
+
+	currentPatternIndex = 0;
+	currentRotation = 0;
+	rotatedPattern = patterns[currentPatternIndex];
+
+
 	GameObject* testgrid = new GameObject();
 	testgrid->SetColor(1.0f, 0.5f, 1.0f);
 	testgrid->SetSize(100.0f, 100.0f);
@@ -72,13 +104,13 @@ void Level::LevelInit()
 
 	testMove = obj3;
 
-	GameObject* obj4 = new GameObject();
+	/*GameObject* obj4 = new GameObject();
 	obj4->SetColor(1.0, 1.0, 0.0);
 	obj4->SetSize(75.0, 75.0);
 	objectsList.push_back(obj4);
 	obj4->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	draggableObject = obj4;
+	draggableObject = obj4;*/
 	grabbedObject = nullptr;
 
 
@@ -236,24 +268,41 @@ void Level::HandleKey(char key)
 		//case 'd': testGrid->Translate(glm::vec3(100.0, 0, 0)); break;
 	case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT; ; break;
 	case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; ; break;
-	//case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break;
-	
+	case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2; ; break;
 	}
-	if (key == 'e') {
-		int startRow = nowRow;
-		int startCol = nowCol;
-		//For testing will delete the loop and call attack action function later
-		startRow++; startCol--;
-		for (int i = 0; i < 2; i++) {
-			for (int j = 0; j < 3; j++) {
-				int attackRow = startRow + i;
-				int attackCol = startCol + j;
-				cout << "attack at " << attackRow << "," << attackCol << endl;
-			}
+
+	if (key == 'c') {
+		currentPatternIndex++;
+		if (currentPatternIndex >= patterns.size())
+			currentPatternIndex = 0;
+
+		//currentRotation = 0;
+		rotatedPattern = patterns[currentPatternIndex];
+
+		std::cout << "Switched to pattern #" << currentPatternIndex + 1 << std::endl;
+	}
+	if (key == 'x') {
+		currentRotation = (currentRotation + 90) % 360;
+
+		rotatedPattern = patterns[currentPatternIndex];
+		int times = currentRotation / 90;
+		for (int i = 0; i < times; ++i)
+			rotatedPattern = rotatedPattern.rotated90CW();
+
+		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
+	}
+	if (key == ' ') {
+		auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
+
+		cout << "Using pattern #" << currentPatternIndex + 1 << endl;
+		for (auto& cell : attacks) {
+			cout << "attack at (" << cell.first.x << ", " << cell.first.y << ")\n";
 		}
-		///
 		cout << endl;
 	}
+
+
+
 
 	
 

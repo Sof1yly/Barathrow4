@@ -5,6 +5,7 @@
 #include "ImageObject.h"
 #include "SpriteObject.h"
 #include "Button.h"
+#include "AttackPattern.h"
 
 class Level
 {
@@ -26,6 +27,12 @@ private:
 
 	int nowRow = 0;
 	int nowCol = 0;
+
+	std::vector<AttackPattern> patterns;
+	int currentPatternIndex = 0;
+
+	AttackPattern rotatedPattern;
+	int currentRotation = 0;// 0, 90, 180, 270
 
 public:
 	virtual void LevelLoad();
