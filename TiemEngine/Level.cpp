@@ -104,13 +104,13 @@ void Level::LevelInit()
 
 	testMove = obj3;
 
-	GameObject* obj4 = new GameObject();
+	/*GameObject* obj4 = new GameObject();
 	obj4->SetColor(1.0, 1.0, 0.0);
 	obj4->SetSize(75.0, 75.0);
 	objectsList.push_back(obj4);
 	obj4->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	draggableObject = obj4;
+	draggableObject = obj4;*/
 	grabbedObject = nullptr;
 
 
