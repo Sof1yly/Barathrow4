@@ -24,7 +24,7 @@ private:
 	void restoreVisual(GameObject* v);
 
 public:
-	//void SetCards(const vector<Card*>& cards);
+	GameObject* GetSelectedView() const { return selectedView; }
 
 	void CreateVisualHand(int cardCount, vector<DrawableObject*>& objectsList);
 

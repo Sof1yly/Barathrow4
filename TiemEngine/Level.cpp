@@ -101,7 +101,7 @@ void Level::LevelInit()
 	//mainMenu = MenuUI;
 
 	hand.CreateVisualHand(5, objectsList);
-
+	CreateDropZones(objectsList);
 	GameDataLoader loader;
 
 	string error;
@@ -250,7 +250,21 @@ void Level::HandleMouse(int type, int x, int y)
 
 	if (type == 0) {
 		cout << "Mouse Pressed\n";
-		hand.TrySelectAt(mousePos);
+		//hand.TrySelectAt(mousePos);
+
+		CreateDropZones(objectsList);
+
+		// Detect selection change and toggle drop zones only when state changes
+		GameObject* before = hand.GetSelectedView();
+		hand.TrySelectAt(mousePos);                 // selects or deselects
+		GameObject* after = hand.GetSelectedView();
+
+		if (after && !before) {
+			ShowDropZones();
+		}
+		else if (!after && before) {
+			HideDropZones();
+		}
 		if (draggableObject) {
 			glm::vec3 pos = draggableObject->GetPosition();
 			glm::vec2 s = draggableObject->GetSize();
@@ -319,4 +333,129 @@ void Level::HandleMouse(int type, int x, int y)
 
 	player->SetPosition(glm::vec3(realX, realY, 0));
 }
+
+void Level::CreateDropZones(std::vector<DrawableObject*>& objectsList)
+{
+	if (dropZonesCreated) return;
+	dropZonesCreated = true;
+
+	const float Z = 400.0f; // render depth (above board, below selected card)
+
+	// Tall side zones
+	const float SIDE_W = 340.0f;   // wide side panels
+	const float SIDE_H = 520.0f;   // tall side panels
+
+	// Upper / Bottom zones around the board
+	const float MID_W = 550.0f;   // wide (almost as wide as board+padding)
+	const float MID_H = 260.0f;   // chunky horizontal bar
+
+
+	const float BOARD_CENTER_Y = 200.0f;
+
+
+
+	const float SIDE_X_OFFSET = 600.0f;
+
+	// Vertical position for side panels: centered around board
+	const float SIDE_Y = BOARD_CENTER_Y;
+
+	// Upper zone goes above the board
+	const float UPPER_Y = BOARD_CENTER_Y + 180.0f;
+
+	// Bottom zone goes below the board but still above the hand cards
+	const float BOTTOM_Y = BOARD_CENTER_Y - 180.0f;
+
+
+	// ----- LEFT -----
+	dropZones[0] = new GameObject();
+	dropZones[0]->SetSize(SIDE_W, SIDE_H);
+	dropZones[0]->SetPosition({
+		-SIDE_X_OFFSET,  // big push to left side
+		SIDE_Y,
+		Z
+		});
+	dropZones[0]->SetRotate(0.0f);
+	dropZones[0]->SetColor(1.0f, 0.6f, 0.8f); // pastel pink
+
+	// ----- UPPER -----
+	dropZones[1] = new GameObject();
+	dropZones[1]->SetSize(MID_W, MID_H);
+	dropZones[1]->SetPosition({
+		0.0f,
+		UPPER_Y,
+		Z
+		});
+	dropZones[1]->SetRotate(0.0f);
+	dropZones[1]->SetColor(1.0f, 0.6f, 0.8f);
+
+	// ----- BOTTOM -----
+	dropZones[2] = new GameObject();
+	dropZones[2]->SetSize(MID_W, MID_H);
+	dropZones[2]->SetPosition({
+		0.0f,
+		BOTTOM_Y,
+		Z
+		});
+	dropZones[2]->SetRotate(0.0f);
+	dropZones[2]->SetColor(1.0f, 0.6f, 0.8f);
+
+	// ----- RIGHT -----
+	dropZones[3] = new GameObject();
+	dropZones[3]->SetSize(SIDE_W, SIDE_H);
+	dropZones[3]->SetPosition({
+		SIDE_X_OFFSET,   // big push to right side
+		SIDE_Y,
+		Z
+		});
+	dropZones[3]->SetRotate(0.0f);
+	dropZones[3]->SetColor(1.0f, 0.6f, 0.8f);
+
+
+	//
+	// Add to draw list and hide initially
+	//
+	for (int i = 0; i < 4; ++i) {
+		objectsList.push_back(dropZones[i]);
+
+		// Save their true visible position
+		dropZoneSavedPos[i] = dropZones[i]->GetPosition();
+
+		// Move off-screen (hidden) until player starts dragging a card
+		dropZones[i]->SetPosition(glm::vec3(
+			dropZoneSavedPos[i].x,
+			-10000.0f,
+			dropZoneSavedPos[i].z
+		));
+	}
+
+	dropZonesVisible = false;
+}
+
+
+
+void Level::ShowDropZones()
+{
+	if (!dropZonesCreated) return;     // not created yet
+	if (dropZonesVisible) return;      // already visible — do nothing
+
+	for (int i = 0; i < 4; ++i) {
+		if (!dropZones[i]) continue;
+		dropZones[i]->SetPosition(dropZoneSavedPos[i]);
+	}
+	dropZonesVisible = true;
+}
+
+void Level::HideDropZones()
+{
+	if (!dropZonesCreated) return;     // not created yet
+	if (!dropZonesVisible) return;     // already hidden — do nothing
+
+	for (int i = 0; i < 4; ++i) {
+		if (!dropZones[i]) continue;
+		auto p = dropZoneSavedPos[i];
+		dropZones[i]->SetPosition(glm::vec3(p.x, -10000.0f, p.z)); // move off-screen
+	}
+	dropZonesVisible = false;
+}
+
 

@@ -8,6 +8,8 @@
 #include "GameDataLoader.h"
 #include "Hand.h"
 
+
+
 class Level
 {
 private:
@@ -18,6 +20,15 @@ private:
 	ImageObject* mainMenu;
 	GameObject* grabbedObject = nullptr;
 	GameObject* draggableObject = nullptr;
+	GameObject* dropZones[4];
+
+	bool dropZonesCreated = false;
+	bool dropZonesVisible = false;
+	glm::vec3 dropZoneSavedPos[4];
+
+	void CreateDropZones(std::vector<DrawableObject*>& objectsList);
+	void ShowDropZones();
+	void HideDropZones();
 
 	GameDataLoader dataLoader;
 	Hand hand;
