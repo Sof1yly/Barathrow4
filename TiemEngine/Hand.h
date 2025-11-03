@@ -1,35 +1,35 @@
 #pragma once
 #include <unordered_map>
+#include <vector>
 #include "Card.h"
 #include "DrawableObject.h"
 #include "GameObject.h"
 
-
 class Hand {
 private:
-	vector<Card*> deck;
-	vector<GameObject*> views;
-	//unordered_map<GameObject*, Card*> viewToData;
+    vector<Card*> deck;
+    vector<GameObject*> views;
+    GameObject* selectedView = nullptr;
 
-	GameObject* selectedView = nullptr;
+    unordered_map<GameObject*, glm::vec3> origPos;
+    unordered_map<GameObject*, glm::vec2> origSize;
+    unordered_map<GameObject*, float> origRot;
 
-	unordered_map<GameObject*, glm::vec3> origPos;
-	unordered_map<GameObject*, glm::vec2> origSize;
-	unordered_map<GameObject*, float> origRot;
+    bool hitTest(GameObject* v, const glm::vec3& p) const;
 
-	bool hitTest(GameObject* v, const glm::vec3& p) const;
-
-	// effects
-	void applySelectedVisual(GameObject* v);
-	void restoreVisual(GameObject* v);
+    void applySelectedVisual(GameObject* v);
+    void restoreVisual(GameObject* v);
 
 public:
-	GameObject* GetSelectedView() const { return selectedView; }
+    GameObject* GetSelectedView() const { return selectedView; }
 
-	void CreateVisualHand(int cardCount, vector<DrawableObject*>& objectsList);
+    void CreateVisualHand(int cardCount, vector<DrawableObject*>& objectsList);
 
-	bool TrySelectAt(const glm::vec3& mouseWorld);
-	void Deselect();
+    bool TrySelectAt(const glm::vec3& mouseWorld);
+    void Deselect();
 
-	int LogicalCount()const { return (int)deck.size(); }
+ 
+    GameObject* PeekAt(const glm::vec3& mouseWorld) const;
+
+    int LogicalCount()const { return (int)deck.size(); }
 };

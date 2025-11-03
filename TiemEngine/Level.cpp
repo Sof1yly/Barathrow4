@@ -1,4 +1,4 @@
-#include "Level.h"
+ï»¿#include "Level.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "Button.h"
@@ -7,6 +7,17 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "GameDataLoader.h"
+
+
+static inline glm::vec3 QuadraticBezier(
+	const glm::vec3& P0,
+	const glm::vec3& C,
+	const glm::vec3& P1,
+	float t)
+{
+	float u = 1.0f - t;
+	return (u * u) * P0 + 2.0f * u * t * C + (t * t) * P1;
+}
 
 void Level::LevelLoad()
 {
@@ -234,105 +245,92 @@ void Level::HandleMouse(int type, int x, int y)
 	int winW = GameEngine::GetInstance()->GetWindowWidth();
 	int winH = GameEngine::GetInstance()->GetWindowHeight();
 
-	float scaleW = GameEngine::GetInstance()-> GetDrawAreaWidth();
-	float scaleH = GameEngine::GetInstance()-> GetDrawAreaHeight();
-
+	float scaleW = GameEngine::GetInstance()->GetDrawAreaWidth();
+	float scaleH = GameEngine::GetInstance()->GetDrawAreaHeight();
 
 	realX = (x - winW / 2) * (scaleW / winW);
 	realY = (winH / 2 - y) * (scaleH / winH);
-	
-
-	GameEngine::GetInstance()->GetWindowHeight();
-	GameEngine::GetInstance()->GetWindowWidth();
 
 	glm::vec3 mousePos(realX, realY, 0.0f);
-	
 
-	if (type == 0) {
-		cout << "Mouse Pressed\n";
-		//hand.TrySelectAt(mousePos);
+
+	screenCenterY = 0.0f;
+
+
+	if (type == 0)
+	{
+		std::cout << "Mouse Pressed\n";
+
+		// Menu button toggle (unchanged)
+		if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470)
+		{
+			std::cout << "MenuButton Down" << std::endl;
+			if (!Button::getMenu())
+			{
+				Button::setMenu(true);
+				mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+			}
+			else
+			{
+				Button::setMenu(false);
+				mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
+			}
+		}
 
 		CreateDropZones(objectsList);
 
-		// Detect selection change and toggle drop zones only when state changes
-		GameObject* before = hand.GetSelectedView();
-		hand.TrySelectAt(mousePos);                 // selects or deselects
-		GameObject* after = hand.GetSelectedView();
 
-		if (after && !before) {
-			ShowDropZones();
-		}
-		else if (!after && before) {
-			HideDropZones();
-		}
-		if (draggableObject) {
-			glm::vec3 pos = draggableObject->GetPosition();
-			glm::vec2 s = draggableObject->GetSize();
-			float halfW = s.x * 0.5f;
-			float halfH = s.y * 0.5f;
+		pendingCard = hand.PeekAt(mousePos);
 
-			const float grabPadding = 50.0f;
+		// DO NOT show dropzones yet
+		// DO NOT call TrySelectAt (no pop/no scale)
 
-
-			if (mousePos.x >= pos.x - halfW - grabPadding && mousePos.x <= pos.x + halfW + grabPadding &&
-				mousePos.y >= pos.y - halfH - grabPadding && mousePos.y <= pos.y + halfH + grabPadding)
-			{
-				grabbedObject = draggableObject;
-				grabbedTarget = mousePos;
-				isDragging = true;
-			}
-			else {
-				isDragging = false;
-				grabbedObject = nullptr;
-			}
-		}
-	}
-
-	if (type == 1) {
-		if (isDragging && grabbedObject == draggableObject) {
-			isHolding = true;
-
-			glm::vec3 current = grabbedObject->GetPosition();
-			glm::vec3 diff = mousePos - current;
-
-			float followSpeed = 0.3f;
-			grabbedObject->Translate(diff * followSpeed);
-		}
-	}
-
-	if (type == 2) {
-		std::cout << "Mouse Released\n";
-		isDragging = false;
-		isHolding = false;
-		grabbedObject = nullptr;
-	}
-
-	if (type == 0 || type == 1) {
 		testMoveTarget = glm::vec3(realX, realY, 0.0f);
 		testMoveMoving = true;
 	}
-	
 
-	if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470 && type == 0 ) {
-		cout << "MenuButton Down" << endl;
-		if (Button::getMenu() == false) {
-			Button::setMenu(true);
-			mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-		}
-		else {
-			Button::setMenu(false);
-			mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
+	// ---------- type 1: mouse is held/moved while still down ----------
+	if (type == 1)
+	{
+		// if we have a card from mousedown:
+		if (pendingCard)
+		{
+			// if drag not yet started, start now
+			if (!isDragging)
+			{
+				BeginDrag(pendingCard, mousePos);
+			}
+			else
+			{
+				UpdateDrag(mousePos);
+			}
 		}
 	}
-	/*
-	if (realX >= -3 && realX <= -1.5 && realY <= -1.5 && realY >= -2.5) {
-		cout << "Doro" << endl;
-	}*/
-	cout << "X : " << x << "	Y" << y << endl;
-	cout << "real X : " << realX << "	real Y" << realY << endl;
+
+	// ---------- type 2: button released ----------
+	if (type == 2)
+	{
+		std::cout << "Mouse Released\n";
+
+		if (isDragging)
+		{
+			EndDrag(mousePos);
+		}
+
+		// clear state
+		isDragging = false;
+		isHolding = false;
+		grabbedObject = nullptr;
+		pendingCard = nullptr;
+	}
+
+	// debug + player follow (unchanged)
+	std::cout << "X : " << x << "    Y : " << y << std::endl;
+	std::cout << "real X : " << realX << "    real Y : " << realY << std::endl;
 
 	player->SetPosition(glm::vec3(realX, realY, 0));
 }
+
 
 void Level::CreateDropZones(std::vector<DrawableObject*>& objectsList)
 {
@@ -436,7 +434,7 @@ void Level::CreateDropZones(std::vector<DrawableObject*>& objectsList)
 void Level::ShowDropZones()
 {
 	if (!dropZonesCreated) return;     // not created yet
-	if (dropZonesVisible) return;      // already visible — do nothing
+	if (dropZonesVisible) return;      // already visible â€” do nothing
 
 	for (int i = 0; i < 4; ++i) {
 		if (!dropZones[i]) continue;
@@ -448,7 +446,7 @@ void Level::ShowDropZones()
 void Level::HideDropZones()
 {
 	if (!dropZonesCreated) return;     // not created yet
-	if (!dropZonesVisible) return;     // already hidden — do nothing
+	if (!dropZonesVisible) return;     // already hidden â€” do nothing
 
 	for (int i = 0; i < 4; ++i) {
 		if (!dropZones[i]) continue;
@@ -459,3 +457,182 @@ void Level::HideDropZones()
 }
 
 
+// Create visual dots for the curve if not created yet
+void Level::EnsureBezierDots(std::vector<DrawableObject*>& objectsListRef)
+{
+	if (bezierCreated) return;
+	bezierCreated = true;
+
+	bezierDots.reserve(BEZIER_DOT_COUNT);
+
+	for (int i = 0; i < BEZIER_DOT_COUNT; ++i)
+	{
+		GameObject* d = new GameObject();
+		d->SetSize(4.0f, 4.0f);
+		d->SetColor(1.0f, 0.6f, 0.85f); // pink
+		d->SetRotate(0.0f);
+
+		// start hidden offscreen
+		d->SetPosition({ 99999.0f, 99999.0f, 500.0f }); // 500 = above drop zones
+
+		bezierDots.push_back(d);
+		objectsListRef.push_back(d);
+	}
+
+	// keep synced
+	objectsList = objectsListRef;
+}
+
+void Level::ShowBezier()
+{
+	for (auto* d : bezierDots)
+	{
+		if (!d) continue;
+		glm::vec3 p = d->GetPosition();
+		d->SetPosition({ p.x, p.y, 500.0f });
+	}
+}
+
+void Level::HideBezier()
+{
+	for (auto* d : bezierDots)
+	{
+		if (!d) continue;
+		d->SetPosition({ 99999.0f, 99999.0f, 500.0f });
+	}
+}
+
+// Updates the curve from dragAnchor (P0) to mouse (P1)
+void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
+{
+	if (!bezierCreated) return;
+
+	// which way should the arc bend?
+	float midY = 0.5f * (P0.y + P1.y);
+	float dir = (midY < screenCenterY) ? 1.0f : -1.0f;
+
+	float liftAmount = 220.0f;
+	glm::vec3 mid = 0.5f * (P0 + P1);
+	glm::vec3 lift = glm::vec3(0.0f, dir * liftAmount, 0.0f);
+	glm::vec3 C = mid + lift;
+
+	for (int i = 0; i < BEZIER_DOT_COUNT; ++i)
+	{
+		float t = (float)i / (float)(BEZIER_DOT_COUNT - 1);
+		glm::vec3 p = QuadraticBezier(P0, C, P1, t);
+
+		// curve should be above zones
+		bezierDots[i]->SetPosition({ p.x, p.y, 500.0f });
+	}
+}
+
+
+bool Level::IsPointInsideZone(const glm::vec3& p, GameObject* zone) const
+{
+	if (!zone) return false;
+
+	glm::vec3 zpos = zone->GetPosition();
+	glm::vec2 zsize = zone->GetSize();
+
+	float halfW = zsize.x * 0.5f;
+	float halfH = zsize.y * 0.5f;
+
+	return (
+		p.x >= zpos.x - halfW && p.x <= zpos.x + halfW &&
+		p.y >= zpos.y - halfH && p.y <= zpos.y + halfH
+		);
+}
+
+int Level::HitDropZone(const glm::vec3& p) const
+{
+	for (int i = 0; i < 4; ++i)
+	{
+		if (IsPointInsideZone(p, dropZones[i]))
+			return i;
+	}
+	return -1;
+}
+
+
+
+void Level::BeginDrag(GameObject* card, const glm::vec3& mouseWorld)
+{
+	if (isDragging || !card) return;
+
+	// make sure curve visual exists
+	EnsureBezierDots(objectsList);
+
+	// show helpers now that we are ACTUALLY dragging
+	ShowDropZones(); // zones at Z=400
+	ShowBezier();    // dots at Z=500
+
+	isDragging = true;
+	draggingCard = card;
+	dragStartPos = card->GetPosition();
+	dragMouseWorld = mouseWorld;
+
+	// anchor near the top of the card
+	glm::vec2 cardSize = card->GetSize();
+	dragAnchor = dragStartPos + glm::vec3(0.0f, cardSize.y * 0.5f, 0.0f);
+
+	// bring card in front of everything
+	draggingCard->SetPosition({ dragStartPos.x, dragStartPos.y, 600.0f });
+
+	// draw first leash frame
+	UpdateBezier(dragAnchor, mouseWorld);
+}
+
+void Level::UpdateDrag(const glm::vec3& mouseWorld)
+{
+	if (!isDragging || !draggingCard) return;
+
+	dragMouseWorld = mouseWorld;
+
+	// card leans toward mouse, but we clamp it so it doesn't fly
+	glm::vec3 newPos = dragStartPos;
+
+	float rawDY = mouseWorld.y - dragStartPos.y;
+	float dy = rawDY;
+	if (dy < -40.0f) dy = -40.0f;
+	if (dy > 80.0f) dy = 80.0f;
+	newPos.y += dy;
+
+	// keep on top visually
+	draggingCard->SetPosition({ newPos.x, newPos.y, 600.0f });
+
+	UpdateBezier(dragAnchor, mouseWorld);
+}
+
+void Level::EndDrag(const glm::vec3& mouseWorld)
+{
+	if (!isDragging || !draggingCard) return;
+
+	HideBezier();
+	HideDropZones();
+
+	int dz = HitDropZone(mouseWorld);
+	if (dz >= 0)
+	{
+
+		auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
+		if (it != objectsList.end()) {
+			objectsList.erase(it);
+		}
+
+		delete draggingCard;
+		draggingCard = nullptr;
+	}
+	else
+	{
+
+		draggingCard->SetPosition({
+			dragStartPos.x,
+			dragStartPos.y,
+			300.0f // hand layer depth after cancel
+			});
+	}
+
+	isDragging = false;
+	draggingCard = nullptr;
+	pendingCard = nullptr;
+}

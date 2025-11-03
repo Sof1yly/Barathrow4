@@ -137,3 +137,15 @@ void Hand::Deselect()
     }
 }
 
+GameObject* Hand::PeekAt(const glm::vec3& mouseWorld) const
+{
+
+    GameObject* hit = nullptr;
+    for (int i = int(views.size()) - 1; i >= 0; --i) {
+        if (hitTest(views[i], mouseWorld)) {
+            hit = views[i];
+            break;
+        }
+    }
+    return hit;
+}
