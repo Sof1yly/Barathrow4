@@ -29,17 +29,13 @@ void Level::LevelLoad()
 void Level::LevelInit()
 {
 	// Create a grid
-	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 5; j++) {
-			GameObject* tile = new GameObject();
-			if ((i + j) % 2 == 0) {
-				tile->SetColor(0.8f, 0.8f, 0.8f);
-			}
-			else {
-				tile->SetColor(0.2f, 0.2f, 0.2f);
-			}
-			tile->SetSize(100.0f, 100.0f);
-			tile->SetPosition(glm::vec3(i * 100.0f - 200.0f, j * -100.0f + 300.0f, 0.0f)); //Set distance between tiles
+	for (int i = GridStartRow; i < GridEndRow; i++) {
+		for (int j = GridStartCol; j < GridEndCol; j++) {
+			ImageObject* tile = new ImageObject();
+			tile->SetTexture("../Resource/Texture/tile.png");
+			tile->SetSize(GridWide, GridHigh);
+			tile->SetPosition(glm::vec3(i * 101.0f - 404.0f, j * -105.0f + 352.0f, 0.0f)); //Set distance between tiles
+			//If y pixel not correct, change 394 to 352
 			objectsList.push_back(tile);
 		}
 	}
@@ -75,10 +71,10 @@ void Level::LevelInit()
 	rotatedPattern = patterns[currentPatternIndex];
 
 
-	GameObject* testgrid = new GameObject();
-	testgrid->SetColor(1.0f, 0.5f, 1.0f);
-	testgrid->SetSize(100.0f, 100.0f);
-	testgrid->SetPosition(glm::vec3(-200.0f, 300.0f, 0.0f));
+	ImageObject* testgrid = new ImageObject();
+	testgrid->SetSize(84.0f, -90.0f);
+	testgrid->SetPosition(glm::vec3(-404.0f, 352.0f, 0.0f));
+	testgrid->SetTexture("../Resource/Texture/player.png");
 	objectsList.push_back(testgrid);
 
 	testGrid = testgrid;
@@ -307,19 +303,19 @@ void Level::HandleKey(char key)
 	
 
 	if (key == 'w' && nowCol != 0) {
-		testGrid->Translate(glm::vec3(0, 100.0, 0));
+		testGrid->Translate(glm::vec3(0, GridHigh+distanceBetweenGridY, 0));
 		nowCol--;
 	}
-	else if (key == 's' && nowCol != 4) {
-		testGrid->Translate(glm::vec3(0, -100.0, 0));
+	else if (key == 's' && nowCol < GridEndCol-1) {
+		testGrid->Translate(glm::vec3(0, -(GridHigh + distanceBetweenGridY), 0));
 		nowCol++;
 	}
 	else if (key == 'a'&&nowRow!=0) {
-		testGrid->Translate(glm::vec3(-100.0, 0, 0));
+		testGrid->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0, 0));
 		nowRow--;
 	}
-	else if (key == 'd'&&nowRow!=4) {
-		testGrid->Translate(glm::vec3(100.0, 0, 0));
+	else if (key == 'd'&&nowRow<GridEndRow-1) {
+		testGrid->Translate(glm::vec3(GridWide+distanceBetweenGridX, 0, 0));
 		nowRow++;
 	}
 }

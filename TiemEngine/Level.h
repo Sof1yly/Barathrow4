@@ -13,7 +13,7 @@ private:
 	vector<DrawableObject*> objectsList;
 	GameObject * player;
 	GameObject* testMove;
-	GameObject* testGrid;
+	ImageObject* testGrid;
 	ImageObject* mainMenu;
 	GameObject* grabbedObject = nullptr;
 	GameObject* draggableObject = nullptr;
@@ -24,6 +24,18 @@ private:
 	bool testMoveMoving = false;
 	bool isDragging = false;
 	bool isHolding = false;
+
+	int GridStartRow = 0;
+	int GridStartCol = 0;
+
+	int GridEndRow = 9;
+	int GridEndCol = 5;
+
+	float GridHigh = 84.0;
+	float GridWide = 90.0;
+
+	int distanceBetweenGridX = 11;
+	int distanceBetweenGridY = 21;
 
 	int nowRow = 0;
 	int nowCol = 0;
