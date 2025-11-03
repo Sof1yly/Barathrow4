@@ -142,6 +142,9 @@ int main(int argc, char *argv[])
 					case SDLK_ESCAPE: gameStateController->currentLevel->HandleKey('q'); break;
 					case SDLK_r: gameStateController->currentLevel->HandleKey('r'); break;
 					case SDLK_e: gameStateController->currentLevel->HandleKey('e'); break;
+					case SDLK_c: gameStateController->currentLevel->HandleKey('c'); break;
+					case SDLK_x: gameStateController->currentLevel->HandleKey('x'); break;
+					case SDLK_SPACE: gameStateController->currentLevel->HandleKey(' '); break;
 					}
 				}
 				else if (sdlEvent.type == SDL_MOUSEBUTTONDOWN)
