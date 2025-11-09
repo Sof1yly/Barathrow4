@@ -1,22 +1,22 @@
 #include "Card.h"
 
-
-const string& Card::getName() const
+const std::string& Card::getName() const
 {
     return name;
 }
-const vector<Action*>& Card::getActions() const
+
+const std::vector<Action*>& Card::getActions() const
 {
-	return actions;
+    return actions;
 }
 
 void Card::addAction(Action* action)
 {
-	actions.push_back(action);
+    actions.push_back(action);
 }
 
-void Card::do_action() {
-	for (Action* action : actions) {
-		action->do_action();
-	}
+void Card::do_action()
+{
+    for (Action* action : actions)
+        action->do_action();
 }

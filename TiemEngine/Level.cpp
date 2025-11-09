@@ -130,7 +130,7 @@ void Level::LevelInit()
 
     testMoveTarget = testMove->GetPosition();
     testMoveMoving = false;
-    grabbedObject = nullptr;
+
 
     // 5) Menu button + UI
     {
@@ -151,15 +151,18 @@ void Level::LevelInit()
     }
 
     // 6) Hand + Drop zones + Card data
-    hand.CreateVisualHand(5, objectsList);
-    CreateDropZones(objectsList);
-
     std::string error;
     if (!dataLoader.loadFromFile("../Resource/GameData/ActionTest.txt", &error)) {
-        cerr << "Error loading card data: " << error << endl;
+        std::cerr << "Error loading card data: " << error << std::endl;
     }
 
-    cout << "Init Level" << endl;
+    // Create visual hand using loaded cards
+    hand.CreateVisualHand(5, objectsList, dataLoader.getCards());
+
+    // Drop zones
+    CreateDropZones(objectsList);
+
+    std::cout << "Init Level" << std::endl;
 }
 
 void Level::LevelUpdate()
@@ -169,23 +172,7 @@ void Level::LevelUpdate()
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
-    // Smooth move generic grabbed object (if used)
-    if (grabbedObject && isDragging) {
-        glm::vec3 cur = grabbedObject->GetPosition();
-        glm::vec3 dir = grabbedTarget - cur;
-        float dist = glm::length(dir);
 
-        if (dist > 1.0f) {
-            dir = glm::normalize(dir);
-            float speed = 800.0f * (deltaTime / 1000.0f);
-            grabbedObject->Translate(dir * speed);
-        }
-        else {
-            grabbedObject->SetPosition(grabbedTarget);
-            isDragging = false;
-            grabbedObject = nullptr;
-        }
-    }
 
     // Smooth move testMove object
     if (testMoveMoving && testMove) {
@@ -430,9 +417,7 @@ void Level::HideDropZones()
     dropZonesVisible = false;
 }
 
-// ===========================
-// Bezier leash (segments)
-// ===========================
+
 
 void Level::EnsureBezierSegments(std::vector<DrawableObject*>& list)
 {
@@ -493,9 +478,9 @@ void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
     }
 }
 
-// ===========================
+
 // Drag & drop of cards
-// ===========================
+
 
 bool Level::IsPointInsideZone(const glm::vec3& p, GameObject* zone) const
 {
@@ -559,15 +544,40 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 {
     if (!isDragging || !draggingCard) return;
 
-    // 1) Check drop zone while zones are visible
     int dz = HitDropZone(mouseWorld);
 
     if (dz >= 0)
     {
-        // Tell Hand this view is gone so it can refan
+        Card* cardData = hand.FindCardByImage(draggingCard);
+
+        const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
+        std::cout << "[DropZone] Dropped in zone: " << zoneNames[dz] << std::endl;
+
+        if (cardData)
+        {
+            std::cout << "[Card] " << cardData->getName() << std::endl;
+
+            const auto& acts = cardData->getActions();
+            for (Action* a : acts)
+            {
+                if (auto* atk = dynamic_cast<AttackAction*>(a))
+                    std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+                else if (auto* mv = dynamic_cast<MoveAction*>(a))
+                    std::cout << "  MoveAction: " << mv->getValue() << std::endl;
+                else
+                    std::cout << "  (Unknown action type)" << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "[Warning] No Card* bound to this image" << std::endl;
+        }
+
+        std::cout << "----------------------------------------" << std::endl;
+
+        // remove from hand + render list
         hand.RemoveView(draggingCard);
 
-        // Remove from render list & delete
         auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
         if (it != objectsList.end())
             objectsList.erase(it);
@@ -577,19 +587,14 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     }
     else
     {
-        // Snap back to original hand position
-        draggingCard->SetPosition(glm::vec3(
-            dragStartPos.x,
-            dragStartPos.y,
-            300.0f
-        ));
+        // no zone: snap back to start
+        draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
     }
 
-    // 2) Cleanup helpers
     HideBezier();
     HideDropZones();
 
-	hand.UpdateHover(mouseWorld, false);
+    hand.UpdateHover(mouseWorld, false);
 
     isDragging = false;
     draggingCard = nullptr;
@@ -597,5 +602,6 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 }
 
 
-// Stub if something calls it
-void Level::CreateCard(int, std::vector<DrawableObject*>&) {}
+
+
+

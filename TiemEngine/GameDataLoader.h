@@ -7,32 +7,28 @@
 #include "AttackAction.h"
 #include "MoveAction.h"
 
-using namespace std;
-
-class GameDataLoader {
+class GameDataLoader
+{
 private:
-	struct NameAction {
-		string name;
-		Action* action;
-	};
-	vector<Card*> cards;
-	vector<NameAction> actions;
-	vector<Action*> actions_list;
-	
+    struct NameAction {
+        std::string name;
+        Action* action;
+    };
 
+    std::vector<Card*>      cards;
+    std::vector<NameAction> actions;
+    std::vector<Action*>    actions_list;
 
-	Action* findActionByName(const string& name)const;
-
-	bool parseActionRow(const vector<string>& cols, string* error);
-	bool parseCardRow(const vector<string>& cols, string* error);
+    Action* findActionByName(const std::string& name) const;
+    bool parseActionRow(const std::vector<std::string>& cols, std::string* error);
+    bool parseCardRow(const std::vector<std::string>& cols, std::string* error);
 
 public:
-	GameDataLoader();
-	~GameDataLoader();
-	
-	bool loadFromFile(const string& filename, string* outError = nullptr);
+    GameDataLoader();
+    ~GameDataLoader();
 
-	const vector<Card*>& getCards() const { return cards; }
-	const vector<Action*>& getActions() const { return actions_list; }
+    bool loadFromFile(const std::string& filename, std::string* outError = nullptr);
 
+    const std::vector<Card*>& getCards()   const { return cards; }
+    const std::vector<Action*>& getActions() const { return actions_list; }
 };

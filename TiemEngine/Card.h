@@ -1,20 +1,21 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "Action.h"
 
-using namespace std;
-
-class Card {
+class Card
+{
 private:
-	string name;
-	vector<Action*> actions;
-	
+    std::string name;
+    std::vector<Action*> actions;
 
 public:
-	Card(const string& n) :name(n){}
-	const string& getName()const;
-	const vector<Action*>& getActions()const;
-	void addAction(Action* action);
-	void do_action();
+    explicit Card(const std::string& n) : name(n) {}
 
+    const std::string& getName() const;
+    const std::vector<Action*>& getActions() const;
+
+    void addAction(Action* action);
+    void do_action();
 };

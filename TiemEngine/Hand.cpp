@@ -1,5 +1,4 @@
 #include "Hand.h"
-#include "ImageObject.h"
 #include <cmath>
 
 static const float PI = 3.1415926535f;
@@ -12,8 +11,8 @@ bool Hand::hitTest(ImageObject* v, const glm::vec3& p) const
     glm::vec3 pos = v->GetPosition();
     glm::vec2 sz = v->GetSize();
 
-    float halfW = fabs(sz.x) * 0.5f;
-    float halfH = fabs(sz.y) * 0.5f;
+    float halfW = std::fabs(sz.x) * 0.5f;
+    float halfH = std::fabs(sz.y) * 0.5f;
 
     return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
         p.y >= pos.y - halfH && p.y <= pos.y + halfH);
@@ -26,8 +25,8 @@ void Hand::layoutViews()
 
     const float W = 220.0f;
     const float H = 335.0f;
-    const float handY = -610.0f; // position of hand base
-    const float baseRadius = 2100.0f; // bigger = flatter, smaller more curverd 
+    const float handY = -610.0f;    // baseline for the hand at bottom
+    const float baseRadius = 2100.0f;    // bigger = flatter
     const float R = baseRadius + 120.0f;
     const float Cx = 0.0f;
     const float Cy = handY - R;
@@ -39,29 +38,33 @@ void Hand::layoutViews()
     float spanDeg = (count > 1) ? stepDeg * (count - 1) : 0.0f;
     float startDeg = -0.5f * spanDeg;
 
+    origPos.clear();
+    origSize.clear();
+    origRot.clear();
+
     for (int i = 0; i < count; ++i)
     {
-        ImageObject* card = views[i];
+        ImageObject* card = views[i].image;
         if (!card) continue;
 
         float deg = startDeg + stepDeg * i;
         float ang = deg * (PI / 180.0f);
 
-        float rimX = Cx + sinf(ang) * R;
-        float rimY = Cy + cosf(ang) * R;
+        float rimX = Cx + std::sinf(ang) * R;
+        float rimY = Cy + std::cosf(ang) * R;
 
-        float nx = sinf(ang);
-        float ny = cosf(ang);
+        float nx = std::sinf(ang);
+        float ny = std::cosf(ang);
         float tx = ny;
         float ty = -nx;
 
         float px = rimX + nx * (H * 0.5f - sink);
         float py = rimY + ny * (H * 0.5f - sink);
 
-        float rotDeg = atan2f(ty, tx) * RAD2DEG;
+        float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
 
         card->SetPosition(glm::vec3(px, py, 0.0f));
-        card->SetSize(W, -H);
+        card->SetSize(W, -H); // -H to flip the upside-down texture
         card->SetRotate(rotDeg);
 
         origPos[card] = card->GetPosition();
@@ -81,10 +84,9 @@ void Hand::liftForHover(ImageObject* v)
     const float HOVER_Z = 350.0f;
 
     glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
-
     v->SetPosition(newPos);
-    v->SetSize(baseSize.x, baseSize.y); // same size
-    v->SetRotate(0.0f);
+    v->SetSize(baseSize.x, baseSize.y);
+    v->SetRotate(0.0f); // straight up
 }
 
 void Hand::clearHover()
@@ -92,30 +94,41 @@ void Hand::clearHover()
     if (!hoveredView) return;
 
     ImageObject* v = hoveredView;
-    if (origPos.count(v)) v->SetPosition(origPos[v]);
+    if (origPos.count(v))  v->SetPosition(origPos[v]);
     if (origSize.count(v)) v->SetSize(origSize[v].x, origSize[v].y);
-    if (origRot.count(v)) v->SetRotate(origRot[v]);
+    if (origRot.count(v))  v->SetRotate(origRot[v]);
 
     hoveredView = nullptr;
 }
 
-void Hand::CreateVisualHand(int cardCount, std::vector<DrawableObject*>& objectsList)
+void Hand::CreateVisualHand(int cardCount,
+    std::vector<DrawableObject*>& objectsList,
+    const std::vector<Card*>& cardData)
 {
-    deck.clear();
     views.clear();
+    hoveredView = nullptr;
+    selectedView = nullptr;
     origPos.clear();
     origSize.clear();
     origRot.clear();
-    hoveredView = nullptr;
-    selectedView = nullptr;
 
-    for (int i = 0; i < cardCount; ++i)
+    int count = std::min(cardCount, (int)cardData.size());
+
+    for (int i = 0; i < count; ++i)
     {
-        ImageObject* card = new ImageObject();
-        card->SetSize(220.0f, -335.0f);
-        card->SetTexture("../Resource/Texture/cards/slayCardTest.png"); 
-        views.push_back(card);
-        objectsList.push_back(card);
+        Card* data = cardData[i];
+
+        auto* img = new ImageObject();
+        img->SetSize(220.0f, -335.0f);
+        img->SetTexture("../Resource/Texture/cards/slayCardTest.png");
+   
+
+        objectsList.push_back(img);
+
+        CardView cv;
+        cv.cardData = data;
+        cv.image = img;
+        views.push_back(cv);
     }
 
     layoutViews();
@@ -125,7 +138,7 @@ ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
     for (int i = (int)views.size() - 1; i >= 0; --i)
     {
-        ImageObject* v = views[i];
+        ImageObject* v = views[i].image;
         if (hitTest(v, mouseWorld))
             return v;
     }
@@ -143,16 +156,19 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
     ImageObject* top = nullptr;
     for (int i = (int)views.size() - 1; i >= 0; --i)
     {
-        ImageObject* v = views[i];
-        if (hitTest(v, mouseWorld)) {
+        ImageObject* v = views[i].image;
+        if (hitTest(v, mouseWorld))
+        {
             top = v;
             break;
         }
     }
 
     if (top == hoveredView) return;
+
     if (hoveredView) clearHover();
-    if (top) {
+    if (top)
+    {
         hoveredView = top;
         liftForHover(hoveredView);
     }
@@ -162,21 +178,69 @@ void Hand::RemoveView(ImageObject* view)
 {
     if (!view) return;
 
-    int idx = -1;
-    for (int i = 0; i < (int)views.size(); ++i) {
-        if (views[i] == view) { idx = i; break; }
+    for (auto it = views.begin(); it != views.end(); ++it)
+    {
+        if (it->image == view)
+        {
+            views.erase(it);
+            break;
+        }
     }
-    if (idx == -1) return;
-
-    if (idx < (int)deck.size()) deck.erase(deck.begin() + idx);
-    views.erase(views.begin() + idx);
 
     origPos.erase(view);
     origSize.erase(view);
     origRot.erase(view);
 
-    if (hoveredView == view) hoveredView = nullptr;
+    if (hoveredView == view)  hoveredView = nullptr;
     if (selectedView == view) selectedView = nullptr;
 
     layoutViews();
+}
+
+Card* Hand::FindCardByImage(ImageObject* img)
+{
+    for (auto& v : views)
+        if (v.image == img)
+            return v.cardData;
+    return nullptr;
+}
+
+// Optional: simple select logic (if you still need it)
+bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
+{
+    ImageObject* hit = PeekAt(mouseWorld);
+    if (!hit)
+    {
+        Deselect();
+        return false;
+    }
+
+    if (selectedView == hit)
+    {
+        Deselect();
+        return false;
+    }
+
+    if (selectedView && origPos.count(selectedView))
+    {
+        selectedView->SetPosition(origPos[selectedView]);
+        selectedView->SetSize(origSize[selectedView].x, origSize[selectedView].y);
+        selectedView->SetRotate(origRot[selectedView]);
+    }
+
+    selectedView = hit;
+    liftForHover(selectedView);
+    return true;
+}
+
+void Hand::Deselect()
+{
+    if (!selectedView) return;
+    if (origPos.count(selectedView))
+        selectedView->SetPosition(origPos[selectedView]);
+    if (origSize.count(selectedView))
+        selectedView->SetSize(origSize[selectedView].x, origSize[selectedView].y);
+    if (origRot.count(selectedView))
+        selectedView->SetRotate(origRot[selectedView]);
+    selectedView = nullptr;
 }

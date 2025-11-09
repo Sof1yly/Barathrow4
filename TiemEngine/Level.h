@@ -23,23 +23,16 @@ private:
     // Basic objects
     GameObject* player = nullptr;
     GameObject* testMove = nullptr;
-    ImageObject* testGrid = nullptr;   // player marker on grid
+    ImageObject* testGrid = nullptr;
     ImageObject* mainMenu = nullptr;
 
-    // Generic dragging (non-card)
-    GameObject* grabbedObject = nullptr;
-    glm::vec3   grabbedTarget = glm::vec3(0.0f);
-    glm::vec3   grabOffset = glm::vec3(0.0f);
-
-    // Grid config
+    // Grid
     int   GridStartRow = 0;
     int   GridEndRow = 9;
     int   GridStartCol = 0;
     int   GridEndCol = 5;
     float GridWide = 90.0f;
     float GridHigh = 84.0f;
-    int   distanceBetweenGridX = 11;
-    int   distanceBetweenGridY = 21;
 
     int nowRow = 0;
     int nowCol = 0;
@@ -48,7 +41,7 @@ private:
     glm::vec3 testMoveTarget = glm::vec3(0.0f);
     bool      testMoveMoving = false;
 
-    // Hand & data
+    // Data & hand
     GameDataLoader dataLoader;
     Hand           hand;
 
@@ -58,57 +51,51 @@ private:
     bool        dropZonesVisible = false;
     glm::vec3   dropZoneSavedPos[4];
 
-    // Drag & card leash
-    bool        isDragging = false;   // card drag (also used by grabbedObject)
-    bool        isHolding = false;
+    // Dragging cards
+    bool         isDragging = false;
+    bool         isHolding = false;
     ImageObject* draggingCard = nullptr;
-    ImageObject* pendingCard = nullptr; // selected on mouse-down before drag
-    glm::vec3   dragStartPos = glm::vec3(0.0f);
-    glm::vec3   dragMouseWorld = glm::vec3(0.0f);
-    glm::vec3   dragAnchor = glm::vec3(0.0f);   // anchor on card for rope
+    ImageObject* pendingCard = nullptr;
+    glm::vec3    dragStartPos = glm::vec3(0.0f);
+    glm::vec3    dragMouseWorld = glm::vec3(0.0f);
+    glm::vec3    dragAnchor = glm::vec3(0.0f);
 
-    // Bezier rope (segments)
+    // Bezier leash
     static const int BEZIER_SEGMENTS = 32;
     std::vector<GameObject*> bezierSegments;
     bool  bezierCreated = false;
     float screenCenterY = 0.0f;
 
-    // Attack pattern
+    // Patterns
     std::vector<AttackPattern> patterns;
     AttackPattern rotatedPattern;
     int currentPatternIndex = 0;
-    int currentRotation = 0;  // 0,90,180,270
+    int currentRotation = 0;
 
-    // ---- helpers: drop zones ----
+    // helpers
     void CreateDropZones(std::vector<DrawableObject*>& list);
     void ShowDropZones();
     void HideDropZones();
 
-    // ---- helpers: bezier rope ----
     void EnsureBezierSegments(std::vector<DrawableObject*>& list);
     void HideBezier();
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
 
-    // ---- helpers: hit test ----
     bool IsPointInsideZone(const glm::vec3& p, GameObject* zone) const;
     int  HitDropZone(const glm::vec3& p) const;
 
-    // ---- helpers: drag flow ----
     void BeginDrag(ImageObject* card, const glm::vec3& mouseWorld);
     void UpdateDrag(const glm::vec3& mouseWorld);
     void EndDrag(const glm::vec3& mouseWorld);
 
 public:
-    virtual void LevelLoad();
-    virtual void LevelInit();
-    virtual void LevelUpdate();
-    virtual void LevelDraw();
-    virtual void LevelFree();
-    virtual void LevelUnload();
+    void LevelLoad();
+    void LevelInit();
+    void LevelUpdate();
+    void LevelDraw();
+    void LevelFree();
+    void LevelUnload();
 
-    virtual void HandleKey(char key);
-    virtual void HandleMouse(int type, int x, int y);
-
-    // keep for compatibility if something else calls it
-    virtual void CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList);
+    void HandleKey(char key);
+    void HandleMouse(int type, int x, int y);
 };
