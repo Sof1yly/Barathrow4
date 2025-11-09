@@ -4,7 +4,30 @@
 static const float PI = 3.1415926535f;
 static const float RAD2DEG = 180.0f / PI;
 
-bool Hand::hitTest(ImageObject* v, const glm::vec3& p) const
+bool Hand::hitTestBase(ImageObject* v, const glm::vec3& p) const
+{
+    if (!v) return false;
+
+    // Use original fan transform if we have it
+    glm::vec3 pos = v->GetPosition();
+    glm::vec2 sz = v->GetSize();
+
+    auto itP = origPos.find(v);
+    if (itP != origPos.end())
+        pos = itP->second;
+
+    auto itS = origSize.find(v);
+    if (itS != origSize.end())
+        sz = itS->second;
+
+    float halfW = std::fabs(sz.x) * 0.5f;
+    float halfH = std::fabs(sz.y) * 0.5f;
+
+    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
+        p.y >= pos.y - halfH && p.y <= pos.y + halfH);
+}
+
+bool Hand::hitTestCurrent(ImageObject* v, const glm::vec3& p) const
 {
     if (!v) return false;
 
@@ -17,6 +40,9 @@ bool Hand::hitTest(ImageObject* v, const glm::vec3& p) const
     return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
         p.y >= pos.y - halfH && p.y <= pos.y + halfH);
 }
+
+
+
 
 void Hand::layoutViews()
 {
@@ -80,7 +106,7 @@ void Hand::liftForHover(ImageObject* v)
     glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
 
-    const float HOVER_OFFSET_Y = 230.0f;
+    const float HOVER_OFFSET_Y = 230.0f; 
     const float HOVER_Z = 350.0f;
 
     glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
@@ -136,14 +162,18 @@ void Hand::CreateVisualHand(int cardCount,
 
 ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
+    if (hoveredView && hitTestCurrent(hoveredView, mouseWorld))
+        return hoveredView;
+
     for (int i = (int)views.size() - 1; i >= 0; --i)
     {
         ImageObject* v = views[i].image;
-        if (hitTest(v, mouseWorld))
+        if (hitTestBase(v, mouseWorld))
             return v;
     }
     return nullptr;
 }
+
 
 void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
 {
@@ -153,26 +183,37 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
         return;
     }
 
+    if (hoveredView)
+    {
+        if (hitTestCurrent(hoveredView, mouseWorld))
+            return;
+    }
+
+
     ImageObject* top = nullptr;
     for (int i = (int)views.size() - 1; i >= 0; --i)
     {
         ImageObject* v = views[i].image;
-        if (hitTest(v, mouseWorld))
+        if (hitTestBase(v, mouseWorld))
         {
             top = v;
             break;
         }
     }
 
-    if (top == hoveredView) return;
+    if (top == hoveredView)
+        return; // nothing changed
 
-    if (hoveredView) clearHover();
+    if (hoveredView)
+        clearHover();
+
     if (top)
     {
         hoveredView = top;
         liftForHover(hoveredView);
     }
 }
+
 
 void Hand::RemoveView(ImageObject* view)
 {
@@ -205,7 +246,7 @@ Card* Hand::FindCardByImage(ImageObject* img)
     return nullptr;
 }
 
-// Optional: simple select logic (if you still need it)
+
 bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
 {
     ImageObject* hit = PeekAt(mouseWorld);

@@ -19,14 +19,15 @@ class Hand
 {
 private:
     std::vector<CardView> views;          // all cards in hand
-    ImageObject* selectedView = nullptr;  // currently selected (if any)
-    ImageObject* hoveredView = nullptr;  // currently hovered (if any)
+    ImageObject* selectedView = nullptr;  
+    ImageObject* hoveredView = nullptr;  
 
     std::unordered_map<ImageObject*, glm::vec3> origPos;
     std::unordered_map<ImageObject*, glm::vec2> origSize;
     std::unordered_map<ImageObject*, float>     origRot;
 
-    bool hitTest(ImageObject* v, const glm::vec3& p) const;
+    bool hitTestBase(ImageObject* v, const glm::vec3& p) const;    // use orig fan pos
+	bool hitTestCurrent(ImageObject* v, const glm::vec3& p) const;  // use current pos
     void layoutViews();
     void liftForHover(ImageObject* v);
     void clearHover();
@@ -34,12 +35,12 @@ private:
 public:
     ImageObject* GetSelectedView() const { return selectedView; }
 
-    // create N visual cards, bound to first N cardData entries
+
     void CreateVisualHand(int cardCount,
         std::vector<DrawableObject*>& objectsList,
         const std::vector<Card*>& cardData);
 
-    // top-most card under mouse (for hover / click)
+    // t (for hover / click)
     ImageObject* PeekAt(const glm::vec3& mouseWorld);
 
     // hover highlight handling
@@ -51,7 +52,6 @@ public:
     // find logical card by its image
     Card* FindCardByImage(ImageObject* img);
 
-    // simple select helpers (if you want click-to-select)
     bool TrySelectAt(const glm::vec3& mouseWorld);
     void Deselect();
 };

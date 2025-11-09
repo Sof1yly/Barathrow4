@@ -10,13 +10,11 @@
 #include <algorithm>
 #include <cmath>
 
-using std::cout;
-using std::cerr;
-using std::endl;
 
-// ===========================
-// Bezier helper
-// ===========================
+
+
+// Bezier line
+
 static inline glm::vec3 QuadraticBezier(
     const glm::vec3& P0,
     const glm::vec3& C,
@@ -132,7 +130,7 @@ void Level::LevelInit()
     testMoveMoving = false;
 
 
-    // 5) Menu button + UI
+    //  Menu button + UI
     {
         ImageObject* img = new ImageObject();
         img->SetSize(50.0f, -50.0f);
@@ -150,7 +148,7 @@ void Level::LevelInit()
         mainMenu = menu;
     }
 
-    // 6) Hand + Drop zones + Card data
+    // Hand + Drop zones + Card data
     std::string error;
     if (!dataLoader.loadFromFile("../Resource/GameData/ActionTest.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
@@ -171,8 +169,6 @@ void Level::LevelUpdate()
 
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
-
-
 
     // Smooth move testMove object
     if (testMoveMoving && testMove) {
@@ -213,9 +209,8 @@ void Level::LevelUnload()
     cout << "Unload Level" << endl;
 }
 
-// ===========================
+
 // Input
-// ===========================
 
 void Level::HandleKey(char key)
 {
@@ -260,13 +255,13 @@ void Level::HandleMouse(int type, int x, int y)
 
     screenCenterY = 0.0f;
 
-    // ---------------- HOVER (mouse move / idle) ----------------
+    //Mouse Hover
     if (type == 3) {
         hand.UpdateHover(mousePos, isDragging);
         return;
     }
 
-    // ---------------- MOUSE DOWN ----------------
+    // Mouse down
     if (type == 0)
     {
         // Menu toggle
@@ -284,26 +279,22 @@ void Level::HandleMouse(int type, int x, int y)
 
         CreateDropZones(objectsList);
 
-        //Ensure hover is up-to-date before clicking
         hand.UpdateHover(mousePos, false);
 
-        //Get whichever card is currently hovered or under the cursor
         pendingCard = hand.PeekAt(mousePos);
 
-        //If we clicked the hovered card, freeze it exactly where it is now
+
         if (pendingCard) {
-            // Make sure we drag from its current visual position (hovered height)
             dragStartPos = pendingCard->GetPosition();
         }
 
-        // Optional movement test
         if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0.0f);
             testMoveMoving = true;
         }
     }
 
-    // ---------------- MOUSE DRAG (held) ----------------
+    // Mouse drag
     if (type == 1)
     {
         if (pendingCard) {
@@ -319,7 +310,7 @@ void Level::HandleMouse(int type, int x, int y)
         hand.UpdateHover(mousePos, true);
     }
 
-    // ---------------- MOUSE UP ----------------
+    // Mouse up
     if (type == 2)
     {
         if (isDragging) {
@@ -340,10 +331,8 @@ void Level::HandleMouse(int type, int x, int y)
     }
 }
 
-
-// ===========================
 // Drop zones
-// ===========================
+
 
 void Level::CreateDropZones(std::vector<DrawableObject*>& list)
 {
@@ -365,25 +354,25 @@ void Level::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZones[0] = new GameObject();
     dropZones[0]->SetSize(SIDE_W, SIDE_H);
     dropZones[0]->SetPosition(glm::vec3(-SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f);
+    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
 
     // TOP
     dropZones[1] = new GameObject();
     dropZones[1]->SetSize(MID_W, MID_H);
     dropZones[1]->SetPosition(glm::vec3(0.0f, UPPER_Y, Z));
-    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f);
+    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f,0.35f);
 
     // BOTTOM
     dropZones[2] = new GameObject();
     dropZones[2]->SetSize(MID_W, MID_H);
     dropZones[2]->SetPosition(glm::vec3(0.0f, BOTTOM_Y, Z));
-    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f);
+    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
 
     // RIGHT
     dropZones[3] = new GameObject();
     dropZones[3]->SetSize(SIDE_W, SIDE_H);
     dropZones[3]->SetPosition(glm::vec3(SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f);
+    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
 
     for (int i = 0; i < 4; ++i) {
         list.push_back(dropZones[i]);
@@ -478,9 +467,7 @@ void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
     }
 }
 
-
 // Drag & drop of cards
-
 
 bool Level::IsPointInsideZone(const glm::vec3& p, GameObject* zone) const
 {
@@ -587,7 +574,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     }
     else
     {
-        // no zone: snap back to start
+        // snap back to start
         draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
     }
 
