@@ -292,7 +292,15 @@ void Level::HandleKey(char key)
 
 		cout << "Using pattern #" << currentPatternIndex + 1 << endl;
 		for (auto& cell : attacks) {
-			cout << "attack at (" << cell.first.x << ", " << cell.first.y << ")\n";
+			int x = cell.first.x;
+			int y = cell.first.y;
+
+			if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
+				cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
+				continue;
+			}
+
+			cout << "attack at (" << x << ", " << y << ")\n";
 		}
 		cout << endl;
 	}
