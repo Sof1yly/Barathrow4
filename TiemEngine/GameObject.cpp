@@ -6,7 +6,7 @@
 
 GameObject::GameObject()
 {
-	color = glm::vec3(0.0, 0.0, 0.0);
+	color = glm::vec4(0.0, 0.0, 0.0,1.0);
 	type = 0;
 }
 
@@ -15,9 +15,9 @@ GameObject::~GameObject()
 {
 }
 
-void GameObject::SetColor(float r, float g, float b)
+void GameObject::SetColor(float r, float g, float b,float a )
 {
-	color = glm::vec3(r, g, b);
+	color = glm::vec4(r, g, b,a);
 }
 
 void GameObject::Render(glm::mat4 globalModelTransform)
@@ -49,7 +49,7 @@ void GameObject::Render(glm::mat4 globalModelTransform)
 	{
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
-		glUniform3f(colorId, color.x, color.y, color.z);
+		glUniform4f(colorId, color.x, color.y, color.z,color.a);
 		glUniform1i(renderModeId, 0);
 		squareMesh->Render();
 	}

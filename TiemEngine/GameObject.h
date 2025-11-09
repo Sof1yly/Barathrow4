@@ -6,13 +6,13 @@
 #include "TriangleMeshVbo.h"
 class GameObject :public DrawableObject
 {
-	glm::vec3 color;
+	glm::vec4 color;
 	int type;
 
 public:
 	GameObject();
 	~GameObject();
-	void SetColor(float r, float g, float b);
+	void SetColor(float r, float g, float b,float a = 1.0f);
 	void Render(glm::mat4 globalModelTransform);
 };
 

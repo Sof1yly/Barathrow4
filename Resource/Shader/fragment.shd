@@ -3,19 +3,21 @@
 uniform sampler2D ourTexture;
 uniform int renderMode = 0;
 
-in vec3 OutColor;
+
+in vec4 InColor;  
 in vec2 TexCoord;
 
 out vec4 finalColor;
 
 void main()
 {
-	if(renderMode == 0)
-	{
-		finalColor = vec4( OutColor, 1.0 ); 
-	} 
+    if (renderMode == 0)
+    {
+        finalColor = InColor;
+    }
     else
     {
-    	finalColor = texture(ourTexture, TexCoord);
+        vec4 texColor = texture(ourTexture, TexCoord);
+        finalColor = vec4(texColor.rgb, texColor.a * InColor.a);
     }
 }

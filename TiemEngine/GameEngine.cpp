@@ -51,6 +51,9 @@ void GameEngine::Init(int width, int height)
 	winHeight = height;
 	renderer = new GLRenderer(width, height);
 	renderer->InitGL("../Resource/Shader/vertext.shd", "../Resource/Shader/fragment.shd");
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	SetDrawArea(-960, 960, -540, 540);
 	SetBackgroundColor(1.0f, 1.0f, 200.0f / 255);
 

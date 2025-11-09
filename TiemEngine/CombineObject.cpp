@@ -25,6 +25,11 @@ void CombineObject::SetColor2(float r, float g, float b)
 	color2 = glm::vec3(r, g, b);
 }
 
+void CombineObject::SetColor3(float r, float g, float b, float a ) 
+{
+	color3 = glm::vec4(r, g, b, a);
+}
+
 void CombineObject::Render(glm::mat4 globalModelTransform)
 {
 	SquareMeshVbo *squareMesh = dynamic_cast<SquareMeshVbo *> (GameEngine::GetInstance()->GetRenderer()->GetMesh(SquareMeshVbo::MESH_NAME));
@@ -50,7 +55,7 @@ void CombineObject::Render(glm::mat4 globalModelTransform)
 
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
-		glUniform3f(colorId, color.x, color.y, color.z);
+		glUniform4f(colorId, color3.x, color3.y, color3.z,color3.a);
 		squareMesh->Render();
 
 	}

@@ -4,6 +4,7 @@
 #include "DrawableObject.h"
 #include "GLRenderer.h"
 #include "GameData.h"
+#include <GL/glew.h>
 
 using namespace std;
 class GameEngine
