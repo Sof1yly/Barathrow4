@@ -274,8 +274,6 @@ void Level::HandleMouse(int type, int x, int y)
     screenCenterY = 0.0f;
 
     // ---------------- HOVER (mouse move / idle) ----------------
-    // If your main loop calls HandleMouse with a separate "move" type, say 3,
-    // this will keep previews live. It's also called in other branches below.
     if (type == 3) {
         hand.UpdateHover(mousePos, isDragging);
         return;
@@ -299,16 +297,23 @@ void Level::HandleMouse(int type, int x, int y)
 
         CreateDropZones(objectsList);
 
-        // snapshot which card we might drag
+        //Ensure hover is up-to-date before clicking
+        hand.UpdateHover(mousePos, false);
+
+        //Get whichever card is currently hovered or under the cursor
         pendingCard = hand.PeekAt(mousePos);
 
+        //If we clicked the hovered card, freeze it exactly where it is now
+        if (pendingCard) {
+            // Make sure we drag from its current visual position (hovered height)
+            dragStartPos = pendingCard->GetPosition();
+        }
+
+        // Optional movement test
         if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0.0f);
             testMoveMoving = true;
         }
-
-        // when clicking, freeze hover on that card (already lifted)
-        hand.UpdateHover(mousePos, isDragging);
     }
 
     // ---------------- MOUSE DRAG (held) ----------------
@@ -585,6 +590,8 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     // 2) Cleanup helpers
     HideBezier();
     HideDropZones();
+
+	hand.UpdateHover(mouseWorld, false);
 
     isDragging = false;
     draggingCard = nullptr;
