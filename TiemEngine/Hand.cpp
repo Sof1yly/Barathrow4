@@ -1,82 +1,36 @@
 #include "Hand.h"
-#include "GameObject.h"    
-#include <algorithm>
+#include "GameObject.h"
 #include <cmath>
 
-static float PI = 3.1415926535f;
-static float RAD2DEG = 180.0f / PI;
+static const float PI = 3.1415926535f;
+static const float RAD2DEG = 180.0f / PI;
 
-void Hand::CreateVisualHand(int cardCount, std::vector<DrawableObject*>& objectsList)
+// ----------------- internal -----------------
+
+bool Hand::hitTest(GameObject* v, const glm::vec3& p) const
 {
-    if (cardCount <= 0) return;
+    if (!v) return false;
 
-    const int drawCount = cardCount;
+    glm::vec3 pos = v->GetPosition();
+    glm::vec2 sz = v->GetSize();
 
-    // layout params
-    const float W = 220.0f, H = 335.0f;
-    const float handY = -540.0f;
+    float halfW = std::fabs(sz.x) * 0.5f;
+    float halfH = std::fabs(sz.y) * 0.5f;
 
-    const float baseRadius = 1000.0f;
-    const float centerDrop = 120.0f;
-    const float R = baseRadius + centerDrop;
-
-    const float Cx = 0.0f, Cy = handY - R;
-    const float sepFactor = 0.65f;  // spacing vs card width
-    const float sink = 4.0f;        // tuck bottom slightly past rim
-
-
-    float arcSpacing = W * sepFactor;                 // pixels along the arc
-    float stepDeg = (arcSpacing / R) * RAD2DEG;       // angle per neighbor
-    float spanDeg = (drawCount > 1) ? stepDeg * float(drawCount - 1) : 0.0f;
-    float startDeg = -0.5f * spanDeg;
-
-    for (int i = 0; i < drawCount; ++i) {
-        float ang = (startDeg + i * stepDeg) * (PI / 180.0f);
-
-        // circle rim position under the card
-        float rimX = Cx + std::sinf(ang) * R;
-        float rimY = Cy + std::cosf(ang) * R;
-
-        // radial normal and tangent
-        float nx = std::sinf(ang), ny = std::cosf(ang);
-        float tx = ny, ty = -nx;
-
-        // place sprite center slightly outside the rim
-        float px = rimX + nx * (H * 0.5f - sink);
-        float py = rimY + ny * (H * 0.5f - sink);
-
-        float rotDeg = std::atan2f(ty, tx) * RAD2DEG; // tangent orientation
-
-        auto* go = new GameObject();
-        go->SetSize(W, H);
-        go->SetPosition({ px, py, 0.0f });
-        go->SetRotate(rotDeg);
-
-        // quick tint to visualize order (optional)
-        if (i % 3 == 0)      go->SetColor(5.0f, 0.0f, 0.0f);
-        else if (i % 3 == 1) go->SetColor(0.0f, 5.0f, 0.0f);
-        else                 go->SetColor(0.0f, 0.0f, 5.0f);
-
-        views.push_back(go);
-        origPos[go] = go->GetPosition();
-        origSize[go] = go->GetSize();
-        origRot[go] = go->GetRotate();
-
-        objectsList.push_back(go);
-    }
-
-
+    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
+        p.y >= pos.y - halfH && p.y <= pos.y + halfH);
 }
 
 void Hand::layoutViews()
 {
-    const int drawCount = (int)views.size();
-    if (drawCount <= 0) return;
+    int count = (int)views.size();
+    if (count <= 0) return;
 
-    const float W = 220.0f;
-    const float H = 335.0f;
+    const float W = 220.0f; //card width
+	const float H = 335.0f; //card height
 
-    const float handY = -540.0f;
+    // base hand line at bottom
+    const float handY = -620.0f;   // adjust to your screen
     const float baseRadius = 1000.0f;
     const float centerDrop = 120.0f;
     const float R = baseRadius + centerDrop;
@@ -89,15 +43,16 @@ void Hand::layoutViews()
 
     float arcSpacing = W * sepFactor;
     float stepDeg = (arcSpacing / R) * RAD2DEG;
-    float spanDeg = (drawCount > 1) ? stepDeg * float(drawCount - 1) : 0.0f;
+    float spanDeg = (count > 1) ? stepDeg * (float)(count - 1) : 0.0f;
     float startDeg = -0.5f * spanDeg;
 
-    for (int i = 0; i < drawCount; ++i)
+    for (int i = 0; i < count; ++i)
     {
         GameObject* go = views[i];
         if (!go) continue;
 
-        float ang = (startDeg + i * stepDeg) * (PI / 180.0f);
+        float deg = startDeg + stepDeg * (float)i;
+        float ang = deg * (PI / 180.0f);
 
         float rimX = Cx + std::sinf(ang) * R;
         float rimY = Cy + std::cosf(ang) * R;
@@ -122,85 +77,73 @@ void Hand::layoutViews()
     }
 }
 
-bool Hand::hitTest(GameObject* v, const glm::vec3& p) const
-{
-    if (!v) return false;
-
-    glm::vec3 pos = v->GetPosition();
-    glm::vec2 sz = v->GetSize();
-
-    float halfW = std::abs(sz.x) * 0.5f;
-    float halfH = std::abs(sz.y) * 0.5f;
-
-    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
-        p.y >= pos.y - halfH && p.y <= pos.y + halfH);
-}
-
-
-void Hand::applySelectedVisual(GameObject* v)
+void Hand::liftForHover(GameObject* v)
 {
     if (!v) return;
 
-    glm::vec3 p = v->GetPosition();
-    glm::vec2 s = v->GetSize();
+    // Base transform from fan
+    glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
+    glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
 
-    v->SetPosition(glm::vec3(p.x, p.y + 160.0f, 500.0f)); // Z up to draw on top
-    v->SetSize(s.x * 1.25f, s.y * 1.25f);
-    v->SetRotate(0.0f);
+    const float HOVER_OFFSET_Y = 260.0f;  // how far it pops up
+    const float HOVER_Z = 350.0f;  // in front of other cards
 
+    glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
+
+    v->SetPosition(newPos);
+    v->SetSize(baseSize.x, baseSize.y);   // no scale
+    v->SetRotate(0.0f);                   // straight vertical
 }
 
 
-
-void Hand::restoreVisual(GameObject* v)
+void Hand::clearHover()
 {
-    if (!v) return;
-    v->SetPosition(origPos[v]);
-    glm::vec2 s = origSize[v];
-    v->SetSize(s.x, s.y);
-    v->SetRotate(origRot[v]);
+    if (!hoveredView) return;
 
+    GameObject* v = hoveredView;
+
+    if (origPos.find(v) != origPos.end())
+        v->SetPosition(origPos[v]);
+
+    if (origSize.find(v) != origSize.end())
+        v->SetSize(origSize[v].x, origSize[v].y);
+
+    if (origRot.find(v) != origRot.end())
+        v->SetRotate(origRot[v]);
+
+    hoveredView = nullptr;
 }
 
-bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
+// ----------------- public API -----------------
+
+void Hand::CreateVisualHand(int cardCount, std::vector<DrawableObject*>& objectsList)
 {
-    // Check top-most first: iterate from back of vector (last created on top)
-    GameObject* hit = nullptr;
-    for (int i = int(views.size()) - 1; i >= 0; --i) {
-        if (hitTest(views[i], mouseWorld)) { hit = views[i]; break; }
+    // You can keep your logical deck; this just spawns visuals.
+    deck.clear();
+    views.clear();
+    origPos.clear();
+    origSize.clear();
+    origRot.clear();
+    hoveredView = nullptr;
+    selectedView = nullptr;
+
+    for (int i = 0; i < cardCount; ++i)
+    {
+        // This assumes GameObject is fine as a visual card.
+        GameObject* go = new GameObject();
+        go->SetColor(1.0f, 1.0f, 1.0f);   // actual texture set elsewhere
+        objectsList.push_back(go);
+        views.push_back(go);
     }
 
-    // click on empty space: clear selection
-    if (!hit) {
-        Deselect();
-        return false;
-    }
-
-    // toggle if clicking the same card
-    if (selectedView == hit) {
-        Deselect();
-        return false;
-    }
-
-    // switch selection
-    if (selectedView) restoreVisual(selectedView);
-    selectedView = hit;
-    applySelectedVisual(selectedView);
-    return true;
-}
-
-void Hand::Deselect()
-{
-    if (selectedView) {
-        restoreVisual(selectedView);
-        selectedView = nullptr;
-    }
+    layoutViews();
 }
 
 GameObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
-    // topmost first
-    for (int i = (int)views.size() - 1; i >= 0; --i) {
+    // search from topmost to bottom
+    for (int i = (int)views.size() - 1; i >= 0; --i)
+    {
         GameObject* v = views[i];
         if (hitTest(v, mouseWorld))
             return v;
@@ -208,35 +151,87 @@ GameObject* Hand::PeekAt(const glm::vec3& mouseWorld)
     return nullptr;
 }
 
+void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
+{
+    // During drag we don't want hover popping others
+    if (isDragging) {
+        if (hoveredView) {
+            clearHover();
+        }
+        return;
+    }
+
+    // Find topmost under mouse
+    GameObject* top = nullptr;
+    for (int i = (int)views.size() - 1; i >= 0; --i)
+    {
+        GameObject* v = views[i];
+        if (hitTest(v, mouseWorld)) {
+            top = v;
+            break;
+        }
+    }
+
+    if (top == hoveredView) {
+        // already previewing this one
+        return;
+    }
+
+    // remove old hover
+    if (hoveredView) {
+        clearHover();
+    }
+
+    // apply new hover
+    if (top) {
+        hoveredView = top;
+        liftForHover(hoveredView);
+    }
+}
 
 void Hand::RemoveView(GameObject* view)
 {
     if (!view) return;
 
-    // find index in views
-    int index = -1;
+    int idx = -1;
     for (int i = 0; i < (int)views.size(); ++i) {
         if (views[i] == view) {
-            index = i;
+            idx = i;
             break;
         }
     }
-    if (index == -1) return;
+    if (idx == -1) return;
 
-    // keep deck aligned (optional but recommended)
-    if (index < (int)deck.size()) {
-        deck.erase(deck.begin() + index);
+    // keep logical deck aligned if you're using it
+    if (idx < (int)deck.size()) {
+        deck.erase(deck.begin() + idx);
     }
 
-    views.erase(views.begin() + index);
+    views.erase(views.begin() + idx);
 
     origPos.erase(view);
     origSize.erase(view);
     origRot.erase(view);
 
-    if (selectedView == view)
-        selectedView = nullptr;
+    if (hoveredView == view) hoveredView = nullptr;
+    if (selectedView == view) selectedView = nullptr;
 
-    // re-fan the remaining cards
     layoutViews();
+}
+
+bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
+{
+    GameObject* v = PeekAt(mouseWorld);
+    if (!v) {
+        Deselect();
+        return false;
+    }
+    selectedView = v;
+    return true;
+}
+
+void Hand::Deselect()
+{
+    selectedView = nullptr;
+    // no auto-reset of transforms here; hover/layout handles visuals
 }

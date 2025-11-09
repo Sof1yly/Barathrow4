@@ -273,7 +273,15 @@ void Level::HandleMouse(int type, int x, int y)
 
     screenCenterY = 0.0f;
 
-    // Mouse down
+    // ---------------- HOVER (mouse move / idle) ----------------
+    // If your main loop calls HandleMouse with a separate "move" type, say 3,
+    // this will keep previews live. It's also called in other branches below.
+    if (type == 3) {
+        hand.UpdateHover(mousePos, isDragging);
+        return;
+    }
+
+    // ---------------- MOUSE DOWN ----------------
     if (type == 0)
     {
         // Menu toggle
@@ -291,17 +299,19 @@ void Level::HandleMouse(int type, int x, int y)
 
         CreateDropZones(objectsList);
 
-        // Check if cursor is on a card in hand (non-destructive)
+        // snapshot which card we might drag
         pendingCard = hand.PeekAt(mousePos);
 
-        // Move blue test object
         if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0.0f);
             testMoveMoving = true;
         }
+
+        // when clicking, freeze hover on that card (already lifted)
+        hand.UpdateHover(mousePos, isDragging);
     }
 
-    // Mouse drag (button held)
+    // ---------------- MOUSE DRAG (held) ----------------
     if (type == 1)
     {
         if (pendingCard) {
@@ -312,9 +322,12 @@ void Level::HandleMouse(int type, int x, int y)
                 UpdateDrag(mousePos);
             }
         }
+
+        // while dragging, disable hover effects
+        hand.UpdateHover(mousePos, true);
     }
 
-    // Mouse up
+    // ---------------- MOUSE UP ----------------
     if (type == 2)
     {
         if (isDragging) {
@@ -325,12 +338,16 @@ void Level::HandleMouse(int type, int x, int y)
         isHolding = false;
         draggingCard = nullptr;
         pendingCard = nullptr;
+
+        // after release, allow hover again at the new mouse position
+        hand.UpdateHover(mousePos, false);
     }
 
     if (player) {
         player->SetPosition(glm::vec3(realX, realY, 0.0f));
     }
 }
+
 
 // ===========================
 // Drop zones

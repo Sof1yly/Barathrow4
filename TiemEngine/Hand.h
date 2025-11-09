@@ -2,43 +2,50 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+
 #include "Card.h"
 #include "DrawableObject.h"
 #include "GameObject.h"
 
 class Hand {
 private:
-    std::vector<Card*>        deck;
-    std::vector<GameObject*>  views;
+    std::vector<Card*>       deck;     // optional logical deck
+    std::vector<GameObject*> views;    // card GameObjects in the hand
 
-    GameObject* selectedView = nullptr;
+    GameObject* selectedView = nullptr; // if you use selection
+    GameObject* hoveredView = nullptr; // currently hovered (previewed) card
 
+    // store base fan transform for each view
     std::unordered_map<GameObject*, glm::vec3> origPos;
     std::unordered_map<GameObject*, glm::vec2> origSize;
     std::unordered_map<GameObject*, float>     origRot;
 
-
+    // -------- internal helpers --------
     bool hitTest(GameObject* v, const glm::vec3& p) const;
 
-    // recompute fan pattern positions/rotations for all current views
+    // arrange all current views in fan pattern + update origPos/origSize/origRot
     void layoutViews();
 
-    // effects
-    void applySelectedVisual(GameObject* v);
-    void restoreVisual(GameObject* v);
+    // hover visuals
+    void liftForHover(GameObject* v);
+    void clearHover();
 
 public:
     GameObject* GetSelectedView() const { return selectedView; }
 
-    // create initial hand and push GameObjects into objectsList
+    // create visual cards and push into objectsList
     void CreateVisualHand(int cardCount, std::vector<DrawableObject*>& objectsList);
 
-    // just return which card is under mouse (no selection, no pop)
+    // topmost card under mouse, no side-effects
     GameObject* PeekAt(const glm::vec3& mouseWorld);
 
-    // remove a view from the hand and re-fan the rest
+    // called every mouse move to manage hover preview
+    void UpdateHover(const glm::vec3& mouseWorld, bool isDragging);
+
+    // when a card is consumed: remove from structures & refan
     void RemoveView(GameObject* view);
 
+    // optional existing APIs, keep them if used elsewhere
     bool TrySelectAt(const glm::vec3& mouseWorld);
     void Deselect();
 
