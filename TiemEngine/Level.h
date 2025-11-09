@@ -1,4 +1,9 @@
 #pragma once
+
+#include <vector>
+#include <algorithm>
+#include <cmath>
+
 #include "GameEngine.h"
 #include "GameObject.h"
 #include "GameData.h"
@@ -6,55 +11,104 @@
 #include "SpriteObject.h"
 #include "Button.h"
 #include "AttackPattern.h"
+#include "GameDataLoader.h"
+#include "Hand.h"
 
 class Level
 {
 private:
-	vector<DrawableObject*> objectsList;
-	GameObject * player;
-	GameObject* testMove;
-	ImageObject* testGrid;
-	ImageObject* mainMenu;
-	GameObject* grabbedObject = nullptr;
-	GameObject* draggableObject = nullptr;
+    // Render list
+    std::vector<DrawableObject*> objectsList;
 
-	glm::vec3 testMoveTarget;
-	glm::vec3 grabbedTarget = glm::vec3(0.0f);
-	glm::vec3 grabOffset = glm::vec3(0.0f);
-	bool testMoveMoving = false;
-	bool isDragging = false;
-	bool isHolding = false;
+    // Basic objects
+    GameObject* player = nullptr;
+    GameObject* testMove = nullptr;
+    ImageObject* testGrid = nullptr;   // player marker on grid
+    ImageObject* mainMenu = nullptr;
 
-	int GridStartRow = 0;
-	int GridStartCol = 0;
+    // Generic dragging (non-card)
+    GameObject* grabbedObject = nullptr;
+    glm::vec3   grabbedTarget = glm::vec3(0.0f);
+    glm::vec3   grabOffset = glm::vec3(0.0f);
 
-	int GridEndRow = 9;
-	int GridEndCol = 5;
+    // Grid config
+    int   GridStartRow = 0;
+    int   GridEndRow = 9;
+    int   GridStartCol = 0;
+    int   GridEndCol = 5;
+    float GridWide = 90.0f;
+    float GridHigh = 84.0f;
+    int   distanceBetweenGridX = 11;
+    int   distanceBetweenGridY = 21;
 
-	float GridHigh = 84.0;
-	float GridWide = 90.0;
+    int nowRow = 0;
+    int nowCol = 0;
 
-	int distanceBetweenGridX = 11;
-	int distanceBetweenGridY = 21;
+    // Movement
+    glm::vec3 testMoveTarget = glm::vec3(0.0f);
+    bool      testMoveMoving = false;
 
-	int nowRow = 0;
-	int nowCol = 0;
+    // Hand & data
+    GameDataLoader dataLoader;
+    Hand           hand;
 
-	std::vector<AttackPattern> patterns;
-	int currentPatternIndex = 0;
+    // Drop zones
+    GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };
+    bool        dropZonesCreated = false;
+    bool        dropZonesVisible = false;
+    glm::vec3   dropZoneSavedPos[4];
 
-	AttackPattern rotatedPattern;
-	int currentRotation = 0;// 0, 90, 180, 270
+    // Drag & card leash
+    bool        isDragging = false;   // card drag (also used by grabbedObject)
+    bool        isHolding = false;
+    GameObject* draggingCard = nullptr;
+    GameObject* pendingCard = nullptr; // selected on mouse-down before drag
+    glm::vec3   dragStartPos = glm::vec3(0.0f);
+    glm::vec3   dragMouseWorld = glm::vec3(0.0f);
+    glm::vec3   dragAnchor = glm::vec3(0.0f);   // anchor on card for rope
+
+    // Bezier rope (segments)
+    static const int BEZIER_SEGMENTS = 32;
+    std::vector<GameObject*> bezierSegments;
+    bool  bezierCreated = false;
+    float screenCenterY = 0.0f;
+
+    // Attack pattern
+    std::vector<AttackPattern> patterns;
+    AttackPattern rotatedPattern;
+    int currentPatternIndex = 0;
+    int currentRotation = 0;  // 0,90,180,270
+
+    // ---- helpers: drop zones ----
+    void CreateDropZones(std::vector<DrawableObject*>& list);
+    void ShowDropZones();
+    void HideDropZones();
+
+    // ---- helpers: bezier rope ----
+    void EnsureBezierSegments(std::vector<DrawableObject*>& list);
+    void HideBezier();
+    void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
+
+    // ---- helpers: hit test ----
+    bool IsPointInsideZone(const glm::vec3& p, GameObject* zone) const;
+    int  HitDropZone(const glm::vec3& p) const;
+
+    // ---- helpers: drag flow ----
+    void BeginDrag(GameObject* card, const glm::vec3& mouseWorld);
+    void UpdateDrag(const glm::vec3& mouseWorld);
+    void EndDrag(const glm::vec3& mouseWorld);
 
 public:
-	virtual void LevelLoad();
-	virtual void LevelInit();
-	virtual void LevelUpdate();
-	virtual void LevelDraw();
-	virtual void LevelFree();
-	virtual void LevelUnload();
+    virtual void LevelLoad();
+    virtual void LevelInit();
+    virtual void LevelUpdate();
+    virtual void LevelDraw();
+    virtual void LevelFree();
+    virtual void LevelUnload();
 
-	virtual void CreateCard(int cardCount, vector<DrawableObject*>& objectsList);
-	virtual void HandleKey(char key);
-	virtual void HandleMouse(int type, int x, int y);
+    virtual void HandleKey(char key);
+    virtual void HandleMouse(int type, int x, int y);
+
+    // keep for compatibility if something else calls it
+    virtual void CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList);
 };

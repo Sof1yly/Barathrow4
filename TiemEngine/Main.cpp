@@ -17,7 +17,7 @@
 //asdsa
 using namespace std;
 bool quit;
-const GLint WIDTH = 1080, HEIGHT = 720;
+const GLint WIDTH = 1920, HEIGHT = 1080;
 int currentFrame = 0, lastFrame = 0;
 
 Uint32 mouseDownTime = 0;
@@ -162,6 +162,8 @@ int main(int argc, char *argv[])
 					if (sdlEvent.button.button == SDL_BUTTON_LEFT)
 					{
 						mouseHeld = false;
+						SDL_GetMouseState(&mouseX, &mouseY);
+						gameStateController->currentLevel->HandleMouse(2, mouseX, mouseY);
 					}
 				}
 			}
