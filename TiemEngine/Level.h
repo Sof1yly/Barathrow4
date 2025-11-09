@@ -61,8 +61,8 @@ private:
     // Drag & card leash
     bool        isDragging = false;   // card drag (also used by grabbedObject)
     bool        isHolding = false;
-    GameObject* draggingCard = nullptr;
-    GameObject* pendingCard = nullptr; // selected on mouse-down before drag
+    ImageObject* draggingCard = nullptr;
+    ImageObject* pendingCard = nullptr; // selected on mouse-down before drag
     glm::vec3   dragStartPos = glm::vec3(0.0f);
     glm::vec3   dragMouseWorld = glm::vec3(0.0f);
     glm::vec3   dragAnchor = glm::vec3(0.0f);   // anchor on card for rope
@@ -94,7 +94,7 @@ private:
     int  HitDropZone(const glm::vec3& p) const;
 
     // ---- helpers: drag flow ----
-    void BeginDrag(GameObject* card, const glm::vec3& mouseWorld);
+    void BeginDrag(ImageObject* card, const glm::vec3& mouseWorld);
     void UpdateDrag(const glm::vec3& mouseWorld);
     void EndDrag(const glm::vec3& mouseWorld);
 

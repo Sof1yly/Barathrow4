@@ -519,7 +519,7 @@ int Level::HitDropZone(const glm::vec3& p) const
     return -1;
 }
 
-void Level::BeginDrag(GameObject* card, const glm::vec3& mouseWorld)
+void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
 {
     if (isDragging || !card) return;
 
@@ -533,9 +533,7 @@ void Level::BeginDrag(GameObject* card, const glm::vec3& mouseWorld)
 
     glm::vec2 cardSize = card->GetSize();
     dragAnchor = dragStartPos + glm::vec3(0.0f, cardSize.y * 0.5f, 0.0f);
-
-    // Bring card above drop zones
-    draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+    card->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
 
     UpdateBezier(dragAnchor, mouseWorld);
 }
