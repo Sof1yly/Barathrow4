@@ -539,12 +539,15 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 {
     if (!isDragging || !draggingCard) return;
 
-    // IMPORTANT: check hit BEFORE hiding zones
+    // 1) Check drop zone while zones are visible
     int dz = HitDropZone(mouseWorld);
 
     if (dz >= 0)
     {
-        // In a valid zone -> delete card
+        // Tell Hand this view is gone so it can refan
+        hand.RemoveView(draggingCard);
+
+        // Remove from render list & delete
         auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
         if (it != objectsList.end())
             objectsList.erase(it);
@@ -554,7 +557,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     }
     else
     {
-        // Not in zone -> snap back
+        // Snap back to original hand position
         draggingCard->SetPosition(glm::vec3(
             dragStartPos.x,
             dragStartPos.y,
@@ -562,6 +565,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         ));
     }
 
+    // 2) Cleanup helpers
     HideBezier();
     HideDropZones();
 
@@ -569,6 +573,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     draggingCard = nullptr;
     pendingCard = nullptr;
 }
+
 
 // Stub if something calls it
 void Level::CreateCard(int, std::vector<DrawableObject*>&) {}

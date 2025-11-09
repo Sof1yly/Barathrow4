@@ -68,16 +68,74 @@ void Hand::CreateVisualHand(int cardCount, std::vector<DrawableObject*>& objects
 
 }
 
+void Hand::layoutViews()
+{
+    const int drawCount = (int)views.size();
+    if (drawCount <= 0) return;
+
+    const float W = 220.0f;
+    const float H = 335.0f;
+
+    const float handY = -540.0f;
+    const float baseRadius = 1000.0f;
+    const float centerDrop = 120.0f;
+    const float R = baseRadius + centerDrop;
+
+    const float Cx = 0.0f;
+    const float Cy = handY - R;
+
+    const float sepFactor = 0.65f;
+    const float sink = 4.0f;
+
+    float arcSpacing = W * sepFactor;
+    float stepDeg = (arcSpacing / R) * RAD2DEG;
+    float spanDeg = (drawCount > 1) ? stepDeg * float(drawCount - 1) : 0.0f;
+    float startDeg = -0.5f * spanDeg;
+
+    for (int i = 0; i < drawCount; ++i)
+    {
+        GameObject* go = views[i];
+        if (!go) continue;
+
+        float ang = (startDeg + i * stepDeg) * (PI / 180.0f);
+
+        float rimX = Cx + std::sinf(ang) * R;
+        float rimY = Cy + std::cosf(ang) * R;
+
+        float nx = std::sinf(ang);
+        float ny = std::cosf(ang);
+        float tx = ny;
+        float ty = -nx;
+
+        float px = rimX + nx * (H * 0.5f - sink);
+        float py = rimY + ny * (H * 0.5f - sink);
+
+        float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
+
+        go->SetPosition(glm::vec3(px, py, 0.0f));
+        go->SetSize(W, H);
+        go->SetRotate(rotDeg);
+
+        origPos[go] = go->GetPosition();
+        origSize[go] = go->GetSize();
+        origRot[go] = go->GetRotate();
+    }
+}
+
 bool Hand::hitTest(GameObject* v, const glm::vec3& p) const
 {
-    // Simple AABB hit (ignores rotation; good enough for fanned hand)
+    if (!v) return false;
+
     glm::vec3 pos = v->GetPosition();
     glm::vec2 sz = v->GetSize();
+
     float halfW = std::abs(sz.x) * 0.5f;
     float halfH = std::abs(sz.y) * 0.5f;
 
-    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&p.y >= pos.y - halfH && p.y <= pos.y + halfH);
+    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
+        p.y >= pos.y - halfH && p.y <= pos.y + halfH);
 }
+
 
 void Hand::applySelectedVisual(GameObject* v)
 {
@@ -91,6 +149,8 @@ void Hand::applySelectedVisual(GameObject* v)
     v->SetRotate(0.0f);
 
 }
+
+
 
 void Hand::restoreVisual(GameObject* v)
 {
@@ -137,15 +197,46 @@ void Hand::Deselect()
     }
 }
 
-GameObject* Hand::PeekAt(const glm::vec3& mouseWorld) const
+GameObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
+    // topmost first
+    for (int i = (int)views.size() - 1; i >= 0; --i) {
+        GameObject* v = views[i];
+        if (hitTest(v, mouseWorld))
+            return v;
+    }
+    return nullptr;
+}
 
-    GameObject* hit = nullptr;
-    for (int i = int(views.size()) - 1; i >= 0; --i) {
-        if (hitTest(views[i], mouseWorld)) {
-            hit = views[i];
+
+void Hand::RemoveView(GameObject* view)
+{
+    if (!view) return;
+
+    // find index in views
+    int index = -1;
+    for (int i = 0; i < (int)views.size(); ++i) {
+        if (views[i] == view) {
+            index = i;
             break;
         }
     }
-    return hit;
+    if (index == -1) return;
+
+    // keep deck aligned (optional but recommended)
+    if (index < (int)deck.size()) {
+        deck.erase(deck.begin() + index);
+    }
+
+    views.erase(views.begin() + index);
+
+    origPos.erase(view);
+    origSize.erase(view);
+    origRot.erase(view);
+
+    if (selectedView == view)
+        selectedView = nullptr;
+
+    // re-fan the remaining cards
+    layoutViews();
 }
