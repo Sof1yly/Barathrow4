@@ -1,6 +1,4 @@
-// ======================================================
-// Main.cpp - SDL + OpenGL Game Loop (with hover support)
-// ======================================================
+
 
 #include <GL/glew.h>
 #include <SDL_main.h>
@@ -35,9 +33,8 @@ GameEngine* engine = nullptr;
 GameStateController* gameStateController = nullptr;
 GameData* gameData = nullptr;
 
-// ---------------------------------------------
 // Main function
-// ---------------------------------------------
+
 int main(int argc, char* argv[])
 {
 	quit = false;
@@ -98,9 +95,9 @@ int main(int argc, char* argv[])
 	gameStateController = new GameStateController();
 	gameStateController->Init(GameState::GS_LEVEL1);
 
-	// ---------------------------------------------
+
 	// Game Loop
-	// ---------------------------------------------
+
 	while (GameData::GetInstance()->gGameStateCurr != GameState::GS_QUIT)
 	{
 		// Load new state
