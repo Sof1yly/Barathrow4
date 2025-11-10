@@ -224,22 +224,62 @@ void Level::HandleKey(char key)
 
     if (!testGrid) return;
 
-    if (key == 'w' && nowCol > 0) {
-        testGrid->Translate(glm::vec3(0, 100.0f, 0));
-        --nowCol;
-    }
-    else if (key == 's' && nowCol < GridEndCol - 1) {
-        testGrid->Translate(glm::vec3(0, -100.0f, 0));
-        ++nowCol;
-    }
-    else if (key == 'a' && nowRow > 0) {
-        testGrid->Translate(glm::vec3(-100.0f, 0, 0));
-        --nowRow;
-    }
-    else if (key == 'd' && nowRow < GridEndRow - 1) {
-        testGrid->Translate(glm::vec3(100.0f, 0, 0));
-        ++nowRow;
-    }
+	if (key == 'c') {
+		currentPatternIndex++;
+		if (currentPatternIndex >= patterns.size())
+			currentPatternIndex = 0;
+
+		//currentRotation = 0;
+		rotatedPattern = patterns[currentPatternIndex];
+
+		std::cout << "Switched to pattern #" << currentPatternIndex + 1 << std::endl;
+	}
+	if (key == 'x') {
+		currentRotation = (currentRotation + 90) % 360;
+
+		rotatedPattern = patterns[currentPatternIndex];
+		int times = currentRotation / 90;
+		for (int i = 0; i < times; ++i)
+			rotatedPattern = rotatedPattern.rotated90CW();
+
+		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
+	}
+	if (key == ' ') {
+		auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
+
+		cout << "Using pattern #" << currentPatternIndex + 1 << endl;
+		for (auto& cell : attacks) {
+			int x = cell.first.x;
+			int y = cell.first.y;
+
+			if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
+				cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
+				continue;
+			}
+
+			cout << "attack at (" << x << ", " << y << ")\n";
+		}
+		cout << endl;
+	}
+
+
+
+	if (key == 'w' && nowCol != 0) {
+		testGrid->Translate(glm::vec3(0, GridHigh+distanceBetweenGridY, 0));
+		nowCol--;
+	}
+	else if (key == 's' && nowCol < GridEndCol-1) {
+		testGrid->Translate(glm::vec3(0, -(GridHigh + distanceBetweenGridY), 0));
+		nowCol++;
+	}
+	else if (key == 'a'&&nowRow!=0) {
+		testGrid->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0, 0));
+		nowRow--;
+	}
+	else if (key == 'd'&&nowRow<GridEndRow-1) {
+		testGrid->Translate(glm::vec3(GridWide+distanceBetweenGridX, 0, 0));
+		nowRow++;
+	}
 }
 
 void Level::HandleMouse(int type, int x, int y)
