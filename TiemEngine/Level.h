@@ -34,6 +34,10 @@ private:
     float GridWide = 90.0f;
     float GridHigh = 84.0f;
 
+
+    int distanceBetweenGridX = 11;
+    int distanceBetweenGridY = 21;
+
     int nowRow = 0;
     int nowCol = 0;
 
