@@ -106,12 +106,16 @@ void Hand::liftForHover(ImageObject* v)
     glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
 
-    const float HOVER_OFFSET_Y = 230.0f; 
-    const float HOVER_Z = 350.0f;
+    const float HOVER_OFFSET_Y = 135.0f;   // how high above fan
+    const float HOVER_Z = 420.0f;   // above other cards
+    const float HOVER_SCALE = 1.35f;     // change this to adjust hover size
 
     glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
+
+    glm::vec2 newSize(baseSize.x * HOVER_SCALE,baseSize.y * HOVER_SCALE);
+
     v->SetPosition(newPos);
-    v->SetSize(baseSize.x, baseSize.y);
+    v->SetSize(newSize.x, newSize.y);
     v->SetRotate(0.0f); // straight up
 }
 
@@ -179,7 +183,6 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
 {
     if (isDragging)
     {
-        if (hoveredView) clearHover();
         return;
     }
 
@@ -201,8 +204,10 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
         }
     }
 
-    if (top == hoveredView)
+    if (top == hoveredView) {
         return; // nothing changed
+    }
+        
 
     if (hoveredView)
         clearHover();
@@ -240,9 +245,11 @@ void Hand::RemoveView(ImageObject* view)
 
 Card* Hand::FindCardByImage(ImageObject* img)
 {
-    for (auto& v : views)
-        if (v.image == img)
-            return v.cardData;
+    for (auto& v : views) {
+         if (v.image == img){
+			return v.cardData;
+        }
+    }
     return nullptr;
 }
 
@@ -276,12 +283,17 @@ bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
 
 void Hand::Deselect()
 {
-    if (!selectedView) return;
-    if (origPos.count(selectedView))
+    if (!selectedView) {
+		return;
+    }
+    if (origPos.count(selectedView)) {
         selectedView->SetPosition(origPos[selectedView]);
-    if (origSize.count(selectedView))
+    }    
+    if (origSize.count(selectedView)) {
         selectedView->SetSize(origSize[selectedView].x, origSize[selectedView].y);
-    if (origRot.count(selectedView))
+    }
+    if (origRot.count(selectedView)) {
         selectedView->SetRotate(origRot[selectedView]);
+    }
     selectedView = nullptr;
 }

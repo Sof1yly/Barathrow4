@@ -540,14 +540,15 @@ void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
 
     isDragging = true;
     draggingCard = card;
+
     dragStartPos = card->GetPosition();
     dragMouseWorld = mouseWorld;
 
-    glm::vec2 cardSize = card->GetSize();
-    dragAnchor = dragStartPos + glm::vec3(0.0f, cardSize.y * 0.5f, 0.0f);
-    card->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+    dragAnchor = dragStartPos;
+    draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
 
-    UpdateBezier(dragAnchor, mouseWorld);
+
+    UpdateBezier(draggingCard->GetPosition(), mouseWorld);
 }
 
 void Level::UpdateDrag(const glm::vec3& mouseWorld)
@@ -555,16 +556,10 @@ void Level::UpdateDrag(const glm::vec3& mouseWorld)
     if (!isDragging || !draggingCard) return;
 
     dragMouseWorld = mouseWorld;
+    draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
 
-    glm::vec3 newPos = dragStartPos;
-    float rawDY = mouseWorld.y - dragStartPos.y;
-
-    if (rawDY < -40.0f) rawDY = -40.0f;
-    if (rawDY > 80.0f) rawDY = 80.0f;
-    newPos.y += rawDY;
-
-    draggingCard->SetPosition(glm::vec3(newPos.x, newPos.y, 600.0f));
-    UpdateBezier(dragAnchor, mouseWorld);
+    glm::vec3 anchor = draggingCard->GetPosition();
+    UpdateBezier(anchor, mouseWorld);
 }
 
 void Level::EndDrag(const glm::vec3& mouseWorld)
