@@ -1,0 +1,34 @@
+#pragma once
+#include "ImageObject.h"
+
+class Enemy {
+public:
+    Enemy();
+
+    void setHealth(int h);
+
+    void setNowPosition(int row, int col) {
+        nowRow = row;
+        nowCol = col;
+    }
+
+    int getNowRow() const { return nowRow; }
+    int getNowCol() const { return nowCol; }
+
+    int getHealth() const{ return health; }
+
+    void getDamage(int damage);
+
+    void setObject(ImageObject* obj) { objImg = obj; }
+    ImageObject* getObject() { return objImg; }
+
+private:
+    int maxHealth = 10;
+    int health = maxHealth;
+    int damage = 1;
+
+    int nowRow = 0;
+    int nowCol = 0;
+
+    ImageObject* objImg = nullptr;
+};

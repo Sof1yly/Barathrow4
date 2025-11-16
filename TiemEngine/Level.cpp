@@ -10,6 +10,7 @@
 #include "AttackPattern.h"
 
 
+
 void Level::LevelLoad()
 {
 	SquareMeshVbo * square = new SquareMeshVbo();
@@ -78,6 +79,26 @@ void Level::LevelInit()
 	objectsList.push_back(testgrid);
 
 	testGrid = testgrid;
+	
+	// --- Create Enemy ---
+	enemy = new Enemy();
+	enemy->setNowPosition(8, 0); // row=8, col=0
+
+	// --- Create ImageObject for enemy ---
+	ImageObject* enemyObj = new ImageObject();
+	enemyObj->SetSize(100.0f, -100.0f);
+	enemyObj->SetTexture("../Resource/Texture/doro.png");
+
+	// Convert row/col to world position
+	glm::vec3 pos = GridToWorld(8, 0);
+	enemyObj->SetPosition(pos);
+
+	// Add to scene list
+	objectsList.push_back(enemyObj);
+
+	// Link the visual object to the Enemy
+	enemy->setObject(enemyObj);
+
 
 	GameObject * obj = new GameObject();
 	obj->SetColor(1.0, 0.0, 0.0);
@@ -185,6 +206,25 @@ void Level::LevelUpdate()
 	int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 	for (DrawableObject* obj : objectsList) {
 		obj->Update(deltaTime);
+	}
+
+	if (enemy && enemy->getHealth() <= 0)
+	{
+		ImageObject* obj = enemy->getObject();
+
+		if (obj)
+		{
+			// remove from vector
+			auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+			if (it != objectsList.end())
+				objectsList.erase(it);
+
+			delete obj;
+			enemy->setObject(nullptr);
+		}
+
+		delete enemy;
+		enemy = nullptr;
 	}
 
 	if (isDragging && grabbedObject && !isHolding) {
@@ -301,8 +341,19 @@ void Level::HandleKey(char key)
 			}
 
 			cout << "attack at (" << x << ", " << y << ")\n";
+
+			if (enemy &&enemy->getNowRow() == x &&enemy->getNowCol() == y)
+			{
+				enemy->getDamage(1); //do 1 damage
+				cout << "HIT ENEMY! HP = " << enemy->getHealth() << endl;
+
+				if (enemy->getHealth() <= 0) {
+					cout << "Enemy died!" << endl;
+				}
+			}
 		}
 		cout << endl;
+
 	}
 
 
@@ -417,6 +468,13 @@ void Level::HandleMouse(int type, int x, int y)
 	cout << "real X : " << realX << "	real Y" << realY << endl;
 
 	player->SetPosition(glm::vec3(realX, realY, 0));
+}
+
+glm::vec3 Level::GridToWorld(int row, int col)
+{
+	float x = row * 101.0f - 404.0f;
+	float y = col * -105.0f + 352.0f;
+	return glm::vec3(x, y, 0.0f);
 }
 
 void Level::CreateCard(int cardCount, std::vector<DrawableObject*>& objectsList)

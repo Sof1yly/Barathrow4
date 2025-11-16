@@ -6,6 +6,7 @@
 #include "SpriteObject.h"
 #include "Button.h"
 #include "AttackPattern.h"
+#include "Enemy.h"
 
 class Level
 {
@@ -15,12 +16,18 @@ private:
 	GameObject* testMove;
 	ImageObject* testGrid;
 	ImageObject* mainMenu;
+	ImageObject* testEnemy;
+	Enemy* enemy;
+
 	GameObject* grabbedObject = nullptr;
 	GameObject* draggableObject = nullptr;
 
 	glm::vec3 testMoveTarget;
 	glm::vec3 grabbedTarget = glm::vec3(0.0f);
 	glm::vec3 grabOffset = glm::vec3(0.0f);
+
+	glm::vec3 GridToWorld(int row, int col);
+
 	bool testMoveMoving = false;
 	bool isDragging = false;
 	bool isHolding = false;
