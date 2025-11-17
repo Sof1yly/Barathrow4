@@ -379,7 +379,7 @@ void Level::CreateDropZones(std::vector<DrawableObject*>& list)
     if (dropZonesCreated) return;
     dropZonesCreated = true;
 
-    const float Z = 400.0f;
+    const float Z = 1.0f;
     const float SIDE_W = 340.0f;
     const float SIDE_H = 520.0f;
     const float MID_W = 550.0f;
@@ -458,7 +458,7 @@ void Level::EnsureBezierSegments(std::vector<DrawableObject*>& list)
         auto* seg = new GameObject();
         seg->SetColor(1.0f, 0.6f, 0.85f);
         seg->SetSize(1.0f, 6.0f);
-        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 500.0f));
+        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 0.0f));
         bezierSegments.push_back(seg);
         list.push_back(seg);
     }
@@ -467,7 +467,7 @@ void Level::EnsureBezierSegments(std::vector<DrawableObject*>& list)
 void Level::HideBezier()
 {
     for (auto* seg : bezierSegments)
-        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 500.0f));
+        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 0.0f));
 }
 
 void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
@@ -501,7 +501,7 @@ void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
         float angleRad = std::atan2(D.y, D.x);
         float angleDeg = angleRad * 180.0f / 3.14159265f;
 
-        seg->SetPosition(glm::vec3(midAB.x, midAB.y, 500.0f));
+        seg->SetPosition(glm::vec3(midAB.x, midAB.y, 0.0f));
         seg->SetSize(len, 6.0f);
         seg->SetRotate(angleDeg);
     }
