@@ -575,6 +575,9 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
         std::cout << "[DropZone] Dropped in zone: " << zoneNames[dz] << std::endl;
 
+        int moveSteps = 0;
+
+        // ---------------- READ CARD ACTIONS ----------------
         if (cardData)
         {
             std::cout << "[Card] " << cardData->getName() << std::endl;
@@ -583,11 +586,61 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
             for (Action* a : acts)
             {
                 if (auto* atk = dynamic_cast<AttackAction*>(a))
+                {
                     std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+                }
                 else if (auto* mv = dynamic_cast<MoveAction*>(a))
+                {
+                    moveSteps += mv->getValue();
                     std::cout << "  MoveAction: " << mv->getValue() << std::endl;
-                else
-                    std::cout << "  (Unknown action type)" << std::endl;
+                }
+            }
+
+            // ---------------- APPLY MOVE ACTION ----------------
+            if (moveSteps > 0 && testGrid)
+            {
+                std::cout << "Applying MoveAction steps = " << moveSteps
+                    << " toward " << zoneNames[dz] << std::endl;
+
+                for (int s = 0; s < moveSteps; ++s)
+                {
+                    switch (dz)
+                    {
+                    case 0: // LEFT (same as key 'a')
+                        if (nowRow > GridStartRow)
+                        {
+                            testGrid->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0.0f, 0.0f));
+                            nowRow--;
+                        }
+                        break;
+
+                    case 3: // RIGHT (same as key 'd')
+                        if (nowRow < GridEndRow - 1)
+                        {
+                            testGrid->Translate(glm::vec3((GridWide + distanceBetweenGridX), 0.0f, 0.0f));
+                            nowRow++;
+                        }
+                        break;
+
+                    case 1: // TOP (same as key 'w')
+                        if (nowCol > GridStartCol)
+                        {
+                            testGrid->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0f));
+                            nowCol--;
+                        }
+                        break;
+
+                    case 2: // BOTTOM (same as key 's')
+                        if (nowCol < GridEndCol - 1)
+                        {
+                            testGrid->Translate(glm::vec3(0.0f, -(GridHigh + distanceBetweenGridY), 0.0f));
+                            nowCol++;
+                        }
+                        break;
+                    }
+                }
+
+                std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
         }
         else
@@ -597,7 +650,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         std::cout << "----------------------------------------" << std::endl;
 
-        // remove from hand + render list
+        // Remove card from hand + render list
         hand.RemoveView(draggingCard);
 
         auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
@@ -609,19 +662,19 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     }
     else
     {
-        // snap back to start
+        // Snap card back
         draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
     }
 
     HideBezier();
     HideDropZones();
-
     hand.UpdateHover(mouseWorld, false);
 
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
 }
+
 
 
 
