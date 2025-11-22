@@ -13,6 +13,7 @@
 #include "AttackPattern.h"
 #include "GameDataLoader.h"
 #include "Hand.h"
+#include "Enemy.h"
 
 class Level
 {
@@ -25,6 +26,8 @@ private:
     GameObject* testMove = nullptr;
     ImageObject* testGrid = nullptr;
     ImageObject* mainMenu = nullptr;
+    ImageObject* testEnemy;
+    Enemy* enemy;
 
     // Grid
     int   GridStartRow = 0;
@@ -75,6 +78,8 @@ private:
     AttackPattern rotatedPattern;
     int currentPatternIndex = 0;
     int currentRotation = 0;
+
+	glm::vec3 GridToWorld(int row, int col) const;
 
     // helpers
     void CreateDropZones(std::vector<DrawableObject*>& list);

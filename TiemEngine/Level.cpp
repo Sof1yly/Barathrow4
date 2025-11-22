@@ -89,6 +89,21 @@ void Level::LevelInit()
     currentPatternIndex = 0;
     currentRotation = 0;
     rotatedPattern = patterns[currentPatternIndex];
+    //Enemy
+	enemy = new Enemy();
+    enemy->setNowPosition(8, 0); //row=8,col=0
+
+	ImageObject* enemyObj = new ImageObject();
+	enemyObj->SetSize(100.0f, -100.0f);
+    enemyObj->SetTexture("../Resource/Texture/doro.png");
+
+	//glm::vec3 pos = GridToWorld(enemy->getNowRow(), enemy->getNowCol()); //  glm::vec3 pos = GridToWorld(8, 0);
+    glm::vec3 pos = GridToWorld(8, 0);
+	enemyObj->SetPosition(pos);
+
+	objectsList.push_back(enemyObj); 
+    enemy->setObject(enemyObj);
+
 
     // 3) Player grid marker
     {
@@ -169,6 +184,26 @@ void Level::LevelUpdate()
 
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
+
+    if (enemy && enemy->getHealth() <= 0)
+    {
+        ImageObject* obj = enemy->getObject();
+
+        if (obj)
+        {
+            // remove from vector
+            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+
+            delete obj;
+            enemy->setObject(nullptr);
+        }
+
+        delete enemy;
+        enemy = nullptr;
+    }
+
 
     // Smooth move testMove object
     if (testMoveMoving && testMove) {
@@ -258,11 +293,18 @@ void Level::HandleKey(char key)
 			}
 
 			cout << "attack at (" << x << ", " << y << ")\n";
+
+			if (enemy && enemy->getNowRow() == x && enemy->getNowCol() == y) {
+				enemy->getDamage(1); // do damage
+				cout << "  HIT!!! Enemy HP: " << enemy->getHealth() << endl;
+
+				if (enemy->getHealth() <= 0) {
+					cout << "  Enemy died!" << endl;
+				}
+			}
 		}
 		cout << endl;
 	}
-
-
 
 	if (key == 'w' && nowCol != 0) {
 		testGrid->Translate(glm::vec3(0, GridHigh+distanceBetweenGridY, 0));
@@ -369,11 +411,19 @@ void Level::HandleMouse(int type, int x, int y)
     if (player) {
         player->SetPosition(glm::vec3(realX, realY, 0.0f));
     }
+
+	
+    
+}
+
+glm::vec3 Level::GridToWorld(int row, int col) const
+{
+    float x = row * 101.0f - 404.0f;
+    float y = col * -105.0f + 352.0f;
+    return glm::vec3(x, y, 0.0f);
 }
 
 // Drop zones
-
-
 void Level::CreateDropZones(std::vector<DrawableObject*>& list)
 {
     if (dropZonesCreated) return;
