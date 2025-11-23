@@ -1,0 +1,7 @@
+Action					Card			
+Name	Damage	Move	Pattern		Name	Action		
+A	5	0	A1		C1	A		
+B	2	0	A2		C2	B		
+C	0	2	A3		C3	"B,C"		
+D	0	3	A4		C4	"D,B"		
+E	1	1	A4		C5	E		
