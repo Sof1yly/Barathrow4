@@ -107,4 +107,9 @@ public:
 
     void HandleKey(char key);
     void HandleMouse(int type, int x, int y);
+
+    void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
+
+
+
 };

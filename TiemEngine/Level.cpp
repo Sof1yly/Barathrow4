@@ -280,30 +280,8 @@ void Level::HandleKey(char key)
 		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
 	}
 	if (key == ' ') {
-		auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
-
-		cout << "Using pattern #" << currentPatternIndex + 1 << endl;
-		for (auto& cell : attacks) {
-			int x = cell.first.x;
-			int y = cell.first.y;
-
-			if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
-				cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
-				continue;
-			}
-
-			cout << "attack at (" << x << ", " << y << ")\n";
-
-			if (enemy && enemy->getNowRow() == x && enemy->getNowCol() == y) {
-				enemy->getDamage(1); // do damage
-				cout << "  HIT!!! Enemy HP: " << enemy->getHealth() << endl;
-
-				if (enemy->getHealth() <= 0) {
-					cout << "  Enemy died!" << endl;
-				}
-			}
-		}
-		cout << endl;
+        auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
+        ApplyAttackCells(attacks);
 	}
 
 	if (key == 'w' && nowCol != 0) {
@@ -415,6 +393,7 @@ void Level::HandleMouse(int type, int x, int y)
 	
     
 }
+
 
 glm::vec3 Level::GridToWorld(int row, int col) const
 {
@@ -725,8 +704,37 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     pendingCard = nullptr;
 }
 
+// Apply attack pattern
+void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
+{
+    cout << "Using pattern #" << currentPatternIndex + 1 << endl;
 
+    for (const auto& item : cells)
+    {
+        const IVec2& cell = item.first;
+        int x = cell.x;
+        int y = cell.y;
 
+        // Out-of-bound check
+        if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
+            cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
+            continue;
+        }
 
+        cout << "attack at (" << x << ", " << y << ")\n";
+
+        // Check if enemy is hit
+        if (enemy && enemy->getNowRow() == x && enemy->getNowCol() == y) {
+            enemy->getDamage(1);
+            cout << "  HIT!!! Enemy HP: " << enemy->getHealth() << endl;
+
+            if (enemy->getHealth() <= 0) {
+                cout << "  Enemy died!" << endl;
+            }
+        }
+    }
+
+    cout << endl;
+}
 
 
