@@ -1,0 +1,16 @@
+PatternAttack	
+A1	.X.
+	XXX
+	.X.
+	
+A2	XXX
+	XXX
+	XXX
+	
+A3	..X..
+	.XXX.
+	XXXXX
+	.XXX.
+	..X..
+	
+A4	...XX

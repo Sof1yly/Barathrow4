@@ -197,4 +197,12 @@
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Resource\GameData\CardAction.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\Resource\GameData\Pattern.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

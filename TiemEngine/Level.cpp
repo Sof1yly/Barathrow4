@@ -59,36 +59,6 @@ void Level::LevelInit()
         }
     }
 
-    // 2) Attack patterns
-    patterns = {
-        AttackPattern::fromGrid({
-            ".X.",
-            "XXX",
-            ".X."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "XXX",
-            "XXX",
-            "XXX"
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "..X..",
-            ".XXX.",
-            "XXXXX",
-            ".XXX.",
-            "..X.."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "...XX",
-        }, 'X'),
-    };
-
-    currentPatternIndex = 0;
-    currentRotation = 0;
-    rotatedPattern = patterns[currentPatternIndex];
     //Enemy
 	enemy = new Enemy();
     enemy->setNowPosition(8, 0); //row=8,col=0
@@ -163,14 +133,21 @@ void Level::LevelInit()
         mainMenu = menu;
     }
 
-    // Hand + Drop zones + Card data
     std::string error;
-    if (!dataLoader.loadFromFile("../Resource/GameData/ActionTest.txt", &error)) {
+
+    // 1) Load pattern shapes
+    if (!dataLoader.loadPatternsFromFile("../Resource/GameData/Pattern.txt", &error)) {
+        std::cerr << "Error loading attack patterns: " << error << std::endl;
+    }
+
+    // 2) Load actions + cards (with Pattern column)
+    if (!dataLoader.loadFromFile("../Resource/GameData/CardAction.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
-    // Create visual hand using loaded cards
+    // 3) Create visual hand with real card data
     hand.CreateVisualHand(5, objectsList, dataLoader.getCards());
+
 
     // Drop zones
     CreateDropZones(objectsList);
@@ -638,6 +615,75 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 if (auto* atk = dynamic_cast<AttackAction*>(a))
                 {
                     std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+
+                    // 1) Get pattern for this action
+                    const AttackPattern* basePat = dataLoader.getPatternForAction(a);
+                    if (basePat == nullptr) {
+                        std::cout << "    (no attack pattern linked to this action)\n";
+                    }
+                    else {
+                        // 2) Orient pattern based on drop zone
+                        AttackPattern oriented = *basePat;
+                        int rotateTimes = 0;
+
+                        // dz: 0=LEFT, 1=TOP, 2=BOTTOM, 3=RIGHT
+                        switch (dz)
+                        {
+                        case 0: { // LEFT
+                            rotateTimes = 3; // 270° CW (i.e., 90° CCW)
+                            break;
+                        }
+                        case 1: { // TOP (forward)
+                            rotateTimes = 0;
+                            break;
+                        }
+                        case 2: { // BOTTOM (backwards)
+                            rotateTimes = 2; // 180°
+                            break;
+                        }
+                        case 3: { // RIGHT
+                            rotateTimes = 1; // 90° CW
+                            break;
+                        }
+                        }
+
+                        for (int i = 0; i < rotateTimes; ++i) {
+                            oriented = oriented.rotated90CW();
+                        }
+
+                        // 3) Apply pattern on grid at (nowRow, nowCol)
+                        auto cells = oriented.applyTo(nowRow, nowCol);
+                        std::cout << "    Applying attack pattern from ("
+                            << nowRow << ", " << nowCol << ")\n";
+
+                        for (auto& cell : cells)
+                        {
+                            int gx = cell.first.x;
+                            int gy = cell.first.y;
+
+                            // bounds check
+                            if (gx < GridStartRow || gx >= GridEndRow ||
+                                gy < GridStartCol || gy >= GridEndCol)
+                            {
+                                std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
+                                continue;
+                            }
+
+                            std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
+
+                            if (enemy != nullptr &&
+                                enemy->getNowRow() == gx &&
+                                enemy->getNowCol() == gy)
+                            {
+                                enemy->getDamage(atk->getValue());
+                                std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
+
+                                if (enemy->getHealth() <= 0) {
+                                    std::cout << "        Enemy died!\n";
+                                }
+                            }
+                        }
+                    }
                 }
                 else if (auto* mv = dynamic_cast<MoveAction*>(a))
                 {

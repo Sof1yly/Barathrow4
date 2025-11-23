@@ -5,6 +5,20 @@
 #include <cctype>
 using namespace std;
 
+static std::string trim_(const std::string& s) {
+    size_t a = 0;
+    size_t b = s.size();
+
+    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) {
+        ++a;
+    }
+    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) {
+        --b;
+    }
+    return s.substr(a, b - a);
+}
+
+
 GameDataLoader::GameDataLoader() = default;
 
 GameDataLoader::~GameDataLoader() {
@@ -32,7 +46,7 @@ static vector<string> splitCsvRowRespectQuotes_(const string& line) {
                 inQuotes = !inQuotes;
             }
         }
-        else if (ch == ',' && !inQuotes) {
+        else if (ch == '\t' && !inQuotes) {
             out.push_back(cur);
             cur.clear();
         }
@@ -55,12 +69,17 @@ Action* GameDataLoader::findActionByName(const string& name) const {
 
 bool GameDataLoader::parseActionRow(const vector<string>& cols, string* error) {
     if (cols.size() < 3) {
-        if (error) *error = "Not enough columns for action (need Name,Damage,Move)";
+        if (error) *error = "Not enough columns for action (need Name,Damage,Move,Pat)";
         return false;
     }
     const string& name = cols[0];
     const string& sDmg = cols[1];
     const string& sMove = cols[2];
+
+    string patternId;
+    if (cols.size() >= 4) {
+        patternId = trim_(cols[3]);
+    }
 
     if (name.empty()) 
     { 
@@ -109,18 +128,36 @@ bool GameDataLoader::parseActionRow(const vector<string>& cols, string* error) {
         *error = "Action must have either damage or move: " + name; 
         return false; 
     }
-
     Action* a = nullptr;
-    if (damage > 0) 
-    { 
-        auto* aa = new AttackAction(); 
-        aa->setValue(damage); 
-        a = aa; 
+    bool isAttack = false;
+
+    if (damage > 0) {
+        auto* aa = new AttackAction();
+        aa->setValue(damage);
+        a = aa;
+        isAttack = true;
     }
-    else { auto* ma = new MoveAction();   ma->setValue(move);   a = ma; }
+    else {
+        auto* ma = new MoveAction();
+        ma->setValue(move);
+        a = ma;
+    }
 
     actions.push_back({ name, a });
     actions_list.push_back(a);
+
+    if (isAttack && !patternId.empty()) {
+        const AttackPattern* pat = findPatternByName(patternId);
+        if (!pat) {
+            if (error) {
+                *error = "Unknown pattern id '" + patternId + "' for action '" + name + "'";
+            }
+            return false;
+        }
+
+        actionPattern[a] = pat;
+    }
+
     return true;
 }
 
@@ -182,7 +219,7 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
     }
 
     // We’ll first collect rows, then build actions, then cards.
-    vector<array<string, 3>> actionRows; // {Name,Damage,Move}
+    vector<array<string, 4>> actionRows; // {Name,Damage,Move,Pattern}
     vector<pair<string, string>> cardRows; // {CardName, ActionCell}
 
     string line;
@@ -216,20 +253,21 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
             return (idx < cells.size()) ? cells[idx] : string();
             };
 
-        // Action part is columns 0,1,2
+        // Action part is columns 0,1,2,3
         string aName = getCell(0);
         string aDmg = getCell(1);
         string aMove = getCell(2);
+        string aPat = getCell(3);
 
         // Card part is columns 5,6
         string cName = getCell(5);
         string cActs = getCell(6); 
 
         // If there is an action row on this line, store it
-        if (!aName.empty() || !aDmg.empty() || !aMove.empty()) {
+        if (!aName.empty() || !aDmg.empty() || !aMove.empty()||aPat.empty()) {
             // Only push if it looks like a valid action row (has a name at least)
             if (!aName.empty()) {
-                actionRows.push_back({ aName, aDmg, aMove });
+                actionRows.push_back({ aName, aDmg, aMove, aPat});
             }
                 
         }
@@ -249,6 +287,7 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
         cols.push_back(row[0]); // Name
         cols.push_back(row[1]); // Damage
         cols.push_back(row[2]); // Move
+		cols.push_back(row[3]); // Pattern
         if (!parseActionRow(cols, outError)) return false;
     }
 
@@ -261,4 +300,96 @@ bool GameDataLoader::loadFromFile(const string& filename, string* outError) {
     }
 
     return true;
+}
+
+bool GameDataLoader::loadPatternsFromFile(const std::string& filename, std::string* outError)
+{
+    patternMap.clear();
+    actionPattern.clear();  
+
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        if (outError != nullptr) {
+            *outError = "Failed to open pattern file: " + filename;
+        }
+        return false;
+    }
+
+    std::string line;
+    std::string currentId;
+    std::vector<std::string> grid;
+
+    auto flushCurrent = [&]() {
+        if (!currentId.empty() && !grid.empty()) {
+            AttackPattern p = AttackPattern::fromGrid(grid, 'X');
+            patternMap[currentId] = p;
+        }
+        currentId.clear();
+        grid.clear();
+        };
+
+    while (std::getline(file, line)) {
+        std::string trimmed = trim_(line);
+        if (trimmed.empty()) {
+            // blank line = end of current pattern (if any)
+            flushCurrent();
+            continue;
+        }
+
+        // skip header
+        if (trimmed == "PatternAttack") {
+            continue;
+        }
+
+        // row that starts with '.' or 'X' is a grid row
+        if (!trimmed.empty() && (trimmed[0] == '.' || trimmed[0] == 'X')) {
+            grid.push_back(trimmed);
+            continue;
+        }
+
+        // otherwise this starts a new pattern, e.g. "A1   .X."
+        flushCurrent();
+
+        std::istringstream iss(trimmed);
+        std::string id;
+        iss >> id;
+        currentId = id;
+
+        std::string rest;
+        std::getline(iss, rest);
+        rest = trim_(rest);
+        if (!rest.empty()) {
+            grid.push_back(rest);
+        }
+    }
+
+    // flush last one at EOF
+    flushCurrent();
+
+    if (patternMap.empty()) {
+        if (outError != nullptr) {
+            *outError = "No patterns loaded from file: " + filename;
+        }
+        return false;
+    }
+
+    return true;
+}
+
+const AttackPattern* GameDataLoader::findPatternByName(const std::string& id) const
+{
+    auto it = patternMap.find(id);
+    if (it == patternMap.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
+{
+    auto it = actionPattern.find(a);
+    if (it == actionPattern.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
