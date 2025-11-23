@@ -46,7 +46,7 @@ static vector<string> splitCsvRowRespectQuotes_(const string& line) {
                 inQuotes = !inQuotes;
             }
         }
-        else if (ch == ',' && !inQuotes) {
+        else if (ch == '\t' && !inQuotes) {
             out.push_back(cur);
             cur.clear();
         }
