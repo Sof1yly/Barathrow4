@@ -283,6 +283,14 @@ void Level::HandleKey(char key)
         auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
         ApplyAttackCells(attacks);
 	}
+    if (key == 'p') {
+        ApplyEnemyAttack();
+    }
+
+    if (key == 'o') {
+        enemy->rotatePattern();
+        cout << "Enemy rotated pattern.\n";
+    }
 
 	if (key == 'w' && nowCol != 0) {
 		testGrid->Translate(glm::vec3(0, GridHigh+distanceBetweenGridY, 0));
@@ -736,5 +744,37 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
     cout << endl;
 }
+
+void Level::ApplyEnemyAttack()
+{
+    if (!enemy) return;
+
+    auto attacks = enemy->getCurrentPattern().applyTo(enemy->getNowRow(), enemy->getNowCol());
+
+    cout << "[Enemy Attack]\n";
+
+    for (auto& cell : attacks)
+    {
+        int x = cell.first.x;
+        int y = cell.first.y;
+
+        if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
+            cout << "  Skip (" << x << ", " << y << ") out of bounds\n";
+            continue;
+        }
+
+        cout << "  Enemy attacks (" << x << ", " << y << ")\n";
+
+        if (nowRow == x && nowCol == y)
+        {
+            playerHealth--;
+            cout << "    HIT PLAYER!!! New HP = " << playerHealth << endl;
+        }
+    }
+
+    cout << endl;
+}
+
+
 
 
