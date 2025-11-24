@@ -1,9 +1,19 @@
 #pragma once
 #include "ImageObject.h"
+#include "AttackPattern.h"
 
 class Enemy {
 public:
     Enemy();
+
+    AttackPattern getCurrentPattern() const {
+        return patterns[currentPatternIndex];
+    }
+
+    // Rotate enemy pattern
+    void rotatePattern() {
+		patterns[currentPatternIndex] = patterns[currentPatternIndex].rotated90CW();
+    }
 
     void setHealth(int h);
 
@@ -31,4 +41,6 @@ private:
     int nowCol = 0;
 
     ImageObject* objImg = nullptr;
+    std::vector<AttackPattern> patterns;
+    int currentPatternIndex = 0;
 };
