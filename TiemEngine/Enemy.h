@@ -10,7 +10,6 @@ public:
         return patterns[currentPatternIndex];
     }
 
-    // Rotate enemy pattern
     void rotatePattern();
 
 

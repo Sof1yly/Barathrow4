@@ -43,4 +43,3 @@ void Enemy::getDamage(int damage)
 void Enemy::rotatePattern() {
     patterns[currentPatternIndex] = patterns[currentPatternIndex].rotated90CW();
 }
-
