@@ -11,9 +11,8 @@ public:
     }
 
     // Rotate enemy pattern
-    void rotatePattern() {
-		patterns[currentPatternIndex] = patterns[currentPatternIndex].rotated90CW();
-    }
+    void rotatePattern();
+
 
     void setHealth(int h);
 
