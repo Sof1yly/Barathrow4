@@ -91,6 +91,15 @@ private:
 
 	glm::vec3 GridToWorld(int row, int col) const;
 
+    //gameloop
+    enum class TurnState {
+        PLAYER_TURN,
+        ENEMY_TURN
+    };
+
+    TurnState turnState = TurnState::PLAYER_TURN;
+	//end gameloop
+
 
 
     // helpers
@@ -126,7 +135,9 @@ public:
     void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
     void ApplyEnemyAttack();
     void MoveEnemyTowardPlayer();
+    bool EnemyCanAttackPlayer();
 
+    void UpdateTurn();
 
 
 };

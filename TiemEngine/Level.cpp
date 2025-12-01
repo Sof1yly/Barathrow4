@@ -180,6 +180,8 @@ void Level::LevelUpdate()
 {
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
+    UpdateTurn();
+
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
@@ -867,9 +869,12 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
+
+    cout << "End of player turn" << endl;
+	turnState = TurnState::ENEMY_TURN; // End of player's turn
 }
 
-// Apply attack pattern
+// Apply attack pattern (player)
 void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 {
     cout << "Using pattern #" << currentPatternIndex + 1 << endl;
@@ -901,6 +906,8 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
     cout << endl;
 }
+
+//////////////////////// Part of AI logic ////////////////////////
 
 void Level::ApplyEnemyAttack()
 {
@@ -964,8 +971,37 @@ void Level::MoveEnemyTowardPlayer()
 
     std::cout << "Enemy moved to (" << newR << ", " << newC << ")\n";
 }
+bool Level::EnemyCanAttackPlayer()
+{
+    int er = enemy->getNowRow();
+    int ec = enemy->getNowCol();
+    int pr = nowRow;
+    int pc = nowCol;
+
+    return (abs(er - pr) <= 1 && abs(ec - pc) <= 1);
+}
+
+///////////////////////////////////End AI logic/////////
 
 
+////////////////////////////////////////////Game Loop/////////////////////////////////////
+void Level::UpdateTurn()
+{
+    if (turnState == TurnState::PLAYER_TURN) {
+        
+    }
+    else if (turnState == TurnState::ENEMY_TURN) {
 
+        if (EnemyCanAttackPlayer()) {
+            ApplyEnemyAttack();
+            
+        }
+        else {
+            MoveEnemyTowardPlayer();
+        }
+
+        turnState = TurnState::PLAYER_TURN;
+    }
+}
 
 
