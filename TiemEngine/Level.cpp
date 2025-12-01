@@ -284,6 +284,9 @@ void Level::HandleKey(char key)
     if (key == 'p') {
         ApplyEnemyAttack();
     }
+    if(key == 'l'){
+        MoveEnemyTowardPlayer();
+	}
 
     if (key == 'o') {
         enemy->rotatePattern();
@@ -928,6 +931,40 @@ void Level::ApplyEnemyAttack()
 
     cout << endl;
 }
+void Level::MoveEnemyTowardPlayer()
+{
+    if (!enemy) return;
+
+    int er = enemy->getNowRow();
+    int ec = enemy->getNowCol();
+
+    int pr = nowRow;  // player's grid row
+    int pc = nowCol;  // player's grid col
+
+    int newR = er;
+    int newC = ec;
+
+    //  Move one step toward the player 
+    if (er < pr) newR = er + 1;
+    else if (er > pr) newR = er - 1;
+    else if (ec < pc) newC = ec + 1;
+    else if (ec > pc) newC = ec - 1;
+
+    // clamp to grid
+    newR = std::max(GridStartRow, std::min(newR, GridEndRow - 1));
+    newC = std::max(GridStartCol, std::min(newC, GridEndCol - 1));
+
+    // update enemy grid
+    enemy->setNowPosition(newR, newC);
+
+    // update sprite position
+    glm::vec3 world = GridToWorld(newR, newC);
+    if (enemy->getObject())
+        enemy->getObject()->SetPosition(world);
+
+    std::cout << "Enemy moved to (" << newR << ", " << newC << ")\n";
+}
+
 
 
 

@@ -125,7 +125,7 @@ public:
 
     void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
     void ApplyEnemyAttack();
-
+    void MoveEnemyTowardPlayer();
 
 
 

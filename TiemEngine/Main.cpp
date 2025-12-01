@@ -154,6 +154,7 @@ int main(int argc, char* argv[])
 					case SDLK_SPACE: gameStateController->currentLevel->HandleKey(' '); break;
 					case SDLK_p: gameStateController->currentLevel->HandleKey('p'); break;
 					case SDLK_o: gameStateController->currentLevel->HandleKey('o'); break;
+					case SDLK_l: gameStateController->currentLevel->HandleKey('l'); break;
 					}
 				}
 
