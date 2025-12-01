@@ -9,6 +9,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 
 
@@ -145,8 +146,28 @@ void Level::LevelInit()
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
-    // 3) Create visual hand with real card data
-    hand.CreateVisualHand(5, objectsList, dataLoader.getCards());
+    deck = dataLoader.getCards();
+    ShuffleDeck();
+
+    // Start the game with 5 cards in hand
+    DealNewHand(5);
+
+
+    // ------------------------
+    // View-Deck button (left)
+    viewDeckButton = new ImageObject();
+    viewDeckButton->SetSize(200.0f, -260.0f);
+    viewDeckButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
+    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png"); 
+    objectsList.push_back(viewDeckButton);
+
+    // ------------------------
+    // Re-Draw button (right)
+    reDrawButton = new ImageObject();
+    reDrawButton->SetSize(200.0f, -260.0f);
+    reDrawButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
+    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png"); 
+    objectsList.push_back(reDrawButton);
 
 
     // Drop zones
@@ -314,46 +335,104 @@ void Level::HandleMouse(int type, int x, int y)
 
     screenCenterY = 0.0f;
 
-    //Mouse Hover
+    // ----------------------------------------------------
+    // Hover
+    // ----------------------------------------------------
     if (type == 3) {
         hand.UpdateHover(mousePos, isDragging);
         return;
     }
 
-    // Mouse down
+    // ----------------------------------------------------
+    // MOUSE DOWN
+    // ----------------------------------------------------
     if (type == 0)
     {
-        // Menu toggle
+        // menu toggle
         if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470)
         {
             if (!Button::getMenu()) {
                 Button::setMenu(true);
-                if (mainMenu) mainMenu->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+                if (mainMenu) {
+                    mainMenu->SetPosition(glm::vec3(0, 0, 0));
+                }
             }
             else {
                 Button::setMenu(false);
-                if (mainMenu) mainMenu->SetPosition(glm::vec3(0.0f, 20000.0f, 0.0f));
+                if (mainMenu) {
+                    mainMenu->SetPosition(glm::vec3(0, 20000, 0));
+                }
             }
         }
 
+        // ------------------------------
+        // VIEW-DECK BUTTON (LEFT)
+        //  - shuffle deck
+        //  - draw until hand has 5 cards
+        // ------------------------------
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        {
+            cout << "[UI] View-Deck clicked"<<endl;
+            const int MAX_HAND = 5;
+            int current = hand.GetCardCount();
+            int need = MAX_HAND - current;
+
+            if (need > 0 && !deck.empty())
+            {
+                ShuffleDeck();
+
+                std::vector<Card*> drawn;
+                for (int i = 0; i < need && !deck.empty(); ++i)
+                {
+                    drawn.push_back(deck.back());
+                    deck.pop_back();
+                }
+
+                if (!drawn.empty()) {
+                    hand.AddCards(drawn, objectsList);
+                }
+            }
+            return; // button handled
+        }
+
+        // ------------------------------
+        // RE-DRAW BUTTON (RIGHT)
+        //  - move used cards (discard) back to deck
+        //  - shuffle deck
+        // ------------------------------
+        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
+        {
+            cout << "[UI] Re-Draw clicked"<<endl;
+            if (!discard.empty())
+            {
+                deck.insert(deck.end(), discard.begin(), discard.end());
+                discard.clear();
+            }
+            ShuffleDeck();
+            return; // button handled
+        }
+
+        // ------------------------------
+        // DROP ZONES
+        // ------------------------------
         CreateDropZones(objectsList);
 
         hand.UpdateHover(mousePos, false);
 
         pendingCard = hand.PeekAt(mousePos);
-
-
         if (pendingCard) {
             dragStartPos = pendingCard->GetPosition();
         }
 
         if (testMove) {
-            testMoveTarget = glm::vec3(realX, realY, 0.0f);
+            testMoveTarget = glm::vec3(realX, realY, 0);
             testMoveMoving = true;
         }
     }
 
-    // Mouse drag
+    // ----------------------------------------------------
+    // DRAG
+    // ----------------------------------------------------
     if (type == 1)
     {
         if (pendingCard) {
@@ -364,12 +443,11 @@ void Level::HandleMouse(int type, int x, int y)
                 UpdateDrag(mousePos);
             }
         }
-
-        // while dragging, disable hover effects
         hand.UpdateHover(mousePos, true);
     }
-
-    // Mouse up
+    // ----------------------------------------------------
+    // RELEASE
+    // ----------------------------------------------------
     if (type == 2)
     {
         if (isDragging) {
@@ -381,16 +459,42 @@ void Level::HandleMouse(int type, int x, int y)
         draggingCard = nullptr;
         pendingCard = nullptr;
 
-        // after release, allow hover again at the new mouse position
         hand.UpdateHover(mousePos, false);
     }
 
     if (player) {
-        player->SetPosition(glm::vec3(realX, realY, 0.0f));
+        player->SetPosition(glm::vec3(realX, realY, 0));
+    }
+}
+
+
+void Level::ShuffleDeck() {
+	if (deck.empty()) return;   
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(deck.begin(), deck.end(), g);
+}
+
+void Level::DealNewHand(int cardCount) {
+    if (cardCount <= 0) {
+        return;
     }
 
-	
-    
+    // clear old hand visuals
+    hand.Clear(objectsList);
+
+    int drawCount = std::min(cardCount, (int)deck.size());
+    std::vector<Card*> drawn;
+    for (int i = 0; i < drawCount && !deck.empty(); ++i)
+    {
+        drawn.push_back(deck.back());
+        deck.pop_back();
+    }
+    if (!drawn.empty())
+    {
+        hand.AddCards(drawn, objectsList);
+    }
 }
 
 glm::vec3 Level::GridToWorld(int row, int col) const
@@ -536,7 +640,7 @@ void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
 
 // Drag & drop of cards
 
-bool Level::IsPointInsideZone(const glm::vec3& p, GameObject* zone) const
+bool Level::IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const
 {
     if (!zone) return false;
 
@@ -755,6 +859,10 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         delete draggingCard;
         draggingCard = nullptr;
+
+        if (cardData != nullptr) {
+            discard.push_back(cardData);
+        }
     }
     else
     {
