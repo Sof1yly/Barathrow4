@@ -164,6 +164,74 @@ void Hand::CreateVisualHand(int cardCount,
     layoutViews();
 }
 
+int Hand::GetCardCount() const
+{
+    return static_cast<int>(views.size());
+}
+
+void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
+    std::vector<DrawableObject*>& objectsList)
+{
+    for (Card* data : cardsToAdd)
+    {
+        if (!data) {
+            continue;
+        }
+
+        auto* img = new ImageObject();
+        img->SetSize(220.0f, -335.0f);
+        img->SetTexture("../Resource/Texture/cards/slayCardTest.png");
+
+        objectsList.push_back(img);
+
+        CardView cv;
+        cv.cardData = data;
+        cv.image = img;
+        views.push_back(cv);
+    }
+
+    // re-fan whole hand
+    layoutViews();
+}
+
+void Hand::Clear(std::vector<DrawableObject*>& objectsList)
+{
+    for (auto& v : views)
+    {
+        if (!v.image) {
+            continue;
+        }
+
+        auto it = std::find(objectsList.begin(), objectsList.end(), v.image);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+
+        delete v.image;
+    }
+
+    views.clear();
+    hoveredView = nullptr;
+    selectedView = nullptr;
+    origPos.clear();
+    origSize.clear();
+    origRot.clear();
+}
+
+std::vector<Card*> Hand::CollectAllCardData() const
+{
+    std::vector<Card*> out;
+    out.reserve(views.size());
+    for (const auto& v : views)
+    {
+        if (v.cardData) {
+            out.push_back(v.cardData);
+        }
+    }
+    return out;
+}
+
+
 ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
     if (hoveredView && hitTestCurrent(hoveredView, mouseWorld))

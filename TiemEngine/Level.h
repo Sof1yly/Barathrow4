@@ -52,7 +52,15 @@ private:
 
     // Data & hand
     GameDataLoader dataLoader;
-    Hand           hand;
+    Hand hand;
+
+    //piles
+    std::vector<Card*> deck; //view deck
+    std::vector<Card*> discard; // re-draw
+
+    //Deck Ui
+	ImageObject* viewDeckButton = nullptr;
+	ImageObject* reDrawButton = nullptr;
 
     // Drop zones
     GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };
@@ -83,6 +91,8 @@ private:
 
 	glm::vec3 GridToWorld(int row, int col) const;
 
+
+
     // helpers
     void CreateDropZones(std::vector<DrawableObject*>& list);
     void ShowDropZones();
@@ -92,12 +102,15 @@ private:
     void HideBezier();
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
 
-    bool IsPointInsideZone(const glm::vec3& p, GameObject* zone) const;
+    bool IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const;
     int  HitDropZone(const glm::vec3& p) const;
 
     void BeginDrag(ImageObject* card, const glm::vec3& mouseWorld);
     void UpdateDrag(const glm::vec3& mouseWorld);
     void EndDrag(const glm::vec3& mouseWorld);
+
+    void ShuffleDeck();
+    void DealNewHand(int cardCount);
 
 public:
     void LevelLoad();
