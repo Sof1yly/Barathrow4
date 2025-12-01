@@ -31,7 +31,7 @@ public:
     ImageObject* getObject() { return objImg; }
 
 private:
-    int maxHealth = 10;
+    int maxHealth = 3;
     int health = maxHealth;
     int damage = 1;
 
