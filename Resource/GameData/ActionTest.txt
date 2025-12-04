@@ -1,7 +1,0 @@
-Action,,,,,Card,
-Name,Damage,Move,,,Name,Action
-A,5,0,,,C1,A
-B,2,0,,,C2,B
-C,0,2,,,C3,"B,C"
-D,0,3,,,C4,"D,B"
-E,0,1,,,C4,"D,B"

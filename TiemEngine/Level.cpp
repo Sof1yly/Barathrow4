@@ -700,6 +700,13 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         int moveSteps = 0;
 
+        // store attacks to execute AFTER movement
+        struct PendingAttack {
+            AttackAction* atk;
+            const AttackPattern* pattern;
+        };
+        std::vector<PendingAttack> pendingAttacks;
+
         // ---------------- READ CARD ACTIONS ----------------
         if (cardData)
         {
@@ -712,73 +719,13 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 {
                     std::cout << "  AttackAction: " << atk->getValue() << std::endl;
 
-                    // 1) Get pattern for this action
                     const AttackPattern* basePat = dataLoader.getPatternForAction(a);
-                    if (basePat == nullptr) {
+                    if (!basePat) {
                         std::cout << "    (no attack pattern linked to this action)\n";
+                        pendingAttacks.push_back({ atk, nullptr });
                     }
                     else {
-                        // 2) Orient pattern based on drop zone
-                        AttackPattern oriented = *basePat;
-                        int rotateTimes = 0;
-
-                        // dz: 0=LEFT, 1=TOP, 2=BOTTOM, 3=RIGHT
-                        switch (dz)
-                        {
-                        case 0: { // LEFT
-                            rotateTimes = 3; // 270° CW (i.e., 90° CCW)
-                            break;
-                        }
-                        case 1: { // TOP (forward)
-                            rotateTimes = 0;
-                            break;
-                        }
-                        case 2: { // BOTTOM (backwards)
-                            rotateTimes = 2; // 180°
-                            break;
-                        }
-                        case 3: { // RIGHT
-                            rotateTimes = 1; // 90° CW
-                            break;
-                        }
-                        }
-
-                        for (int i = 0; i < rotateTimes; ++i) {
-                            oriented = oriented.rotated90CW();
-                        }
-
-                        // 3) Apply pattern on grid at (nowRow, nowCol)
-                        auto cells = oriented.applyTo(nowRow, nowCol);
-                        std::cout << "    Applying attack pattern from ("
-                            << nowRow << ", " << nowCol << ")\n";
-
-                        for (auto& cell : cells)
-                        {
-                            int gx = cell.first.x;
-                            int gy = cell.first.y;
-
-                            // bounds check
-                            if (gx < GridStartRow || gx >= GridEndRow ||
-                                gy < GridStartCol || gy >= GridEndCol)
-                            {
-                                std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
-                                continue;
-                            }
-
-                            std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
-
-                            if (enemy != nullptr &&
-                                enemy->getNowRow() == gx &&
-                                enemy->getNowCol() == gy)
-                            {
-                                enemy->getDamage(atk->getValue());
-                                std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
-
-                                if (enemy->getHealth() <= 0) {
-                                    std::cout << "        Enemy died!\n";
-                                }
-                            }
-                        }
+                        pendingAttacks.push_back({ atk, basePat });
                     }
                 }
                 else if (auto* mv = dynamic_cast<MoveAction*>(a))
@@ -788,7 +735,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 }
             }
 
-            // ---------------- APPLY MOVE ACTION ----------------
+            // ---------------- APPLY MOVE ACTION FIRST ----------------
             if (moveSteps > 0 && testGrid)
             {
                 std::cout << "Applying MoveAction steps = " << moveSteps
@@ -834,6 +781,66 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
+
+            // ---------------- NOW APPLY ALL ATTACK PATTERNS ----------------
+            for (const PendingAttack& pa : pendingAttacks)
+            {
+                AttackAction* atk = pa.atk;
+                const AttackPattern* basePat = pa.pattern;
+
+                if (!basePat) {
+                    // no pattern linked, just skip pattern damage
+                    continue;
+                }
+
+                // Orient pattern based on drop zone
+                AttackPattern oriented = *basePat;
+                int rotateTimes = 0;
+
+                // dz: 0=LEFT, 1=TOP, 2=BOTTOM, 3=RIGHT
+                switch (dz)
+                {
+                case 0: rotateTimes = 3; break; // LEFT = 270° CW
+                case 1: rotateTimes = 0; break; // TOP  = 0°
+                case 2: rotateTimes = 2; break; // BOTTOM = 180°
+                case 3: rotateTimes = 1; break; // RIGHT = 90° CW
+                }
+
+                for (int i = 0; i < rotateTimes; ++i) {
+                    oriented = oriented.rotated90CW();
+                }
+
+                auto cells = oriented.applyTo(nowRow, nowCol);
+                std::cout << "    Applying attack pattern from ("
+                    << nowRow << ", " << nowCol << ")\n";
+
+                for (auto& cell : cells)
+                {
+                    int gx = cell.first.x;
+                    int gy = cell.first.y;
+
+                    if (gx < GridStartRow || gx >= GridEndRow ||
+                        gy < GridStartCol || gy >= GridEndCol)
+                    {
+                        std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
+                        continue;
+                    }
+
+                    std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
+
+                    if (enemy &&
+                        enemy->getNowRow() == gx &&
+                        enemy->getNowCol() == gy)
+                    {
+                        enemy->getDamage(atk->getValue());
+                        std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
+
+                        if (enemy->getHealth() <= 0) {
+                            std::cout << "        Enemy died!\n";
+                        }
+                    }
+                }
+            }
         }
         else
         {
@@ -852,7 +859,8 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         delete draggingCard;
         draggingCard = nullptr;
 
-        if (cardData != nullptr) {
+        // send the card's data to discard pile (for redraw system)
+        if (cardData) {
             discard.push_back(cardData);
         }
     }
@@ -870,8 +878,8 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     draggingCard = nullptr;
     pendingCard = nullptr;
 
-    cout << "End of player turn" << endl;
-	turnState = TurnState::ENEMY_TURN; // End of player's turn
+    std::cout << "End of player turn" << std::endl;
+    turnState = TurnState::ENEMY_TURN;
 }
 
 // Apply attack pattern (player)
