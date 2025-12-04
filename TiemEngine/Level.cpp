@@ -150,20 +150,20 @@ void Level::LevelInit()
 
 
     // ------------------------
-    // View-Deck button (left)
-    viewDeckButton = new ImageObject();
-    viewDeckButton->SetSize(200.0f, -260.0f);
-    viewDeckButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
-    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png"); 
-    objectsList.push_back(viewDeckButton);
-
-    // ------------------------
-    // Re-Draw button (right)
+    // Re-Draw button (LEFT)
     reDrawButton = new ImageObject();
     reDrawButton->SetSize(200.0f, -260.0f);
-    reDrawButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
-    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png"); 
+    reDrawButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));  // LEFT
+    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png");
     objectsList.push_back(reDrawButton);
+
+    // ------------------------
+    // View-Deck button (RIGHT)
+    viewDeckButton = new ImageObject();
+    viewDeckButton->SetSize(200.0f, -260.0f);
+    viewDeckButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));  // RIGHT
+    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png");
+    objectsList.push_back(viewDeckButton);
 
 
     // Drop zones
