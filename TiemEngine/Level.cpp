@@ -11,11 +11,7 @@
 #include <cmath>
 #include <random>
 
-
-
-
 // Bezier line
-
 static inline glm::vec3 QuadraticBezier(
     const glm::vec3& P0,
     const glm::vec3& C,
@@ -381,6 +377,12 @@ void Level::HandleMouse(int type, int x, int y)
 
                 if (!drawn.empty()) {
                     hand.AddCards(drawn, objectsList);
+
+					for (Card* c : drawn) {
+						if (c != nullptr) {
+							std::cout << c->getName() << std::endl;
+						}
+					}
                 }
             }
             return; // button handled
@@ -485,6 +487,12 @@ void Level::DealNewHand(int cardCount) {
     if (!drawn.empty())
     {
         hand.AddCards(drawn, objectsList);
+
+        for (Card* c : drawn) {
+            if (c != nullptr) {
+                std::cout << c->getName() << std::endl;
+            }
+        }
     }
 }
 
@@ -915,8 +923,6 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
     cout << endl;
 }
 
-//////////////////////// Part of AI logic ////////////////////////
-
 void Level::ApplyEnemyAttack()
 {
     if (!enemy) return;
@@ -989,10 +995,6 @@ bool Level::EnemyCanAttackPlayer()
     return (abs(er - pr) <= 1 && abs(ec - pc) <= 1);
 }
 
-///////////////////////////////////End AI logic/////////
-
-
-////////////////////////////////////////////Game Loop/////////////////////////////////////
 void Level::UpdateTurn()
 {
     if (turnState == TurnState::PLAYER_TURN) {
