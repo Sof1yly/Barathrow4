@@ -719,7 +719,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         if (cardData)
         {
             std::cout << "[Card] " << cardData->getName() << std::endl;
-
+            
             const auto& acts = cardData->getActions();
             for (Action* a : acts)
             {

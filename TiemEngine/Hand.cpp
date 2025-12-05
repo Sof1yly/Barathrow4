@@ -1,4 +1,8 @@
 #include "Hand.h"
+#include "Action.h"
+#include "MoveAction.h"
+#include "AttackAction.h"
+#include <iostream>
 #include <cmath>
 
 static const float PI = 3.1415926535f;
@@ -284,6 +288,29 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
     {
         hoveredView = top;
         liftForHover(hoveredView);
+
+        Card* data = FindCardByImage(hoveredView);
+        if (data != nullptr)
+        {
+            int dmg = 0;
+            int mv = 0;
+
+            const auto& acts = data->getActions();
+            for (Action* a : acts)
+            {
+                if (auto* atk = dynamic_cast<AttackAction*>(a))
+                {
+                    dmg += atk->getValue();
+                }
+                else if (auto* move = dynamic_cast<MoveAction*>(a))
+                {
+                    mv += move->getValue();
+                }
+            }
+
+            std::cout<< data->getName()<< " Damage: " << dmg<< " Move: " << mv << std::endl;
+            std::cout << "===========================================" << std::endl;
+        }
     }
 }
 
