@@ -330,9 +330,7 @@ void Level::HandleMouse(int type, int x, int y)
         return;
     }
 
-    // ----------------------------------------------------
-    // MOUSE DOWN
-    // ----------------------------------------------------
+    // Left Click
     if (type == 0)
     {
         // menu toggle
@@ -353,56 +351,101 @@ void Level::HandleMouse(int type, int x, int y)
         }
 
         // ------------------------------
-        // VIEW-DECK BUTTON (LEFT)
-        //  - shuffle deck
-        //  - draw until hand has 5 cards
+        // RE-DRAW BUTTON (LEFT) - Left Click
+        //  - discard all cards in hand to discard pile
+        //  - if deck is empty, move all discard back to deck and shuffle
+        //  - draw new hand (5 cards)
         // ------------------------------
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
         {
-            cout << "[UI] View-Deck clicked"<<endl;
-            const int MAX_HAND = 5;
-            int current = hand.GetCardCount();
-            int need = MAX_HAND - current;
-
-            if (need > 0 && !deck.empty())
+            cout << "[UI] Re-Draw Button clicked" << endl;
+            
+            // 1) Collect all card data from current hand
+            std::vector<Card*> cardsInHand = hand.CollectAllCardData();
+            
+            // 2) Move all cards from hand to discard pile
+            if (!cardsInHand.empty())
             {
+                discard.insert(discard.end(), cardsInHand.begin(), cardsInHand.end());
+                cout << "  Discarded " << cardsInHand.size() << " cards from hand" << endl;
+            }
+            
+            // 3) Clear the visual hand
+            hand.Clear(objectsList);
+            
+            // 4) If deck is empty, shuffle discard pile back into deck
+            if (deck.empty() && !discard.empty())
+            {
+                cout << "  Deck is empty. Moving " << discard.size() << " cards from discard to deck" << endl;
+                deck.insert(deck.end(), discard.begin(), discard.end());
+                discard.clear();
                 ShuffleDeck();
-
+            }
+            
+            // 5) Draw new hand (5 cards)
+            const int HAND_SIZE = 5;
+            int drawCount = std::min(HAND_SIZE, (int)deck.size());
+            
+            if (drawCount > 0)
+            {
                 std::vector<Card*> drawn;
-                for (int i = 0; i < need && !deck.empty(); ++i)
+                for (int i = 0; i < drawCount; ++i)
                 {
                     drawn.push_back(deck.back());
                     deck.pop_back();
                 }
-
-                if (!drawn.empty()) {
-                    hand.AddCards(drawn, objectsList);
-
-					for (Card* c : drawn) {
-						if (c != nullptr) {
-							std::cout << c->getName() << std::endl;
-						}
-					}
+                
+                hand.AddCards(drawn, objectsList);
+                
+                cout << "  Drew " << drawCount << " new cards" << endl;
+                for (Card* c : drawn) {
+                    if (c != nullptr) {
+                        std::cout << "    - " << c->getName() << std::endl;
+                    }
                 }
             }
+            else
+            {
+                cout << "  No cards available to draw!" << endl;
+            }
+            
             return; // button handled
         }
 
         // ------------------------------
-        // RE-DRAW BUTTON (RIGHT)
-        //  - move used cards (discard) back to deck
-        //  - shuffle deck
+        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
         // ------------------------------
-        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
         {
-            cout << "[UI] Re-Draw clicked"<<endl;
-            if (!discard.empty())
-            {
-                deck.insert(deck.end(), discard.begin(), discard.end());
-                discard.clear();
-            }
-            ShuffleDeck();
-            return; // button handled
+            // Do nothing on left-click for discard pile button
+            return;
+        }
+
+        // ------------------------------
+        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
+        // ------------------------------
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        {
+            // Do nothing on left-click for discard pile button
+            return;
+        }
+
+        // ------------------------------
+        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
+        // ------------------------------
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        {
+            // Do nothing on left-click for discard pile button
+            return;
+        }
+
+        // ------------------------------
+        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
+        // ------------------------------
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        {
+            // Do nothing on left-click for discard pile button
+            return;
         }
 
         // ------------------------------
@@ -438,11 +481,65 @@ void Level::HandleMouse(int type, int x, int y)
         }
         hand.UpdateHover(mousePos, true);
     }
+    
     // ----------------------------------------------------
-    // RELEASE
+    // RELEASE (Mouse Right Click - type == 2)
     // ----------------------------------------------------
     if (type == 2)
     {
+        // Check if right-clicked on RE-DRAW BUTTON to view re-draw deck
+        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
+        {
+            cout << "[UI] View Re-Draw Deck (Right Click)" << endl;
+            cout << "=== RE-DRAW DECK CONTENTS ===" << endl;
+            cout << "Total cards in re-draw deck: " << deck.size() << endl;
+            
+            if (!deck.empty())
+            {
+                for (size_t i = 0; i < deck.size(); ++i)
+                {
+                    Card* c = deck[i];
+                    if (c != nullptr) {
+                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
+                    }
+                }
+            }
+            else
+            {
+                cout << "  Re-draw deck is empty!" << endl;
+            }
+            cout << "=============================" << endl;
+            
+            return; // button handled
+        }
+
+        // Check if right-clicked on VIEW-DECK BUTTON to view discard pile
+        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        {
+            cout << "[UI] View Discard Pile (Right Click)" << endl;
+            cout << "=== DISCARD PILE CONTENTS ===" << endl;
+            cout << "Total cards in discard pile: " << discard.size() << endl;
+            
+            if (!discard.empty())
+            {
+                for (size_t i = 0; i < discard.size(); ++i)
+                {
+                    Card* c = discard[i];
+                    if (c != nullptr) {
+                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
+                    }
+                }
+            }
+            else
+            {
+                cout << "  Discard pile is empty!" << endl;
+            }
+            cout << "=============================" << endl;
+            
+            return; // button handled
+        }
+
+        // Handle drag release
         if (isDragging) {
             EndDrag(mousePos);
         }
