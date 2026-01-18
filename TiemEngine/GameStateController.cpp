@@ -25,24 +25,91 @@ void GameStateController::Init(GameState gameStateInit)
 
 void GameStateController::Update()
 {
-	if ((GameData::GetInstance()->gGameStateCurr == GameState::GS_RESTART) || (GameData::GetInstance()->gGameStateCurr == GameState::GS_QUIT))
+	// Handle state transitions
+	if (GameData::GetInstance()->gGameStateNext != GameData::GetInstance()->gGameStateCurr)
 	{
-		return;
-	}
+		GameState nextState = GameData::GetInstance()->gGameStateNext;
 
-	switch (GameData::GetInstance()->gGameStateCurr)
+		// Handle restart
+		if (nextState == GameState::GS_RESTART)
+		{
+			if (currentLevel)
+			{
+				currentLevel->LevelRestart();
+			}
+			// Reset to current state (stay in same level)
+			GameData::GetInstance()->gGameStateNext = GameData::GetInstance()->gGameStateCurr;
+			return;
+		}
+
+		// Handle quit
+		if (nextState == GameState::GS_QUIT)
+		{
+			return;
+		}
+
+		// Clean up current level before switching
+		if (currentLevel)
+		{
+			currentLevel->LevelFree();
+			currentLevel->LevelUnload();
+			delete currentLevel;
+			currentLevel = nullptr;
+		}
+
+		// Update states
+		GameData::GetInstance()->gGameStatePrev = GameData::GetInstance()->gGameStateCurr;
+		GameData::GetInstance()->gGameStateCurr = nextState;
+
+		// Initialize new level
+		switch (GameData::GetInstance()->gGameStateCurr)
+		{
+		case GameState::GS_LEVEL1:
+			currentLevel = new Level();
+			currentLevel->LevelLoad();
+			currentLevel->LevelInit();
+			break;
+		case GameState::GS_LEVEL2:
+			currentLevel = new LevelTest();
+			currentLevel->LevelLoad();
+			currentLevel->LevelInit();
+			break;
+		case GameState::GS_LEVEL3:
+			currentLevel = new Level3();
+			currentLevel->LevelLoad();
+			currentLevel->LevelInit();
+			break;
+		default:
+			cout << "gGameStateCurr : invalid state!!" << endl;
+			exit(1);
+		}
+	}
+	else
 	{
-	case GameState::GS_LEVEL1:
-		currentLevel = new Level();
-		break;
-	case GameState::GS_LEVEL2:
-		currentLevel = new LevelTest();
-		break;
-	case GameState::GS_LEVEL3:
-		currentLevel = new Level3();
-		break;
-	default:
-		cout << "gGameStateCurr : invalid state!!" << endl;
-		exit(1);
+		// First time initialization
+		if (!currentLevel)
+		{
+			switch (GameData::GetInstance()->gGameStateCurr)
+			{
+			case GameState::GS_LEVEL1:
+				currentLevel = new Level();
+				currentLevel->LevelLoad();
+				currentLevel->LevelInit();
+				break;
+			case GameState::GS_LEVEL2:
+				currentLevel = new LevelTest();
+				currentLevel->LevelLoad();
+				currentLevel->LevelInit();
+				break;
+			case GameState::GS_LEVEL3:
+				currentLevel = new Level3();
+				currentLevel->LevelLoad();
+				currentLevel->LevelInit();
+				break;
+			default:
+				cout << "gGameStateCurr : invalid state!!" << endl;
+				exit(1);
+			}
+		}
 	}
 }

@@ -139,5 +139,7 @@ public:
 
     void UpdateTurn();
 
+    void LevelRestart();
+
 
 };

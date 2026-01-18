@@ -1,5 +1,3 @@
-
-
 #include <GL/glew.h>
 #include <SDL_main.h>
 #include <SDL.h>
@@ -95,28 +93,10 @@ int main(int argc, char* argv[])
 	gameStateController = new GameStateController();
 	gameStateController->Init(GameState::GS_LEVEL1);
 
-
 	// Game Loop
-
 	while (GameData::GetInstance()->gGameStateCurr != GameState::GS_QUIT)
 	{
-		// Load new state
-		if (GameData::GetInstance()->gGameStateCurr != GS_RESTART)
-		{
-			gameStateController->Update();
-			gameStateController->currentLevel->LevelLoad();
-		}
-		else
-		{
-			GameData::GetInstance()->gGameStateNext =
-				GameData::GetInstance()->gGameStateCurr =
-				GameData::GetInstance()->gGameStatePrev;
-		}
-
-		// Initialize the gamestate
-		gameStateController->currentLevel->LevelInit();
-
-		// Frame loop for this state
+		// Frame loop for current state
 		while (GameData::GetInstance()->gGameStateCurr == GameData::GetInstance()->gGameStateNext)
 		{
 			currentFrame = SDL_GetTicks();
@@ -166,7 +146,7 @@ int main(int argc, char* argv[])
 						mouseHeld = true;
 						mouseDownTime = SDL_GetTicks();
 						SDL_GetMouseState(&mouseX, &mouseY);
-						gameStateController->currentLevel->HandleMouse(0, mouseX, mouseY); // press
+						gameStateController->currentLevel->HandleMouse(0, mouseX, mouseY);
 					}
 				}
 
@@ -177,7 +157,7 @@ int main(int argc, char* argv[])
 					{
 						mouseHeld = false;
 						SDL_GetMouseState(&mouseX, &mouseY);
-						gameStateController->currentLevel->HandleMouse(2, mouseX, mouseY); // release
+						gameStateController->currentLevel->HandleMouse(2, mouseX, mouseY);
 					}
 				}
 
@@ -185,7 +165,7 @@ int main(int argc, char* argv[])
 				else if (sdlEvent.type == SDL_MOUSEMOTION)
 				{
 					SDL_GetMouseState(&mouseX, &mouseY);
-					gameStateController->currentLevel->HandleMouse(3, mouseX, mouseY); // hover
+					gameStateController->currentLevel->HandleMouse(3, mouseX, mouseY);
 				}
 			}
 
@@ -195,43 +175,33 @@ int main(int argc, char* argv[])
 			if (mouseHeld)
 			{
 				Uint32 heldDuration = SDL_GetTicks() - mouseDownTime;
-				if (heldDuration >= 250) // start drag after 0.25s
+				if (heldDuration >= 250)
 				{
 					SDL_GetMouseState(&mouseX, &mouseY);
-					gameStateController->currentLevel->HandleMouse(1, mouseX, mouseY); // drag
+					gameStateController->currentLevel->HandleMouse(1, mouseX, mouseY);
 				}
 			}
 
 			// ---------------------------------------------
-			// Update game + hover refresh
+			// Update and Render
 			// ---------------------------------------------
-			gameStateController->currentLevel->LevelUpdate();
-
-			// Optional: keep hover responsive even if mouse not moving
-			SDL_GetMouseState(&mouseX, &mouseY);
-			gameStateController->currentLevel->HandleMouse(3, mouseX, mouseY);
-
-	
-			// Render
-	
-			gameStateController->currentLevel->LevelDraw();
+			if (gameStateController->currentLevel)
+			{
+				gameStateController->currentLevel->LevelUpdate();
+				
+				SDL_GetMouseState(&mouseX, &mouseY);
+				gameStateController->currentLevel->HandleMouse(3, mouseX, mouseY);
+				
+				gameStateController->currentLevel->LevelDraw();
+			}
+			
 			SDL_GL_SwapWindow(window);
-
 			lastFrame = currentFrame;
 		}
 
-		// Cleanup after this state
-		gameStateController->currentLevel->LevelFree();
-
-		if (GameData::GetInstance()->gGameStateNext != GS_RESTART)
-		{
-			gameStateController->currentLevel->LevelUnload();
-		}
-
-		GameData::GetInstance()->gGameStatePrev = GameData::GetInstance()->gGameStateCurr;
-		GameData::GetInstance()->gGameStateCurr = GameData::GetInstance()->gGameStateNext;
+		// State transition detected - handle it
+		gameStateController->Update();
 	}
-
 
 	SDL_DestroyWindow(window);
 	window = nullptr;

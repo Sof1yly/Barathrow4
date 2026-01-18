@@ -359,12 +359,8 @@ void Level::HandleMouse(int type, int x, int y)
             }
         }
 
-        // ------------------------------
         // RE-DRAW BUTTON (LEFT) - Left Click
-        //  - discard all cards in hand to discard pile
-        //  - if deck is empty, move all discard back to deck and shuffle
-        //  - draw new hand (5 cards)
-        // ------------------------------
+ 
         if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
         {
             cout << "[UI] Re-Draw Button clicked" << endl;
@@ -890,7 +886,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                             nowCol++;
                         }
                         break;
-                    }
+                }
                 }
 
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
@@ -1104,20 +1100,99 @@ bool Level::EnemyCanAttackPlayer()
 void Level::UpdateTurn()
 {
     if (turnState == TurnState::PLAYER_TURN) {
-        
+        // Player turn - nothing to do here
     }
     else if (turnState == TurnState::ENEMY_TURN) {
+        
+        if (!enemy) {
+            cout << "[ERROR] Enemy is nullptr during ENEMY_TURN!" << endl;
+            turnState = TurnState::PLAYER_TURN;
+            return;
+        }
+        
+        cout << "[ENEMY TURN] Enemy at (" << enemy->getNowRow() << ", " << enemy->getNowCol() << ")" << endl;
+        cout << "[ENEMY TURN] Player at (" << nowRow << ", " << nowCol << ")" << endl;
 
         if (EnemyCanAttackPlayer()) {
+            cout << "[ENEMY TURN] Enemy can attack player!" << endl;
             ApplyEnemyAttack();
-            
         }
         else {
+            cout << "[ENEMY TURN] Enemy is moving toward player" << endl;
             MoveEnemyTowardPlayer();
         }
 
         turnState = TurnState::PLAYER_TURN;
     }
+}
+
+
+void Level::LevelRestart() 
+{
+    cout << "Restarting Level..." << endl;
+
+    // 1. Clear the hand FIRST 
+    hand.Clear(objectsList);
+
+    // 2. Delete enemy if exists
+    if (enemy)
+    {
+        ImageObject* obj = enemy->getObject();
+        if (obj)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+            
+            delete obj;
+            enemy->setObject(nullptr);
+        }
+        delete enemy;
+        enemy = nullptr;
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        dropZones[i] = nullptr;
+    }
+
+    // 4. Delete all remaining objects
+    for (auto* obj : objectsList) {
+        delete obj;
+    }
+    objectsList.clear();
+    
+    // 5. Clear bezier segments 
+    bezierSegments.clear();
+
+    // 6. Reset level variables
+    nowRow = 0;
+    nowCol = 0;
+    playerHealth = 10;
+    turnState = TurnState::PLAYER_TURN;
+
+    // 7. Clear card system
+    deck.clear();
+    discard.clear();
+
+    // 8. Reset all flags and pointers
+    dropZonesCreated = false;
+    dropZonesVisible = false;
+    bezierCreated = false;
+    isDragging = false;
+    isHolding = false;
+    draggingCard = nullptr;
+    pendingCard = nullptr;
+    testGrid = nullptr;
+    testMove = nullptr;
+    player = nullptr;
+    mainMenu = nullptr;
+    reDrawButton = nullptr;
+    viewDeckButton = nullptr;
+
+    // 9. Reinitialize the level
+    LevelInit();
+
+    cout << "Level Restarted" << endl;
 }
 
 
