@@ -173,6 +173,15 @@ void Level::LevelInit()
     // Drop zones
     CreateDropZones(objectsList);
 
+	//////////////////////////////////////test sprite *delete later
+    SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
+    sprite->SetSize(50.0f, -50.0f);
+    sprite->SetPosition(glm::vec3(800.0f, 0.0f, 0.0f));
+    sprite->SetAnimationLoop(0, 0, 27, 50);
+    sprite->NextAnimation();
+    objectsList.push_back(sprite);
+	//////////////////////////////////////test sprite *delete later
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -253,7 +262,7 @@ void Level::HandleKey(char key)
     {
     case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    break;
     case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; break;
-    case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2;  break;
+    case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL3;  break;
     default: break;
     }
 

@@ -66,18 +66,19 @@ void SpriteObject::Update(float deltaTime)
 
 void SpriteObject::GenUV()
 {
+	float frameW = 1.0f / columnMax;
+	float frameH = 1.0f / rowMax;
 
-	uv[0] = 0.0f;
-	uv[1] = 0.0f;
+	float u0 = currentColumn * frameW;
+	float v0 = currentRow * frameH;
 
-	uv[2] = 1.0f;
-	uv[3] = 0.0f;
+	float u1 = u0 + frameW;
+	float v1 = v0 + frameH;
 
-	uv[4] = 1.0f;
-	uv[5] = 1.0f;
-
-	uv[6] = 0.0f;
-	uv[7] = 1.0f;
+	uv[0] = u0; uv[1] = v0;
+	uv[2] = u1; uv[3] = v0;
+	uv[4] = u1; uv[5] = v1;
+	uv[6] = u0; uv[7] = v1;
 }
 
 void SpriteObject::SetAnimationLoop(int startRow, int startColumn, int howManyFrame, int delayBetaweenFrame)
