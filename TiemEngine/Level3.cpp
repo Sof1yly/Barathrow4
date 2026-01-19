@@ -12,7 +12,7 @@ void Level3::LevelLoad()
 	sprite->LoadData();
 	GameEngine::GetInstance()->AddMesh(SpriteMeshVbo::MESH_NAME, sprite);
 
-	cout << "Load Level" << endl;
+	cout << "Load Level 3" << endl;
 }
 
 void Level3::LevelInit()

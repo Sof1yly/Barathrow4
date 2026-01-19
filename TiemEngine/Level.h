@@ -122,15 +122,15 @@ private:
     void DealNewHand(int cardCount);
 
 public:
-    void LevelLoad();
-    void LevelInit();
-    void LevelUpdate();
-    void LevelDraw();
-    void LevelFree();
-    void LevelUnload();
+    virtual void LevelLoad();
+    virtual void LevelInit();
+    virtual void LevelDraw();
+    virtual void LevelFree();
+    virtual void LevelUpdate();
+    virtual void LevelUnload();
 
-    void HandleKey(char key);
-    void HandleMouse(int type, int x, int y);
+    virtual void HandleKey(char key);
+    virtual void HandleMouse(int type, int x, int y);
 
     void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
     void ApplyEnemyAttack();
