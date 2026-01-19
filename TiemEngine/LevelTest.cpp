@@ -11,7 +11,7 @@ void LevelTest::LevelLoad()
 	tri->LoadData();
 	GameEngine::GetInstance()->AddMesh(TriangleMeshVbo::MESH_NAME, tri);
 
-	cout << "Load Level" << endl;
+	cout << "Load Test Level" << endl;
 }
 
 void LevelTest::LevelInit()
@@ -30,9 +30,10 @@ void LevelTest::LevelInit()
 	GameObject * obj3 = new GameObject();
 	obj3->SetColor(0.0, 0.0, 1.0);
 	obj3->SetPosition(glm::vec3(-2.0f, -2.0f, 0.0f));
+	obj3->SetSize(100, 100);
 	objectsList.push_back(obj3);
 
-	cout << "Init Level" << endl;
+	cout << "Init Test Level" << endl;
 }
 
 void LevelTest::LevelUpdate()
@@ -73,7 +74,9 @@ void LevelTest::HandleKey(char key)
 	case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT; ; break;
 	case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; ; break;
 	case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL3; ; break;
+	case 'c': cout << "C press";break;
 	}
+	
 }
 
 void LevelTest::HandleMouse(int type, int x, int y)

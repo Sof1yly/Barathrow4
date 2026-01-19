@@ -271,7 +271,7 @@ void Level::HandleKey(char key)
     {
     case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    break;
     case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; break;
-    case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL3;  break;
+    case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2;  break;
     default: break;
     }
 
