@@ -15,9 +15,15 @@ void main()
     {
         finalColor = InColor;
     }
+    else if (renderMode == 1)
+    {
+        vec4 texColor = texture(ourTexture, TexCoord);
+        finalColor = vec4(texColor.rgb, texColor.a * InColor.a);
+    }
     else
     {
         vec4 texColor = texture(ourTexture, TexCoord);
+        texColor = texColor * InColor;
         finalColor = vec4(texColor.rgb, texColor.a * InColor.a);
     }
 }

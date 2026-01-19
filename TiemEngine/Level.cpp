@@ -1,10 +1,12 @@
 ﻿#include "Level.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
+#include "TriangleMeshVbo.h"
 #include "Card.h"
 #include "Action.h"
 #include "MoveAction.h"
 #include "AttackAction.h"
+#include "CombineObject.h"
 
 #include <iostream>
 #include <algorithm>
@@ -36,7 +38,11 @@ void Level::LevelLoad()
     sprite->LoadData();
     GameEngine::GetInstance()->AddMesh(SpriteMeshVbo::MESH_NAME, sprite);
 
-    cout << "Load Level" << endl;
+    auto* triangle = new TriangleMeshVbo();
+    triangle->LoadData();
+    GameEngine::GetInstance()->AddMesh(TriangleMeshVbo::MESH_NAME, triangle);
+
+    cout << "Load Level 00" << endl;
 }
 
 void Level::LevelInit()
@@ -177,6 +183,13 @@ void Level::LevelInit()
     sprite->NextAnimation();
     objectsList.push_back(sprite);
 	//////////////////////////////////////test sprite *delete later
+
+    CombineObject* cb = new CombineObject();
+    cb->SetSize(100.0f, 100.0f);
+    cb->SetPosition(glm::vec3(800.0f, 200.0f, 0.0f));
+    cb->SetColor2(1.0f, 0.0f, 0.0f);
+    cb->SetColor3(0.0f, 1.0f, 0.0f);
+    objectsList.push_back(cb);
 
     std::cout << "Init Level" << std::endl;
 }

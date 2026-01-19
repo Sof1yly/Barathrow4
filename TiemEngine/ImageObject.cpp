@@ -25,6 +25,7 @@ void ImageObject::Render(glm::mat4 globalModelTransform)
 
 	GLuint modelMatixId = GameEngine::GetInstance()->GetRenderer()->GetModelMatrixAttrId();
 	GLuint renderModeId = GameEngine::GetInstance()->GetRenderer()->GetModeUniformId();
+	GLuint colorId = GameEngine::GetInstance()->GetRenderer()->GetColorUniformId();
 
 	if (modelMatixId == -1) {
 		cout << "Error: Can't perform transformation " << endl;
@@ -32,6 +33,10 @@ void ImageObject::Render(glm::mat4 globalModelTransform)
 	}
 	if (renderModeId == -1) {
 		cout << "Error: Can't set renderMode in ImageObject " << endl;
+		return;
+	}
+	if (colorId == -1) {
+		cout << "Error: Can't set color " << endl;
 		return;
 	}
 
@@ -43,7 +48,8 @@ void ImageObject::Render(glm::mat4 globalModelTransform)
 
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
-		glUniform1i(renderModeId, 1);
+		glUniform1i(renderModeId, 2);
+		glUniform4f(colorId, 1.0f, 1.0f, 1.0f, 1.0f);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		squareMesh->Render();
 	}

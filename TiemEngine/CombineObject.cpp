@@ -37,6 +37,7 @@ void CombineObject::Render(glm::mat4 globalModelTransform)
 
 	GLuint modelMatixId = GameEngine::GetInstance()->GetRenderer()->GetModelMatrixAttrId();
 	GLuint colorId = GameEngine::GetInstance()->GetRenderer()->GetColorUniformId();
+	GLuint renderModeId = GameEngine::GetInstance()->GetRenderer()->GetModeUniformId();
 
 
 	if (modelMatixId == -1) {
@@ -47,9 +48,15 @@ void CombineObject::Render(glm::mat4 globalModelTransform)
 		cout << "Error: Can't set color " << endl;
 		return;
 	}
+	if (renderModeId == -1) {
+		cout << "Error: Can't set renderMode in ImageObject " << endl;
+		return;
+	}
+
 	vector <glm::mat4> matrixStack;
 
 	glm::mat4 currentMatrix = this->getTransform();
+	glUniform1i(renderModeId, 0);
 
 	if (squareMesh != nullptr) {
 
@@ -64,7 +71,7 @@ void CombineObject::Render(glm::mat4 globalModelTransform)
 
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
-		glUniform3f(colorId, color2.x, color2.y, color2.z);
+		glUniform4f(colorId, color2.x, color2.y, color2.z, 1.0f);
 		triangleMesh->Render();
 
 	}
