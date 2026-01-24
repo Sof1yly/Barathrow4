@@ -26,10 +26,26 @@ private:
     // Basic objects
     GameObject* player = nullptr;
     GameObject* testMove = nullptr;
-    ImageObject* testGrid = nullptr;
+    SpriteObject* playersprite = nullptr; //Real Player
     ImageObject* mainMenu = nullptr;
     ImageObject* testEnemy;
     Enemy* enemy;
+
+
+    //////////////////////////////
+	// Player state
+    // Smooth grid movement
+    bool playerMoving = false;
+    glm::vec3 playerMoveStart;
+    glm::vec3 playerMoveTarget;
+    float playerMoveTimer = 0.0f;
+    const float PLAYER_MOVE_TIME = 1000.0f; // 1 sec per tile (ms)
+
+    // Facing / animation
+    enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
+    PlayerDir playerDir = PlayerDir::DOWN;
+	//End player state
+    //////////////////////////////
 
     // Grid
     int   GridStartRow = 0;
@@ -141,5 +157,7 @@ public:
 
     void LevelRestart();
 
+    void SetPlayerIdle(PlayerDir dir);
+    void SetPlayerWalk(PlayerDir dir);
 
 };

@@ -78,14 +78,26 @@ void Level::LevelInit()
     enemy->setObject(enemyObj);
 
 
-    // 3) Player grid marker
+    // 3) Player sprite (3x4, 192x256)
     {
-        ImageObject* marker = new ImageObject();
-        marker->SetSize(84.0f, -90.0f);
-        marker->SetPosition(glm::vec3(-404.0f, 352.0f, 0.0f));
-        marker->SetTexture("../Resource/Texture/player.png");
-        objectsList.push_back(marker);
-        testGrid = marker;
+        SpriteObject* playerSprite =
+            new SpriteObject("../Resource/Texture/Player_sprite.png", 4,3);
+
+        playerSprite->SetSize(84.0f, -90.0f);
+
+        glm::vec3 startPos = GridToWorld(0, 0);
+        playerSprite->SetPosition(startPos);
+
+        playerSprite->SetAnimationLoop(
+            0,      // start frame
+            0,      // row
+            0,      // end frame
+            150     // ms per frame
+        );
+        playerSprite->NextAnimation();
+
+        objectsList.push_back(playerSprite);
+        playersprite = playerSprite;
     }
 
     // 4) Demo objects
@@ -239,6 +251,26 @@ void Level::LevelUpdate()
             testMoveMoving = false;
         }
     }
+
+    if (playerMoving && playersprite)
+    {
+        playerMoveTimer += deltaTime;
+        float t = playerMoveTimer / PLAYER_MOVE_TIME;
+        t = std::min(t, 1.0f);
+
+        glm::vec3 newPos =
+            playerMoveStart + (playerMoveTarget - playerMoveStart) * t;
+
+        playersprite->SetPosition(newPos);
+
+        if (t >= 1.0f)
+        {
+            playersprite->SetPosition(playerMoveTarget);
+            playerMoving = false;
+
+            SetPlayerIdle(playerDir);
+        }
+    }
 }
 
 void Level::LevelDraw()
@@ -275,7 +307,7 @@ void Level::HandleKey(char key)
     default: break;
     }
 
-    if (!testGrid) return;
+    if (!playersprite) return;
 
 	if (key == 'c') {
 		currentPatternIndex++;
@@ -313,22 +345,42 @@ void Level::HandleKey(char key)
         cout << "Enemy rotated pattern.\n";
     }
 
-	if (key == 'w' && nowCol != 0) {
-		testGrid->Translate(glm::vec3(0, GridHigh+distanceBetweenGridY, 0));
-		nowCol--;
-	}
-	else if (key == 's' && nowCol < GridEndCol-1) {
-		testGrid->Translate(glm::vec3(0, -(GridHigh + distanceBetweenGridY), 0));
-		nowCol++;
-	}
-	else if (key == 'a'&&nowRow!=0) {
-		testGrid->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0, 0));
-		nowRow--;
-	}
-	else if (key == 'd'&&nowRow<GridEndRow-1) {
-		testGrid->Translate(glm::vec3(GridWide+distanceBetweenGridX, 0, 0));
-		nowRow++;
-	}
+	//test player movement
+    if (playerMoving) return;
+
+    int targetRow = nowRow;
+    int targetCol = nowCol;
+
+    if (key == 'w' && nowCol > GridStartCol) {
+        targetCol--;
+        playerDir = PlayerDir::UP;
+    }
+    else if (key == 's' && nowCol < GridEndCol - 1) {
+        targetCol++;
+        playerDir = PlayerDir::DOWN;
+    }
+    else if (key == 'a' && nowRow > GridStartRow) {
+        targetRow--;
+        playerDir = PlayerDir::LEFT;
+    }
+    else if (key == 'd' && nowRow < GridEndRow - 1) {
+        targetRow++;
+        playerDir = PlayerDir::RIGHT;
+    }
+    else {
+        return;
+    }
+
+    playerMoving = true;
+    playerMoveTimer = 0.0f;
+
+    playerMoveStart = playersprite->GetPosition();
+    playerMoveTarget = GridToWorld(targetRow, targetCol);
+
+    SetPlayerWalk(playerDir);
+
+    nowRow = targetRow;
+    nowCol = targetCol;
 }
 
 void Level::HandleMouse(int type, int x, int y)
@@ -858,8 +910,8 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 }
             }
 
-            // ---------------- APPLY MOVE ACTION FIRST ----------------
-            if (moveSteps > 0 && testGrid)
+            // ---------------- APPLY MOVE ACTION ----------------
+            if (moveSteps > 0 && playersprite)
             {
                 std::cout << "Applying MoveAction steps = " << moveSteps
                     << " toward " << zoneNames[dz] << std::endl;
@@ -871,7 +923,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                     case 0: // LEFT (same as key 'a')
                         if (nowRow > GridStartRow)
                         {
-                            testGrid->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0.0f, 0.0f));
+                            playersprite->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0.0f, 0.0f));
                             nowRow--;
                         }
                         break;
@@ -879,7 +931,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                     case 3: // RIGHT (same as key 'd')
                         if (nowRow < GridEndRow - 1)
                         {
-                            testGrid->Translate(glm::vec3((GridWide + distanceBetweenGridX), 0.0f, 0.0f));
+                            playersprite->Translate(glm::vec3((GridWide + distanceBetweenGridX), 0.0f, 0.0f));
                             nowRow++;
                         }
                         break;
@@ -887,7 +939,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                     case 1: // TOP (same as key 'w')
                         if (nowCol > GridStartCol)
                         {
-                            testGrid->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0f));
+                            playersprite->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0f));
                             nowCol--;
                         }
                         break;
@@ -895,7 +947,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                     case 2: // BOTTOM (same as key 's')
                         if (nowCol < GridEndCol - 1)
                         {
-                            testGrid->Translate(glm::vec3(0.0f, -(GridHigh + distanceBetweenGridY), 0.0f));
+                            playersprite->Translate(glm::vec3(0.0f, -(GridHigh + distanceBetweenGridY), 0.0f));
                             nowCol++;
                         }
                         break;
@@ -1139,6 +1191,16 @@ void Level::UpdateTurn()
     }
 }
 
+void Level::SetPlayerIdle(PlayerDir dir)
+{
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 1, 1000); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 0, 1, 1000); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(2, 2, 1, 1000); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(3, 2, 1, 1000); break;
+    }
+}
 
 void Level::LevelRestart() 
 {
@@ -1209,3 +1271,13 @@ void Level::LevelRestart()
 }
 
 
+void Level::SetPlayerWalk(PlayerDir dir)
+{
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 1, 2, 150); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 1, 2, 150); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(2, 0, 2, 150); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(3, 0, 2, 150); break;
+    }
+}
