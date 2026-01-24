@@ -1257,7 +1257,7 @@ void Level::LevelRestart()
     isHolding = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
-    testGrid = nullptr;
+    //testGrid = nullptr;
     testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
