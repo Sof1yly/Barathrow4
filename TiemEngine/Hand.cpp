@@ -8,6 +8,81 @@
 static const float PI = 3.1415926535f;
 static const float RAD2DEG = 180.0f / PI;
 
+// Helper function to get card frame filename based on rarity
+static std::string getCardFrameName(int rarity)
+{
+    switch (rarity) {
+    case 1: return "BG_Frame/card_fr_gy.png";
+    case 2: return "BG_Frame/card_fr_gn.png";
+    case 3: return "BG_Frame/card_fr_br.png";
+    case 4: return "BG_Frame/card_fr_or.png";
+    case 5: return "BG_Frame/card_fr_pk.png";
+    default: return "BG_Frame/card_fr_gy.png";
+    }
+}
+
+// Helper function to get visual frame filename based on rarity
+static std::string getVisualFrameName(int rarity)
+{
+    switch (rarity) {
+    case 1: return "BG_viFrame/card_vf_gy.png";
+    case 2: return "BG_viFrame/card_vf_gn.png";
+    case 3: return "BG_viFrame/card_vf_bl.png";
+    case 4: return "BG_viFrame/card_vf_or.png";
+    case 5: return "BG_viFrame/card_vf_pk.png";
+    default: return "BG_viFrame/card_vf_gy.png";
+    }
+}
+
+// Helper function to get type icon filename based on type
+static std::string getTypeIconName(int type)
+{
+    switch (type) {
+    case 1: return "BG_Type/card_ty_atk.png";
+    case 2: return "BG_Type/card_ty_mv.png";
+    case 3: return "BG_Type/card_ty_er.png";
+    case 4: return "BG_Type/card_ty_bf.png";
+    case 5: return "BG_Type/card_ty_db.png";
+    default: return "BG_Type/card_ty_atk.png";
+    }
+}
+
+// Helper function to get star base filename (always gray 3 stars)
+static std::string getStarBaseName()
+{
+    return "BG_Stars/star_gy3.png";
+}
+
+// Helper function to get star overlay filename based on level
+static std::string getStarOverlayName(int level)
+{
+    switch (level) {
+    case 1: return "BG_Stars/star_gd1.png";
+    case 2: return "BG_Stars/star_gd2.png";
+    case 3: return "BG_Stars/star_gd3.png";
+    default: return ""; // no overlay for level 0
+    }
+}
+
+// Helper function to get background filename
+static std::string getBackgroundName()
+{
+    return "BG_card/card_bg.png";
+}
+
+std::vector<ImageObject*> Hand::getAllImagesFromView(const CardView& cv) const
+{
+    std::vector<ImageObject*> images;
+    if (cv.background) images.push_back(cv.background);
+    if (cv.starBase) images.push_back(cv.starBase);
+    if (cv.starOverlay) images.push_back(cv.starOverlay);
+    if (cv.typeIcon) images.push_back(cv.typeIcon);
+    if (cv.visual) images.push_back(cv.visual);
+    if (cv.cardFrame) images.push_back(cv.cardFrame);
+    if (cv.visualFrame) images.push_back(cv.visualFrame);
+    return images;
+}
+
 bool Hand::hitTestBase(ImageObject* v, const glm::vec3& p) const
 {
     if (!v) return false;
@@ -53,8 +128,8 @@ void Hand::layoutViews()
     int count = (int)views.size();
     if (count <= 0) return;
 
-    const float W = 220.0f;
-    const float H = 335.0f;
+    const float W = 280.0f;
+    const float H = 410.0f;
     const float handY = -610.0f;    // baseline for the hand at bottom
     const float baseRadius = 2100.0f;    // bigger = flatter
     const float R = baseRadius + 120.0f;
@@ -74,8 +149,10 @@ void Hand::layoutViews()
 
     for (int i = 0; i < count; ++i)
     {
-        ImageObject* card = views[i].image;
-        if (!card) continue;
+        const CardView& cv = views[i];
+        std::vector<ImageObject*> allImages = getAllImagesFromView(cv);
+
+        if (allImages.empty()) continue;
 
         float deg = startDeg + stepDeg * i;
         float ang = deg * (PI / 180.0f);
@@ -93,19 +170,42 @@ void Hand::layoutViews()
 
         float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
 
-        card->SetPosition(glm::vec3(px, py, 0.0f));
-        card->SetSize(W, -H); // -H to flip the upside-down texture
-        card->SetRotate(rotDeg);
+        // Apply same transformation to all layers of this card
+        for (ImageObject* img : allImages) {
+            if (!img) continue;
 
-        origPos[card] = card->GetPosition();
-        origSize[card] = card->GetSize();
-        origRot[card] = card->GetRotate();
+            img->SetPosition(glm::vec3(px, py, 0.0f));
+            img->SetSize(W, -H);
+            img->SetRotate(rotDeg);
+
+            origPos[img] = img->GetPosition();
+            origSize[img] = img->GetSize();
+            origRot[img] = img->GetRotate();
+        }
     }
 }
 
 void Hand::liftForHover(ImageObject* v)
 {
     if (!v) return;
+
+    // Find which CardView this image belongs to
+    CardView* targetView = nullptr;
+    for (auto& cv : views) {
+        std::vector<ImageObject*> images = getAllImagesFromView(cv);
+        for (ImageObject* img : images) {
+            if (img == v) {
+                targetView = &cv;
+                break;
+            }
+        }
+        if (targetView) break;
+    }
+
+    if (!targetView) return;
+
+    // Get all images from this card
+    std::vector<ImageObject*> allImages = getAllImagesFromView(*targetView);
 
     glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
@@ -115,22 +215,47 @@ void Hand::liftForHover(ImageObject* v)
     const float HOVER_SCALE = 1.35f;     // change this to adjust hover size
 
     glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
+    glm::vec2 newSize(baseSize.x * HOVER_SCALE, baseSize.y * HOVER_SCALE);
 
-    glm::vec2 newSize(baseSize.x * HOVER_SCALE,baseSize.y * HOVER_SCALE);
-
-    v->SetPosition(newPos);
-    v->SetSize(newSize.x, newSize.y);
-    v->SetRotate(0.0f); // straight up
+    // Apply hover effect to all layers
+    for (ImageObject* img : allImages) {
+        if (!img) continue;
+        img->SetPosition(newPos);
+        img->SetSize(newSize.x, newSize.y);
+        img->SetRotate(0.0f); // straight up
+    }
 }
 
 void Hand::clearHover()
 {
     if (!hoveredView) return;
 
-    ImageObject* v = hoveredView;
-    if (origPos.count(v))  v->SetPosition(origPos[v]);
-    if (origSize.count(v)) v->SetSize(origSize[v].x, origSize[v].y);
-    if (origRot.count(v))  v->SetRotate(origRot[v]);
+    // Find which CardView this image belongs to
+    CardView* targetView = nullptr;
+    for (auto& cv : views) {
+        std::vector<ImageObject*> images = getAllImagesFromView(cv);
+        for (ImageObject* img : images) {
+            if (img == hoveredView) {
+                targetView = &cv;
+                break;
+            }
+        }
+        if (targetView) break;
+    }
+
+    if (!targetView) {
+        hoveredView = nullptr;
+        return;
+    }
+
+    // Get all images and restore original positions
+    std::vector<ImageObject*> allImages = getAllImagesFromView(*targetView);
+    for (ImageObject* img : allImages) {
+        if (!img) continue;
+        if (origPos.count(img))  img->SetPosition(origPos[img]);
+        if (origSize.count(img)) img->SetSize(origSize[img].x, origSize[img].y);
+        if (origRot.count(img))  img->SetRotate(origRot[img]);
+    }
 
     hoveredView = nullptr;
 }
@@ -152,16 +277,62 @@ void Hand::CreateVisualHand(int cardCount,
     {
         Card* data = cardData[i];
 
-        auto* img = new ImageObject();
-        img->SetSize(220.0f, -335.0f);
-        img->SetTexture("../Resource/Texture/cards/slayCardTest.png");
-   
-
-        objectsList.push_back(img);
+        // Get card visual properties
+        int level = data->getLevel();    // 0-3 stars
+        int rarity = data->getRarity();  // 1-5 rarity
+        int type = data->getType();      // 1-5 type
 
         CardView cv;
         cv.cardData = data;
-        cv.image = img;
+
+        std::string basePath = "../Resource/Texture/cards/";
+
+        // RENDER ORDER (bottom to top):
+
+        // 1. Background (bottom layer)
+        cv.background = new ImageObject();
+        cv.background->SetSize(280.0f, -410.0f);
+        cv.background->SetTexture(basePath + getBackgroundName());
+        objectsList.push_back(cv.background);
+
+        // 2. Star Base (gray stars - always rendered)
+        cv.starBase = new ImageObject();
+        cv.starBase->SetSize(280.0f, -410.0f);
+        cv.starBase->SetTexture(basePath + getStarBaseName());
+        objectsList.push_back(cv.starBase);
+
+        // 3. Star Overlay (golden stars based on level) - only if level > 0
+        if (level > 0) {
+            cv.starOverlay = new ImageObject();
+            cv.starOverlay->SetSize(280.0f, -410.0f);
+            cv.starOverlay->SetTexture(basePath + getStarOverlayName(level));
+            objectsList.push_back(cv.starOverlay);
+        }
+
+        // 4. Type Icon
+        cv.typeIcon = new ImageObject();
+        cv.typeIcon->SetSize(280.0f, -410.0f);
+        cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
+        objectsList.push_back(cv.typeIcon);
+
+        // 5. Main Visual (center card image)
+        cv.visual = new ImageObject();
+        cv.visual->SetSize(280.0f, -410.0f);
+        cv.visual->SetTexture(basePath + "Sweep_attack.png"); // Replace with actual visual
+        objectsList.push_back(cv.visual);
+
+        // 6. Card Frame (based on rarity)
+        cv.cardFrame = new ImageObject();
+        cv.cardFrame->SetSize(280.0f, -410.0f);
+        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
+        objectsList.push_back(cv.cardFrame);
+
+        // 7. Visual Frame (top layer - based on rarity)
+        cv.visualFrame = new ImageObject();
+        cv.visualFrame->SetSize(280.0f, -410.0f);
+        cv.visualFrame->SetTexture(basePath + getVisualFrameName(rarity));
+        objectsList.push_back(cv.visualFrame);
+
         views.push_back(cv);
     }
 
@@ -182,15 +353,62 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
             continue;
         }
 
-        auto* img = new ImageObject();
-        img->SetSize(220.0f, -335.0f);
-        img->SetTexture("../Resource/Texture/cards/slayCardTest.png");
-
-        objectsList.push_back(img);
+        // Get card visual properties
+        int level = data->getLevel();
+        int rarity = data->getRarity();
+        int type = data->getType();
 
         CardView cv;
         cv.cardData = data;
-        cv.image = img;
+
+        std::string basePath = "../Resource/Texture/cards/";
+
+        // RENDER ORDER (bottom to top):
+
+        // 1. Background (bottom layer)
+        cv.background = new ImageObject();
+        cv.background->SetSize(280.0f, -410.0f);
+        cv.background->SetTexture(basePath + getBackgroundName());
+        objectsList.push_back(cv.background);
+
+        // 2. Star Base (gray stars - always rendered)
+        cv.starBase = new ImageObject();
+        cv.starBase->SetSize(280.0f, -410.0f);
+        cv.starBase->SetTexture(basePath + getStarBaseName());
+        objectsList.push_back(cv.starBase);
+
+        // 3. Star Overlay (golden stars based on level) - only if level > 0
+        if (level > 0) {
+            cv.starOverlay = new ImageObject();
+            cv.starOverlay->SetSize(280.0f, -410.0f);
+            cv.starOverlay->SetTexture(basePath + getStarOverlayName(level));
+            objectsList.push_back(cv.starOverlay);
+        }
+
+        // 4. Type Icon
+        cv.typeIcon = new ImageObject();
+        cv.typeIcon->SetSize(280.0f, -410.0f);
+        cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
+        objectsList.push_back(cv.typeIcon);
+
+        // 5. Main Visual
+        cv.visual = new ImageObject();
+        cv.visual->SetSize(280.0f, -410.0f);
+        cv.visual->SetTexture(basePath + "Sweep_attack.png");
+        objectsList.push_back(cv.visual);
+
+        // 6. Card Frame
+        cv.cardFrame = new ImageObject();
+        cv.cardFrame->SetSize(280.0f, -410.0f);
+        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
+        objectsList.push_back(cv.cardFrame);
+
+        // 7. Visual Frame (top layer)
+        cv.visualFrame = new ImageObject();
+        cv.visualFrame->SetSize(280.0f, -410.0f);
+        cv.visualFrame->SetTexture(basePath + getVisualFrameName(rarity));
+        objectsList.push_back(cv.visualFrame);
+
         views.push_back(cv);
     }
 
@@ -200,18 +418,20 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
 
 void Hand::Clear(std::vector<DrawableObject*>& objectsList)
 {
-    for (auto& v : views)
+    for (auto& cv : views)
     {
-        if (!v.image) {
-            continue;
-        }
+        std::vector<ImageObject*> allImages = getAllImagesFromView(cv);
 
-        auto it = std::find(objectsList.begin(), objectsList.end(), v.image);
-        if (it != objectsList.end()) {
-            objectsList.erase(it);
-        }
+        for (ImageObject* img : allImages) {
+            if (!img) continue;
 
-        delete v.image;
+            auto it = std::find(objectsList.begin(), objectsList.end(), img);
+            if (it != objectsList.end()) {
+                objectsList.erase(it);
+            }
+
+            delete img;
+        }
     }
 
     views.clear();
@@ -235,160 +455,112 @@ std::vector<Card*> Hand::CollectAllCardData() const
     return out;
 }
 
-
 ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
 {
-    if (hoveredView && hitTestCurrent(hoveredView, mouseWorld))
-        return hoveredView;
+    // Check cards in reverse order (front to back)
+    for (int i = (int)views.size() - 1; i >= 0; --i) {
+        const CardView& cv = views[i];
 
-    for (int i = (int)views.size() - 1; i >= 0; --i)
-    {
-        ImageObject* v = views[i].image;
-        if (hitTestBase(v, mouseWorld))
-            return v;
+        // Test against background (the main hit area)
+        if (cv.background && hitTestBase(cv.background, mouseWorld)) {
+            return cv.background;
+        }
     }
     return nullptr;
 }
 
-
 void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
 {
-    if (isDragging)
-    {
+    if (isDragging) {
+        if (hoveredView) {
+            clearHover();
+        }
         return;
     }
 
-    if (hoveredView)
-    {
-        if (hitTestCurrent(hoveredView, mouseWorld))
-            return;
+    ImageObject* hit = PeekAt(mouseWorld);
+
+    if (hit == hoveredView) {
+        return;
     }
 
-
-    ImageObject* top = nullptr;
-    for (int i = (int)views.size() - 1; i >= 0; --i)
-    {
-        ImageObject* v = views[i].image;
-        if (hitTestBase(v, mouseWorld))
-        {
-            top = v;
-            break;
-        }
-    }
-
-    if (top == hoveredView) {
-        return; // nothing changed
-    }
-        
-
-    if (hoveredView)
+    if (hoveredView) {
         clearHover();
+    }
 
-    if (top)
-    {
-        hoveredView = top;
-        liftForHover(hoveredView);
-
-        Card* data = FindCardByImage(hoveredView);
-        if (data != nullptr)
-        {
-            int dmg = 0;
-            int mv = 0;
-
-            const auto& acts = data->getActions();
-            for (Action* a : acts)
-            {
-                if (auto* atk = dynamic_cast<AttackAction*>(a))
-                {
-                    dmg += atk->getValue();
-                }
-                else if (auto* move = dynamic_cast<MoveAction*>(a))
-                {
-                    mv += move->getValue();
-                }
-            }
-
-            std::cout<< data->getName()<< " Damage: " << dmg<< " Move: " << mv << std::endl;
-            std::cout << "===========================================" << std::endl;
-        }
+    if (hit) {
+        hoveredView = hit;
+        liftForHover(hit);
     }
 }
-
 
 void Hand::RemoveView(ImageObject* view)
 {
     if (!view) return;
 
-    for (auto it = views.begin(); it != views.end(); ++it)
-    {
-        if (it->image == view)
-        {
-            views.erase(it);
-            break;
+    auto it = std::find_if(views.begin(), views.end(),
+        [view](const CardView& cv) {
+            std::vector<ImageObject*> images;
+            if (cv.background) images.push_back(cv.background);
+            if (cv.starBase) images.push_back(cv.starBase);
+            if (cv.starOverlay) images.push_back(cv.starOverlay);
+            if (cv.typeIcon) images.push_back(cv.typeIcon);
+            if (cv.visual) images.push_back(cv.visual);
+            if (cv.cardFrame) images.push_back(cv.cardFrame);
+            if (cv.visualFrame) images.push_back(cv.visualFrame);
+
+            return std::find(images.begin(), images.end(), view) != images.end();
+        });
+
+    if (it != views.end()) {
+        // Get all images from this view
+        std::vector<ImageObject*> allImages;
+        if (it->background) allImages.push_back(it->background);
+        if (it->starBase) allImages.push_back(it->starBase);
+        if (it->starOverlay) allImages.push_back(it->starOverlay);
+        if (it->typeIcon) allImages.push_back(it->typeIcon);
+        if (it->visual) allImages.push_back(it->visual);
+        if (it->cardFrame) allImages.push_back(it->cardFrame);
+        if (it->visualFrame) allImages.push_back(it->visualFrame);
+
+        // Remove from tracking maps
+        for (ImageObject* img : allImages) {
+            origPos.erase(img);
+            origSize.erase(img);
+            origRot.erase(img);
+
+            if (hoveredView == img) hoveredView = nullptr;
+            if (selectedView == img) selectedView = nullptr;
         }
+
+        views.erase(it);
     }
-
-    origPos.erase(view);
-    origSize.erase(view);
-    origRot.erase(view);
-
-    if (hoveredView == view)  hoveredView = nullptr;
-    if (selectedView == view) selectedView = nullptr;
 
     layoutViews();
 }
 
 Card* Hand::FindCardByImage(ImageObject* img)
 {
-    for (auto& v : views) {
-         if (v.image == img){
-			return v.cardData;
+    for (auto& cv : views) {
+        std::vector<ImageObject*> images = getAllImagesFromView(cv);
+        if (std::find(images.begin(), images.end(), img) != images.end()) {
+            return cv.cardData;
         }
     }
     return nullptr;
 }
 
-
 bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
 {
     ImageObject* hit = PeekAt(mouseWorld);
-    if (!hit)
-    {
-        Deselect();
-        return false;
+    if (hit) {
+        selectedView = hit;
+        return true;
     }
-
-    if (selectedView == hit)
-    {
-        Deselect();
-        return false;
-    }
-
-    if (selectedView && origPos.count(selectedView))
-    {
-        selectedView->SetPosition(origPos[selectedView]);
-        selectedView->SetSize(origSize[selectedView].x, origSize[selectedView].y);
-        selectedView->SetRotate(origRot[selectedView]);
-    }
-
-    selectedView = hit;
-    liftForHover(selectedView);
-    return true;
+    return false;
 }
 
 void Hand::Deselect()
 {
-    if (!selectedView) {
-		return;
-    }
-    if (origPos.count(selectedView)) {
-        selectedView->SetPosition(origPos[selectedView]);
-    }    
-    if (origSize.count(selectedView)) {
-        selectedView->SetSize(origSize[selectedView].x, origSize[selectedView].y);
-    }
-    if (origRot.count(selectedView)) {
-        selectedView->SetRotate(origRot[selectedView]);
-    }
     selectedView = nullptr;
 }

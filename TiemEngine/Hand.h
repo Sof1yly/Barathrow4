@@ -12,7 +12,13 @@
 struct CardView
 {
     Card* cardData = nullptr;  // which logical card
-    ImageObject* image = nullptr;  // its visual
+    ImageObject* background = nullptr;
+    ImageObject* cardFrame = nullptr;    // card_fr_XX.png 
+    ImageObject* visualFrame = nullptr;  // card_vf_XX.png 
+    ImageObject* visual = nullptr;       
+    ImageObject* typeIcon = nullptr;    // card_ty_XX.png
+    ImageObject* starBase = nullptr;    // star_gy3.png
+    ImageObject* starOverlay = nullptr; // star_gd1/2/3.png
 };
 
 class Hand
@@ -31,6 +37,8 @@ private:
     void layoutViews();
     void liftForHover(ImageObject* v);
     void clearHover();
+
+    std::vector<ImageObject*> getAllImagesFromView(const CardView& cv) const;
 
 public:
     ImageObject* GetSelectedView() const { return selectedView; }

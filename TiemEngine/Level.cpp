@@ -156,7 +156,7 @@ void Level::LevelInit()
     }
 
     // 2) Load actions + cards (with Pattern column)
-    if (!dataLoader.loadFromFile("../Resource/GameData/CardAction.txt", &error)) {
+    if (!dataLoader.loadFromFile("../Resource/GameData/CardActionNovis.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
@@ -1028,8 +1028,10 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         hand.RemoveView(draggingCard);
 
         auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
-        if (it != objectsList.end())
+        if (it != objectsList.end()){
             objectsList.erase(it);
+        }
+            
 
         delete draggingCard;
         draggingCard = nullptr;
