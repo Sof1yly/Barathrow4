@@ -24,19 +24,22 @@ struct CardView
 class Hand
 {
 private:
-    std::vector<CardView> views;          // all cards in hand
+    std::vector<CardView> views;
     ImageObject* selectedView = nullptr;
     ImageObject* hoveredView = nullptr;
 
     std::unordered_map<ImageObject*, glm::vec3> origPos;
     std::unordered_map<ImageObject*, glm::vec2> origSize;
-    std::unordered_map<ImageObject*, float>     origRot;
+    std::unordered_map<ImageObject*, float> origRot;
+    
+
+    std::unordered_map<ImageObject*, size_t> origIndices;
 
     bool hitTestBase(ImageObject* v, const glm::vec3& p) const;    // use orig fan pos
     bool hitTestCurrent(ImageObject* v, const glm::vec3& p) const; // use current pos
     void layoutViews();
-    void liftForHover(ImageObject* v);
-    void clearHover();
+    void liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsList);
+    void clearHover(std::vector<DrawableObject*>& objectsList);
 
     std::vector<ImageObject*> getAllImagesFromView(const CardView& cv) const;
 
@@ -61,7 +64,7 @@ public:
     ImageObject* PeekAt(const glm::vec3& mouseWorld);
 
 
-    void UpdateHover(const glm::vec3& mouseWorld, bool isDragging);
+    void UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector<DrawableObject*>& objectsList);
 
  
     void RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList);

@@ -400,7 +400,7 @@ void Level::HandleMouse(int type, int x, int y)
     // Hover
     // ----------------------------------------------------
     if (type == 3) {
-        hand.UpdateHover(mousePos, isDragging);
+        hand.UpdateHover(mousePos, isDragging, objectsList);
         return;
     }
 
@@ -523,7 +523,7 @@ void Level::HandleMouse(int type, int x, int y)
         // ------------------------------
         CreateDropZones(objectsList);
 
-        hand.UpdateHover(mousePos, false);
+        hand.UpdateHover(mousePos, false, objectsList);
 
         pendingCard = hand.PeekAt(mousePos);
         if (pendingCard) {
@@ -549,7 +549,7 @@ void Level::HandleMouse(int type, int x, int y)
                 UpdateDrag(mousePos);
             }
         }
-        hand.UpdateHover(mousePos, true);
+        hand.UpdateHover(mousePos, true, objectsList);
     }
     
     // ----------------------------------------------------
@@ -619,7 +619,7 @@ void Level::HandleMouse(int type, int x, int y)
         draggingCard = nullptr;
         pendingCard = nullptr;
 
-        hand.UpdateHover(mousePos, false);
+        hand.UpdateHover(mousePos, false, objectsList);
     }
 
     if (player) {
@@ -1023,7 +1023,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         // Remove card from hand + render list (this now handles everything)
         hand.RemoveView(draggingCard, objectsList);
 
-        // Don't delete draggingCard - RemoveView already did it
+   
         draggingCard = nullptr;
 
         // Send card data to discard pile
@@ -1038,7 +1038,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
     HideBezier();
     HideDropZones();
-    hand.UpdateHover(mouseWorld, false);
+    hand.UpdateHover(mouseWorld, false,objectsList);
 
     isDragging = false;
     draggingCard = nullptr;

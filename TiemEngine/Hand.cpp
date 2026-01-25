@@ -194,7 +194,7 @@ void Hand::layoutViews()
     }
 }
 
-void Hand::liftForHover(ImageObject* v)
+void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsList)
 {
     if (!v) return;
 
@@ -218,28 +218,44 @@ void Hand::liftForHover(ImageObject* v)
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
 
     const float HOVER_OFFSET_Y = 120.0f;
-    const float HOVER_Z_BASE = 1000.0f;  // Very high Z to be above ALL cards
+    const float HOVER_Z_BASE = 1000.0f;
     const float HOVER_SCALE = 1.3f;
 
-    glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z_BASE);
-    glm::vec2 newSize(baseSize.x * HOVER_SCALE, baseSize.y * HOVER_SCALE);
+    // SAVE original indices before removing
+    for (ImageObject* img : allImages) {
+        auto it = std::find(objectsList.begin(), objectsList.end(), img);
+        if (it != objectsList.end()) {
+            origIndices[img] = std::distance(objectsList.begin(), it);
+        }
+    }
 
-    // Apply hover effect to all layers with proper Z layering
+    // REMOVE all layers from objectsList first
+    for (ImageObject* img : allImages) {
+        auto it = std::find(objectsList.begin(), objectsList.end(), img);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+    }
+
+    // Apply hover effect and RE-ADD to END of objectsList (renders on top)
     int layerIndex = 0;
     for (ImageObject* img : allImages) {
         if (!img) continue;
         
         float layerZ = HOVER_Z_BASE + (layerIndex * 0.1f);
         
-        img->SetPosition(glm::vec3(newPos.x, newPos.y, layerZ));
-        img->SetSize(newSize.x, newSize.y);
+        img->SetPosition(glm::vec3(basePos.x, basePos.y + HOVER_OFFSET_Y, layerZ));
+        img->SetSize(baseSize.x * HOVER_SCALE, baseSize.y * HOVER_SCALE);
         img->SetRotate(0.0f);
+        
+        // Add back to END of objectsList
+        objectsList.push_back(img);
         
         layerIndex++;
     }
 }
 
-void Hand::clearHover()
+void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
 {
     if (!hoveredView) return;
 
@@ -260,8 +276,17 @@ void Hand::clearHover()
         return;
     }
 
-    // Restore ALL original properties including Z position
     std::vector<ImageObject*> allImages = getAllImagesFromView(*targetView);
+    
+    // REMOVE from objectsList
+    for (ImageObject* img : allImages) {
+        auto it = std::find(objectsList.begin(), objectsList.end(), img);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+    }
+    
+    // Restore original properties
     for (ImageObject* img : allImages) {
         if (!img) continue;
         
@@ -276,6 +301,36 @@ void Hand::clearHover()
         if (origRot.count(img)) {
             img->SetRotate(origRot[img]);
         }
+    }
+    
+    // Sort by original index (lowest first) to maintain proper order
+    std::vector<std::pair<ImageObject*, size_t>> imagesToRestore;
+    for (ImageObject* img : allImages) {
+        if (origIndices.count(img)) {
+            imagesToRestore.push_back({img, origIndices[img]});
+        }
+    }
+    
+    // Sort by original index
+    std::sort(imagesToRestore.begin(), imagesToRestore.end(),
+        [](const auto& a, const auto& b) {
+            return a.second < b.second;
+        });
+    
+    // Insert back at original positions (adjusted for already removed items)
+    for (const auto& pair : imagesToRestore) {
+        ImageObject* img = pair.first;
+        size_t originalIndex = pair.second;
+        
+        // Clamp to valid range
+        size_t insertPos = std::min(originalIndex, objectsList.size());
+        
+        objectsList.insert(objectsList.begin() + insertPos, img);
+    }
+    
+    // Clear saved indices
+    for (ImageObject* img : allImages) {
+        origIndices.erase(img);
     }
 
     hoveredView = nullptr;
@@ -489,11 +544,11 @@ ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
     return nullptr;
 }
 
-void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
+void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector<DrawableObject*>& objectsList)
 {
     if (isDragging) {
         if (hoveredView) {
-            clearHover();
+            clearHover(objectsList);
         }
         return;
     }
@@ -505,18 +560,18 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
     }
 
     if (hoveredView) {
-        clearHover();
+        clearHover(objectsList);
     }
 
     if (hit) {
         hoveredView = hit;
-        liftForHover(hit);
+        liftForHover(hit, objectsList);
 
         Card* cardData = FindCardByImage(hit);
         if (cardData) {
-			cout << "Hover card: " << cardData->getName();
+            cout << "Hover card: " << cardData->getName();
 
-			const auto& actions = cardData->getActions();
+            const auto& actions = cardData->getActions();
             for (Action* a : actions) {
                 if(auto* atk = dynamic_cast<AttackAction*>(a)) {
                     cout << " Attack: " << atk->getValue();
