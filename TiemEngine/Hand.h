@@ -64,7 +64,7 @@ public:
     void UpdateHover(const glm::vec3& mouseWorld, bool isDragging);
 
  
-    void RemoveView(ImageObject* view);
+    void RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList);
 
     Card* FindCardByImage(ImageObject* img);
 

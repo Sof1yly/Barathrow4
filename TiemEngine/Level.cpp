@@ -875,14 +875,12 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         int moveSteps = 0;
 
-        // store attacks to execute AFTER movement
         struct PendingAttack {
             AttackAction* atk;
             const AttackPattern* pattern;
         };
         std::vector<PendingAttack> pendingAttacks;
 
-        // ---------------- READ CARD ACTIONS ----------------
         if (cardData)
         {
             std::cout << "[Card] " << cardData->getName() << std::endl;
@@ -910,7 +908,6 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 }
             }
 
-            // ---------------- APPLY MOVE ACTION ----------------
             if (moveSteps > 0 && playersprite)
             {
                 std::cout << "Applying MoveAction steps = " << moveSteps
@@ -920,7 +917,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 {
                     switch (dz)
                     {
-                    case 0: // LEFT (same as key 'a')
+                    case 0:
                         if (nowRow > GridStartRow)
                         {
                             playersprite->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0.0f, 0.0f));
@@ -928,7 +925,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                         }
                         break;
 
-                    case 3: // RIGHT (same as key 'd')
+                    case 3:
                         if (nowRow < GridEndRow - 1)
                         {
                             playersprite->Translate(glm::vec3((GridWide + distanceBetweenGridX), 0.0f, 0.0f));
@@ -936,7 +933,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                         }
                         break;
 
-                    case 1: // TOP (same as key 'w')
+                    case 1:
                         if (nowCol > GridStartCol)
                         {
                             playersprite->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0f));
@@ -944,7 +941,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                         }
                         break;
 
-                    case 2: // BOTTOM (same as key 's')
+                    case 2:
                         if (nowCol < GridEndCol - 1)
                         {
                             playersprite->Translate(glm::vec3(0.0f, -(GridHigh + distanceBetweenGridY), 0.0f));
@@ -957,28 +954,24 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
 
-            // ---------------- NOW APPLY ALL ATTACK PATTERNS ----------------
             for (const PendingAttack& pa : pendingAttacks)
             {
                 AttackAction* atk = pa.atk;
                 const AttackPattern* basePat = pa.pattern;
 
                 if (!basePat) {
-                    // no pattern linked, just skip pattern damage
                     continue;
                 }
 
-                // Orient pattern based on drop zone
                 AttackPattern oriented = *basePat;
                 int rotateTimes = 0;
 
-                // dz: 0=LEFT, 1=TOP, 2=BOTTOM, 3=RIGHT
                 switch (dz)
                 {
-                case 0: rotateTimes = 3; break; // LEFT = 270° CW
-                case 1: rotateTimes = 0; break; // TOP  = 0°
-                case 2: rotateTimes = 2; break; // BOTTOM = 180°
-                case 3: rotateTimes = 1; break; // RIGHT = 90° CW
+                case 0: rotateTimes = 3; break;
+                case 1: rotateTimes = 0; break;
+                case 2: rotateTimes = 2; break;
+                case 3: rotateTimes = 1; break;
                 }
 
                 for (int i = 0; i < rotateTimes; ++i) {
@@ -1024,26 +1017,22 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         std::cout << "----------------------------------------" << std::endl;
 
-        // Remove card from hand + render list
-        hand.RemoveView(draggingCard);
+        // Save card data before removing
+        Card* tempCardData = cardData;
 
-        auto it = std::find(objectsList.begin(), objectsList.end(), draggingCard);
-        if (it != objectsList.end()){
-            objectsList.erase(it);
-        }
-            
+        // Remove card from hand + render list (this now handles everything)
+        hand.RemoveView(draggingCard, objectsList);
 
-        delete draggingCard;
+        // Don't delete draggingCard - RemoveView already did it
         draggingCard = nullptr;
 
-        // send the card's data to discard pile (for redraw system)
-        if (cardData) {
-            discard.push_back(cardData);
+        // Send card data to discard pile
+        if (tempCardData) {
+            discard.push_back(tempCardData);
         }
     }
     else
     {
-        // Snap card back
         draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
     }
 

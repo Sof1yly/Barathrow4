@@ -47,7 +47,7 @@ static std::string getTypeIconName(int type)
     }
 }
 
-// Helper function to get star base filename (always gray 3 stars)
+// Helper function to get star base filename 
 static std::string getStarBaseName()
 {
     return "BG_Stars/star_gy3.png";
@@ -130,8 +130,8 @@ void Hand::layoutViews()
 
     const float W = 280.0f;
     const float H = 410.0f;
-    const float handY = -610.0f;    // baseline for the hand at bottom
-    const float baseRadius = 2100.0f;    // bigger = flatter
+    const float handY = -610.0f;
+    const float baseRadius = 2100.0f;
     const float R = baseRadius + 120.0f;
     const float Cx = 0.0f;
     const float Cy = handY - R;
@@ -167,20 +167,29 @@ void Hand::layoutViews()
 
         float px = rimX + nx * (H * 0.5f - sink);
         float py = rimY + ny * (H * 0.5f - sink);
+        
+        // Base Z for each card increases left to right
+        // Each layer within a card also increases slightly
+        float baseZ = 100.0f + (i * 20.0f);
 
         float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
 
-        // Apply same transformation to all layers of this card
+        // Apply transformation to all layers with increasing Z per layer
+        int layerIndex = 0;
         for (ImageObject* img : allImages) {
             if (!img) continue;
 
-            img->SetPosition(glm::vec3(px, py, 0.0f));
+            float layerZ = baseZ + (layerIndex * 0.1f); // Each layer slightly above previous
+            
+            img->SetPosition(glm::vec3(px, py, layerZ));
             img->SetSize(W, -H);
             img->SetRotate(rotDeg);
 
             origPos[img] = img->GetPosition();
             origSize[img] = img->GetSize();
             origRot[img] = img->GetRotate();
+            
+            layerIndex++;
         }
     }
 }
@@ -189,7 +198,6 @@ void Hand::liftForHover(ImageObject* v)
 {
     if (!v) return;
 
-    // Find which CardView this image belongs to
     CardView* targetView = nullptr;
     for (auto& cv : views) {
         std::vector<ImageObject*> images = getAllImagesFromView(cv);
@@ -204,25 +212,30 @@ void Hand::liftForHover(ImageObject* v)
 
     if (!targetView) return;
 
-    // Get all images from this card
     std::vector<ImageObject*> allImages = getAllImagesFromView(*targetView);
 
     glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
 
-    const float HOVER_OFFSET_Y = 135.0f;   // how high above fan
-    const float HOVER_Z = 420.0f;   // above other cards
-    const float HOVER_SCALE = 1.35f;     // change this to adjust hover size
+    const float HOVER_OFFSET_Y = 120.0f;
+    const float HOVER_Z_BASE = 1000.0f;  // Very high Z to be above ALL cards
+    const float HOVER_SCALE = 1.3f;
 
-    glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z);
+    glm::vec3 newPos(basePos.x, basePos.y + HOVER_OFFSET_Y, HOVER_Z_BASE);
     glm::vec2 newSize(baseSize.x * HOVER_SCALE, baseSize.y * HOVER_SCALE);
 
-    // Apply hover effect to all layers
+    // Apply hover effect to all layers with proper Z layering
+    int layerIndex = 0;
     for (ImageObject* img : allImages) {
         if (!img) continue;
-        img->SetPosition(newPos);
+        
+        float layerZ = HOVER_Z_BASE + (layerIndex * 0.1f);
+        
+        img->SetPosition(glm::vec3(newPos.x, newPos.y, layerZ));
         img->SetSize(newSize.x, newSize.y);
-        img->SetRotate(0.0f); // straight up
+        img->SetRotate(0.0f);
+        
+        layerIndex++;
     }
 }
 
@@ -230,7 +243,6 @@ void Hand::clearHover()
 {
     if (!hoveredView) return;
 
-    // Find which CardView this image belongs to
     CardView* targetView = nullptr;
     for (auto& cv : views) {
         std::vector<ImageObject*> images = getAllImagesFromView(cv);
@@ -248,13 +260,22 @@ void Hand::clearHover()
         return;
     }
 
-    // Get all images and restore original positions
+    // Restore ALL original properties including Z position
     std::vector<ImageObject*> allImages = getAllImagesFromView(*targetView);
     for (ImageObject* img : allImages) {
         if (!img) continue;
-        if (origPos.count(img))  img->SetPosition(origPos[img]);
-        if (origSize.count(img)) img->SetSize(origSize[img].x, origSize[img].y);
-        if (origRot.count(img))  img->SetRotate(origRot[img]);
+        
+        if (origPos.count(img)) {
+            img->SetPosition(origPos[img]);
+        }
+        
+        if (origSize.count(img)) {
+            img->SetSize(origSize[img].x, origSize[img].y);
+        }
+        
+        if (origRot.count(img)) {
+            img->SetRotate(origRot[img]);
+        }
     }
 
     hoveredView = nullptr;
@@ -412,7 +433,6 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         views.push_back(cv);
     }
 
-    // re-fan whole hand
     layoutViews();
 }
 
@@ -491,10 +511,26 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging)
     if (hit) {
         hoveredView = hit;
         liftForHover(hit);
+
+        Card* cardData = FindCardByImage(hit);
+        if (cardData) {
+			cout << "Hover card: " << cardData->getName();
+
+			const auto& actions = cardData->getActions();
+            for (Action* a : actions) {
+                if(auto* atk = dynamic_cast<AttackAction*>(a)) {
+                    cout << " Attack: " << atk->getValue();
+                }
+                else if(auto* mv = dynamic_cast<MoveAction*>(a)) {
+                    cout << " Move: " << mv->getValue();
+                }
+            }
+            cout << endl;
+        }
     }
 }
 
-void Hand::RemoveView(ImageObject* view)
+void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList)
 {
     if (!view) return;
 
@@ -523,14 +559,22 @@ void Hand::RemoveView(ImageObject* view)
         if (it->cardFrame) allImages.push_back(it->cardFrame);
         if (it->visualFrame) allImages.push_back(it->visualFrame);
 
-        // Remove from tracking maps
+        // Remove ALL layers from objectsList and delete them
         for (ImageObject* img : allImages) {
+            // Remove from objectsList
+            auto objIt = std::find(objectsList.begin(), objectsList.end(), img);
+            if (objIt != objectsList.end()) {
+                objectsList.erase(objIt);
+            }
+            
             origPos.erase(img);
             origSize.erase(img);
             origRot.erase(img);
 
             if (hoveredView == img) hoveredView = nullptr;
             if (selectedView == img) selectedView = nullptr;
+            
+            delete img;
         }
 
         views.erase(it);
