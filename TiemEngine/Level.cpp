@@ -829,6 +829,40 @@ int Level::HitDropZone(const glm::vec3& p) const
     return -1;
 }
 
+void Level::MoveCardLayers(ImageObject* cardBackground, const glm::vec3& newPos)
+{
+    if (!cardBackground) return;
+    
+    // Find all layers of this card
+    Card* cardData = hand.FindCardByImage(cardBackground);
+    if (!cardData) return;
+    
+    // Get all image layers for this card
+    // We need to iterate through the hand to find all layers
+    // This is a bit hacky - we'll move all images at the same position
+    glm::vec3 oldPos = cardBackground->GetPosition();
+    glm::vec3 offset = newPos - oldPos;
+    
+    // Move the background first
+    cardBackground->SetPosition(newPos);
+    
+    // Move all other layers that are at the same position
+    for (auto* obj : objectsList) {
+        if (obj == cardBackground) continue;
+        
+        ImageObject* imgObj = dynamic_cast<ImageObject*>(obj);
+        if (!imgObj) continue;
+        
+        glm::vec3 objPos = imgObj->GetPosition();
+        float dist = glm::length(objPos - oldPos);
+        
+        // If this object is at the same position (same card layer)
+        if (dist < 1.0f) {
+            imgObj->SetPosition(objPos + offset);
+        }
+    }
+}
+
 void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
 {
     if (isDragging || !card) return;
@@ -843,8 +877,14 @@ void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
     dragMouseWorld = mouseWorld;
 
     dragAnchor = dragStartPos;
-    draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
-
+    
+    // Move ALL card layers together
+    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(card);
+    for (ImageObject* layer : allLayers) {
+        if (layer) {
+            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+        }
+    }
 
     UpdateBezier(draggingCard->GetPosition(), mouseWorld);
 }
@@ -854,7 +894,14 @@ void Level::UpdateDrag(const glm::vec3& mouseWorld)
     if (!isDragging || !draggingCard) return;
 
     dragMouseWorld = mouseWorld;
-    draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+    
+    // Move ALL card layers together
+    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
+    for (ImageObject* layer : allLayers) {
+        if (layer) {
+            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+        }
+    }
 
     glm::vec3 anchor = draggingCard->GetPosition();
     UpdateBezier(anchor, mouseWorld);
@@ -1045,7 +1092,6 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     pendingCard = nullptr;
 
     std::cout << "End of player turn" << std::endl;
-    turnState = TurnState::ENEMY_TURN;
 }
 
 // Apply attack pattern (player)

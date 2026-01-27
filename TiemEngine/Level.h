@@ -160,4 +160,6 @@ public:
     void SetPlayerIdle(PlayerDir dir);
     void SetPlayerWalk(PlayerDir dir);
 
+    void MoveCardLayers(ImageObject* cardBackground, const glm::vec3& newPos);
+
 };

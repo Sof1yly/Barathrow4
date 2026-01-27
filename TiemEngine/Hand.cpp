@@ -74,12 +74,12 @@ std::vector<ImageObject*> Hand::getAllImagesFromView(const CardView& cv) const
 {
     std::vector<ImageObject*> images;
     if (cv.background) images.push_back(cv.background);
-    if (cv.starBase) images.push_back(cv.starBase);
+    // Removed starBase
     if (cv.starOverlay) images.push_back(cv.starOverlay);
     if (cv.typeIcon) images.push_back(cv.typeIcon);
     if (cv.visual) images.push_back(cv.visual);
     if (cv.cardFrame) images.push_back(cv.cardFrame);
-    if (cv.visualFrame) images.push_back(cv.visualFrame);
+    // Removed visualFrame
     return images;
 }
 
@@ -353,10 +353,9 @@ void Hand::CreateVisualHand(int cardCount,
     {
         Card* data = cardData[i];
 
-        // Get card visual properties
-        int level = data->getLevel();    // 0-3 stars
-        int rarity = data->getRarity();  // 1-5 rarity
-        int type = data->getType();      // 1-5 type
+        int level = data->getLevel();
+        int rarity = data->getRarity();
+        int type = data->getType();
 
         CardView cv;
         cv.cardData = data;
@@ -371,13 +370,7 @@ void Hand::CreateVisualHand(int cardCount,
         cv.background->SetTexture(basePath + getBackgroundName());
         objectsList.push_back(cv.background);
 
-        // 2. Star Base (gray stars - always rendered)
-        cv.starBase = new ImageObject();
-        cv.starBase->SetSize(280.0f, -410.0f);
-        cv.starBase->SetTexture(basePath + getStarBaseName());
-        objectsList.push_back(cv.starBase);
-
-        // 3. Star Overlay (golden stars based on level) - only if level > 0
+        // 2. Star Overlay (golden stars based on level) - only if level > 0
         if (level > 0) {
             cv.starOverlay = new ImageObject();
             cv.starOverlay->SetSize(280.0f, -410.0f);
@@ -385,29 +378,23 @@ void Hand::CreateVisualHand(int cardCount,
             objectsList.push_back(cv.starOverlay);
         }
 
-        // 4. Type Icon
+        // 3. Type Icon
         cv.typeIcon = new ImageObject();
         cv.typeIcon->SetSize(280.0f, -410.0f);
         cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
         objectsList.push_back(cv.typeIcon);
 
-        // 5. Main Visual (center card image)
+        // 4. Main Visual (center card image)
         cv.visual = new ImageObject();
         cv.visual->SetSize(280.0f, -410.0f);
-        cv.visual->SetTexture(basePath + "Sweep_attack.png"); // Replace with actual visual
+        cv.visual->SetTexture(basePath + "Sweep_attack.png");
         objectsList.push_back(cv.visual);
 
-        // 6. Card Frame (based on rarity)
+        // 5. Card Frame (based on rarity)
         cv.cardFrame = new ImageObject();
         cv.cardFrame->SetSize(280.0f, -410.0f);
         cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
         objectsList.push_back(cv.cardFrame);
-
-        // 7. Visual Frame (top layer - based on rarity)
-        cv.visualFrame = new ImageObject();
-        cv.visualFrame->SetSize(280.0f, -410.0f);
-        cv.visualFrame->SetTexture(basePath + getVisualFrameName(rarity));
-        objectsList.push_back(cv.visualFrame);
 
         views.push_back(cv);
     }
@@ -429,7 +416,6 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
             continue;
         }
 
-        // Get card visual properties
         int level = data->getLevel();
         int rarity = data->getRarity();
         int type = data->getType();
@@ -447,13 +433,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         cv.background->SetTexture(basePath + getBackgroundName());
         objectsList.push_back(cv.background);
 
-        // 2. Star Base (gray stars - always rendered)
-        cv.starBase = new ImageObject();
-        cv.starBase->SetSize(280.0f, -410.0f);
-        cv.starBase->SetTexture(basePath + getStarBaseName());
-        objectsList.push_back(cv.starBase);
-
-        // 3. Star Overlay (golden stars based on level) - only if level > 0
+        // 2. Star Overlay (golden stars based on level) - only if level > 0
         if (level > 0) {
             cv.starOverlay = new ImageObject();
             cv.starOverlay->SetSize(280.0f, -410.0f);
@@ -461,31 +441,75 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
             objectsList.push_back(cv.starOverlay);
         }
 
-        // 4. Type Icon
+        // 3. Type Icon
         cv.typeIcon = new ImageObject();
         cv.typeIcon->SetSize(280.0f, -410.0f);
         cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
         objectsList.push_back(cv.typeIcon);
 
-        // 5. Main Visual
+        // 4. Main Visual
         cv.visual = new ImageObject();
         cv.visual->SetSize(280.0f, -410.0f);
         cv.visual->SetTexture(basePath + "Sweep_attack.png");
         objectsList.push_back(cv.visual);
 
-        // 6. Card Frame
+        // 5. Card Frame (based on rarity)
         cv.cardFrame = new ImageObject();
         cv.cardFrame->SetSize(280.0f, -410.0f);
         cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
         objectsList.push_back(cv.cardFrame);
 
-        // 7. Visual Frame (top layer)
-        cv.visualFrame = new ImageObject();
-        cv.visualFrame->SetSize(280.0f, -410.0f);
-        cv.visualFrame->SetTexture(basePath + getVisualFrameName(rarity));
-        objectsList.push_back(cv.visualFrame);
-
         views.push_back(cv);
+    }
+
+    layoutViews();
+}
+
+void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList)
+{
+    if (!view) return;
+
+    auto it = std::find_if(views.begin(), views.end(),
+        [view](const CardView& cv) {
+            std::vector<ImageObject*> images;
+            if (cv.background) images.push_back(cv.background);
+            // Removed starBase
+            if (cv.starOverlay) images.push_back(cv.starOverlay);
+            if (cv.typeIcon) images.push_back(cv.typeIcon);
+            if (cv.visual) images.push_back(cv.visual);
+            if (cv.cardFrame) images.push_back(cv.cardFrame);
+            // Removed visualFrame
+
+            return std::find(images.begin(), images.end(), view) != images.end();
+        });
+
+    if (it != views.end()) {
+        std::vector<ImageObject*> allImages;
+        if (it->background) allImages.push_back(it->background);
+        // Removed starBase
+        if (it->starOverlay) allImages.push_back(it->starOverlay);
+        if (it->typeIcon) allImages.push_back(it->typeIcon);
+        if (it->visual) allImages.push_back(it->visual);
+        if (it->cardFrame) allImages.push_back(it->cardFrame);
+        // Removed visualFrame
+
+        for (ImageObject* img : allImages) {
+            auto objIt = std::find(objectsList.begin(), objectsList.end(), img);
+            if (objIt != objectsList.end()) {
+                objectsList.erase(objIt);
+            }
+            
+            origPos.erase(img);
+            origSize.erase(img);
+            origRot.erase(img);
+
+            if (hoveredView == img) hoveredView = nullptr;
+            if (selectedView == img) selectedView = nullptr;
+            
+            delete img;
+        }
+
+        views.erase(it);
     }
 
     layoutViews();
@@ -585,59 +609,6 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector
     }
 }
 
-void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList)
-{
-    if (!view) return;
-
-    auto it = std::find_if(views.begin(), views.end(),
-        [view](const CardView& cv) {
-            std::vector<ImageObject*> images;
-            if (cv.background) images.push_back(cv.background);
-            if (cv.starBase) images.push_back(cv.starBase);
-            if (cv.starOverlay) images.push_back(cv.starOverlay);
-            if (cv.typeIcon) images.push_back(cv.typeIcon);
-            if (cv.visual) images.push_back(cv.visual);
-            if (cv.cardFrame) images.push_back(cv.cardFrame);
-            if (cv.visualFrame) images.push_back(cv.visualFrame);
-
-            return std::find(images.begin(), images.end(), view) != images.end();
-        });
-
-    if (it != views.end()) {
-        // Get all images from this view
-        std::vector<ImageObject*> allImages;
-        if (it->background) allImages.push_back(it->background);
-        if (it->starBase) allImages.push_back(it->starBase);
-        if (it->starOverlay) allImages.push_back(it->starOverlay);
-        if (it->typeIcon) allImages.push_back(it->typeIcon);
-        if (it->visual) allImages.push_back(it->visual);
-        if (it->cardFrame) allImages.push_back(it->cardFrame);
-        if (it->visualFrame) allImages.push_back(it->visualFrame);
-
-        // Remove ALL layers from objectsList and delete them
-        for (ImageObject* img : allImages) {
-            // Remove from objectsList
-            auto objIt = std::find(objectsList.begin(), objectsList.end(), img);
-            if (objIt != objectsList.end()) {
-                objectsList.erase(objIt);
-            }
-            
-            origPos.erase(img);
-            origSize.erase(img);
-            origRot.erase(img);
-
-            if (hoveredView == img) hoveredView = nullptr;
-            if (selectedView == img) selectedView = nullptr;
-            
-            delete img;
-        }
-
-        views.erase(it);
-    }
-
-    layoutViews();
-}
-
 Card* Hand::FindCardByImage(ImageObject* img)
 {
     for (auto& cv : views) {
@@ -662,4 +633,19 @@ bool Hand::TrySelectAt(const glm::vec3& mouseWorld)
 void Hand::Deselect()
 {
     selectedView = nullptr;
+}
+
+std::vector<ImageObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
+{
+    if (!anyLayer) return {};
+    
+    // Find the CardView that contains this layer
+    for (auto& cv : views) {
+        std::vector<ImageObject*> images = getAllImagesFromView(cv);
+        if (std::find(images.begin(), images.end(), anyLayer) != images.end()) {
+            return images;
+        }
+    }
+    
+    return {};
 }

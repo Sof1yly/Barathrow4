@@ -11,14 +11,12 @@
 
 struct CardView
 {
-    Card* cardData = nullptr;  // which logical card
+    Card* cardData = nullptr;
     ImageObject* background = nullptr;
-    ImageObject* cardFrame = nullptr;    // card_fr_XX.png 
-    ImageObject* visualFrame = nullptr;  // card_vf_XX.png 
-    ImageObject* visual = nullptr;       
-    ImageObject* typeIcon = nullptr;    // card_ty_XX.png
-    ImageObject* starBase = nullptr;    // star_gy3.png
-    ImageObject* starOverlay = nullptr; // star_gd1/2/3.png
+    ImageObject* cardFrame = nullptr;
+    ImageObject* visual = nullptr;
+    ImageObject* typeIcon = nullptr;
+    ImageObject* starOverlay = nullptr; 
 };
 
 class Hand
@@ -73,4 +71,7 @@ public:
 
     bool TrySelectAt(const glm::vec3& mouseWorld);
     void Deselect();
+
+    
+    std::vector<ImageObject*> GetAllLayersForCard(ImageObject* anyLayer);
 };
