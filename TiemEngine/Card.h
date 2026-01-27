@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #include <vector>
 #include "Action.h"
@@ -8,27 +7,25 @@ class Card
 {
 private:
     std::string name;
+    int level;
+    std::string rarityCode;  
+    std::string typeCode;    
     std::vector<Action*> actions;
-    int level;    // 0-3 stars
-    int rarity;   // 1-5 rarity (card frame)
-    int type;     // 1-5 type (icon at top left)
 
 public:
-    explicit Card(const std::string& n) : name(n), level(0), rarity(1), type(1) {}
+    Card(const std::string& n);
+    ~Card();
 
     const std::string& getName() const;
-    const std::vector<Action*>& getActions() const;
-
-    // Getters for visual properties
     int getLevel() const { return level; }
-    int getRarity() const { return rarity; }
-    int getType() const { return type; }
-
-    // Setters
-    void setLevel(int l) { level = l; }
-    void setRarity(int r) { rarity = r; }
-    void setType(int t) { type = t; }
-
+    const std::string& getRarityCode() const { return rarityCode; }
+    const std::string& getTypeCode() const { return typeCode; }
+    
+    void setLevel(int lv) { level = lv; }
+    void setRarityCode(const std::string& code) { rarityCode = code; }
+    void setTypeCode(const std::string& code) { typeCode = code; }
+    
+    const std::vector<Action*>& getActions() const;
     void addAction(Action* action);
     void do_action();
 };

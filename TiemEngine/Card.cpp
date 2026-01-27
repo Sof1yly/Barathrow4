@@ -1,5 +1,18 @@
 #include "Card.h"
 
+Card::Card(const std::string& n)
+    : name(n), level(0), rarityCode("sta"), typeCode("atk")  
+{
+}
+
+Card::~Card()
+{
+    for (Action* a : actions) {
+        delete a;
+    }
+    actions.clear();  
+}
+
 const std::string& Card::getName() const
 {
     return name;
@@ -12,7 +25,9 @@ const std::vector<Action*>& Card::getActions() const
 
 void Card::addAction(Action* action)
 {
-    actions.push_back(action);
+    if (action) {
+        actions.push_back(action);
+    }
 }
 
 void Card::do_action()

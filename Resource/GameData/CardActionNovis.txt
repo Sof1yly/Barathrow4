@@ -1,16 +1,16 @@
 Card						
 Name	Damage	Move	Pattern	Level	Rarity	Type
-C1	4	0	A1	1	1	2
-C2	2	0	A2	2	2	1
-C3	3	2	A3	1	1	3
-C4	1	4	A4	2	4	2
-C5	2	2	A4	3	3	1
-C6	1	3	A2	3	5	4
-C7	5	1	A4	3	5	3
-C8	3	0	A1	3	2	2
-C9	2	1	A3	1	1	1
-C10	1	2	A4	1	2	2
-						
+C1	4	0	A1	2	sta	atk
+C2	2	0	A2	1	sta	mov
+C3	3	2	A3	3	sta	eng
+C4	1	4	A4	2	com	buf
+C5	2	2	A4	3	com	dbf
+C6	1	3	A2	2	com	atk
+C7	5	1	A4	3	rar	atk
+C8	3	0	A1	1	rar	atk
+C9	2	1	A3	1	leg	buf
+C10	1	2	A4	2	leg	mov
+C11	3	3	A1	3	spc	dbf
 						
 						
 						

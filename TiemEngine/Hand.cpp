@@ -9,48 +9,25 @@ static const float PI = 3.1415926535f;
 static const float RAD2DEG = 180.0f / PI;
 
 // Helper function to get card frame filename based on rarity
-static std::string getCardFrameName(int rarity)
+static std::string getCardFrameName(const std::string& rarityCode)
 {
-    switch (rarity) {
-    case 1: return "BG_Frame/card_fr_gy.png";
-    case 2: return "BG_Frame/card_fr_gn.png";
-    case 3: return "BG_Frame/card_fr_br.png";
-    case 4: return "BG_Frame/card_fr_or.png";
-    case 5: return "BG_Frame/card_fr_pk.png";
-    default: return "BG_Frame/card_fr_gy.png";
-    }
-}
-
-// Helper function to get visual frame filename based on rarity
-static std::string getVisualFrameName(int rarity)
-{
-    switch (rarity) {
-    case 1: return "BG_viFrame/card_vf_gy.png";
-    case 2: return "BG_viFrame/card_vf_gn.png";
-    case 3: return "BG_viFrame/card_vf_bl.png";
-    case 4: return "BG_viFrame/card_vf_or.png";
-    case 5: return "BG_viFrame/card_vf_pk.png";
-    default: return "BG_viFrame/card_vf_gy.png";
-    }
+    if (rarityCode == "sta") return "BG_Frame/card_fr_gy.png";
+    if (rarityCode == "com") return "BG_Frame/card_fr_gn.png";
+    if (rarityCode == "rar") return "BG_Frame/card_fr_br.png";
+    if (rarityCode == "leg") return "BG_Frame/card_fr_or.png";
+    if (rarityCode == "spc") return "BG_Frame/card_fr_pk.png";
+    return "BG_Frame/card_fr_gy.png";
 }
 
 // Helper function to get type icon filename based on type
-static std::string getTypeIconName(int type)
+static std::string getTypeIconName(const std::string& typeCode)
 {
-    switch (type) {
-    case 1: return "BG_Type/card_ty_atk.png";
-    case 2: return "BG_Type/card_ty_mv.png";
-    case 3: return "BG_Type/card_ty_er.png";
-    case 4: return "BG_Type/card_ty_bf.png";
-    case 5: return "BG_Type/card_ty_db.png";
-    default: return "BG_Type/card_ty_atk.png";
-    }
-}
-
-// Helper function to get star base filename 
-static std::string getStarBaseName()
-{
-    return "BG_Stars/star_gy3.png";
+    if (typeCode == "atk") return "BG_Type/card_ty_atk.png";
+    if (typeCode == "mov") return "BG_Type/card_ty_mv.png";
+    if (typeCode == "eng") return "BG_Type/card_ty_er.png";
+    if (typeCode == "buf") return "BG_Type/card_ty_bf.png";
+    if (typeCode == "dbf") return "BG_Type/card_ty_db.png";
+    return "BG_Type/card_ty_atk.png";
 }
 
 // Helper function to get star overlay filename based on level
@@ -354,8 +331,8 @@ void Hand::CreateVisualHand(int cardCount,
         Card* data = cardData[i];
 
         int level = data->getLevel();
-        int rarity = data->getRarity();
-        int type = data->getType();
+        std::string rarityCode = data->getRarityCode();
+        std::string typeCode = data->getTypeCode();
 
         CardView cv;
         cv.cardData = data;
@@ -381,7 +358,7 @@ void Hand::CreateVisualHand(int cardCount,
         // 3. Type Icon
         cv.typeIcon = new ImageObject();
         cv.typeIcon->SetSize(280.0f, -410.0f);
-        cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
+        cv.typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
         objectsList.push_back(cv.typeIcon);
 
         // 4. Main Visual (center card image)
@@ -393,7 +370,7 @@ void Hand::CreateVisualHand(int cardCount,
         // 5. Card Frame (based on rarity)
         cv.cardFrame = new ImageObject();
         cv.cardFrame->SetSize(280.0f, -410.0f);
-        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
+        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarityCode));
         objectsList.push_back(cv.cardFrame);
 
         views.push_back(cv);
@@ -417,8 +394,8 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         }
 
         int level = data->getLevel();
-        int rarity = data->getRarity();
-        int type = data->getType();
+        std::string rarityCode = data->getRarityCode();
+        std::string typeCode = data->getTypeCode();
 
         CardView cv;
         cv.cardData = data;
@@ -444,7 +421,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         // 3. Type Icon
         cv.typeIcon = new ImageObject();
         cv.typeIcon->SetSize(280.0f, -410.0f);
-        cv.typeIcon->SetTexture(basePath + getTypeIconName(type));
+        cv.typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
         objectsList.push_back(cv.typeIcon);
 
         // 4. Main Visual
@@ -456,7 +433,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         // 5. Card Frame (based on rarity)
         cv.cardFrame = new ImageObject();
         cv.cardFrame->SetSize(280.0f, -410.0f);
-        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarity));
+        cv.cardFrame->SetTexture(basePath + getCardFrameName(rarityCode));
         objectsList.push_back(cv.cardFrame);
 
         views.push_back(cv);
@@ -473,12 +450,10 @@ void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsLi
         [view](const CardView& cv) {
             std::vector<ImageObject*> images;
             if (cv.background) images.push_back(cv.background);
-            // Removed starBase
             if (cv.starOverlay) images.push_back(cv.starOverlay);
             if (cv.typeIcon) images.push_back(cv.typeIcon);
             if (cv.visual) images.push_back(cv.visual);
             if (cv.cardFrame) images.push_back(cv.cardFrame);
-            // Removed visualFrame
 
             return std::find(images.begin(), images.end(), view) != images.end();
         });
@@ -486,27 +461,28 @@ void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsLi
     if (it != views.end()) {
         std::vector<ImageObject*> allImages;
         if (it->background) allImages.push_back(it->background);
-        // Removed starBase
         if (it->starOverlay) allImages.push_back(it->starOverlay);
         if (it->typeIcon) allImages.push_back(it->typeIcon);
         if (it->visual) allImages.push_back(it->visual);
         if (it->cardFrame) allImages.push_back(it->cardFrame);
-        // Removed visualFrame
 
         for (ImageObject* img : allImages) {
+            // Remove from objectsList
             auto objIt = std::find(objectsList.begin(), objectsList.end(), img);
             if (objIt != objectsList.end()) {
                 objectsList.erase(objIt);
             }
             
+            // Clean up tracking
             origPos.erase(img);
             origSize.erase(img);
             origRot.erase(img);
+            origIndices.erase(img);  
 
             if (hoveredView == img) hoveredView = nullptr;
             if (selectedView == img) selectedView = nullptr;
             
-            delete img;
+            delete img; 
         }
 
         views.erase(it);
@@ -539,6 +515,7 @@ void Hand::Clear(std::vector<DrawableObject*>& objectsList)
     origPos.clear();
     origSize.clear();
     origRot.clear();
+    origIndices.clear();  
 }
 
 std::vector<Card*> Hand::CollectAllCardData() const

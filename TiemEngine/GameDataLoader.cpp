@@ -21,7 +21,6 @@ static std::vector<std::string> splitCsvRowRespectQuotes_(const std::string& lin
         char ch = line[i];
         if (ch == '"') {
             if (inQuotes && i + 1 < line.size() && line[i + 1] == '"') {
-                // escaped quote
                 cur.push_back('"');
                 ++i;
             }
@@ -41,8 +40,6 @@ static std::vector<std::string> splitCsvRowRespectQuotes_(const std::string& lin
     return out;
 }
 
-// --------- ctor / dtor ---------
-
 GameDataLoader::GameDataLoader()
 {
 }
@@ -52,8 +49,6 @@ GameDataLoader::~GameDataLoader()
     for (Card* c : cards)      delete c;
     for (Action* a : actions_list) delete a;
 }
-
-// --------- patterns ---------
 
 bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
     std::string* outError)
@@ -78,28 +73,24 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
         }
         currentId.clear();
         grid.clear();
-        };
+    };
 
     while (std::getline(file, line)) {
         std::string trimmed = trim_(line);
         if (trimmed.empty()) {
-            // blank line = end of current pattern
             flushCurrent();
             continue;
         }
 
-        // optional header
         if (trimmed == "PatternAttack") {
             continue;
         }
 
-        // grid row
         if (!trimmed.empty() && (trimmed[0] == '.' || trimmed[0] == 'X')) {
             grid.push_back(trimmed);
             continue;
         }
 
-        // otherwise: new pattern id
         flushCurrent();
 
         std::istringstream iss(trimmed);
@@ -139,12 +130,9 @@ const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
     return it->second;
 }
 
-// --------- cards + actions (CardAction.txt) ---------
-
 bool GameDataLoader::loadFromFile(const std::string& filename,
     std::string* outError)
 {
-    // Clear old
     for (Card* c : cards)      delete c;
     cards.clear();
     for (Action* a : actions_list) delete a;
@@ -159,12 +147,12 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
     }
 
     std::string line;
-    bool skippedCardHeader = false;   // for the "Card" line
+    bool skippedCardHeader = false;
 
     while (std::getline(file, line)) {
         std::string trimmed = trim_(line);
         if (trimmed.empty()) {
-            continue; // ignore blank lines
+            continue;
         }
 
         if (!skippedCardHeader) {
@@ -179,32 +167,28 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
         for (auto& c : cells) c = trim_(c);
         if (cells.empty()) continue;
 
-   
         if (cells[0] == "Name") {
             continue;
         }
 
-        // columns: Name, Damage, Move, Pattern, Level, Rarity, Type
+        // Columns: Name, Damage, Move, Pattern, Level, RarityCode, TypeCode
         std::string name = cells.size() > 0 ? cells[0] : "";
         std::string sDmg = cells.size() > 1 ? cells[1] : "";
         std::string sMove = cells.size() > 2 ? cells[2] : "";
         std::string patternId = cells.size() > 3 ? cells[3] : "";
         std::string sLevel = cells.size() > 4 ? cells[4] : "0";    
-        std::string sRarity = cells.size() > 5 ? cells[5] : "1";  
-        std::string sType = cells.size() > 6 ? cells[6] : "1";
+        std::string rarityCode = cells.size() > 5 ? cells[5] : "sta";
+        std::string typeCode = cells.size() > 6 ? cells[6] : "atk";
 
         if (name.empty()) {
-            // weird line, ignore quietly
             continue;
         }
 
         int damage = 0;
         int move = 0;
         int level = 0;
-        int rarity = 1;
-        int type = 1;
 
-        try { //dmg
+        try {
             if (!sDmg.empty())
                 damage = std::stoi(sDmg);
         }
@@ -213,7 +197,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             return false;
         }
 
-        try {//move
+        try {
             if (!sMove.empty())
                 move = std::stoi(sMove);
         }
@@ -222,35 +206,14 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             return false;
         }
         
-        try {//level stars 
+        try {
             if(!sLevel.empty())
-				level = std::stoi(sLevel);
+                level = std::stoi(sLevel);
         }
         catch (...) {
             if (outError)*outError = "Invalid level: " + sLevel;
             return false;
         }
-
-        try {// rarity
-            if (!sRarity.empty()) {
-                rarity = std::stoi(sRarity);
-            }
-        }
-        catch (...) {   
-            if (outError)*outError = "Invalid rarity: " + sRarity;
-            return false;
-        }
-
-        try {//type
-            if (!sType.empty()) {
-                type = std::stoi(sType);
-            }
-        }
-        catch (...) {
-            if (outError)*outError = "Invalid type: " + sType;
-            return false;
-        }
-
 
         if (damage <= 0 && move <= 0) {
             if (outError) *outError =
@@ -258,14 +221,12 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             return false;
         }
 
-        // ----- create Card -----
         Card* card = new Card(name);
 
         card->setLevel(level);
-        card->setRarity(rarity);
-        card->setType(type);
+        card->setRarityCode(rarityCode);
+        card->setTypeCode(typeCode);
 
-        // attack part
         if (damage > 0) {
             auto* atk = new AttackAction();
             atk->setValue(damage);
@@ -285,7 +246,6 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             }
         }
 
-        // move part
         if (move > 0) {
             auto* mv = new MoveAction();
             mv->setValue(move);
