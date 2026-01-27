@@ -45,7 +45,7 @@ public:
     bool loadFromFile(const std::string& filename,
         std::string* outError = nullptr);
 
-    const std::vector<Card*>& getCards()   const { return cards; }
+    std::vector<Card*> getCards() const { return cards; }  
     const std::vector<Action*>& getActions() const { return actions_list; }
 
     const AttackPattern* getPatternForAction(const Action* a) const;

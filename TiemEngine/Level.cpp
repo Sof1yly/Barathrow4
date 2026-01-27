@@ -24,10 +24,7 @@ static inline glm::vec3 QuadraticBezier(
     return (u * u) * P0 + 2.0f * u * t * C + (t * t) * P1;
 }
 
-// ===========================
 // Lifecycle
-// ===========================
-
 void Level::LevelLoad()
 {
     auto* square = new SquareMeshVbo();
@@ -280,10 +277,29 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
-    for (auto* obj : objectsList)
-        delete obj;
+    // Clear hand first
+    hand.Clear(objectsList);
+    
+    // Delete remaining objects
+    for (auto* obj : objectsList) {
+        if (obj) {
+            delete obj;
+        }
+    }
     objectsList.clear();
+    
+    // Clear bezier segments
     bezierSegments.clear();
+    
+    // Delete enemy
+    if (enemy) {
+        delete enemy;
+        enemy = nullptr;
+    }
+
+    // Clear deck/discard 
+    deck.clear();
+    discard.clear();
 
     cout << "Free Level" << endl;
 }
@@ -566,7 +582,7 @@ void Level::HandleMouse(int type, int x, int y)
             
             if (!deck.empty())
             {
-                for (size_t i = 0; i < deck.size(); ++i)
+                for (size_t i = 0; i < deck.size(); i++)
                 {
                     Card* c = deck[i];
                     if (c != nullptr) {
@@ -592,7 +608,7 @@ void Level::HandleMouse(int type, int x, int y)
             
             if (!discard.empty())
             {
-                for (size_t i = 0; i < discard.size(); ++i)
+                for (size_t i = 0; i < discard.size(); i++)
                 {
                     Card* c = discard[i];
                     if (c != nullptr) {
@@ -829,42 +845,9 @@ int Level::HitDropZone(const glm::vec3& p) const
     return -1;
 }
 
-void Level::MoveCardLayers(ImageObject* cardBackground, const glm::vec3& newPos)
-{
-    if (!cardBackground) return;
-    
-    // Find all layers of this card
-    Card* cardData = hand.FindCardByImage(cardBackground);
-    if (!cardData) return;
-    
-    // Get all image layers for this card
-    // We need to iterate through the hand to find all layers
-    // This is a bit hacky - we'll move all images at the same position
-    glm::vec3 oldPos = cardBackground->GetPosition();
-    glm::vec3 offset = newPos - oldPos;
-    
-    // Move the background first
-    cardBackground->SetPosition(newPos);
-    
-    // Move all other layers that are at the same position
-    for (auto* obj : objectsList) {
-        if (obj == cardBackground) continue;
-        
-        ImageObject* imgObj = dynamic_cast<ImageObject*>(obj);
-        if (!imgObj) continue;
-        
-        glm::vec3 objPos = imgObj->GetPosition();
-        float dist = glm::length(objPos - oldPos);
-        
-        // If this object is at the same position (same card layer)
-        if (dist < 1.0f) {
-            imgObj->SetPosition(objPos + offset);
-        }
-    }
-}
 
 void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
-{
+{       
     if (isDragging || !card) return;
 
     EnsureBezierSegments(objectsList);
@@ -875,10 +858,9 @@ void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
 
     dragStartPos = card->GetPosition();
     dragMouseWorld = mouseWorld;
-
     dragAnchor = dragStartPos;
     
-    // Move ALL card layers together
+    // Move ALL card layers together - inline code
     std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(card);
     for (ImageObject* layer : allLayers) {
         if (layer) {
@@ -895,7 +877,7 @@ void Level::UpdateDrag(const glm::vec3& mouseWorld)
 
     dragMouseWorld = mouseWorld;
     
-    // Move ALL card layers together
+    // Move ALL card layers together - inline code
     std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
     for (ImageObject* layer : allLayers) {
         if (layer) {
@@ -1064,34 +1046,39 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
         std::cout << "----------------------------------------" << std::endl;
 
-        // Save card data before removing
+        // Save card data before removing visual
         Card* tempCardData = cardData;
 
-        // Remove card from hand + render list (this now handles everything)
+        // Remove visual card layers from hand + render list
         hand.RemoveView(draggingCard, objectsList);
 
-   
         draggingCard = nullptr;
 
-        // Send card data to discard pile
+        // Add Card* pointer to discard pile
         if (tempCardData) {
             discard.push_back(tempCardData);
         }
     }
     else
     {
-        draggingCard->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
+        std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
+        for (ImageObject* layer : allLayers) {
+            if (layer) {
+                layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
+            }
+        }
     }
 
     HideBezier();
     HideDropZones();
-    hand.UpdateHover(mouseWorld, false,objectsList);
+    hand.UpdateHover(mouseWorld, false, objectsList);
 
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
 
     std::cout << "End of player turn" << std::endl;
+    turnState = TurnState::ENEMY_TURN;
 }
 
 // Apply attack pattern (player)
@@ -1241,12 +1228,12 @@ void Level::SetPlayerIdle(PlayerDir dir)
 
 void Level::LevelRestart() 
 {
-    cout << "Restarting Level..." << endl;
+    cout << "=== RESTART START ===" << endl;
 
-    // 1. Clear the hand FIRST 
+    // 1. Clear hand first
     hand.Clear(objectsList);
 
-    // 2. Delete enemy if exists
+    // 2. Delete enemy
     if (enemy)
     {
         ImageObject* obj = enemy->getObject();
@@ -1255,7 +1242,6 @@ void Level::LevelRestart()
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end())
                 objectsList.erase(it);
-            
             delete obj;
             enemy->setObject(nullptr);
         }
@@ -1263,30 +1249,25 @@ void Level::LevelRestart()
         enemy = nullptr;
     }
 
+    // 3. Clear drop zones
     for (int i = 0; i < 4; ++i) {
         dropZones[i] = nullptr;
     }
 
     // 4. Delete all remaining objects
     for (auto* obj : objectsList) {
-        delete obj;
+        if (obj) delete obj;
     }
     objectsList.clear();
     
-    // 5. Clear bezier segments 
+    // 5. Clear bezier
     bezierSegments.clear();
 
-    // 6. Reset level variables
+    // 6. Reset variables
     nowRow = 0;
     nowCol = 0;
     playerHealth = 10;
     turnState = TurnState::PLAYER_TURN;
-
-    // 7. Clear card system
-    deck.clear();
-    discard.clear();
-
-    // 8. Reset all flags and pointers
     dropZonesCreated = false;
     dropZonesVisible = false;
     bezierCreated = false;
@@ -1294,17 +1275,118 @@ void Level::LevelRestart()
     isHolding = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
-    //testGrid = nullptr;
     testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
     reDrawButton = nullptr;
     viewDeckButton = nullptr;
+    playersprite = nullptr;
+    deck = dataLoader.getCards();  
+    discard.clear();
+    ShuffleDeck();
 
-    // 9. Reinitialize the level
-    LevelInit();
+    
+    // Tiles
+    for (int i = GridStartRow; i < GridEndRow; ++i) {
+        for (int j = GridStartCol; j < GridEndCol; ++j) {
+            ImageObject* tile = new ImageObject();
+            tile->SetTexture("../Resource/Texture/tile.png");
+            tile->SetSize(GridWide, GridHigh);
+            tile->SetPosition(glm::vec3(i * 101.0f - 404.0f, j * -105.0f + 352.0f, 0.0f));
+            objectsList.push_back(tile);
+        }
+    }
 
-    cout << "Level Restarted" << endl;
+    // Enemy
+    enemy = new Enemy();
+    enemy->setNowPosition(8, 0);
+    ImageObject* enemyObj = new ImageObject();
+    enemyObj->SetSize(100.0f, -100.0f);
+    enemyObj->SetTexture("../Resource/Texture/doro.png");
+    glm::vec3 pos = GridToWorld(8, 0);
+    enemyObj->SetPosition(pos);
+    objectsList.push_back(enemyObj);
+    enemy->setObject(enemyObj);
+
+    // Player sprite
+    SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite.png", 4, 3);
+    playerSprite->SetSize(84.0f, -90.0f);
+    glm::vec3 startPos = GridToWorld(0, 0);
+    playerSprite->SetPosition(startPos);
+    playerSprite->SetAnimationLoop(0, 0, 0, 150);
+    playerSprite->NextAnimation();
+    objectsList.push_back(playerSprite);
+    playersprite = playerSprite;
+
+    // Demo objects
+    GameObject* obj = new GameObject();
+    obj->SetColor(1.0f, 0.0f, 0.0f);
+    obj->SetSize(200.0f, 200.0f);
+    objectsList.push_back(obj);
+    player = obj;
+
+    GameObject* obj2 = new GameObject();
+    obj2->SetColor(0.0f, 1.0f, 0.0f);
+    obj2->SetSize(50.0f, 50.0f);
+    obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+    objectsList.push_back(obj2);
+
+    GameObject* obj3 = new GameObject();
+    obj3->SetColor(0.0f, 0.0f, 1.0f);
+    obj3->SetSize(100.0f, 100.0f);
+    obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    objectsList.push_back(obj3);
+    testMove = obj3;
+    testMoveTarget = testMove->GetPosition();
+
+    // UI
+    ImageObject* img = new ImageObject();
+    img->SetSize(50.0f, -50.0f);
+    img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+    img->SetTexture("../Resource/Texture/menu.png");
+    objectsList.push_back(img);
+
+    ImageObject* menu = new ImageObject();
+    menu->SetSize(1000.0f, -400.0f);
+    menu->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f));
+    menu->SetTexture("../Resource/Texture/MainMenu.png");
+    objectsList.push_back(menu);
+    mainMenu = menu;
+
+    // Deal new hand
+    DealNewHand(5);
+
+    // Buttons
+    reDrawButton = new ImageObject();
+    reDrawButton->SetSize(200.0f, -260.0f);
+    reDrawButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
+    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png");
+    objectsList.push_back(reDrawButton);
+
+    viewDeckButton = new ImageObject();
+    viewDeckButton->SetSize(200.0f, -260.0f);
+    viewDeckButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
+    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png");
+    objectsList.push_back(viewDeckButton);
+
+    CreateDropZones(objectsList);
+
+    // Test sprites
+    SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
+    sprite->SetSize(50.0f, -50.0f);
+    sprite->SetPosition(glm::vec3(800.0f, 0.0f, 0.0f));
+    sprite->SetAnimationLoop(0, 0, 27, 50);
+    sprite->NextAnimation();
+    objectsList.push_back(sprite);
+
+    CombineObject* cb = new CombineObject();
+    cb->SetSize(100.0f, 100.0f);
+    cb->SetPosition(glm::vec3(800.0f, 200.0f, 0.0f));
+    cb->SetColor2(1.0f, 0.0f, 0.0f);
+    cb->SetColor3(0.0f, 1.0f, 0.0f);
+    objectsList.push_back(cb);
+
+    cout << "=== RESTART COMPLETE ===" << endl;
 }
 
 

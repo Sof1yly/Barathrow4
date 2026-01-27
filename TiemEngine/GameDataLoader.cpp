@@ -46,8 +46,16 @@ GameDataLoader::GameDataLoader()
 
 GameDataLoader::~GameDataLoader()
 {
-    for (Card* c : cards)      delete c;
-    for (Action* a : actions_list) delete a;
+    for (Card* c : cards) {
+        if (c) delete c;
+    }
+    cards.clear();
+    
+
+    for (Action* a : actions_list) {
+        if (a) delete a;
+    }
+    actions_list.clear();
 }
 
 bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
