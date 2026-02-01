@@ -333,6 +333,7 @@ void Hand::CreateVisualHand(int cardCount,
         int level = data->getLevel();
         std::string rarityCode = data->getRarityCode();
         std::string typeCode = data->getTypeCode();
+        std::string cardName = data->getName();  // Get card name
 
         CardView cv;
         cv.cardData = data;
@@ -361,10 +362,10 @@ void Hand::CreateVisualHand(int cardCount,
         cv.typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
         objectsList.push_back(cv.typeIcon);
 
-        // 4. Main Visual (center card image)
+        // 4. Main Visual 
         cv.visual = new ImageObject();
         cv.visual->SetSize(280.0f, -410.0f);
-        cv.visual->SetTexture(basePath + "Sweep_attack.png");
+        cv.visual->SetTexture(basePath + "BG_visual/" + cardName + ".png");  
         objectsList.push_back(cv.visual);
 
         // 5. Card Frame (based on rarity)
@@ -396,6 +397,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         int level = data->getLevel();
         std::string rarityCode = data->getRarityCode();
         std::string typeCode = data->getTypeCode();
+        std::string cardName = data->getName();  // Get card name
 
         CardView cv;
         cv.cardData = data;
@@ -410,7 +412,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         cv.background->SetTexture(basePath + getBackgroundName());
         objectsList.push_back(cv.background);
 
-        // 2. Star Overlay (golden stars based on level) - only if level > 0
+        // 2. Star Overlay 
         if (level > 0) {
             cv.starOverlay = new ImageObject();
             cv.starOverlay->SetSize(280.0f, -410.0f);
@@ -424,10 +426,10 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         cv.typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
         objectsList.push_back(cv.typeIcon);
 
-        // 4. Main Visual
+        // 4. Main Visual 
         cv.visual = new ImageObject();
         cv.visual->SetSize(280.0f, -410.0f);
-        cv.visual->SetTexture(basePath + "Sweep_attack.png");
+        cv.visual->SetTexture(basePath + "BG_visual/" + cardName + ".png");  
         objectsList.push_back(cv.visual);
 
         // 5. Card Frame (based on rarity)
