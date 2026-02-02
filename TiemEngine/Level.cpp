@@ -7,6 +7,7 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "CombineObject.h"
+#include "TextObject.h"
 
 #include <iostream>
 #include <algorithm>
@@ -199,6 +200,12 @@ void Level::LevelInit()
     cb->SetColor2(1.0f, 0.0f, 0.0f);
     cb->SetColor3(0.0f, 1.0f, 0.0f);
     objectsList.push_back(cb);
+
+    TextObject* text = new TextObject();
+    text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
+    SDL_Color color = {0, 255,0 };
+    text->LoadText("hello world!", color, 64);
+    objectsList.push_back(text);
 
     std::cout << "Init Level" << std::endl;
 }

@@ -2,6 +2,7 @@
 #include <SDL_main.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <SDL_ttf.h>
 
 #include <iostream>
 #include <string>
@@ -46,6 +47,11 @@ int main(int argc, char* argv[])
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
 		cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
+		return false;
+	}
+
+	if (TTF_Init() < 0) { // Initialize SDL_ttf
+		printf("Couldn't initialize SDL TTF: %s\\n", SDL_GetError());
 		return false;
 	}
 
@@ -206,6 +212,7 @@ int main(int argc, char* argv[])
 	SDL_DestroyWindow(window);
 	window = nullptr;
 	SDL_Quit();
+	TTF_Quit();
 
 	return 0;
 }
