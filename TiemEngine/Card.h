@@ -3,6 +3,7 @@
 #include <vector>
 #include "Action.h"
 #include "ImageObject.h"
+#include "TextObject.h"
 
 class Card
 {
@@ -19,6 +20,7 @@ private:
     ImageObject* visual = nullptr;
     ImageObject* typeIcon = nullptr;
     ImageObject* starOverlay = nullptr;
+    TextObject* nameText = nullptr;
     bool visualsCreated = false;
 
 public:
@@ -43,10 +45,11 @@ public:
     void DestroyVisuals();
     bool HasVisuals() const { return visualsCreated; }
     
-    std::vector<ImageObject*> GetAllLayers() const;
+    std::vector<DrawableObject*> GetAllLayers() const;
     ImageObject* GetBackground() const { return background; }
     ImageObject* GetCardFrame() const { return cardFrame; }
     ImageObject* GetVisual() const { return visual; }
     ImageObject* GetTypeIcon() const { return typeIcon; }
     ImageObject* GetStarOverlay() const { return starOverlay; }
+    TextObject* GetNameText() const { return nameText; }
 };

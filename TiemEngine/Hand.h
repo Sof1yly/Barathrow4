@@ -12,7 +12,6 @@
 struct CardView
 {
     Card* cardData = nullptr;
-    // Visual references (owned by Card, not Hand)
     ImageObject* background = nullptr;
     ImageObject* cardFrame = nullptr;
     ImageObject* visual = nullptr;
@@ -40,7 +39,7 @@ private:
     void liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsList);
     void clearHover(std::vector<DrawableObject*>& objectsList);
 
-    std::vector<ImageObject*> getAllImagesFromView(const CardView& cv) const;
+    std::vector<DrawableObject*> getAllImagesFromView(const CardView& cv) const;
 
 public:
     ImageObject* GetSelectedView() const { return selectedView; }

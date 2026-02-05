@@ -204,7 +204,7 @@ void Level::LevelInit()
     TextObject* text = new TextObject();
     text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
     SDL_Color color = {0, 255,0 };
-    text->LoadText("hello world!", color, 64);
+    text->LoadText("hello world!", color, 20);
     objectsList.push_back(text);
 
     std::cout << "Init Level" << std::endl;

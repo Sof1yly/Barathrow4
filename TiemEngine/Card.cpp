@@ -80,7 +80,7 @@ void Card::CreateVisuals()
     
     std::string basePath = "../Resource/Texture/cards/";
     
-    // Render order
+    // RENDER ORDER (bottom to top):
     
     // 1. Background (bottom layer)
     background = new ImageObject();
@@ -109,6 +109,11 @@ void Card::CreateVisuals()
     cardFrame->SetSize(280.0f, -410.0f);
     cardFrame->SetTexture(basePath + getCardFrameName(rarityCode));
     
+    // 6. Card Name Text 
+    nameText = new TextObject();
+    SDL_Color textColor = { 255, 255, 255, 255 }; 
+    nameText->LoadText(name, textColor, 20);
+    
     visualsCreated = true;
 }
 
@@ -121,17 +126,19 @@ void Card::DestroyVisuals()
     if (typeIcon) { delete typeIcon; typeIcon = nullptr; }
     if (visual) { delete visual; visual = nullptr; }
     if (cardFrame) { delete cardFrame; cardFrame = nullptr; }
+    if (nameText) { delete nameText; nameText = nullptr; }
     
     visualsCreated = false;
 }
 
-std::vector<ImageObject*> Card::GetAllLayers() const
+std::vector<DrawableObject*> Card::GetAllLayers() const
 {
-    std::vector<ImageObject*> layers;
+    std::vector<DrawableObject*> layers;
     if (background) layers.push_back(background);
     if (starOverlay) layers.push_back(starOverlay);
     if (typeIcon) layers.push_back(typeIcon);
     if (visual) layers.push_back(visual);
     if (cardFrame) layers.push_back(cardFrame);
+    if (nameText) layers.push_back(nameText);
     return layers;
 }
