@@ -12,11 +12,12 @@
 struct CardView
 {
     Card* cardData = nullptr;
+    // Visual references (owned by Card, not Hand)
     ImageObject* background = nullptr;
     ImageObject* cardFrame = nullptr;
     ImageObject* visual = nullptr;
     ImageObject* typeIcon = nullptr;
-    ImageObject* starOverlay = nullptr; 
+    ImageObject* starOverlay = nullptr;
 };
 
 class Hand

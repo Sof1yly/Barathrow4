@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Action.h"
+#include "ImageObject.h"
 
 class Card
 {
@@ -11,6 +12,14 @@ private:
     std::string rarityCode;  
     std::string typeCode;    
     std::vector<Action*> actions;
+    
+    // Visual rendering data
+    ImageObject* background = nullptr;
+    ImageObject* cardFrame = nullptr;
+    ImageObject* visual = nullptr;
+    ImageObject* typeIcon = nullptr;
+    ImageObject* starOverlay = nullptr;
+    bool visualsCreated = false;
 
 public:
     Card(const std::string& n);
@@ -28,4 +37,16 @@ public:
     const std::vector<Action*>& getActions() const;
     void addAction(Action* action);
     void do_action();
+    
+    // Visual rendering methods
+    void CreateVisuals();
+    void DestroyVisuals();
+    bool HasVisuals() const { return visualsCreated; }
+    
+    std::vector<ImageObject*> GetAllLayers() const;
+    ImageObject* GetBackground() const { return background; }
+    ImageObject* GetCardFrame() const { return cardFrame; }
+    ImageObject* GetVisual() const { return visual; }
+    ImageObject* GetTypeIcon() const { return typeIcon; }
+    ImageObject* GetStarOverlay() const { return starOverlay; }
 };
