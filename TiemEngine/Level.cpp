@@ -232,10 +232,19 @@ void Level::LevelUpdate()
 
         switch (pendingMoveZone)
         {
-        case 0: if (nowRow > GridStartRow) targetRow--; break; // LEFT
-        case 3: if (nowRow < GridEndRow - 1) targetRow++; break; // RIGHT
-        case 1: if (nowCol > GridStartCol) targetCol--; break; // TOP
-        case 2: if (nowCol < GridEndCol - 1) targetCol++; break; // BOTTOM
+        case 0: if (nowRow > GridStartRow) targetRow--; break;
+        case 3: if (nowRow < GridEndRow - 1) targetRow++; break;
+        case 1: if (nowCol > GridStartCol) targetCol--; break;
+        case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
+        }
+
+        if (targetRow == nowRow && targetCol == nowCol)
+        {
+            std::cout << "[Card Move Blocked] Edge reached, cancelling movement.\n";
+
+            pendingMoveSteps = 0;
+            turnState = TurnState::ENEMY_TURN;
+            return;
         }
 
         playerMoving = true;
@@ -254,6 +263,7 @@ void Level::LevelUpdate()
 
         pendingMoveSteps--;
     }
+
 
 
     if (enemy && enemy->getHealth() <= 0)
