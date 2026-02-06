@@ -29,6 +29,7 @@ private:
     SpriteObject* playersprite = nullptr; //Real Player
     ImageObject* mainMenu = nullptr;
     ImageObject* testEnemy;
+	ImageObject* Background;
     Enemy* enemy;
 
 

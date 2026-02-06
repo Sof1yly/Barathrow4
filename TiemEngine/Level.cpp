@@ -45,6 +45,12 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	ImageObject* Background = new ImageObject();
+	Background->SetSize(1920.0f, -1080.0f);
+	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	Background->SetTexture("../Resource/Texture/Background.png");
+	objectsList.push_back(Background);
+
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
         for (int j = GridStartCol; j < GridEndCol; ++j) {
