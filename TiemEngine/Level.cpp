@@ -45,6 +45,12 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	ImageObject* Background = new ImageObject();
+	Background->SetSize(1920.0f, -1080.0f);
+	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	Background->SetTexture("../Resource/Texture/Background.png");
+	objectsList.push_back(Background);
+
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
         for (int j = GridStartCol; j < GridEndCol; ++j) {
@@ -66,7 +72,7 @@ void Level::LevelInit()
 
 	ImageObject* enemyObj = new ImageObject();
 	enemyObj->SetSize(100.0f, -100.0f);
-    enemyObj->SetTexture("../Resource/Texture/doro.png");
+    enemyObj->SetTexture("../Resource/Texture/Enemy/Enemy1.png");
 
 	//glm::vec3 pos = GridToWorld(enemy->getNowRow(), enemy->getNowCol()); //  glm::vec3 pos = GridToWorld(8, 0);
     glm::vec3 pos = GridToWorld(8, 0);
@@ -219,6 +225,47 @@ void Level::LevelUpdate()
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
+    if (turnState == TurnState::PLAYER_MOVING && pendingMoveSteps > 0 && !playerMoving)
+    {
+        int targetRow = nowRow;
+        int targetCol = nowCol;
+
+        switch (pendingMoveZone)
+        {
+        case 0: if (nowRow > GridStartRow) targetRow--; break;
+        case 3: if (nowRow < GridEndRow - 1) targetRow++; break;
+        case 1: if (nowCol > GridStartCol) targetCol--; break;
+        case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
+        }
+
+        if (targetRow == nowRow && targetCol == nowCol)
+        {
+            std::cout << "[Card Move Blocked] Edge reached, cancelling movement.\n";
+
+            pendingMoveSteps = 0;
+            turnState = TurnState::ENEMY_TURN;
+            return;
+        }
+
+        playerMoving = true;
+        playerMoveTimer = 0.0f;
+
+        playerMoveStart = playersprite->GetPosition();
+        playerMoveTarget = GridToWorld(targetRow, targetCol);
+
+        if (pendingMoveZone == 0) SetPlayerWalk(PlayerDir::LEFT);
+        if (pendingMoveZone == 3) SetPlayerWalk(PlayerDir::RIGHT);
+        if (pendingMoveZone == 1) SetPlayerWalk(PlayerDir::UP);
+        if (pendingMoveZone == 2) SetPlayerWalk(PlayerDir::DOWN);
+
+        nowRow = targetRow;
+        nowCol = targetCol;
+
+        pendingMoveSteps--;
+    }
+
+
+
     if (enemy && enemy->getHealth() <= 0)
     {
         ImageObject* obj = enemy->getObject();
@@ -273,7 +320,22 @@ void Level::LevelUpdate()
             playerMoving = false;
 
             SetPlayerIdle(playerDir);
+
+            if (pendingMoveSteps > 0)
+            {
+                return;
+            }
+            if (turnState == TurnState::PLAYER_MOVING)
+            {
+                std::cout << "[Card Move Finished] Enemy Turn Begins!\n";
+                turnState = TurnState::ENEMY_TURN;
+            }
+            else
+            {
+                turnState = TurnState::PLAYER_TURN;
+            }
         }
+
     }
 }
 
@@ -322,6 +384,9 @@ void Level::LevelUnload()
 
 void Level::HandleKey(char key)
 {
+    if (turnState != TurnState::PLAYER_TURN)
+        return;
+
     switch (key)
     {
     case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    break;
@@ -408,6 +473,9 @@ void Level::HandleKey(char key)
 
 void Level::HandleMouse(int type, int x, int y)
 {
+    if (turnState != TurnState::PLAYER_TURN)
+        return;
+
     int winW = GameEngine::GetInstance()->GetWindowWidth();
     int winH = GameEngine::GetInstance()->GetWindowHeight();
     float scaleW = GameEngine::GetInstance()->GetDrawAreaWidth();
@@ -949,7 +1017,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 std::cout << "Applying MoveAction steps = " << moveSteps
                     << " toward " << zoneNames[dz] << std::endl;
 
-                for (int s = 0; s < moveSteps; ++s)
+                /*for (int s = 0; s < moveSteps; ++s)
                 {
                     switch (dz)
                     {
@@ -984,10 +1052,24 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                             nowCol++;
                         }
                         break;
-                }
-                }
-
+                    }
+                }*/
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
+            }
+
+            if (moveSteps > 0 && playersprite)
+            {
+                pendingMoveSteps = moveSteps;
+                pendingMoveZone = dz;
+
+                turnState = TurnState::PLAYER_MOVING;
+
+                std::cout << "[Card Move] Player will walk "
+                    << pendingMoveSteps << " steps\n";
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
             }
 
             for (const PendingAttack& pa : pendingAttacks)
@@ -1084,8 +1166,6 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     draggingCard = nullptr;
     pendingCard = nullptr;
 
-    std::cout << "End of player turn" << std::endl;
-    turnState = TurnState::ENEMY_TURN;
 }
 
 // Apply attack pattern (player)
@@ -1195,6 +1275,9 @@ bool Level::EnemyCanAttackPlayer()
 
 void Level::UpdateTurn()
 {
+    if (turnState == TurnState::PLAYER_MOVING)
+        return;
+
     if (turnState == TurnState::PLAYER_TURN) {
         // Player turn - nothing to do here
     }
