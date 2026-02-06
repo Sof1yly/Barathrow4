@@ -78,9 +78,9 @@ void Card::CreateVisuals()
 {
     if (visualsCreated) return;
     
-    std::string basePath = "../Resource/Texture/cards/";
+    string basePath = "../Resource/Texture/cards/";
     
-    // RENDER ORDER (bottom to top):
+    // RENDER ORDER 
     
     // 1. Background (bottom layer)
     background = new ImageObject();
@@ -113,6 +113,7 @@ void Card::CreateVisuals()
     nameText = new TextObject();
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 20);
+
     
     visualsCreated = true;
 }

@@ -8,11 +8,11 @@
 class Card
 {
 private:
-    std::string name;
+    string name;
     int level;
-    std::string rarityCode;  
-    std::string typeCode;    
-    std::vector<Action*> actions;
+    string rarityCode;  
+    string typeCode;    
+    vector<Action*> actions;
     
     // Visual rendering data
     ImageObject* background = nullptr;
@@ -22,6 +22,7 @@ private:
     ImageObject* starOverlay = nullptr;
     TextObject* nameText = nullptr;
     bool visualsCreated = false;
+
 
 public:
     Card(const std::string& n);
