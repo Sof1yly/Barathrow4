@@ -63,6 +63,10 @@ private:
     int nowRow = 0;
     int nowCol = 0;
 
+    int pendingMoveSteps = 0;
+    int pendingMoveZone = -1;
+
+
     // Movement
     glm::vec3 testMoveTarget = glm::vec3(0.0f);
     bool      testMoveMoving = false;
@@ -111,7 +115,9 @@ private:
     //gameloop
     enum class TurnState {
         PLAYER_TURN,
-        ENEMY_TURN
+        PLAYER_MOVING,
+        ENEMY_TURN,
+        GAME_OVER
     };
 
     TurnState turnState = TurnState::PLAYER_TURN;

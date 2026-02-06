@@ -225,6 +225,37 @@ void Level::LevelUpdate()
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
+    if (turnState == TurnState::PLAYER_MOVING && pendingMoveSteps > 0 && !playerMoving)
+    {
+        int targetRow = nowRow;
+        int targetCol = nowCol;
+
+        switch (pendingMoveZone)
+        {
+        case 0: if (nowRow > GridStartRow) targetRow--; break; // LEFT
+        case 3: if (nowRow < GridEndRow - 1) targetRow++; break; // RIGHT
+        case 1: if (nowCol > GridStartCol) targetCol--; break; // TOP
+        case 2: if (nowCol < GridEndCol - 1) targetCol++; break; // BOTTOM
+        }
+
+        playerMoving = true;
+        playerMoveTimer = 0.0f;
+
+        playerMoveStart = playersprite->GetPosition();
+        playerMoveTarget = GridToWorld(targetRow, targetCol);
+
+        if (pendingMoveZone == 0) SetPlayerWalk(PlayerDir::LEFT);
+        if (pendingMoveZone == 3) SetPlayerWalk(PlayerDir::RIGHT);
+        if (pendingMoveZone == 1) SetPlayerWalk(PlayerDir::UP);
+        if (pendingMoveZone == 2) SetPlayerWalk(PlayerDir::DOWN);
+
+        nowRow = targetRow;
+        nowCol = targetCol;
+
+        pendingMoveSteps--;
+    }
+
+
     if (enemy && enemy->getHealth() <= 0)
     {
         ImageObject* obj = enemy->getObject();
@@ -279,7 +310,22 @@ void Level::LevelUpdate()
             playerMoving = false;
 
             SetPlayerIdle(playerDir);
+
+            if (pendingMoveSteps > 0)
+            {
+                return;
+            }
+            if (turnState == TurnState::PLAYER_MOVING)
+            {
+                std::cout << "[Card Move Finished] Enemy Turn Begins!\n";
+                turnState = TurnState::ENEMY_TURN;
+            }
+            else
+            {
+                turnState = TurnState::PLAYER_TURN;
+            }
         }
+
     }
 }
 
@@ -328,6 +374,9 @@ void Level::LevelUnload()
 
 void Level::HandleKey(char key)
 {
+    if (turnState != TurnState::PLAYER_TURN)
+        return;
+
     switch (key)
     {
     case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    break;
@@ -414,6 +463,9 @@ void Level::HandleKey(char key)
 
 void Level::HandleMouse(int type, int x, int y)
 {
+    if (turnState != TurnState::PLAYER_TURN)
+        return;
+
     int winW = GameEngine::GetInstance()->GetWindowWidth();
     int winH = GameEngine::GetInstance()->GetWindowHeight();
     float scaleW = GameEngine::GetInstance()->GetDrawAreaWidth();
@@ -955,7 +1007,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 std::cout << "Applying MoveAction steps = " << moveSteps
                     << " toward " << zoneNames[dz] << std::endl;
 
-                for (int s = 0; s < moveSteps; ++s)
+                /*for (int s = 0; s < moveSteps; ++s)
                 {
                     switch (dz)
                     {
@@ -990,10 +1042,24 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                             nowCol++;
                         }
                         break;
-                }
-                }
-
+                    }
+                }*/
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
+            }
+
+            if (moveSteps > 0 && playersprite)
+            {
+                pendingMoveSteps = moveSteps;
+                pendingMoveZone = dz;
+
+                turnState = TurnState::PLAYER_MOVING;
+
+                std::cout << "[Card Move] Player will walk "
+                    << pendingMoveSteps << " steps\n";
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
             }
 
             for (const PendingAttack& pa : pendingAttacks)
@@ -1090,8 +1156,6 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     draggingCard = nullptr;
     pendingCard = nullptr;
 
-    std::cout << "End of player turn" << std::endl;
-    turnState = TurnState::ENEMY_TURN;
 }
 
 // Apply attack pattern (player)
@@ -1201,6 +1265,9 @@ bool Level::EnemyCanAttackPlayer()
 
 void Level::UpdateTurn()
 {
+    if (turnState == TurnState::PLAYER_MOVING)
+        return;
+
     if (turnState == TurnState::PLAYER_TURN) {
         // Player turn - nothing to do here
     }
