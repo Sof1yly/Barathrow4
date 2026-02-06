@@ -72,7 +72,7 @@ void Level::LevelInit()
 
 	ImageObject* enemyObj = new ImageObject();
 	enemyObj->SetSize(100.0f, -100.0f);
-    enemyObj->SetTexture("../Resource/Texture/doro.png");
+    enemyObj->SetTexture("../Resource/Texture/Enemy/Enemy1.png");
 
 	//glm::vec3 pos = GridToWorld(enemy->getNowRow(), enemy->getNowCol()); //  glm::vec3 pos = GridToWorld(8, 0);
     glm::vec3 pos = GridToWorld(8, 0);
