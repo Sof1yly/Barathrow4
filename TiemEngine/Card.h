@@ -9,6 +9,7 @@ class Card
 {
 private:
     string name;
+    string description;
     int level;
     string rarityCode;  
     string typeCode;    
@@ -21,23 +22,26 @@ private:
     ImageObject* typeIcon = nullptr;
     ImageObject* starOverlay = nullptr;
     TextObject* nameText = nullptr;
+    TextObject* descriptionText = nullptr;
     bool visualsCreated = false;
 
 
 public:
-    Card(const std::string& n);
+    Card(const string& n);
     ~Card();
 
-    const std::string& getName() const;
+    const string& getName() const;
+    const string& getDescription() const { return description; }
+    void setDescription(const string& desc) { description = desc; }
     int getLevel() const { return level; }
-    const std::string& getRarityCode() const { return rarityCode; }
-    const std::string& getTypeCode() const { return typeCode; }
+    const string& getRarityCode() const { return rarityCode; }
+    const string& getTypeCode() const { return typeCode; }
     
     void setLevel(int lv) { level = lv; }
-    void setRarityCode(const std::string& code) { rarityCode = code; }
-    void setTypeCode(const std::string& code) { typeCode = code; }
+    void setRarityCode(const string& code) { rarityCode = code; }
+    void setTypeCode(const string& code) { typeCode = code; }
     
-    const std::vector<Action*>& getActions() const;
+    const vector<Action*>& getActions() const;
     void addAction(Action* action);
     void do_action();
     
@@ -46,11 +50,12 @@ public:
     void DestroyVisuals();
     bool HasVisuals() const { return visualsCreated; }
     
-    std::vector<DrawableObject*> GetAllLayers() const;
+    vector<DrawableObject*> GetAllLayers() const;
     ImageObject* GetBackground() const { return background; }
     ImageObject* GetCardFrame() const { return cardFrame; }
     ImageObject* GetVisual() const { return visual; }
     ImageObject* GetTypeIcon() const { return typeIcon; }
     ImageObject* GetStarOverlay() const { return starOverlay; }
     TextObject* GetNameText() const { return nameText; }
+    TextObject* GetDescriptionText() const { return descriptionText; }
 };

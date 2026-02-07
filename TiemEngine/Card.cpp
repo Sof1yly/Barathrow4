@@ -1,7 +1,7 @@
 #include "Card.h"
 
 
-static std::string getCardFrameName(const std::string& rarityCode)
+static string getCardFrameName(const string& rarityCode)
 {
     if (rarityCode == "sta") return "BG_Frame/card_fr_gy.png";
     if (rarityCode == "com") return "BG_Frame/card_fr_gn.png";
@@ -11,7 +11,7 @@ static std::string getCardFrameName(const std::string& rarityCode)
     return "BG_Frame/card_fr_gy.png";
 }
 
-static std::string getTypeIconName(const std::string& typeCode)
+static string getTypeIconName(const string& typeCode)
 {
     if (typeCode == "atk") return "BG_Type/card_ty_atk.png";
     if (typeCode == "mov") return "BG_Type/card_ty_mv.png";
@@ -21,7 +21,7 @@ static std::string getTypeIconName(const std::string& typeCode)
     return "BG_Type/card_ty_atk.png";
 }
 
-static std::string getStarOverlayName(int level)
+static string getStarOverlayName(int level)
 {
     switch (level) {
     case 1: return "BG_Stars/star_gd1.png";
@@ -31,13 +31,13 @@ static std::string getStarOverlayName(int level)
     }
 }
 
-static std::string getBackgroundName()
+static string getBackgroundName()
 {
     return "BG_card/card_bg.png";
 }
 
-Card::Card(const std::string& n)
-    : name(n), level(0), rarityCode("sta"), typeCode("atk")  
+Card::Card(const string& n)
+    : name(n), description(""), level(0), rarityCode("sta"), typeCode("atk")  
 {
 }
 
@@ -51,12 +51,12 @@ Card::~Card()
     DestroyVisuals();
 }
 
-const std::string& Card::getName() const
+const string& Card::getName() const
 {
     return name;
 }
 
-const std::vector<Action*>& Card::getActions() const
+const vector<Action*>& Card::getActions() const
 {
     return actions;
 }
@@ -112,8 +112,14 @@ void Card::CreateVisuals()
     // 6. Card Name Text 
     nameText = new TextObject();
     SDL_Color textColor = { 255, 255, 255, 255 }; 
-    nameText->LoadText(name, textColor, 20);
+    nameText->LoadText(name, textColor, 18);
 
+    // 7. Description Text
+    if (!description.empty()) {
+        descriptionText = new TextObject();
+        SDL_Color descColor = { 220, 220, 220, 255 };
+        descriptionText->LoadTextWrapped(description, descColor, 16, 240);
+    }
     
     visualsCreated = true;
 }
@@ -128,18 +134,20 @@ void Card::DestroyVisuals()
     if (visual) { delete visual; visual = nullptr; }
     if (cardFrame) { delete cardFrame; cardFrame = nullptr; }
     if (nameText) { delete nameText; nameText = nullptr; }
+    if (descriptionText) { delete descriptionText; descriptionText = nullptr; }
     
     visualsCreated = false;
 }
 
-std::vector<DrawableObject*> Card::GetAllLayers() const
+vector<DrawableObject*> Card::GetAllLayers() const
 {
-    std::vector<DrawableObject*> layers;
+    vector<DrawableObject*> layers;
     if (background) layers.push_back(background);
     if (starOverlay) layers.push_back(starOverlay);
     if (typeIcon) layers.push_back(typeIcon);
     if (visual) layers.push_back(visual);
     if (cardFrame) layers.push_back(cardFrame);
     if (nameText) layers.push_back(nameText);
+    if (descriptionText) layers.push_back(descriptionText);
     return layers;
 }

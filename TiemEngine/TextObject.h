@@ -17,5 +17,6 @@ public:
 	void Render(glm::mat4 globalModelTransform);
 	void Update(float deltaTime);
 	void LoadText(string text, SDL_Color textColor, int fontSize);
+	void LoadTextWrapped(string text, SDL_Color textColor, int fontSize, int maxWidth);
 	
 };

@@ -22,50 +22,50 @@ struct CardView
 class Hand
 {
 private:
-    std::vector<CardView> views;
+    vector<CardView> views;
     ImageObject* selectedView = nullptr;
     ImageObject* hoveredView = nullptr;
 
-    std::unordered_map<ImageObject*, glm::vec3> origPos;
-    std::unordered_map<ImageObject*, glm::vec2> origSize;
-    std::unordered_map<ImageObject*, float> origRot;
+    unordered_map<ImageObject*, glm::vec3> origPos;
+    unordered_map<ImageObject*, glm::vec2> origSize;
+    unordered_map<ImageObject*, float> origRot;
     
 
-    std::unordered_map<ImageObject*, size_t> origIndices;
+    unordered_map<ImageObject*, size_t> origIndices;
 
     bool hitTestBase(ImageObject* v, const glm::vec3& p) const;    // use orig fan pos
     bool hitTestCurrent(ImageObject* v, const glm::vec3& p) const; // use current pos
     void layoutViews();
-    void liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsList);
-    void clearHover(std::vector<DrawableObject*>& objectsList);
+    void liftForHover(ImageObject* v, vector<DrawableObject*>& objectsList);
+    void clearHover(vector<DrawableObject*>& objectsList);
 
-    std::vector<DrawableObject*> getAllImagesFromView(const CardView& cv) const;
+    vector<DrawableObject*> getAllImagesFromView(const CardView& cv) const;
 
 public:
     ImageObject* GetSelectedView() const { return selectedView; }
 
 
-    void CreateVisualHand(int cardCount,std::vector<DrawableObject*>& objectsList,const std::vector<Card*>& cardData);
+    void CreateVisualHand(int cardCount,vector<DrawableObject*>& objectsList,const vector<Card*>& cardData);
 
 
     int GetCardCount() const;
 
 
-    void AddCards(const std::vector<Card*>& cardsToAdd,std::vector<DrawableObject*>& objectsList);
+    void AddCards(const vector<Card*>& cardsToAdd,vector<DrawableObject*>& objectsList);
 
     void Clear(std::vector<DrawableObject*>& objectsList);
 
 
-    std::vector<Card*> CollectAllCardData() const;
+    vector<Card*> CollectAllCardData() const;
 
 
     ImageObject* PeekAt(const glm::vec3& mouseWorld);
 
 
-    void UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector<DrawableObject*>& objectsList);
+    void UpdateHover(const glm::vec3& mouseWorld, bool isDragging, vector<DrawableObject*>& objectsList);
 
  
-    void RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList);
+    void RemoveView(ImageObject* view, vector<DrawableObject*>& objectsList);
 
     Card* FindCardByImage(ImageObject* img);
 
@@ -73,5 +73,5 @@ public:
     void Deselect();
 
     
-    std::vector<ImageObject*> GetAllLayersForCard(ImageObject* anyLayer);
+    vector<ImageObject*> GetAllLayersForCard(ImageObject* anyLayer);
 };

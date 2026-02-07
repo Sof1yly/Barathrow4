@@ -179,7 +179,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             continue;
         }
 
-        // Columns: Name, Damage, Move, Pattern, Level, RarityCode, TypeCode
+        // Columns: Name, Damage, Move, Pattern, Level, RarityCode, TypeCode, Desc
         std::string name = cells.size() > 0 ? cells[0] : "";
         std::string sDmg = cells.size() > 1 ? cells[1] : "";
         std::string sMove = cells.size() > 2 ? cells[2] : "";
@@ -187,6 +187,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
         std::string sLevel = cells.size() > 4 ? cells[4] : "0";    
         std::string rarityCode = cells.size() > 5 ? cells[5] : "sta";
         std::string typeCode = cells.size() > 6 ? cells[6] : "atk";
+        std::string description = cells.size() > 7 ? cells[7] : "";
 
         if (name.empty()) {
             continue;
@@ -234,6 +235,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
         card->setLevel(level);
         card->setRarityCode(rarityCode);
         card->setTypeCode(typeCode);
+        card->setDescription(description);
 
         if (damage > 0) {
             auto* atk = new AttackAction();

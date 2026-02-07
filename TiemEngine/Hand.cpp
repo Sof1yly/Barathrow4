@@ -10,7 +10,7 @@ static const float PI = 3.1415926535f;
 static const float RAD2DEG = 180.0f / PI;
 
 //rarity
-static std::string getCardFrameName(const std::string& rarityCode)
+static string getCardFrameName(const string& rarityCode)
 {
     if (rarityCode == "sta") return "BG_Frame/card_fr_gy.png";
     if (rarityCode == "com") return "BG_Frame/card_fr_gn.png";
@@ -21,7 +21,7 @@ static std::string getCardFrameName(const std::string& rarityCode)
 }
 
 //type
-static std::string getTypeIconName(const std::string& typeCode)
+static string getTypeIconName(const string& typeCode)
 {
     if (typeCode == "atk") return "BG_Type/card_ty_atk.png";
     if (typeCode == "mov") return "BG_Type/card_ty_mv.png";
@@ -32,7 +32,7 @@ static std::string getTypeIconName(const std::string& typeCode)
 }
 
 // level
-static std::string getStarOverlayName(int level)
+static string getStarOverlayName(int level)
 {
     switch (level) {
     case 1: return "BG_Stars/star_gd1.png";
@@ -42,12 +42,12 @@ static std::string getStarOverlayName(int level)
     }
 }
 
-static std::string getBackgroundName()
+static string getBackgroundName()
 {
     return "BG_card/card_bg.png";
 }
 
-std::vector<DrawableObject*> Hand::getAllImagesFromView(const CardView& cv) const
+vector<DrawableObject*> Hand::getAllImagesFromView(const CardView& cv) const
 {
     if (!cv.cardData) return {};
     return cv.cardData->GetAllLayers();
@@ -72,8 +72,7 @@ bool Hand::hitTestBase(ImageObject* v, const glm::vec3& p) const
     float halfW = std::fabs(sz.x) * 0.5f;
     float halfH = std::fabs(sz.y) * 0.5f;
 
-    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&
-        p.y >= pos.y - halfH && p.y <= pos.y + halfH);
+    return (p.x >= pos.x - halfW && p.x <= pos.x + halfW &&p.y >= pos.y - halfH && p.y <= pos.y + halfH);
 }
 
 bool Hand::hitTestCurrent(ImageObject* v, const glm::vec3& p) const
@@ -120,18 +119,18 @@ void Hand::layoutViews()
     for (int i = 0; i < count; ++i)
     {
         const CardView& cv = views[i];
-        std::vector<DrawableObject*> allLayers = getAllImagesFromView(cv);
+        vector<DrawableObject*> allLayers = getAllImagesFromView(cv);
 
         if (allLayers.empty()) continue;
 
         float deg = startDeg + stepDeg * i;
         float ang = deg * (PI / 180.0f);
 
-        float rimX = Cx + std::sinf(ang) * R;
-        float rimY = Cy + std::cosf(ang) * R;
+        float rimX = Cx + sinf(ang) * R;
+        float rimY = Cy + cosf(ang) * R;
 
-        float nx = std::sinf(ang);
-        float ny = std::cosf(ang);
+        float nx = sinf(ang);
+        float ny = cosf(ang);
         float tx = ny;
         float ty = -nx;
 
@@ -140,19 +139,26 @@ void Hand::layoutViews()
         
   
         float baseZ = 100.0f + (i * 10.0f);
-        float rotDeg = std::atan2f(ty, tx) * RAD2DEG;
+        float rotDeg = atan2f(ty, tx) * RAD2DEG;
 
         int layerIndex = 0;
+        int textObjectCount = 0;
         for (DrawableObject* layer : allLayers) {
             if (!layer) continue;
 
             float layerZ = baseZ + (layerIndex * 0.1f);
             
             if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
-                float textOffsetX = 45.0f;   // Move right
-                float textOffsetY = 135.0f; // Move up (higher value = higher position)
+                textObjectCount++;
+                float textOffsetX = 35.0f;
+                float textOffsetY;
+                
+                if (textObjectCount == 1) {
+                    textOffsetY = 130.0f; // Name position (top)
+                } else {
+                    textOffsetY = -80.0f; // Description position (below main visual)
+                }
 				
-                // Apply rotation to the offset vector
                 float angleRad = rotDeg * (PI / 180.0f);
                 float rotatedOffsetX = textOffsetX * std::cosf(angleRad) - textOffsetY * std::sinf(angleRad);
                 float rotatedOffsetY = textOffsetX * std::sinf(angleRad) + textOffsetY * std::cosf(angleRad);
@@ -166,7 +172,7 @@ void Hand::layoutViews()
                 layer->SetRotate(rotDeg);
             }
 
-            // Store for ImageObject (for hit testing)
+            // Store for ImageObject
             if (ImageObject* img = dynamic_cast<ImageObject*>(layer)) {
                 origPos[img] = layer->GetPosition();
                 origSize[img] = layer->GetSize();
@@ -178,13 +184,13 @@ void Hand::layoutViews()
     }
 }
 
-void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsList)
+void Hand::liftForHover(ImageObject* v, vector<DrawableObject*>& objectsList)
 {
     if (!v) return;
 
     CardView* targetView = nullptr;
     for (auto& cv : views) {
-        std::vector<DrawableObject*> layers = getAllImagesFromView(cv);
+        vector<DrawableObject*> layers = getAllImagesFromView(cv);
         for (DrawableObject* layer : layers) {
             if (layer == v) {
                 targetView = &cv;
@@ -196,7 +202,7 @@ void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsLis
 
     if (!targetView) return;
 
-    std::vector<DrawableObject*> allLayers = getAllImagesFromView(*targetView);
+    vector<DrawableObject*> allLayers = getAllImagesFromView(*targetView);
 
     glm::vec3 basePos = origPos.count(v) ? origPos[v] : v->GetPosition();
     glm::vec2 baseSize = origSize.count(v) ? origSize[v] : v->GetSize();
@@ -205,7 +211,6 @@ void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsLis
     const float HOVER_Z_BASE = 1000.0f;
     const float HOVER_SCALE = 1.3f;
 
-    // SAVE original indices before removing
     for (DrawableObject* layer : allLayers) {
         auto it = std::find(objectsList.begin(), objectsList.end(), layer);
         if (it != objectsList.end()) {
@@ -215,7 +220,6 @@ void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsLis
         }
     }
 
-    // REMOVE all layers from objectsList first
     for (DrawableObject* layer : allLayers) {
         auto it = std::find(objectsList.begin(), objectsList.end(), layer);
         if (it != objectsList.end()) {
@@ -224,15 +228,23 @@ void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsLis
     }
 
     int layerIndex = 0;
+    int textObjectCount = 0;
     for (DrawableObject* layer : allLayers) {
         if (!layer) continue;
         
         float layerZ = HOVER_Z_BASE + (layerIndex * 0.1f);
         
         if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
-
-            float textOffsetX = 44.0f; // Move right 
-            float textOffsetY = 125.0f * HOVER_SCALE; // Move up
+            textObjectCount++;
+            float textOffsetX = 22.5f * HOVER_SCALE;
+            float textOffsetY;
+            
+            if (textObjectCount == 1) {
+                textOffsetY = 135.0f * HOVER_SCALE; // Name position (top) 135
+            } else {
+                textOffsetY = -80.0f * HOVER_SCALE; // Description position (below main visual)
+            }
+            
             textObj->SetPosition(glm::vec3(basePos.x + textOffsetX, basePos.y + HOVER_OFFSET_Y + textOffsetY, layerZ));
             textObj->SetRotate(0.0f);
         }
@@ -249,7 +261,7 @@ void Hand::liftForHover(ImageObject* v, std::vector<DrawableObject*>& objectsLis
     }
 }
 
-void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
+void Hand::clearHover(vector<DrawableObject*>& objectsList)
 {
     if (!hoveredView) return;
 
@@ -258,7 +270,7 @@ void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
     
     // Find which card is being hovered and its index
     for (size_t i = 0; i < views.size(); ++i) {
-        std::vector<DrawableObject*> layers = getAllImagesFromView(views[i]);
+        vector<DrawableObject*> layers = getAllImagesFromView(views[i]);
         for (DrawableObject* layer : layers) {
             ImageObject* img = dynamic_cast<ImageObject*>(layer);
             if (img == hoveredView) {
@@ -275,7 +287,7 @@ void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
         return;
     }
 
-    std::vector<DrawableObject*> allLayers = getAllImagesFromView(*targetView);
+    vector<DrawableObject*> allLayers = getAllImagesFromView(*targetView);
     
     // REMOVE all layers of the hovered card from objectsList
     for (DrawableObject* layer : allLayers) {
@@ -285,7 +297,6 @@ void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
         }
     }
     
-    // This ensures the card goes back to its original position in the rendering order
     size_t insertionPoint = objectsList.size(); 
     
     if (cardIndex < static_cast<int>(views.size()) - 1) {
@@ -310,7 +321,7 @@ void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
     // Insert all layers at the calculated position (in order: background, star, type, visual, frame, text)
     for (DrawableObject* layer : allLayers) {
         objectsList.insert(objectsList.begin() + insertionPoint, layer);
-        insertionPoint++; // Move insertion point forward for next layer
+        insertionPoint++; 
     }
     
     // Clear saved indices
@@ -328,9 +339,7 @@ void Hand::clearHover(std::vector<DrawableObject*>& objectsList)
 
 }
 
-void Hand::CreateVisualHand(int cardCount,
-    std::vector<DrawableObject*>& objectsList,
-    const std::vector<Card*>& cardData)
+void Hand::CreateVisualHand(int cardCount,vector<DrawableObject*>& objectsList,const vector<Card*>& cardData)
 {
     views.clear();
     hoveredView = nullptr;
@@ -360,7 +369,7 @@ void Hand::CreateVisualHand(int cardCount,
         cv.cardFrame = data->GetCardFrame();
 
         // Add all layers to objectsList
-        std::vector<DrawableObject*> allLayers = data->GetAllLayers();
+        vector<DrawableObject*> allLayers = data->GetAllLayers();
         for (DrawableObject* layer : allLayers) {
             if (layer) {
                 objectsList.push_back(layer);
@@ -378,8 +387,8 @@ int Hand::GetCardCount() const
     return static_cast<int>(views.size());
 }
 
-void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
-    std::vector<DrawableObject*>& objectsList)
+void Hand::AddCards(const vector<Card*>& cardsToAdd,
+    vector<DrawableObject*>& objectsList)
 {
     for (Card* data : cardsToAdd)
     {
@@ -401,7 +410,7 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
         cv.cardFrame = data->GetCardFrame();
 
         // Add all layers to objectsList
-        std::vector<DrawableObject*> allLayers = data->GetAllLayers();
+        vector<DrawableObject*> allLayers = data->GetAllLayers();
         for (DrawableObject* layer : allLayers) {
             if (layer) {
                 objectsList.push_back(layer);
@@ -414,14 +423,14 @@ void Hand::AddCards(const std::vector<Card*>& cardsToAdd,
     layoutViews();
 }
 
-void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsList)
+void Hand::RemoveView(ImageObject* view, vector<DrawableObject*>& objectsList)
 {
     if (!view) return;
 
-    auto it = std::find_if(views.begin(), views.end(),
+    auto it = find_if(views.begin(), views.end(),
         [view](const CardView& cv) {
             if (!cv.cardData) return false;
-            std::vector<DrawableObject*> layers = cv.cardData->GetAllLayers();
+            vector<DrawableObject*> layers = cv.cardData->GetAllLayers();
             for (DrawableObject* layer : layers) {
                 if (dynamic_cast<ImageObject*>(layer) == view) {
                     return true;
@@ -431,11 +440,11 @@ void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsLi
         });
 
     if (it != views.end()) {
-        std::vector<DrawableObject*> allLayers = it->cardData->GetAllLayers();
+        vector<DrawableObject*> allLayers = it->cardData->GetAllLayers();
 
         for (DrawableObject* layer : allLayers) {
             // Remove from objectsList
-            auto objIt = std::find(objectsList.begin(), objectsList.end(), layer);
+            auto objIt = find(objectsList.begin(), objectsList.end(), layer);
             if (objIt != objectsList.end()) {
                 objectsList.erase(objIt);
             }
@@ -458,7 +467,7 @@ void Hand::RemoveView(ImageObject* view, std::vector<DrawableObject*>& objectsLi
     layoutViews();
 }
 
-void Hand::Clear(std::vector<DrawableObject*>& objectsList)
+void Hand::Clear(vector<DrawableObject*>& objectsList)
 {
     for (auto& cv : views)
     {
@@ -485,9 +494,9 @@ void Hand::Clear(std::vector<DrawableObject*>& objectsList)
     origIndices.clear();
 }
 
-std::vector<Card*> Hand::CollectAllCardData() const
+vector<Card*> Hand::CollectAllCardData() const
 {
-    std::vector<Card*> out;
+    vector<Card*> out;
     out.reserve(views.size());
     for (const auto& v : views)
     {
@@ -512,7 +521,7 @@ ImageObject* Hand::PeekAt(const glm::vec3& mouseWorld)
     return nullptr;
 }
 
-void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector<DrawableObject*>& objectsList)
+void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, vector<DrawableObject*>& objectsList)
 {
     if (isDragging) {
         if (hoveredView) {
@@ -556,7 +565,7 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, std::vector
 Card* Hand::FindCardByImage(ImageObject* img)
 {
     for (auto& cv : views) {
-        std::vector<DrawableObject*> layers = getAllImagesFromView(cv);
+        vector<DrawableObject*> layers = getAllImagesFromView(cv);
         for (DrawableObject* layer : layers) {
             if (dynamic_cast<ImageObject*>(layer) == img) {
                 return cv.cardData;
@@ -581,7 +590,7 @@ void Hand::Deselect()
     selectedView = nullptr;
 }
 
-std::vector<ImageObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
+vector<ImageObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
 {
     if (!anyLayer) return {};
     

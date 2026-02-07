@@ -86,7 +86,6 @@
     <None Include="..\Resource\Shader\vertext.shd" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\Resource\GameData\CardAction.txt" />
     <Text Include="..\Resource\GameData\Pattern.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
