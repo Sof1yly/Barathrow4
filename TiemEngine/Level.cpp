@@ -160,7 +160,7 @@ void Level::LevelInit()
     }
 
     // 2) Load actions + cards (with Pattern column)
-    if (!dataLoader.loadFromFile("../Resource/GameData/CardActionNovis.txt", &error)) {
+    if (!dataLoader.loadFromFile("../Resource/GameData/CardAction.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
