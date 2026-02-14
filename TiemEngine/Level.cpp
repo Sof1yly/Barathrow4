@@ -51,6 +51,11 @@ void Level::LevelInit()
 	Background->SetTexture("../Resource/Texture/Background.png");
 	objectsList.push_back(Background);
 
+	// Initialize player state
+    playerDir = PlayerDir::DOWN;
+    playerState = PlayerState::IDLE;
+    UpdatePlayerAnimation();
+
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
         for (int j = GridStartCol; j < GridEndCol; ++j) {
@@ -85,9 +90,9 @@ void Level::LevelInit()
     // 3) Player sprite (3x4, 192x256)
     {
         SpriteObject* playerSprite =
-            new SpriteObject("../Resource/Texture/Player_sprite.png", 4,3);
+            new SpriteObject("../Resource/Texture/Player_sprite1.png", 6,10);
 
-        playerSprite->SetSize(84.0f, -90.0f);
+        playerSprite->SetSize(150.0f, -150.0f);
 
         glm::vec3 startPos = GridToWorld(0, 0);
         playerSprite->SetPosition(startPos);
@@ -95,8 +100,8 @@ void Level::LevelInit()
         playerSprite->SetAnimationLoop(
             0,      // start frame
             0,      // row
-            0,      // end frame
-            150     // ms per frame
+            2,      // end frame
+            200     // ms per frame
         );
         playerSprite->NextAnimation();
 
@@ -253,11 +258,6 @@ void Level::LevelUpdate()
         playerMoveStart = playersprite->GetPosition();
         playerMoveTarget = GridToWorld(targetRow, targetCol);
 
-        if (pendingMoveZone == 0) SetPlayerWalk(PlayerDir::LEFT);
-        if (pendingMoveZone == 3) SetPlayerWalk(PlayerDir::RIGHT);
-        if (pendingMoveZone == 1) SetPlayerWalk(PlayerDir::UP);
-        if (pendingMoveZone == 2) SetPlayerWalk(PlayerDir::DOWN);
-
         nowRow = targetRow;
         nowCol = targetCol;
 
@@ -319,12 +319,13 @@ void Level::LevelUpdate()
             playersprite->SetPosition(playerMoveTarget);
             playerMoving = false;
 
-            SetPlayerIdle(playerDir);
-
             if (pendingMoveSteps > 0)
             {
                 return;
             }
+            playerState = PlayerState::IDLE;
+            UpdatePlayerAnimation();
+
             if (turnState == TurnState::PLAYER_MOVING)
             {
                 std::cout << "[Card Move Finished] Enemy Turn Begins!\n";
@@ -335,6 +336,7 @@ void Level::LevelUpdate()
                 turnState = TurnState::PLAYER_TURN;
             }
         }
+
 
     }
 }
@@ -969,6 +971,16 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     if (!isDragging || !draggingCard) return;
 
     int dz = HitDropZone(mouseWorld);
+    if (dz >= 0)
+    {
+        switch (dz)
+        {
+        case 0: playerDir = PlayerDir::LEFT;  break;
+        case 1: playerDir = PlayerDir::UP;    break;
+        case 2: playerDir = PlayerDir::DOWN;  break;
+        case 3: playerDir = PlayerDir::RIGHT; break;
+        }
+    }
 
     if (dz >= 0)
     {
@@ -1056,11 +1068,15 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 }*/
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
+            
 
             if (moveSteps > 0 && playersprite)
             {
                 pendingMoveSteps = moveSteps;
                 pendingMoveZone = dz;
+
+                playerState = PlayerState::WALK;
+                UpdatePlayerAnimation();
 
                 turnState = TurnState::PLAYER_MOVING;
 
@@ -1069,6 +1085,11 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
             }
             else
             {
+                if (moveSteps == 0)
+                {
+                    playerState = PlayerState::IDLE;
+                    UpdatePlayerAnimation();
+                }
                 turnState = TurnState::ENEMY_TURN;
             }
 
@@ -1305,17 +1326,6 @@ void Level::UpdateTurn()
     }
 }
 
-void Level::SetPlayerIdle(PlayerDir dir)
-{
-    switch (dir)
-    {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 1, 1000); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 0, 1, 1000); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(2, 2, 1, 1000); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(3, 2, 1, 1000); break;
-    }
-}
-
 void Level::LevelRestart() 
 {
     cout << "=== RESTART START ===" << endl;
@@ -1476,17 +1486,56 @@ void Level::LevelRestart()
     cb->SetColor3(0.0f, 1.0f, 0.0f);
     objectsList.push_back(cb);
 
+    playerDir = PlayerDir::DOWN;
+    playerState = PlayerState::IDLE;
+    UpdatePlayerAnimation();
+
     cout << "=== RESTART COMPLETE ===" << endl;
 }
 
+void Level::UpdatePlayerAnimation()
+{
+    if (!playersprite) return;
+
+    if (playerState == PlayerState::IDLE)
+    {
+        switch (playerDir)
+        {
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 2, 400); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(0, 2, 2, 400); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(0, 4, 2, 400); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(0, 6, 2, 400); break;
+        }
+    }
+    else if (playerState == PlayerState::WALK)
+    {
+        switch (playerDir)
+        {
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 2, 150); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
+        }
+    }
+}
+void Level::SetPlayerIdle(PlayerDir dir)
+{
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 2, 400); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(0, 2, 2, 400); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(0, 4, 2, 400); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(0, 6, 2, 400); break;
+    }
+}
 
 void Level::SetPlayerWalk(PlayerDir dir)
 {
     switch (dir)
     {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 1, 2, 150); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 1, 2, 150); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(2, 0, 2, 150); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(3, 0, 2, 150); break;
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 2, 150); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
     }
 }

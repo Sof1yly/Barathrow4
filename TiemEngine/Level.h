@@ -44,7 +44,11 @@ private:
 
     // Facing / animation
     enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
+    enum class PlayerState { IDLE, WALK };
+
     PlayerDir playerDir = PlayerDir::DOWN;
+    PlayerState playerState = PlayerState::IDLE;
+
 	//End player state
     //////////////////////////////
 
@@ -162,6 +166,8 @@ public:
     void UpdateTurn();
 
     void LevelRestart();
+
+    void UpdatePlayerAnimation();
 
     void SetPlayerIdle(PlayerDir dir);
     void SetPlayerWalk(PlayerDir dir);
