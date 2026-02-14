@@ -1789,5 +1789,42 @@ void Level::PreviewMovePath(int steps, int dir)
     if (!moveHighlights.empty())
         moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 60));
 }
+/*//Highlight the entire path (old version)
+void Level::PreviewMovePath(int steps, int dir)
+{
+    MoveHighlights(objectsList);
 
+    int r = nowRow;
+    int c = nowCol;
 
+    // simulate movement until final tile
+    for (int i = 0; i < steps; i++)
+    {
+        switch (dir)
+        {
+        case 0: r--; break; // LEFT
+        case 1: c--; break; // UP
+        case 2: c++; break; // DOWN
+        case 3: r++; break; // RIGHT
+        }
+
+        // stop if out of bounds
+        if (r < GridStartRow || r >= GridEndRow ||
+            c < GridStartCol || c >= GridEndCol)
+            return;
+
+        // stop if enemy blocks
+        if (enemy && enemy->getNowRow() == r && enemy->getNowCol() == c)
+            return;
+    }
+
+    // ✅ Hide old preview first
+    HideMoveHighlights();
+
+    // ✅ Highlight ONLY destination tile
+    glm::vec3 world = GridToWorld(r, c);
+
+    if (!moveHighlights.empty())
+        moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 40));
+}
+*/
