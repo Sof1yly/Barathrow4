@@ -182,44 +182,38 @@ void Level::LevelInit()
     // ------------------------
     // Re-Draw button (LEFT)
     reDrawButton = new ImageObject();
-    reDrawButton->SetSize(200.0f, -260.0f);
-    reDrawButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));  // LEFT
-    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png");
+    reDrawButton->SetSize(260.0f, -275.0f);
+    reDrawButton->SetPosition(glm::vec3(-800.0f, -385.0f, 10.0f));  // LEFT
+    reDrawButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
     objectsList.push_back(reDrawButton);
 
     // ------------------------
     // View-Deck button (RIGHT)
     viewDeckButton = new ImageObject();
-    viewDeckButton->SetSize(200.0f, -260.0f);
-    viewDeckButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));  // RIGHT
-    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png");
+    viewDeckButton->SetSize(260.0f, -275.0f);
+    viewDeckButton->SetPosition(glm::vec3(800.0f, -385.0f, 10.0f));  // RIGHT
+    viewDeckButton->SetTexture("../Resource/Texture/cards/DiscardPile.png");
     objectsList.push_back(viewDeckButton);
 
 
     // Drop zones
     CreateDropZones(objectsList);
 
-	//////////////////////////////////////test sprite *delete later
-    SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
-    sprite->SetSize(50.0f, -50.0f);
-    sprite->SetPosition(glm::vec3(800.0f, 0.0f, 0.0f));
-    sprite->SetAnimationLoop(0, 0, 27, 50);
-    sprite->NextAnimation();
-    objectsList.push_back(sprite);
-	//////////////////////////////////////test sprite *delete later
+	////////////////////////////////////////test sprite *delete later
+ //   SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
+ //   sprite->SetSize(50.0f, -50.0f);
+ //   sprite->SetPosition(glm::vec3(800.0f, 0.0f, 0.0f));
+ //   sprite->SetAnimationLoop(0, 0, 27, 50);
+ //   sprite->NextAnimation();
+ //   objectsList.push_back(sprite);
+	////////////////////////////////////////test sprite *delete later
 
-    CombineObject* cb = new CombineObject();
-    cb->SetSize(100.0f, 100.0f);
-    cb->SetPosition(glm::vec3(800.0f, 200.0f, 0.0f));
-    cb->SetColor2(1.0f, 0.0f, 0.0f);
-    cb->SetColor3(0.0f, 1.0f, 0.0f);
-    objectsList.push_back(cb);
 
-    TextObject* text = new TextObject();
-    text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
-    SDL_Color color = {0, 255,0 };
-    text->LoadText("hello world!", color, 20);
-    objectsList.push_back(text);
+    //TextObject* text = new TextObject();
+    //text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
+    //SDL_Color color = {0, 255,0 };
+    //text->LoadText("hello world!", color, 20);
+    //objectsList.push_back(text);
 
     std::cout << "Init Level" << std::endl;
 }
