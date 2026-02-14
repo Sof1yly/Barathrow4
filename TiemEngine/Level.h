@@ -34,6 +34,8 @@ private:
 
 
     //////////////////////////////
+	// //Enemy state
+    bool enemyPreparingAttack = false;
 	// Player state
     // Smooth grid movement
     bool playerMoving = false;
@@ -53,6 +55,9 @@ private:
 
     std::vector<GameObject*> moveHighlights;
     bool moveHighlightCreated = false;
+
+    std::vector<GameObject*> enemyAttackHighlights;
+	bool enemyHighlightCreated = false;
 
 
     // Facing / animation
@@ -153,6 +158,9 @@ private:
 
     void MoveHighlights(std::vector<DrawableObject*>& list);
 	void HideMoveHighlights();
+
+    void EnemyAttackHighlights(std::vector<DrawableObject*>& list);
+	void HideEnemyAttackHighlights();
     
     void HideBezier();
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
@@ -194,5 +202,6 @@ public:
 
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
+	void PreviewEnemyAttack();
 
 };

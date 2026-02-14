@@ -950,6 +950,34 @@ void Level::HideMoveHighlights()
         h->SetPosition(glm::vec3(99999, 99999, 50));
 }
 
+void Level::EnemyAttackHighlights(std::vector<DrawableObject*>& list)
+{
+    if (enemyHighlightCreated) return;
+    enemyHighlightCreated = true;
+
+    enemyAttackHighlights.reserve(20);
+
+    for (int i = 0; i < 20; i++)
+    {
+        GameObject* h = new GameObject();
+        h->SetSize(GridWide, GridHigh);
+
+        h->SetColor(1.0f, 0.2f, 0.2f, 0.45f);
+
+        h->SetPosition(glm::vec3(99999, 99999, 5));
+
+        enemyAttackHighlights.push_back(h);
+        list.push_back(h);
+    }
+}
+
+void Level::HideEnemyAttackHighlights()
+{
+    for (auto* h : enemyAttackHighlights)
+        h->SetPosition(glm::vec3(99999, 99999, 50));
+}
+
+
 void Level::HideBezier()
 {
     for (auto* seg : bezierSegments)
@@ -1450,28 +1478,49 @@ void Level::UpdateTurn()
     if (turnState == TurnState::PLAYER_TURN) {
         // Player turn - nothing to do here
     }
-    else if (turnState == TurnState::ENEMY_TURN) {
-        
-        if (!enemy) {
-            cout << "[ERROR] Enemy is nullptr during ENEMY_TURN!" << endl;
+    else if (turnState == TurnState::ENEMY_TURN)
+    {
+        if (!enemy)
+        {
             turnState = TurnState::PLAYER_TURN;
             return;
         }
-        
-        cout << "[ENEMY TURN] Enemy at (" << enemy->getNowRow() << ", " << enemy->getNowCol() << ")" << endl;
-        cout << "[ENEMY TURN] Player at (" << nowRow << ", " << nowCol << ")" << endl;
 
-        if (EnemyCanAttackPlayer()) {
-            cout << "[ENEMY TURN] Enemy can attack player!" << endl;
-            ApplyEnemyAttack();
+
+        if (enemyPreparingAttack)
+        {
+            cout << "[ENEMY TURN] Enemy attacks now!\n";
+
+            HideEnemyAttackHighlights();  // remove warning
+            ApplyEnemyAttack();       // real attack
+
+            enemyPreparingAttack = false;
+
+            turnState = TurnState::PLAYER_TURN;
+            return;
         }
-        else {
-            cout << "[ENEMY TURN] Enemy is moving toward player" << endl;
-            MoveEnemyTowardPlayer();
+
+        if (EnemyCanAttackPlayer())
+        {
+            cout << "[ENEMY TURN] Enemy prepares attack (SHOW WARNING)!\n";
+
+            enemyPreparingAttack = true;
+
+            // SHOW enemy attack highlight
+            PreviewEnemyAttack();
+
+            turnState = TurnState::PLAYER_TURN;
+            return;
         }
+
+        cout << "[ENEMY TURN] Enemy moves toward player\n";
+
+        HideAttackHighlights();       // no attack warning
+        MoveEnemyTowardPlayer();
 
         turnState = TurnState::PLAYER_TURN;
     }
+
 }
 
 void Level::LevelRestart() 
@@ -1789,6 +1838,7 @@ void Level::PreviewMovePath(int steps, int dir)
     if (!moveHighlights.empty())
         moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 60));
 }
+
 /*//Highlight the entire path (old version)
 void Level::PreviewMovePath(int steps, int dir)
 {
@@ -1818,13 +1868,47 @@ void Level::PreviewMovePath(int steps, int dir)
             return;
     }
 
-    // ✅ Hide old preview first
     HideMoveHighlights();
 
-    // ✅ Highlight ONLY destination tile
     glm::vec3 world = GridToWorld(r, c);
 
     if (!moveHighlights.empty())
         moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 40));
 }
 */
+void Level::PreviewEnemyAttack()
+{
+    if (!enemy) return;
+
+    EnemyAttackHighlights(objectsList);
+    HideEnemyAttackHighlights();
+
+    auto cells =
+        enemy->getCurrentPattern().applyTo(
+            enemy->getNowRow(),
+            enemy->getNowCol()
+        );
+
+    int index = 0;
+
+    for (auto& cell : cells)
+    {
+        int gx = cell.first.x;
+        int gy = cell.first.y;
+
+        if (gx < GridStartRow || gx >= GridEndRow ||
+            gy < GridStartCol || gy >= GridEndCol)
+            continue;
+
+        if (index >= enemyAttackHighlights.size())
+            break;
+
+        glm::vec3 world = GridToWorld(gx, gy);
+
+        enemyAttackHighlights[index]->SetPosition(
+            glm::vec3(world.x, world.y, 40)
+        );
+
+        index++;
+    }
+}
