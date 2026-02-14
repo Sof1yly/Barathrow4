@@ -270,6 +270,23 @@ void Level::LevelUpdate()
         case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
         }
 
+        if (enemy &&
+            enemy->getNowRow() == targetRow &&
+            enemy->getNowCol() == targetCol)
+        {
+            std::cout << "[Move Blocked] Enemy blocks the tile ("
+                << targetRow << "," << targetCol << ")\n";
+
+            pendingMoveSteps = 0;
+            playerMoving = false;
+
+            playerState = PlayerState::IDLE;
+            UpdatePlayerAnimation();
+
+            turnState = TurnState::ENEMY_TURN;
+            return;
+        }
+
         if (targetRow == nowRow && targetCol == nowCol)
         {
             std::cout << "[Card Move Blocked] Edge reached.\n";
