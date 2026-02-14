@@ -30,7 +30,7 @@ AttackPattern AttackPattern::fromGrid(const std::vector<std::string>& grid,
         for (int c = 0; c < static_cast<int>(grid[r].size()); ++c) {
             if (grid[r][c] == markChar) {
                 int dx = c - originCol;
-                int dy = r - originRow; // y positive downward
+                int dy = originRow-r; // y positive downward
                 p.addOffset(dx, dy, value);
             }
         }
@@ -56,16 +56,6 @@ AttackPattern AttackPattern::rotated90CW() const {
     return p;
 }
 
-AttackPattern AttackPattern::rotated90CCW() const
-{
-    AttackPattern p;
-    for (auto& c : cells) {
-        int nx = -c.first.y;
-        int ny = c.first.x;
-        p.addOffset(nx, ny, c.second);
-    }
-	return p;
-}
 
 AttackPattern AttackPattern::mirroredX() const {
     AttackPattern p;

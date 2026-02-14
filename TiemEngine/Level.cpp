@@ -1214,14 +1214,16 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
 
                 switch (faceDir)
                 {
-                case PlayerDir::UP:    rotateTimes = 0; break;
+                case PlayerDir::UP:    rotateTimes = 2; break;
                 case PlayerDir::RIGHT: rotateTimes = 1; break;
-                case PlayerDir::DOWN:  rotateTimes = 2; break;
+                case PlayerDir::DOWN:  rotateTimes = 0; break;
                 case PlayerDir::LEFT:  rotateTimes = 3; break;
                 }
-
-                for (int i = 0; i < rotateTimes; i++)
+                rotateTimes = (rotateTimes + 3) % 4;
+                for (int i = 0; i < rotateTimes; i++) {
                     oriented = oriented.rotated90CW();
+					
+                }
 
                 auto cells = oriented.applyTo(nowRow, nowCol);
                 std::cout << "    Applying attack pattern from ("
