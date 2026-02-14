@@ -51,6 +51,10 @@ private:
     std::vector<GameObject*> attackHighlights;
     bool highlightCreated = false;
 
+    std::vector<GameObject*> moveHighlights;
+    bool moveHighlightCreated = false;
+
+
     // Facing / animation
     enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
     enum class PlayerState { IDLE, WALK, ATTACK };
@@ -146,6 +150,9 @@ private:
 
     void AttackHighlights(std::vector<DrawableObject*>& list);
     void HideAttackHighlights();
+
+    void MoveHighlights(std::vector<DrawableObject*>& list);
+	void HideMoveHighlights();
     
     void HideBezier();
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
@@ -186,5 +193,6 @@ public:
     void SetPlayerWalk(PlayerDir dir);
 
     void PreviewAttackPattern(Card* cardData, int dz);
+    void PreviewMovePath(int steps, int dir);
 
 };

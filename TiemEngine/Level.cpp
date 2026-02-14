@@ -300,6 +300,7 @@ void Level::LevelUpdate()
 
 
         playerMoving = true;
+        HideMoveHighlights();
         playerMoveTimer = 0.0f;
 
         playerMoveStart = playersprite->GetPosition();
@@ -923,6 +924,32 @@ void Level::HideAttackHighlights()
         h->SetPosition(glm::vec3(99999, 99999, 50));
 }
 
+void Level::MoveHighlights(std::vector<DrawableObject*>& list)
+{
+    if (moveHighlightCreated) return;
+    moveHighlightCreated = true;
+
+    moveHighlights.reserve(10);
+
+    for (int i = 0; i < 10; i++)
+    {
+        GameObject* h = new GameObject();
+        h->SetSize(GridWide/2, GridHigh/2);
+
+        h->SetColor(0.2f, 0.5f, 1.0f, 0.4f);
+
+        h->SetPosition(glm::vec3(99999, 99999, 5));
+        moveHighlights.push_back(h);
+        list.push_back(h);
+    }
+}
+
+void Level::HideMoveHighlights()
+{
+    for (auto* h : moveHighlights)
+        h->SetPosition(glm::vec3(99999, 99999, 50));
+}
+
 void Level::HideBezier()
 {
     for (auto* seg : bezierSegments)
@@ -1039,10 +1066,21 @@ void Level::UpdateDrag(const glm::vec3& mouseWorld)
     {
         Card* cardData = hand.FindCardByImage(draggingCard);
         PreviewAttackPattern(cardData, dz);
+        int moveSteps = 0;
+        for (Action* a : cardData->getActions())
+        {
+            if (auto* mv = dynamic_cast<MoveAction*>(a))
+                moveSteps = mv->getValue();
+        }
+
+        if (moveSteps > 0)
+            PreviewMovePath(moveSteps, dz);
     }
     else
     {
+        HideMoveHighlights();
         HideAttackHighlights();
+        
     }
 }
 
@@ -1294,6 +1332,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
+    HideMoveHighlights();
     HideAttackHighlights();
 
 }
@@ -1710,8 +1749,45 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
         if (index >= attackHighlights.size()) break;
 
         glm::vec3 world = GridToWorld(gx, gy);
-        attackHighlights[index]->SetPosition(glm::vec3(world.x, world.y, 50));
+        attackHighlights[index]->SetPosition(glm::vec3(world.x, world.y, 30));
         index++;
     }
 }
+
+void Level::PreviewMovePath(int steps, int dir)
+{
+    MoveHighlights(objectsList);
+    HideMoveHighlights();
+
+    int r = nowRow;
+    int c = nowCol;
+
+    for (int i = 0; i < steps; i++)
+    {
+        switch (dir)
+        {
+        case 0: r--; break; // LEFT
+        case 1: c--; break; // UP
+        case 2: c++; break; // DOWN
+        case 3: r++; break; // RIGHT
+        }
+
+        if (r < GridStartRow || r >= GridEndRow ||
+            c < GridStartCol || c >= GridEndCol)
+        {
+            return;
+        }
+
+        if (enemy && enemy->getNowRow() == r && enemy->getNowCol() == c)
+        {
+            return;
+        }
+    }
+
+    glm::vec3 world = GridToWorld(r, c);
+
+    if (!moveHighlights.empty())
+        moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 60));
+}
+
 
