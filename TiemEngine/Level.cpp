@@ -230,7 +230,34 @@ void Level::LevelUpdate()
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
-    if (turnState == TurnState::PLAYER_MOVING && pendingMoveSteps > 0 && !playerMoving)
+    if (playerAttacking)
+    {
+        attackTimer += deltaTime;
+
+        if (attackTimer >= ATTACK_TIME)
+        {
+            playerAttacking = false;
+            pendingAttack = false;
+
+            std::cout << "[Attack Animation Finished]\n";
+            if (pendingMoveSteps > 0)
+            {
+                playerState = PlayerState::WALK;
+                UpdatePlayerAnimation();
+            }
+            else
+            {
+                playerState = PlayerState::IDLE;
+                UpdatePlayerAnimation();
+
+                turnState = TurnState::ENEMY_TURN;
+            }
+        }
+
+        return;
+    }
+
+    if (turnState == TurnState::PLAYER_MOVING && pendingMoveSteps > 0 && !playerMoving && !playerAttacking)
     {
         int targetRow = nowRow;
         int targetCol = nowCol;
@@ -245,12 +272,18 @@ void Level::LevelUpdate()
 
         if (targetRow == nowRow && targetCol == nowCol)
         {
-            std::cout << "[Card Move Blocked] Edge reached, cancelling movement.\n";
+            std::cout << "[Card Move Blocked] Edge reached.\n";
 
             pendingMoveSteps = 0;
+            playerMoving = false;
+
+            playerState = PlayerState::IDLE;
+            UpdatePlayerAnimation();
+
             turnState = TurnState::ENEMY_TURN;
             return;
         }
+
 
         playerMoving = true;
         playerMoveTimer = 0.0f;
@@ -1068,9 +1101,26 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 }*/
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
-            
 
-            if (moveSteps > 0 && playersprite)
+            bool hasAttack = !pendingAttacks.empty();
+
+            if (hasAttack)
+            {
+                playerState = PlayerState::ATTACK;
+                UpdatePlayerAnimation();
+
+                playerAttacking = true;
+                attackTimer = 0;
+
+                std::cout << "[Attack Animation Started]\n";
+
+                pendingMoveSteps = moveSteps;
+                pendingMoveZone = dz;
+
+                turnState = TurnState::PLAYER_MOVING;
+            }
+
+            else if (moveSteps > 0 && playersprite)
             {
                 pendingMoveSteps = moveSteps;
                 pendingMoveZone = dz;
@@ -1085,13 +1135,12 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
             }
             else
             {
-                if (moveSteps == 0)
-                {
-                    playerState = PlayerState::IDLE;
-                    UpdatePlayerAnimation();
-                }
+                playerState = PlayerState::IDLE;
+                UpdatePlayerAnimation();
+
                 turnState = TurnState::ENEMY_TURN;
             }
+
 
             for (const PendingAttack& pa : pendingAttacks)
             {
@@ -1515,6 +1564,16 @@ void Level::UpdatePlayerAnimation()
         case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
         case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
         case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
+        }
+    }
+    else if (playerState == PlayerState::ATTACK)
+    {
+        switch (playerDir)
+        {
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 5, 80); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 6, 5, 80); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 5, 80); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 6, 5, 80); break;
         }
     }
 }

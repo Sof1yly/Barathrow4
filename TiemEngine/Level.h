@@ -42,9 +42,15 @@ private:
     float playerMoveTimer = 0.0f;
     const float PLAYER_MOVE_TIME = 1000.0f; // 1 sec per tile (ms)
 
+    bool playerAttacking = false;
+    float attackTimer = 0.0f;
+    const float ATTACK_TIME = 350.0f;
+
+    bool pendingAttack = false;
+
     // Facing / animation
     enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
-    enum class PlayerState { IDLE, WALK };
+    enum class PlayerState { IDLE, WALK, ATTACK };
 
     PlayerDir playerDir = PlayerDir::DOWN;
     PlayerState playerState = PlayerState::IDLE;
