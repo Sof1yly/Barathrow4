@@ -1811,6 +1811,9 @@ void Level::PreviewMovePath(int steps, int dir)
     int r = nowRow;
     int c = nowCol;
 
+    int lastValidR = r;
+    int lastValidC = c;
+
     for (int i = 0; i < steps; i++)
     {
         switch (dir)
@@ -1824,20 +1827,26 @@ void Level::PreviewMovePath(int steps, int dir)
         if (r < GridStartRow || r >= GridEndRow ||
             c < GridStartCol || c >= GridEndCol)
         {
-            return;
+            break;
         }
 
         if (enemy && enemy->getNowRow() == r && enemy->getNowCol() == c)
         {
-            return;
+            break;
         }
+
+        lastValidR = r;
+        lastValidC = c;
     }
 
-    glm::vec3 world = GridToWorld(r, c);
+    glm::vec3 world = GridToWorld(lastValidR, lastValidC);
 
     if (!moveHighlights.empty())
+    {
         moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 60));
+    }
 }
+
 
 /*//Highlight the entire path (old version)
 void Level::PreviewMovePath(int steps, int dir)
