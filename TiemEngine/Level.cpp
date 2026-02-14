@@ -825,10 +825,10 @@ void Level::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZonesCreated = true;
 
     const float Z = 1.0f;
-    const float SIDE_W = 340.0f;
-    const float SIDE_H = 520.0f;
-    const float MID_W = 550.0f;
-    const float MID_H = 260.0f;
+    const float SIDE_W = 390.0f;
+    const float SIDE_H = 530.0f;
+    const float MID_W = 710.0f;
+    const float MID_H = 290.0f;
     const float BOARD_CENTER_Y = 200.0f;
     const float SIDE_X_OFFSET = 600.0f;
     const float SIDE_Y = BOARD_CENTER_Y;
@@ -839,35 +839,31 @@ void Level::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZones[0] = new GameObject();
     dropZones[0]->SetSize(SIDE_W, SIDE_H);
     dropZones[0]->SetPosition(glm::vec3(-SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
+    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
 
     // TOP
     dropZones[1] = new GameObject();
     dropZones[1]->SetSize(MID_W, MID_H);
     dropZones[1]->SetPosition(glm::vec3(0.0f, UPPER_Y, Z));
-    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f,0.35f);
+    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f,0.0f);
 
     // BOTTOM
     dropZones[2] = new GameObject();
     dropZones[2]->SetSize(MID_W, MID_H);
     dropZones[2]->SetPosition(glm::vec3(0.0f, BOTTOM_Y, Z));
-    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
+    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
 
     // RIGHT
     dropZones[3] = new GameObject();
     dropZones[3]->SetSize(SIDE_W, SIDE_H);
     dropZones[3]->SetPosition(glm::vec3(SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.35f);
+    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
 
     for (int i = 0; i < 4; ++i) {
         list.push_back(dropZones[i]);
         dropZoneSavedPos[i] = dropZones[i]->GetPosition();
         // hide offscreen initially
-        dropZones[i]->SetPosition(glm::vec3(
-            dropZoneSavedPos[i].x,
-            -10000.0f,
-            dropZoneSavedPos[i].z
-        ));
+        dropZones[i]->SetPosition(glm::vec3(dropZoneSavedPos[i].x,-10000.0f,dropZoneSavedPos[i].z));
     }
 
     dropZonesVisible = false;
@@ -1155,7 +1151,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                             nowCol++;
                         }
                         break;
-                    }
+                }
                 }*/
                 std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
             }
@@ -1694,10 +1690,10 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
 
     switch (dz)
     {
-    case 1: rotateTimes = 0; break;
-    case 3: rotateTimes = 1; break;
-    case 2: rotateTimes = 2; break;
-    case 0: rotateTimes = 3; break;
+        case 0: rotateTimes = 2; break; // LEFT
+        case 1: rotateTimes = 1; break; // UP
+        case 2: rotateTimes = 3; break; // DOWN
+        case 3: rotateTimes = 0; break; // RIGHT
     }
 
     for (int i = 0; i < rotateTimes; i++)
