@@ -56,6 +56,17 @@ AttackPattern AttackPattern::rotated90CW() const {
     return p;
 }
 
+AttackPattern AttackPattern::rotated90CCW() const
+{
+    AttackPattern p;
+    for (auto& c : cells) {
+        int nx = -c.first.y;
+        int ny = c.first.x;
+        p.addOffset(nx, ny, c.second);
+    }
+	return p;
+}
+
 AttackPattern AttackPattern::mirroredX() const {
     AttackPattern p;
     for (auto& c : cells)

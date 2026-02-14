@@ -27,6 +27,7 @@ public:
     std::vector<Cell> applyTo(int ox, int oy) const;
 
     AttackPattern rotated90CW() const;
+	AttackPattern rotated90CCW() const;
     AttackPattern mirroredX() const;
 
     bool hasOffset(int dx, int dy) const;

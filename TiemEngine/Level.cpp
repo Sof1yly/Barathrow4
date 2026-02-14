@@ -71,6 +71,9 @@ void Level::LevelInit()
         }
     }
 
+    AttackHighlights(objectsList);
+    HideAttackHighlights();
+
     //Enemy
 	enemy = new Enemy();
     enemy->setNowPosition(8, 0); //row=8,col=0
@@ -366,6 +369,7 @@ void Level::LevelUpdate()
 
         if (t >= 1.0f)
         {
+
             playersprite->SetPosition(playerMoveTarget);
             playerMoving = false;
 
@@ -905,6 +909,30 @@ void Level::EnsureBezierSegments(std::vector<DrawableObject*>& list)
     }
 }
 
+void Level::AttackHighlights(std::vector<DrawableObject*>& list)
+{
+    if (highlightCreated) return;
+    highlightCreated = true;
+
+    attackHighlights.reserve(20);
+
+    for (int i = 0; i < 20; i++)
+    {
+        GameObject* h = new GameObject();
+        h->SetSize(GridWide, GridHigh);
+        h->SetColor(1, 0, 0, 0.4f);
+        h->SetPosition(glm::vec3(99999, 99999, 5));
+        attackHighlights.push_back(h);
+        list.push_back(h);
+    }
+}
+
+void Level::HideAttackHighlights()
+{
+    for (auto* h : attackHighlights)
+        h->SetPosition(glm::vec3(99999, 99999, 50));
+}
+
 void Level::HideBezier()
 {
     for (auto* seg : bezierSegments)
@@ -1014,6 +1042,18 @@ void Level::UpdateDrag(const glm::vec3& mouseWorld)
 
     glm::vec3 anchor = draggingCard->GetPosition();
     UpdateBezier(anchor, mouseWorld);
+
+    int dz = HitDropZone(mouseWorld);
+
+    if (dz >= 0)
+    {
+        Card* cardData = hand.FindCardByImage(draggingCard);
+        PreviewAttackPattern(cardData, dz);
+    }
+    else
+    {
+        HideAttackHighlights();
+    }
 }
 
 void Level::EndDrag(const glm::vec3& mouseWorld)
@@ -1021,6 +1061,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     if (!isDragging || !draggingCard) return;
 
     int dz = HitDropZone(mouseWorld);
+    
     if (dz >= 0)
     {
         switch (dz)
@@ -1171,17 +1212,26 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                 AttackPattern oriented = *basePat;
                 int rotateTimes = 0;
 
+                PlayerDir faceDir;
+
                 switch (dz)
                 {
-                case 0: rotateTimes = 3; break;
-                case 1: rotateTimes = 0; break;
-                case 2: rotateTimes = 2; break;
-                case 3: rotateTimes = 1; break;
+                case 0: faceDir = PlayerDir::LEFT;  break;
+                case 1: faceDir = PlayerDir::UP;    break;
+                case 2: faceDir = PlayerDir::DOWN;  break;
+                case 3: faceDir = PlayerDir::RIGHT; break;
                 }
 
-                for (int i = 0; i < rotateTimes; ++i) {
-                    oriented = oriented.rotated90CW();
+                switch (faceDir)
+                {
+                case PlayerDir::UP:    rotateTimes = 0; break;
+                case PlayerDir::RIGHT: rotateTimes = 1; break;
+                case PlayerDir::DOWN:  rotateTimes = 2; break;
+                case PlayerDir::LEFT:  rotateTimes = 3; break;
                 }
+
+                for (int i = 0; i < rotateTimes; i++)
+                    oriented = oriented.rotated90CW();
 
                 auto cells = oriented.applyTo(nowRow, nowCol);
                 std::cout << "    Applying attack pattern from ("
@@ -1252,6 +1302,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
+    HideAttackHighlights();
 
 }
 
@@ -1615,3 +1666,60 @@ void Level::SetPlayerWalk(PlayerDir dir)
     case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
     }
 }
+
+void Level::PreviewAttackPattern(Card* cardData, int dz)
+{
+    if (!cardData) return;
+
+    AttackHighlights(objectsList);
+    HideAttackHighlights();
+
+    AttackAction* atk = nullptr;
+    const AttackPattern* pat = nullptr;
+
+    for (Action* a : cardData->getActions())
+    {
+        atk = dynamic_cast<AttackAction*>(a);
+        if (atk)
+        {
+            pat = dataLoader.getPatternForAction(a);
+            break;
+        }
+    }
+
+    if (!atk || !pat) return;
+
+    AttackPattern oriented = *pat;
+    int rotateTimes = 0;
+
+    switch (dz)
+    {
+    case 1: rotateTimes = 0; break;
+    case 3: rotateTimes = 1; break;
+    case 2: rotateTimes = 2; break;
+    case 0: rotateTimes = 3; break;
+    }
+
+    for (int i = 0; i < rotateTimes; i++)
+        oriented = oriented.rotated90CW();
+
+    auto cells = oriented.applyTo(nowRow, nowCol);
+
+    int index = 0;
+    for (auto& cell : cells)
+    {
+        int gx = cell.first.x;
+        int gy = cell.first.y;
+
+        if (gx < GridStartRow || gx >= GridEndRow ||
+            gy < GridStartCol || gy >= GridEndCol)
+            continue;
+
+        if (index >= attackHighlights.size()) break;
+
+        glm::vec3 world = GridToWorld(gx, gy);
+        attackHighlights[index]->SetPosition(glm::vec3(world.x, world.y, 50));
+        index++;
+    }
+}
+
