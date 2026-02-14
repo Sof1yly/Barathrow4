@@ -48,7 +48,7 @@ void Level::LevelInit()
 	ImageObject* Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
 	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	Background->SetTexture("../Resource/Texture/Background.png");
+	Background->SetTexture("../Resource/Texture/BG/Floor1_FHD.PNG");
 	objectsList.push_back(Background);
 
 	// Initialize player state
@@ -60,7 +60,7 @@ void Level::LevelInit()
     for (int i = GridStartRow; i < GridEndRow; ++i) {
         for (int j = GridStartCol; j < GridEndCol; ++j) {
             ImageObject* tile = new ImageObject();
-            tile->SetTexture("../Resource/Texture/tile.png");
+            tile->SetTexture("../Resource/Texture/BG/F1Grid.png");
             tile->SetSize(GridWide, GridHigh);
             tile->SetPosition(glm::vec3(
                 i * 101.0f - 404.0f,
@@ -910,7 +910,7 @@ void Level::AttackHighlights(std::vector<DrawableObject*>& list)
     {
         GameObject* h = new GameObject();
         h->SetSize(GridWide, GridHigh);
-        h->SetColor(1, 0, 0, 0.4f);
+        h->SetColor(1, 1, 1, 0.4f);
         h->SetPosition(glm::vec3(99999, 99999, 5));
         attackHighlights.push_back(h);
         list.push_back(h);
