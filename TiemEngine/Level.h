@@ -11,8 +11,7 @@
 #include "SpriteObject.h"
 #include "Button.h"
 #include "AttackPattern.h"
-#include "GameDataLoader.h"
-#include "Hand.h"
+#include "CardSystem.h"
 #include "Enemy.h"
 
 class Level
@@ -93,38 +92,8 @@ private:
     glm::vec3 testMoveTarget = glm::vec3(0.0f);
     bool      testMoveMoving = false;
 
-    // Data & hand
-    GameDataLoader dataLoader;
-    Hand hand;
-
-    //piles
-    std::vector<Card*> deck; //view deck
-    std::vector<Card*> discard; // re-draw
-
-    //Deck Ui
-	ImageObject* drawPileButton = nullptr;
-	ImageObject* discardPileButton = nullptr;
-
-    // Drop zones
-    GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };
-    bool        dropZonesCreated = false;
-    bool        dropZonesVisible = false;
-    glm::vec3   dropZoneSavedPos[4];
-
-    // Dragging cards
-    bool         isDragging = false;
-    bool         isHolding = false;
-    ImageObject* draggingCard = nullptr;
-    ImageObject* pendingCard = nullptr;
-    glm::vec3    dragStartPos = glm::vec3(0.0f);
-    glm::vec3    dragMouseWorld = glm::vec3(0.0f);
-    glm::vec3    dragAnchor = glm::vec3(0.0f);
-
-    // Bezier leash
-    static const int BEZIER_SEGMENTS = 32;
-    std::vector<GameObject*> bezierSegments;
-    bool  bezierCreated = false;
-    float screenCenterY = 0.0f;
+    // Card system (deck, discard, drag, drop zones, bezier)
+    CardSystem cardSystem;
 
     // Patterns
     std::vector<AttackPattern> patterns;
@@ -147,12 +116,6 @@ private:
 
 
     // helpers
-    void CreateDropZones(std::vector<DrawableObject*>& list);
-    void ShowDropZones();
-    void HideDropZones();
-
-    void EnsureBezierSegments(std::vector<DrawableObject*>& list);
-
     void AttackHighlights(std::vector<DrawableObject*>& list);
     void HideAttackHighlights();
 
@@ -161,19 +124,6 @@ private:
 
     void EnemyAttackHighlights(std::vector<DrawableObject*>& list);
 	void HideEnemyAttackHighlights();
-    
-    void HideBezier();
-    void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
-
-    bool IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const;
-    int  HitDropZone(const glm::vec3& p) const;
-
-    void BeginDrag(ImageObject* card, const glm::vec3& mouseWorld);
-    void UpdateDrag(const glm::vec3& mouseWorld);
-    void EndDrag(const glm::vec3& mouseWorld);
-
-    void ShuffleDeck();
-    void DealNewHand(int cardCount);
 
 public:
     virtual void LevelLoad();

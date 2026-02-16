@@ -24,6 +24,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="Card.cpp" />
+    <ClCompile Include="CardSystem.cpp" />
     <ClCompile Include="CombineObject.cpp" />
     <ClCompile Include="Deck.cpp" />
     <ClCompile Include="DrawableObject.cpp" />
@@ -55,6 +56,7 @@
     <ClInclude Include="AttackPattern.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="Card.h" />
+    <ClInclude Include="CardSystem.h" />
     <ClInclude Include="CombineObject.h" />
     <ClInclude Include="Deck.h" />
     <ClInclude Include="DrawableObject.h" />

@@ -14,17 +14,6 @@
 #include <cmath>
 #include <random>
 
-// Bezier line
-static inline glm::vec3 QuadraticBezier(
-    const glm::vec3& P0,
-    const glm::vec3& C,
-    const glm::vec3& P1,
-    float t)
-{
-    float u = 1.0f - t;
-    return (u * u) * P0 + 2.0f * u * t * C + (t * t) * P1;
-}
-
 // Lifecycle
 void Level::LevelLoad()
 {
@@ -163,41 +152,19 @@ void Level::LevelInit()
     std::string error;
 
     // 1) Load pattern shapes
-    if (!dataLoader.loadPatternsFromFile("../Resource/GameData/Pattern.txt", &error)) {
-        std::cerr << "Error loading attack patterns: " << error << std::endl;
-    }
-
     // 2) Load actions + cards (with Pattern column)
-    if (!dataLoader.loadFromFile("../Resource/GameData/CardAction.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt",
+                             "../Resource/GameData/CardAction.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
-    deck = dataLoader.getCards();
-    ShuffleDeck();
+    cardSystem.ShuffleDeck();
 
     // Start the game with 5 cards in hand
-    DealNewHand(5);
+    cardSystem.DealNewHand(5, objectsList);
 
-
-    // ------------------------
-    // Discard pile (LEFT) - Shows discard pile contents on click
-    discardPileButton = new ImageObject();
-    discardPileButton->SetSize(260.0f, -275.0f);
-    discardPileButton->SetPosition(glm::vec3(-800.0f, -385.0f, 10.0f));  // LEFT
-    discardPileButton->SetTexture("../Resource/Texture/cards/DiscardPile.png"); 
-    objectsList.push_back(discardPileButton);
-
-    // ------------------------
-    // Draw Pile (RIGHT) - Discards hand and draws new cards
-    drawPileButton = new ImageObject();
-    drawPileButton->SetSize(260.0f, -275.0f);
-    drawPileButton->SetPosition(glm::vec3(800.0f, -385.0f, 10.0f));  // RIGHT
-    drawPileButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
-    objectsList.push_back(drawPileButton);
-
-
-    // Drop zones
-    CreateDropZones(objectsList);
+    // Card system UI (discard/draw pile buttons + drop zones)
+    cardSystem.InitUI(objectsList);
 
 	////////////////////////////////////////test sprite *delete later
  //   SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
@@ -397,8 +364,8 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
-    // Clear hand first
-    hand.Clear(objectsList);
+    // Clear card system first
+    cardSystem.Clear(objectsList);
     
     // Delete remaining objects
     for (auto* obj : objectsList) {
@@ -408,18 +375,11 @@ void Level::LevelFree()
     }
     objectsList.clear();
     
-    // Clear bezier segments
-    bezierSegments.clear();
-    
     // Delete enemy
     if (enemy) {
         delete enemy;
         enemy = nullptr;
     }
-
-    // Clear deck/discard 
-    deck.clear();
-    discard.clear();
 
     cout << "Free Level" << endl;
 }
@@ -536,13 +496,11 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
-    screenCenterY = 0.0f;
-
     // ----------------------------------------------------
     // Hover
     // ----------------------------------------------------
     if (type == 3) {
-        hand.UpdateHover(mousePos, isDragging, objectsList);
+        cardSystem.UpdateHover(mousePos, cardSystem.IsDragging(), objectsList);
         return;
     }
 
@@ -566,100 +524,27 @@ void Level::HandleMouse(int type, int x, int y)
             }
         }
 
-        // RE-DRAW BUTTON (LEFT) - Left Click to DRAW from deck
-        if (drawPileButton && IsPointInsideZone(mousePos, drawPileButton))
+        // DRAW PILE BUTTON (RIGHT) - Left Click to discard hand and draw new cards
+        if (cardSystem.IsDrawPileClicked(mousePos))
         {
-			cout << "============================" << endl;
-            cout << "[UI] Draw from Deck (Discard current hand)" << endl;
-            
-            // 1) Collect all card data from current hand
-            std::vector<Card*> cardsInHand = hand.CollectAllCardData();
-            
-            // 2) Move all cards from hand to discard pile
-            if (!cardsInHand.empty())
-            {
-                discard.insert(discard.end(), cardsInHand.begin(), cardsInHand.end());
-               /* cout << "  Discarded " << cardsInHand.size() << " cards from hand" << endl;*/
-            }
-            
-            // 3) Clear the visual hand
-            hand.Clear(objectsList);
-            
-            // 4) If deck is empty, shuffle discard pile back into deck
-            if (deck.empty() && !discard.empty())
-            {
-                cout << "  Deck is empty. Moving " << discard.size() << " cards from discard to deck" << endl;
-                deck.insert(deck.end(), discard.begin(), discard.end());
-                discard.clear();
-                ShuffleDeck();
-            }
-            
-            // 5) Draw new hand (5 cards)
-            const int HAND_SIZE = 5;
-            int drawCount = std::min(HAND_SIZE, (int)deck.size());
-            
-            if (drawCount > 0)
-            {
-                std::vector<Card*> drawn;
-                for (int i = 0; i < drawCount; ++i)
-                {
-                    drawn.push_back(deck.back());
-                    deck.pop_back();
-                }
-                
-                hand.AddCards(drawn, objectsList);
-                
-                cout << "  Drew " << drawCount << " new cards" << endl;
-                for (Card* c : drawn) {
-                    if (c != nullptr) {
-                        std::cout << "    - " << c->getName() << std::endl;
-                    }
-                }
-            }
-            else
-            {
-                cout << "  No cards available to draw!" << endl;
-            }
-            
-            return; // button handled
+            cardSystem.DiscardHandAndDraw(5, objectsList);
+            return;
         }
 
         // DISCARD PILE BUTTON (LEFT) - Left Click to view discard pile
-        if (discardPileButton && IsPointInsideZone(mousePos, discardPileButton))
+        if (cardSystem.IsDiscardPileClicked(mousePos))
         {
-            cout << "==== DISCARD PILE CONTENTS ====" << endl;
-            cout << "Total cards in discard pile: " << discard.size() << endl;
-            
-            if (!discard.empty())
-            {
-                for (size_t i = 0; i < discard.size(); i++)
-                {
-                    Card* c = discard[i];
-                    if (c != nullptr) {
-                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
-                    }
-                }
-            }
-            else
-            {
-                cout << "  Discard pile is empty!" << endl;
-            }
-            cout << "=============================" << endl;
-            
-            return; // button handled
+            cardSystem.PrintDiscardPile();
+            return;
         }
 
         // ------------------------------
         // DROP ZONES
         // ------------------------------
-        CreateDropZones(objectsList);
+        cardSystem.UpdateHover(mousePos, false, objectsList);
 
-        hand.UpdateHover(mousePos, false, objectsList);
-
-        pendingCard = hand.PeekAt(mousePos);
-        if (pendingCard) {
-            dragStartPos = pendingCard->GetPosition();
-        }
+        ImageObject* peek = cardSystem.PeekAt(mousePos);
+        cardSystem.SetPendingCard(peek);
 
         if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0);
@@ -672,99 +557,239 @@ void Level::HandleMouse(int type, int x, int y)
     // ----------------------------------------------------
     if (type == 1)
     {
-        if (pendingCard) {
-            if (!isDragging) {
-                BeginDrag(pendingCard, mousePos);
+        ImageObject* pending = cardSystem.GetPendingCard();
+        if (pending) {
+            if (!cardSystem.IsDragging()) {
+                cardSystem.BeginDrag(pending, mousePos, objectsList);
             }
             else {
-                UpdateDrag(mousePos);
+                cardSystem.UpdateDrag(mousePos);
+
+                int dz = cardSystem.HitDropZone(mousePos);
+                if (dz >= 0)
+                {
+                    Card* cardData = cardSystem.FindCardByImage(cardSystem.GetDraggingCard());
+                    PreviewAttackPattern(cardData, dz);
+                    int moveSteps = 0;
+                    for (Action* a : cardData->getActions())
+                    {
+                        if (auto* mv = dynamic_cast<MoveAction*>(a))
+                            moveSteps = mv->getValue();
+                    }
+                    if (moveSteps > 0)
+                        PreviewMovePath(moveSteps, dz);
+                }
+                else
+                {
+                    HideMoveHighlights();
+                    HideAttackHighlights();
+                }
             }
         }
-        hand.UpdateHover(mousePos, true, objectsList);
+        cardSystem.UpdateHover(mousePos, true, objectsList);
     }
     
     // ----------------------------------------------------
-    // RELEASE (Mouse Right Click - type == 2)
+    // RELEASE (type == 2)
     // ----------------------------------------------------
     if (type == 2)
     {
-        // Check if right-clicked on DRAW PILE BUTTON (RIGHT) to view draw deck
-        if (drawPileButton && IsPointInsideZone(mousePos, drawPileButton))
+        // Check if right-clicked on DRAW PILE BUTTON to view draw deck
+        if (cardSystem.IsDrawPileClicked(mousePos))
         {
-            cout << "[UI] View Draw Deck" << endl;
-            cout << "=== DRAW DECK CONTENTS ===" << endl;
-            cout << "Total cards in draw deck: " << deck.size() << endl;
-            
-            if (!deck.empty())
-            {
-                for (size_t i = 0; i < deck.size(); i++)
-                {
-                    Card* c = deck[i];
-                    if (c != nullptr) {
-                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
-                    }
-                }
-            }
-            else
-            {
-                cout << "  Draw deck is empty!" << endl;
-            }
-            cout << "=============================" << endl;
-            
-            return; // button handled
+            cardSystem.PrintDrawDeck();
+            return;
         }
 
         // Handle drag release
-        if (isDragging) {
-            EndDrag(mousePos);
+        if (cardSystem.IsDragging())
+        {
+            ImageObject* dragCard = cardSystem.GetDraggingCard();
+            int dz = cardSystem.HitDropZone(mousePos);
+
+            if (dz >= 0)
+            {
+                switch (dz)
+                {
+                case 0: playerDir = PlayerDir::LEFT;  break;
+                case 1: playerDir = PlayerDir::UP;    break;
+                case 2: playerDir = PlayerDir::DOWN;  break;
+                case 3: playerDir = PlayerDir::RIGHT; break;
+                }
+
+                Card* cardData = cardSystem.FindCardByImage(dragCard);
+
+                const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
+
+                int moveSteps = 0;
+
+                struct PendingAttackInfo {
+                    AttackAction* atk;
+                    const AttackPattern* pattern;
+                };
+                std::vector<PendingAttackInfo> pendingAttacks;
+
+                if (cardData)
+                {
+                    std::cout << "[Card] " << cardData->getName() << std::endl;
+                    
+                    const auto& acts = cardData->getActions();
+                    for (Action* a : acts)
+                    {
+                        if (auto* atk = dynamic_cast<AttackAction*>(a))
+                        {
+                            std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+
+                            const AttackPattern* basePat = cardSystem.GetDataLoader().getPatternForAction(a);
+                            if (!basePat) {
+                                std::cout << "    (no attack pattern linked to this action)\n";
+                                pendingAttacks.push_back({ atk, nullptr });
+                            }
+                            else {
+                                pendingAttacks.push_back({ atk, basePat });
+                            }
+                        }
+                        else if (auto* mv = dynamic_cast<MoveAction*>(a))
+                        {
+                            moveSteps += mv->getValue();
+                            std::cout << "  MoveAction: " << mv->getValue() << std::endl;
+                        }
+                    }
+
+                    if (moveSteps > 0 && playersprite)
+                    {
+                        std::cout << "Applying MoveAction steps = " << moveSteps
+                            << " toward " << zoneNames[dz] << std::endl;
+                        std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
+                    }
+
+                    bool hasAttack = !pendingAttacks.empty();
+
+                    if (hasAttack)
+                    {
+                        playerState = PlayerState::ATTACK;
+                        UpdatePlayerAnimation();
+
+                        playerAttacking = true;
+                        attackTimer = 0;
+
+                        std::cout << "[Attack Animation Started]\n";
+
+                        pendingMoveSteps = moveSteps;
+                        pendingMoveZone = dz;
+
+                        turnState = TurnState::PLAYER_MOVING;
+                    }
+                    else if (moveSteps > 0 && playersprite)
+                    {
+                        pendingMoveSteps = moveSteps;
+                        pendingMoveZone = dz;
+
+                        playerState = PlayerState::WALK;
+                        UpdatePlayerAnimation();
+
+                        turnState = TurnState::PLAYER_MOVING;
+
+                        std::cout << "[Card Move] Player will walk "
+                            << pendingMoveSteps << " steps\n";
+                    }
+                    else
+                    {
+                        playerState = PlayerState::IDLE;
+                        UpdatePlayerAnimation();
+
+                        turnState = TurnState::ENEMY_TURN;
+                    }
+
+                    for (const PendingAttackInfo& pa : pendingAttacks)
+                    {
+                        AttackAction* atk = pa.atk;
+                        const AttackPattern* basePat = pa.pattern;
+
+                        if (!basePat) {
+                            continue;
+                        }
+
+                        AttackPattern oriented = *basePat;
+                        int rotateTimes = 0;
+
+                        PlayerDir faceDir;
+
+                        switch (dz)
+                        {
+                        case 0: faceDir = PlayerDir::LEFT;  break;
+                        case 1: faceDir = PlayerDir::UP;    break;
+                        case 2: faceDir = PlayerDir::DOWN;  break;
+                        case 3: faceDir = PlayerDir::RIGHT; break;
+                        }
+
+                        switch (faceDir)
+                        {
+                        case PlayerDir::UP:    rotateTimes = 2; break;
+                        case PlayerDir::RIGHT: rotateTimes = 1; break;
+                        case PlayerDir::DOWN:  rotateTimes = 0; break;
+                        case PlayerDir::LEFT:  rotateTimes = 3; break;
+                        }
+                        rotateTimes = (rotateTimes + 3) % 4;
+                        for (int i = 0; i < rotateTimes; i++) {
+                            oriented = oriented.rotated90CW();
+                        }
+
+                        auto cells = oriented.applyTo(nowRow, nowCol);
+                        std::cout << "    Applying attack pattern from ("
+                            << nowRow << ", " << nowCol << ")\n";
+
+                        for (auto& cell : cells)
+                        {
+                            int gx = cell.first.x;
+                            int gy = cell.first.y;
+
+                            if (gx < GridStartRow || gx >= GridEndRow ||
+                                gy < GridStartCol || gy >= GridEndCol)
+                            {
+                                std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
+                                continue;
+                            }
+
+                            std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
+
+                            if (enemy &&
+                                enemy->getNowRow() == gx &&
+                                enemy->getNowCol() == gy)
+                            {
+                                enemy->getDamage(atk->getValue());
+                                std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
+
+                                if (enemy->getHealth() <= 0) {
+                                    std::cout << "        Enemy died!\n";
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    std::cout << "[Warning] No Card* bound to this image" << std::endl;
+                }
+
+                std::cout << "----------------------------------------" << std::endl;
+
+                cardSystem.EndDragConfirm(dragCard, objectsList);
+            }
+            else
+            {
+                cardSystem.EndDragCancel(mousePos, objectsList);
+            }
         }
 
-        isDragging = false;
-        isHolding = false;
-        draggingCard = nullptr;
-        pendingCard = nullptr;
-
-        hand.UpdateHover(mousePos, false, objectsList);
+        cardSystem.SetPendingCard(nullptr);
+        cardSystem.UpdateHover(mousePos, false, objectsList);
+        HideMoveHighlights();
+        HideAttackHighlights();
     }
 
     if (player) {
         player->SetPosition(glm::vec3(realX, realY, 0));
-    }
-}
-
-
-void Level::ShuffleDeck() {
-	if (deck.empty()) return;   
-
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle(deck.begin(), deck.end(), g);
-}
-
-void Level::DealNewHand(int cardCount) {
-    if (cardCount <= 0) {
-        return;
-    }
-
-    // clear old hand visuals
-    hand.Clear(objectsList);
-
-    int drawCount = std::min(cardCount, (int)deck.size());
-    std::vector<Card*> drawn;
-    for (int i = 0; i < drawCount && !deck.empty(); ++i)
-    {
-        drawn.push_back(deck.back());
-        deck.pop_back();
-    }
-    if (!drawn.empty())
-    {
-        hand.AddCards(drawn, objectsList);
-
-        for (Card* c : drawn) {
-            if (c != nullptr) {
-                std::cout << c->getName() << std::endl;
-            }
-        }
     }
 }
 
@@ -774,93 +799,6 @@ glm::vec3 Level::GridToWorld(int row, int col) const
     float x = row * 101.0f - 404.0f;
     float y = col * -105.0f + 352.0f;
     return glm::vec3(x, y, 0.0f);
-}
-
-// Drop zones
-void Level::CreateDropZones(std::vector<DrawableObject*>& list)
-{
-    if (dropZonesCreated) return;
-    dropZonesCreated = true;
-
-    const float Z = 1.0f;
-    const float SIDE_W = 390.0f;
-    const float SIDE_H = 530.0f;
-    const float MID_W = 710.0f;
-    const float MID_H = 290.0f;
-    const float BOARD_CENTER_Y = 200.0f;
-    const float SIDE_X_OFFSET = 600.0f;
-    const float SIDE_Y = BOARD_CENTER_Y;
-    const float UPPER_Y = BOARD_CENTER_Y + 180.0f;
-    const float BOTTOM_Y = BOARD_CENTER_Y - 180.0f;
-
-    // LEFT
-    dropZones[0] = new GameObject();
-    dropZones[0]->SetSize(SIDE_W, SIDE_H);
-    dropZones[0]->SetPosition(glm::vec3(-SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
-
-    // TOP
-    dropZones[1] = new GameObject();
-    dropZones[1]->SetSize(MID_W, MID_H);
-    dropZones[1]->SetPosition(glm::vec3(0.0f, UPPER_Y, Z));
-    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f,0.0f);
-
-    // BOTTOM
-    dropZones[2] = new GameObject();
-    dropZones[2]->SetSize(MID_W, MID_H);
-    dropZones[2]->SetPosition(glm::vec3(0.0f, BOTTOM_Y, Z));
-    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
-
-    // RIGHT
-    dropZones[3] = new GameObject();
-    dropZones[3]->SetSize(SIDE_W, SIDE_H);
-    dropZones[3]->SetPosition(glm::vec3(SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
-
-    for (int i = 0; i < 4; ++i) {
-        list.push_back(dropZones[i]);
-        dropZoneSavedPos[i] = dropZones[i]->GetPosition();
-        // hide offscreen initially
-        dropZones[i]->SetPosition(glm::vec3(dropZoneSavedPos[i].x,-10000.0f,dropZoneSavedPos[i].z));
-    }
-
-    dropZonesVisible = false;
-}
-
-void Level::ShowDropZones()
-{
-    if (!dropZonesCreated || dropZonesVisible) return;
-    for (int i = 0; i < 4; ++i)
-        dropZones[i]->SetPosition(dropZoneSavedPos[i]);
-    dropZonesVisible = true;
-}
-
-void Level::HideDropZones()
-{
-    if (!dropZonesCreated || !dropZonesVisible) return;
-    for (int i = 0; i < 4; ++i) {
-        auto p = dropZoneSavedPos[i];
-        dropZones[i]->SetPosition(glm::vec3(p.x, -10000.0f, p.z));
-    }
-    dropZonesVisible = false;
-}
-
-
-
-void Level::EnsureBezierSegments(std::vector<DrawableObject*>& list)
-{
-    if (bezierCreated) return;
-    bezierCreated = true;
-
-    bezierSegments.reserve(BEZIER_SEGMENTS);
-    for (int i = 0; i < BEZIER_SEGMENTS; ++i) {
-        auto* seg = new GameObject();
-        seg->SetColor(1.0f, 0.6f, 0.85f);
-        seg->SetSize(1.0f, 6.0f);
-        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 0.0f));
-        bezierSegments.push_back(seg);
-        list.push_back(seg);
-    }
 }
 
 void Level::AttackHighlights(std::vector<DrawableObject*>& list)
@@ -898,9 +836,7 @@ void Level::MoveHighlights(std::vector<DrawableObject*>& list)
     {
         GameObject* h = new GameObject();
         h->SetSize(GridWide/2, GridHigh/2);
-
         h->SetColor(0.2f, 0.5f, 1.0f, 0.4f);
-
         h->SetPosition(glm::vec3(99999, 99999, 5));
         moveHighlights.push_back(h);
         list.push_back(h);
@@ -924,11 +860,8 @@ void Level::EnemyAttackHighlights(std::vector<DrawableObject*>& list)
     {
         GameObject* h = new GameObject();
         h->SetSize(GridWide, GridHigh);
-
         h->SetColor(1.0f, 0.2f, 0.2f, 0.45f);
-
         h->SetPosition(glm::vec3(99999, 99999, 5));
-
         enemyAttackHighlights.push_back(h);
         list.push_back(h);
     }
@@ -938,394 +871,6 @@ void Level::HideEnemyAttackHighlights()
 {
     for (auto* h : enemyAttackHighlights)
         h->SetPosition(glm::vec3(99999, 99999, 50));
-}
-
-
-void Level::HideBezier()
-{
-    for (auto* seg : bezierSegments)
-        seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 0.0f));
-}
-
-void Level::UpdateBezier(const glm::vec3& P0, const glm::vec3& P1)
-{
-    if (!bezierCreated) return;
-
-    float midY = 0.5f * (P0.y + P1.y);
-    float dir = (midY < screenCenterY) ? 1.0f : -1.0f;
-
-    float liftAmount = 220.0f;
-    glm::vec3 mid = 0.5f * (P0 + P1);
-    glm::vec3 C = mid + glm::vec3(0.0f, dir * liftAmount, 0.0f);
-
-    for (int i = 0; i < BEZIER_SEGMENTS; ++i) {
-        float t0 = (float)i / (float)BEZIER_SEGMENTS;
-        float t1 = (float)(i + 1) / (float)BEZIER_SEGMENTS;
-
-        glm::vec3 A = QuadraticBezier(P0, C, P1, t0);
-        glm::vec3 B = QuadraticBezier(P0, C, P1, t1);
-        glm::vec3 D = B - A;
-
-        float len = glm::length(D);
-        auto* seg = bezierSegments[i];
-
-        if (len < 0.001f) {
-            seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 500.0f));
-            continue;
-        }
-
-        glm::vec3 midAB = 0.5f * (A + B);
-        float angleRad = std::atan2(D.y, D.x);
-        float angleDeg = angleRad * 180.0f / 3.14159265f;
-
-        seg->SetPosition(glm::vec3(midAB.x, midAB.y, 0.0f));
-        seg->SetSize(len, 6.0f);
-        seg->SetRotate(angleDeg);
-    }
-}
-
-// Drag & drop of cards
-
-bool Level::IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const
-{
-    if (!zone) return false;
-
-    glm::vec3 zpos = zone->GetPosition();
-    glm::vec2 zsize = zone->GetSize();
-
-    float halfW = std::abs(zsize.x) * 0.5f;
-    float halfH = std::abs(zsize.y) * 0.5f;
-
-    return (p.x >= zpos.x - halfW && p.x <= zpos.x + halfW &&
-        p.y >= zpos.y - halfH && p.y <= zpos.y + halfH);
-}
-
-int Level::HitDropZone(const glm::vec3& p) const
-{
-    for (int i = 0; i < 4; ++i)
-        if (IsPointInsideZone(p, dropZones[i]))
-            return i;
-    return -1;
-}
-
-
-void Level::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld)
-{       
-    if (isDragging || !card) return;
-
-    EnsureBezierSegments(objectsList);
-    ShowDropZones();
-
-    isDragging = true;
-    draggingCard = card;
-
-    dragStartPos = card->GetPosition();
-    dragMouseWorld = mouseWorld;
-    dragAnchor = dragStartPos;
-    
-    // Move ALL card layers together - inline code
-    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(card);
-    for (ImageObject* layer : allLayers) {
-        if (layer) {
-            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
-        }
-    }
-
-    UpdateBezier(draggingCard->GetPosition(), mouseWorld);
-}
-
-void Level::UpdateDrag(const glm::vec3& mouseWorld)
-{
-    if (!isDragging || !draggingCard) return;
-
-    dragMouseWorld = mouseWorld;
-    
-    // Move ALL card layers together - inline code
-    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
-    for (ImageObject* layer : allLayers) {
-        if (layer) {
-            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
-        }
-    }
-
-    glm::vec3 anchor = draggingCard->GetPosition();
-    UpdateBezier(anchor, mouseWorld);
-
-    int dz = HitDropZone(mouseWorld);
-
-    if (dz >= 0)
-    {
-        Card* cardData = hand.FindCardByImage(draggingCard);
-        PreviewAttackPattern(cardData, dz);
-        int moveSteps = 0;
-        for (Action* a : cardData->getActions())
-        {
-            if (auto* mv = dynamic_cast<MoveAction*>(a))
-                moveSteps = mv->getValue();
-        }
-
-        if (moveSteps > 0)
-            PreviewMovePath(moveSteps, dz);
-    }
-    else
-    {
-        HideMoveHighlights();
-        HideAttackHighlights();
-        
-    }
-}
-
-void Level::EndDrag(const glm::vec3& mouseWorld)
-{
-    if (!isDragging || !draggingCard) return;
-
-    int dz = HitDropZone(mouseWorld);
-    
-    if (dz >= 0)
-    {
-        switch (dz)
-        {
-        case 0: playerDir = PlayerDir::LEFT;  break;
-        case 1: playerDir = PlayerDir::UP;    break;
-        case 2: playerDir = PlayerDir::DOWN;  break;
-        case 3: playerDir = PlayerDir::RIGHT; break;
-        }
-    }
-
-    if (dz >= 0)
-    {
-        Card* cardData = hand.FindCardByImage(draggingCard);
-
-        const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
-        /*std::cout << "[DropZone] Dropped in zone: " << zoneNames[dz] << std::endl;*/
-
-        int moveSteps = 0;
-
-        struct PendingAttack {
-            AttackAction* atk;
-            const AttackPattern* pattern;
-        };
-        std::vector<PendingAttack> pendingAttacks;
-
-        if (cardData)
-        {
-            std::cout << "[Card] " << cardData->getName() << std::endl;
-            
-            const auto& acts = cardData->getActions();
-            for (Action* a : acts)
-            {
-                if (auto* atk = dynamic_cast<AttackAction*>(a))
-                {
-                    std::cout << "  AttackAction: " << atk->getValue() << std::endl;
-
-                    const AttackPattern* basePat = dataLoader.getPatternForAction(a);
-                    if (!basePat) {
-                        std::cout << "    (no attack pattern linked to this action)\n";
-                        pendingAttacks.push_back({ atk, nullptr });
-                    }
-                    else {
-                        pendingAttacks.push_back({ atk, basePat });
-                    }
-                }
-                else if (auto* mv = dynamic_cast<MoveAction*>(a))
-                {
-                    moveSteps += mv->getValue();
-                    std::cout << "  MoveAction: " << mv->getValue() << std::endl;
-                }
-            }
-
-            if (moveSteps > 0 && playersprite)
-            {
-                std::cout << "Applying MoveAction steps = " << moveSteps
-                    << " toward " << zoneNames[dz] << std::endl;
-
-                /*for (int s = 0; s < moveSteps; ++s)
-                {
-                    switch (dz)
-                    {
-                    case 0:
-                        if (nowRow > GridStartRow)
-                        {
-                            playersprite->Translate(glm::vec3(-(GridWide + distanceBetweenGridX), 0.0f, 0.0f));
-                            nowRow--;
-                        }
-                        break;
-
-                    case 3:
-                        if (nowRow < GridEndRow - 1)
-                        {
-                            playersprite->Translate(glm::vec3((GridWide + distanceBetweenGridX), 0.0f, 0.0f));
-                            nowRow++;
-                        }
-                        break;
-
-                    case 1:
-                        if (nowCol > GridStartCol)
-                        {
-                            playersprite->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0));
-                            nowCol--;
-                        }
-                        break;
-
-                    case 2:
-                        if (nowCol < GridEndCol - 1)
-                        {
-                            playersprite->Translate(glm::vec3(0.0f, -(GridHigh + distanceBetweenGridY), 0.0f));
-                            nowCol++;
-                        }
-                        break;
-                }
-                }*/
-                std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
-            }
-
-            bool hasAttack = !pendingAttacks.empty();
-
-            if (hasAttack)
-            {
-                playerState = PlayerState::ATTACK;
-                UpdatePlayerAnimation();
-
-                playerAttacking = true;
-                attackTimer = 0;
-
-                std::cout << "[Attack Animation Started]\n";
-
-                pendingMoveSteps = moveSteps;
-                pendingMoveZone = dz;
-
-                turnState = TurnState::PLAYER_MOVING;
-            }
-
-            else if (moveSteps > 0 && playersprite)
-            {
-                pendingMoveSteps = moveSteps;
-                pendingMoveZone = dz;
-
-                playerState = PlayerState::WALK;
-                UpdatePlayerAnimation();
-
-                turnState = TurnState::PLAYER_MOVING;
-
-                std::cout << "[Card Move] Player will walk "
-                    << pendingMoveSteps << " steps\n";
-            }
-            else
-            {
-                playerState = PlayerState::IDLE;
-                UpdatePlayerAnimation();
-
-                turnState = TurnState::ENEMY_TURN;
-            }
-
-
-            for (const PendingAttack& pa : pendingAttacks)
-            {
-                AttackAction* atk = pa.atk;
-                const AttackPattern* basePat = pa.pattern;
-
-                if (!basePat) {
-                    continue;
-                }
-
-                AttackPattern oriented = *basePat;
-                int rotateTimes = 0;
-
-                PlayerDir faceDir;
-
-                switch (dz)
-                {
-                case 0: faceDir = PlayerDir::LEFT;  break;
-                case 1: faceDir = PlayerDir::UP;    break;
-                case 2: faceDir = PlayerDir::DOWN;  break;
-                case 3: faceDir = PlayerDir::RIGHT; break;
-                }
-
-                switch (faceDir)
-                {
-                case PlayerDir::UP:    rotateTimes = 2; break;
-                case PlayerDir::RIGHT: rotateTimes = 1; break;
-                case PlayerDir::DOWN:  rotateTimes = 0; break;
-                case PlayerDir::LEFT:  rotateTimes = 3; break;
-                }
-                rotateTimes = (rotateTimes + 3) % 4;
-                for (int i = 0; i < rotateTimes; i++) {
-                    oriented = oriented.rotated90CW();
-					
-                }
-
-                auto cells = oriented.applyTo(nowRow, nowCol);
-                std::cout << "    Applying attack pattern from ("
-                    << nowRow << ", " << nowCol << ")\n";
-
-                for (auto& cell : cells)
-                {
-                    int gx = cell.first.x;
-                    int gy = cell.first.y;
-
-                    if (gx < GridStartRow || gx >= GridEndRow ||
-                        gy < GridStartCol || gy >= GridEndCol)
-                    {
-                        std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
-                        continue;
-                    }
-
-                    std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
-
-                    if (enemy &&
-                        enemy->getNowRow() == gx &&
-                        enemy->getNowCol() == gy)
-                    {
-                        enemy->getDamage(atk->getValue());
-                        std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
-
-                        if (enemy->getHealth() <= 0) {
-                            std::cout << "        Enemy died!\n";
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            std::cout << "[Warning] No Card* bound to this image" << std::endl;
-        }
-
-        std::cout << "----------------------------------------" << std::endl;
-
-        // Save card data before removing visual
-        Card* tempCardData = cardData;
-
-        // Remove visual card layers from hand + render list
-        hand.RemoveView(draggingCard, objectsList);
-
-        draggingCard = nullptr;
-
-        // Add Card* pointer to discard pile
-        if (tempCardData) {
-            discard.push_back(tempCardData);
-        }
-    }
-    else
-    {
-        std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
-        for (ImageObject* layer : allLayers) {
-            if (layer) {
-                layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
-            }
-        }
-    }
-
-    HideBezier();
-    HideDropZones();
-    hand.UpdateHover(mouseWorld, false, objectsList);
-
-    isDragging = false;
-    draggingCard = nullptr;
-    pendingCard = nullptr;
-    HideMoveHighlights();
-    HideAttackHighlights();
-
 }
 
 // Apply attack pattern (player)
@@ -1490,8 +1035,8 @@ void Level::LevelRestart()
 {
     cout << "=== RESTART START ===" << endl;
 
-    // 1. Clear hand first
-    hand.Clear(objectsList);
+    // 1. Clear card system
+    cardSystem.Clear(objectsList);
 
     // 2. Delete enemy
     if (enemy)
@@ -1509,44 +1054,25 @@ void Level::LevelRestart()
         enemy = nullptr;
     }
 
-    // 3. Clear drop zones
-    for (int i = 0; i < 4; ++i) {
-        dropZones[i] = nullptr;
-    }
-
-    // 4. Delete all remaining objects
+    // 3. Delete all remaining objects
     for (auto* obj : objectsList) {
         if (obj) delete obj;
     }
     objectsList.clear();
-    
-    // 5. Clear bezier
-    bezierSegments.clear();
 
-    // 6. Reset variables
+    // 4. Reset card system
+    cardSystem.Reset(objectsList);
+
+    // 5. Reset variables
     nowRow = 0;
     nowCol = 0;
     playerHealth = 10;
     turnState = TurnState::PLAYER_TURN;
-    dropZonesCreated = false;
-    dropZonesVisible = false;
-    bezierCreated = false;
-    isDragging = false;
-    isHolding = false;
-    draggingCard = nullptr;
-    pendingCard = nullptr;
     testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
-    discardPileButton = nullptr;
-    drawPileButton = nullptr;
     playersprite = nullptr;
 
-    deck = dataLoader.getCards();  
-    discard.clear();
-    ShuffleDeck();
-
-    
     // Tiles
     for (int i = GridStartRow; i < GridEndRow; ++i) {
         for (int j = GridStartCol; j < GridEndCol; ++j) {
@@ -1608,7 +1134,6 @@ void Level::LevelRestart()
     testMoveTarget = testMove->GetPosition();
     testMoveMoving = false;
 
-
     //  Menu button + UI
     {
         ImageObject* img = new ImageObject();
@@ -1628,22 +1153,10 @@ void Level::LevelRestart()
     }
 
     // Deal new hand
-    DealNewHand(5);
+    cardSystem.DealNewHand(5, objectsList);
 
-    // Buttons
-    discardPileButton = new ImageObject();
-    discardPileButton->SetSize(200.0f, -260.0f);
-    discardPileButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
-    discardPileButton->SetTexture("../Resource/Texture/cards/DiscardPile.png");
-    objectsList.push_back(discardPileButton);
-
-    drawPileButton = new ImageObject();
-    drawPileButton->SetSize(200.0f, -260.0f);
-    drawPileButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
-    drawPileButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
-    objectsList.push_back(drawPileButton);
-
-    CreateDropZones(objectsList);
+    // Card system UI (buttons + drop zones)
+    cardSystem.InitUI(objectsList);
 
     // Test sprites
     SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
@@ -1739,7 +1252,7 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
         atk = dynamic_cast<AttackAction*>(a);
         if (atk)
         {
-            pat = dataLoader.getPatternForAction(a);
+            pat = cardSystem.GetDataLoader().getPatternForAction(a);
             break;
         }
     }
