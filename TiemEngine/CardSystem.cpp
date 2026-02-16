@@ -36,14 +36,30 @@ bool CardSystem::LoadData(const string& patternFile,const string& cardFile,strin
 // UI Initialization
 // ============================================================
 
-void CardSystem::InitUI(std::vector<DrawableObject*>& objectsList)
+void CardSystem::InitUI(vector<DrawableObject*>& objectsList)
 {
+    // Discard pile background card 
+    discardPileBG = new ImageObject();
+    discardPileBG->SetSize(245.0f, -360.0f);
+    discardPileBGPos = glm::vec3(-795.0f, -325.0f, 9.0f);
+    discardPileBG->SetPosition(discardPileBGPos);
+    discardPileBG->SetTexture("../Resource/Texture/cards/BG_back/Gy_Back_Card.PNG");
+    objectsList.push_back(discardPileBG);
+
     // Discard pile button (LEFT)
     discardPileButton = new ImageObject();
     discardPileButton->SetSize(260.0f, -275.0f);
     discardPileButton->SetPosition(glm::vec3(-800.0f, -385.0f, 10.0f));
     discardPileButton->SetTexture("../Resource/Texture/cards/DiscardPile.png");
     objectsList.push_back(discardPileButton);
+
+    // Draw pile background card
+    drawPileBG = new ImageObject();
+    drawPileBG->SetSize(245.0f, -360.0f);
+    drawPileBGPos = glm::vec3(805.0f, -325.0f, 9.0f);
+    drawPileBG->SetPosition(drawPileBGPos);
+    drawPileBG->SetTexture("../Resource/Texture/cards/BG_back/Gy_Back_Card.PNG");
+    objectsList.push_back(drawPileBG);
 
     // Draw pile button (RIGHT)
     drawPileButton = new ImageObject();
@@ -54,6 +70,9 @@ void CardSystem::InitUI(std::vector<DrawableObject*>& objectsList)
 
     // Create drop zones
     CreateDropZones(objectsList);
+
+    // Set initial visibility
+    UpdatePileVisuals();
 }
 
 // ============================================================
@@ -69,8 +88,7 @@ void CardSystem::ShuffleDeck()
     std::shuffle(deck.begin(), deck.end(), g);
 }
 
-void CardSystem::DealNewHand(int cardCount,
-                             std::vector<DrawableObject*>& objectsList)
+void CardSystem::DealNewHand(int cardCount,std::vector<DrawableObject*>& objectsList)
 {
     if (cardCount <= 0) return;
 
@@ -94,6 +112,8 @@ void CardSystem::DealNewHand(int cardCount,
             }
         }
     }
+
+    UpdatePileVisuals();
 }
 
 void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& objectsList)
@@ -116,8 +136,7 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     // 4) If deck is empty, shuffle discard pile back into deck
     if (deck.empty() && !discard.empty())
     {
-        cout << "  Deck is empty. Moving " << discard.size()
-             << " cards from discard to deck" << endl;
+        cout << "  Deck is empty. Moving " << discard.size()<< " cards from discard to deck" << endl;
         deck.insert(deck.end(), discard.begin(), discard.end());
         discard.clear();
         ShuffleDeck();
@@ -148,12 +167,15 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     {
         cout << "  No cards available to draw!" << endl;
     }
+
+    UpdatePileVisuals();
 }
 
 void CardSystem::DiscardCard(Card* card)
 {
     if (card) {
         discard.push_back(card);
+        UpdatePileVisuals();
     }
 }
 
@@ -213,15 +235,17 @@ void CardSystem::CreateDropZones(std::vector<DrawableObject*>& list)
 void CardSystem::ShowDropZones()
 {
     if (!dropZonesCreated || dropZonesVisible) return;
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; i++) {
         dropZones[i]->SetPosition(dropZoneSavedPos[i]);
+    }
+        
     dropZonesVisible = true;
 }
 
 void CardSystem::HideDropZones()
 {
     if (!dropZonesCreated || !dropZonesVisible) return;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; i++) {
         auto p = dropZoneSavedPos[i];
         dropZones[i]->SetPosition(glm::vec3(p.x, -10000.0f, p.z));
     }
@@ -230,9 +254,13 @@ void CardSystem::HideDropZones()
 
 int CardSystem::HitDropZone(const glm::vec3& p) const
 {
-    for (int i = 0; i < 4; ++i)
-        if (IsPointInsideZone(p, dropZones[i]))
+    for (int i = 0; i < 4; i++) {
+        if (IsPointInsideZone(p, dropZones[i])) {
             return i;
+        }
+    }
+
+            
     return -1;
 }
 
@@ -240,8 +268,7 @@ int CardSystem::HitDropZone(const glm::vec3& p) const
 // Dragging
 // ============================================================
 
-void CardSystem::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld,
-                           std::vector<DrawableObject*>& objectsList)
+void CardSystem::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld,std::vector<DrawableObject*>& objectsList)
 {
     if (isDragging || !card) return;
 
@@ -282,8 +309,7 @@ void CardSystem::UpdateDrag(const glm::vec3& mouseWorld)
     UpdateBezier(anchor, mouseWorld);
 }
 
-void CardSystem::EndDragCancel(const glm::vec3& mouseWorld,
-                               std::vector<DrawableObject*>& objectsList)
+void CardSystem::EndDragCancel(const glm::vec3& mouseWorld,std::vector<DrawableObject*>& objectsList)
 {
     if (!isDragging || !draggingCard) return;
 
@@ -303,8 +329,7 @@ void CardSystem::EndDragCancel(const glm::vec3& mouseWorld,
     pendingCard = nullptr;
 }
 
-void CardSystem::EndDragConfirm(ImageObject* card,
-                                std::vector<DrawableObject*>& objectsList)
+void CardSystem::EndDragConfirm(ImageObject* card, std::vector<DrawableObject*>& objectsList)
 {
     if (!card) return;
 
@@ -322,14 +347,15 @@ void CardSystem::EndDragConfirm(ImageObject* card,
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
+
+    UpdatePileVisuals();
 }
 
 // ============================================================
 // Hand Queries / Hover
 // ============================================================
 
-void CardSystem::UpdateHover(const glm::vec3& mousePos, bool dragging,
-                             std::vector<DrawableObject*>& objectsList)
+void CardSystem::UpdateHover(const glm::vec3& mousePos, bool dragging,std::vector<DrawableObject*>& objectsList)
 {
     hand.UpdateHover(mousePos, dragging, objectsList);
 }
@@ -349,8 +375,7 @@ std::vector<ImageObject*> CardSystem::GetAllLayersForCard(ImageObject* card)
     return hand.GetAllLayersForCard(card);
 }
 
-void CardSystem::RemoveCardView(ImageObject* card,
-                                std::vector<DrawableObject*>& objectsList)
+void CardSystem::RemoveCardView(ImageObject* card,std::vector<DrawableObject*>& objectsList)
 {
     hand.RemoveView(card, objectsList);
 }
@@ -441,6 +466,8 @@ void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
     pendingCard = nullptr;
     drawPileButton = nullptr;
     discardPileButton = nullptr;
+    drawPileBG = nullptr;
+    discardPileBG = nullptr;
 
     deck = dataLoader.getCards();
     discard.clear();
@@ -508,6 +535,29 @@ void CardSystem::HideBezier()
         seg->SetPosition(glm::vec3(99999.0f, 99999.0f, 0.0f));
     }
        
+}
+
+void CardSystem::UpdatePileVisuals()
+{
+    const float HIDDEN_Y = -99999.0f;
+
+    // Discard pile BG: show only when discard has cards
+    if (discardPileBG)
+    {
+        if (!discard.empty())
+            discardPileBG->SetPosition(discardPileBGPos);
+        else
+            discardPileBG->SetPosition(glm::vec3(discardPileBGPos.x, HIDDEN_Y, discardPileBGPos.z));
+    }
+
+    // Draw pile BG: show only when deck has cards
+    if (drawPileBG)
+    {
+        if (!deck.empty())
+            drawPileBG->SetPosition(drawPileBGPos);
+        else
+            drawPileBG->SetPosition(glm::vec3(drawPileBGPos.x, HIDDEN_Y, drawPileBGPos.z));
+    }
 }
 
 bool CardSystem::IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const

@@ -49,13 +49,13 @@ private:
 
     bool pendingAttack = false;
 
-    std::vector<GameObject*> attackHighlights;
+    vector<GameObject*> attackHighlights;
     bool highlightCreated = false;
 
-    std::vector<GameObject*> moveHighlights;
+    vector<GameObject*> moveHighlights;
     bool moveHighlightCreated = false;
 
-    std::vector<GameObject*> enemyAttackHighlights;
+    vector<GameObject*> enemyAttackHighlights;
 	bool enemyHighlightCreated = false;
 
 

@@ -25,6 +25,12 @@ private:
     ImageObject* drawPileButton = nullptr;
     ImageObject* discardPileButton = nullptr;
 
+    // Pile background card images (rendered behind buttons)
+    ImageObject* drawPileBG = nullptr;
+    ImageObject* discardPileBG = nullptr;
+    glm::vec3 drawPileBGPos = glm::vec3(0.0f);
+    glm::vec3 discardPileBGPos = glm::vec3(0.0f);
+
     // Drop zones (LEFT=0, TOP=1, BOTTOM=2, RIGHT=3)
     GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };
     bool dropZonesCreated = false;
@@ -52,6 +58,7 @@ private:
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
     void HideBezier();
     bool IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const;
+    void UpdatePileVisuals();
 
 public:
     CardSystem();
