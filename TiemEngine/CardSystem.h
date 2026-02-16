@@ -10,6 +10,8 @@
 #include "Card.h"
 #include "GameDataLoader.h"
 
+#include <unordered_map>
+
 class CardSystem
 {
 private:
@@ -45,6 +47,7 @@ private:
     glm::vec3 dragStartPos = glm::vec3(0.0f);
     glm::vec3 dragMouseWorld = glm::vec3(0.0f);
     glm::vec3 dragAnchor = glm::vec3(0.0f);
+    std::unordered_map<DrawableObject*, glm::vec3> dragLayerOffsets;
 
     // Bezier leash
     static const int BEZIER_SEGMENTS = 32;
@@ -89,7 +92,7 @@ public:
     void UpdateHover(const glm::vec3& mousePos, bool dragging, std::vector<DrawableObject*>& objectsList);
     ImageObject* PeekAt(const glm::vec3& mousePos);
     Card* FindCardByImage(ImageObject* img);
-    std::vector<ImageObject*> GetAllLayersForCard(ImageObject* card);
+    std::vector<DrawableObject*> GetAllLayersForCard(ImageObject* card);
     void RemoveCardView(ImageObject* card, std::vector<DrawableObject*>& objectsList);
 
     // Button hit tests

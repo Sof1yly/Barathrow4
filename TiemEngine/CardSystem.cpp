@@ -1,4 +1,5 @@
 #include "CardSystem.h"
+#include "TextObject.h"
 
 #include <iostream>
 #include <algorithm>
@@ -278,15 +279,73 @@ void CardSystem::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld,std::v
     isDragging = true;
     draggingCard = card;
 
-    dragStartPos = card->GetPosition();
+    Hand& h = hand;
+
+    // Clear the hover first — this restores the card to fan layout via layoutViews()
+    h.UpdateHover(mouseWorld, true, objectsList);
+
+    // Now tell Hand which card is being dragged so future layoutViews skips it
+    h.SetDragging(card);
+
+    // Use the original fan base position to compute drag position
+    glm::vec3 basePos = card->GetPosition(); // now back in fan position after clearHover
+    
+    const float HOVER_OFFSET_Y = 120.0f;
+    const float DRAG_SCALE = 1.15f;
+
+    dragStartPos = glm::vec3(basePos.x, basePos.y + HOVER_OFFSET_Y, basePos.z);
     dragMouseWorld = mouseWorld;
     dragAnchor = dragStartPos;
 
-    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(card);
-    for (ImageObject* layer : allLayers) {
-        if (layer) {
-            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+    // Position all layers explicitly for drag state
+    std::vector<DrawableObject*> allLayers = h.GetAllLayersForCard(card);
+
+    // Move layers to end of objectsList so dragged card renders on top of everything
+    for (DrawableObject* layer : allLayers) {
+        if (!layer) continue;
+        auto it = std::find(objectsList.begin(), objectsList.end(), layer);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
         }
+    }
+    for (DrawableObject* layer : allLayers) {
+        if (!layer) continue;
+        objectsList.push_back(layer);
+    }
+
+    int layerIndex = 0;
+    int textObjectCount = 0;
+    for (DrawableObject* layer : allLayers) {
+        if (!layer) continue;
+
+        float layerZ = 600.0f + (layerIndex * 0.1f);
+
+        if (dynamic_cast<TextObject*>(layer)) {
+            textObjectCount++;
+            float textOffsetX = 22.5f * DRAG_SCALE;
+            float textOffsetY;
+
+            if (textObjectCount == 1) {
+                textOffsetY = 135.0f * DRAG_SCALE;
+            } else {
+                textOffsetY = -80.0f * DRAG_SCALE;
+            }
+
+            layer->SetPosition(glm::vec3(dragStartPos.x + textOffsetX, dragStartPos.y + textOffsetY, layerZ));
+            layer->SetRotate(0.0f);
+        }
+        else {
+            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, layerZ));
+
+            if (ImageObject* img = dynamic_cast<ImageObject*>(layer)) {
+                glm::vec2 origSz = img->GetSize();
+                img->SetSize(std::fabs(origSz.x) * DRAG_SCALE, -std::fabs(origSz.y) * DRAG_SCALE);
+            }
+
+            layer->SetRotate(0.0f);
+        }
+
+        layerIndex++;
     }
 
     UpdateBezier(draggingCard->GetPosition(), mouseWorld);
@@ -298,11 +357,34 @@ void CardSystem::UpdateDrag(const glm::vec3& mouseWorld)
 
     dragMouseWorld = mouseWorld;
 
-    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
-    for (ImageObject* layer : allLayers) {
-        if (layer) {
-            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 600.0f));
+    const float DRAG_SCALE = 1.0f;
+
+    std::vector<DrawableObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
+    int layerIndex = 0;
+    int textObjectCount = 0;
+    for (DrawableObject* layer : allLayers) {
+        if (!layer) continue;
+
+        float layerZ = 600.0f + (layerIndex * 0.1f);
+
+        if (dynamic_cast<TextObject*>(layer)) {
+            textObjectCount++;
+            float textOffsetX = 22.5f * DRAG_SCALE;
+            float textOffsetY;
+
+            if (textObjectCount == 1) {
+                textOffsetY = 135.0f * DRAG_SCALE;
+            } else {
+                textOffsetY = -80.0f * DRAG_SCALE;
+            }
+
+            layer->SetPosition(glm::vec3(dragStartPos.x + textOffsetX, dragStartPos.y + textOffsetY, layerZ));
         }
+        else {
+            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, layerZ));
+        }
+
+        layerIndex++;
     }
 
     glm::vec3 anchor = draggingCard->GetPosition();
@@ -313,20 +395,22 @@ void CardSystem::EndDragCancel(const glm::vec3& mouseWorld,std::vector<DrawableO
 {
     if (!isDragging || !draggingCard) return;
 
-    std::vector<ImageObject*> allLayers = hand.GetAllLayersForCard(draggingCard);
-    for (ImageObject* layer : allLayers) {
-        if (layer) {
-            layer->SetPosition(glm::vec3(dragStartPos.x, dragStartPos.y, 300.0f));
-        }
-    }
+    // Clear dragging state first
+    hand.ClearDragging();
 
+    // Restore the card to its correct render order and fan layout position
+    hand.RestoreLayout(draggingCard, objectsList);
+
+    dragLayerOffsets.clear();
     HideBezier();
     HideDropZones();
-    hand.UpdateHover(mouseWorld, false, objectsList);
 
     isDragging = false;
     draggingCard = nullptr;
     pendingCard = nullptr;
+
+    // Allow hover to resume
+    hand.UpdateHover(mouseWorld, false, objectsList);
 }
 
 void CardSystem::EndDragConfirm(ImageObject* card, std::vector<DrawableObject*>& objectsList)
@@ -335,12 +419,14 @@ void CardSystem::EndDragConfirm(ImageObject* card, std::vector<DrawableObject*>&
 
     Card* cardData = hand.FindCardByImage(card);
 
+    hand.ClearDragging();
     hand.RemoveView(card, objectsList);
 
     if (cardData) {
         discard.push_back(cardData);
     }
 
+    dragLayerOffsets.clear();
     HideBezier();
     HideDropZones();
 
@@ -370,7 +456,7 @@ Card* CardSystem::FindCardByImage(ImageObject* img)
     return hand.FindCardByImage(img);
 }
 
-std::vector<ImageObject*> CardSystem::GetAllLayersForCard(ImageObject* card)
+std::vector<DrawableObject*> CardSystem::GetAllLayersForCard(ImageObject* card)
 {
     return hand.GetAllLayersForCard(card);
 }

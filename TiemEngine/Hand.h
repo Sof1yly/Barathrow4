@@ -25,6 +25,7 @@ private:
     vector<CardView> views;
     ImageObject* selectedView = nullptr;
     ImageObject* hoveredView = nullptr;
+    ImageObject* draggingView = nullptr;
 
     unordered_map<ImageObject*, glm::vec3> origPos;
     unordered_map<ImageObject*, glm::vec2> origSize;
@@ -43,7 +44,10 @@ private:
 
 public:
     ImageObject* GetSelectedView() const { return selectedView; }
+    void SetDragging(ImageObject* card) { draggingView = card; }
+    void ClearDragging() { draggingView = nullptr; }
 
+    void RestoreLayout(ImageObject* card, vector<DrawableObject*>& objectsList);
 
     void CreateVisualHand(int cardCount,vector<DrawableObject*>& objectsList,const vector<Card*>& cardData);
 
@@ -73,5 +77,5 @@ public:
     void Deselect();
 
     
-    vector<ImageObject*> GetAllLayersForCard(ImageObject* anyLayer);
+    vector<DrawableObject*> GetAllLayersForCard(ImageObject* anyLayer);
 };

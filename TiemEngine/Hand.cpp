@@ -123,6 +123,17 @@ void Hand::layoutViews()
 
         if (allLayers.empty()) continue;
 
+        // Check if this card is currently being dragged
+        bool isDraggedCard = false;
+        if (draggingView) {
+            for (DrawableObject* layer : allLayers) {
+                if (dynamic_cast<ImageObject*>(layer) == draggingView) {
+                    isDraggedCard = true;
+                    break;
+                }
+            }
+        }
+
         float deg = startDeg + stepDeg * i;
         float ang = deg * (PI / 180.0f);
 
@@ -148,35 +159,38 @@ void Hand::layoutViews()
 
             float layerZ = baseZ + (layerIndex * 0.1f);
             
-            if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
-                textObjectCount++;
-                float textOffsetX = 35.0f;
-                float textOffsetY;
-                
-                if (textObjectCount == 1) {
-                    textOffsetY = 130.0f; // Name position (top)
-                } else {
-                    textOffsetY = -80.0f; // Description position (below main visual)
+            // Skip repositioning dragged card layers, but still store origPos
+            if (!isDraggedCard) {
+                if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
+                    textObjectCount++;
+                    float textOffsetX = 35.0f;
+                    float textOffsetY;
+                    
+                    if (textObjectCount == 1) {
+                        textOffsetY = 130.0f; // Name position (top)
+                    } else {
+                        textOffsetY = -80.0f; // Description position (below main visual)
+                    }
+				    
+                    float angleRad = rotDeg * (PI / 180.0f);
+                    float rotatedOffsetX = textOffsetX * std::cosf(angleRad) - textOffsetY * std::sinf(angleRad);
+                    float rotatedOffsetY = textOffsetX * std::sinf(angleRad) + textOffsetY * std::cosf(angleRad);
+                    
+                    textObj->SetPosition(glm::vec3(px + rotatedOffsetX, py + rotatedOffsetY, layerZ));
+                    textObj->SetRotate(rotDeg);
                 }
-				
-                float angleRad = rotDeg * (PI / 180.0f);
-                float rotatedOffsetX = textOffsetX * std::cosf(angleRad) - textOffsetY * std::sinf(angleRad);
-                float rotatedOffsetY = textOffsetX * std::sinf(angleRad) + textOffsetY * std::cosf(angleRad);
-                
-                textObj->SetPosition(glm::vec3(px + rotatedOffsetX, py + rotatedOffsetY, layerZ));
-                textObj->SetRotate(rotDeg);
-            }
-            else {
-                layer->SetPosition(glm::vec3(px, py, layerZ));
-                layer->SetSize(W, -H);
-                layer->SetRotate(rotDeg);
+                else {
+                    layer->SetPosition(glm::vec3(px, py, layerZ));
+                    layer->SetSize(W, -H);
+                    layer->SetRotate(rotDeg);
+                }
             }
 
-            // Store for ImageObject
+            // Store for ImageObject (always, even for dragged card)
             if (ImageObject* img = dynamic_cast<ImageObject*>(layer)) {
-                origPos[img] = layer->GetPosition();
-                origSize[img] = layer->GetSize();
-                origRot[img] = layer->GetRotate();
+                origPos[img] = glm::vec3(px, py, layerZ);
+                origSize[img] = glm::vec2(W, -H);
+                origRot[img] = rotDeg;
             }
             
             layerIndex++;
@@ -302,6 +316,19 @@ void Hand::clearHover(vector<DrawableObject*>& objectsList)
     if (cardIndex < static_cast<int>(views.size()) - 1) {
         // There are cards after this one, find where their layers start
         for (size_t nextCardIdx = cardIndex + 1; nextCardIdx < views.size(); ++nextCardIdx) {
+            // Skip the dragged card when looking for insertion point
+            if (draggingView) {
+                std::vector<DrawableObject*> checkLayers = getAllImagesFromView(views[nextCardIdx]);
+                bool isNextDragged = false;
+                for (DrawableObject* layer : checkLayers) {
+                    if (dynamic_cast<ImageObject*>(layer) == draggingView) {
+                        isNextDragged = true;
+                        break;
+                    }
+                }
+                if (isNextDragged) continue;
+            }
+
             std::vector<DrawableObject*> nextCardLayers = getAllImagesFromView(views[nextCardIdx]);
             if (!nextCardLayers.empty()) {
                 // Find the first layer of the next card in objectsList
@@ -318,7 +345,7 @@ void Hand::clearHover(vector<DrawableObject*>& objectsList)
         }
     }
     
-    // Insert all layers at the calculated position (in order: background, star, type, visual, frame, text)
+    // Insert all layers at the calculated position
     for (DrawableObject* layer : allLayers) {
         objectsList.insert(objectsList.begin() + insertionPoint, layer);
         insertionPoint++; 
@@ -335,8 +362,6 @@ void Hand::clearHover(vector<DrawableObject*>& objectsList)
     
     // Recalculate all card positions (including text) to restore fan layout
     layoutViews();
-    
-
 }
 
 void Hand::CreateVisualHand(int cardCount,vector<DrawableObject*>& objectsList,const vector<Card*>& cardData)
@@ -590,7 +615,67 @@ void Hand::Deselect()
     selectedView = nullptr;
 }
 
-vector<ImageObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
+void Hand::RestoreLayout(ImageObject* card, vector<DrawableObject*>& objectsList)
+{
+    if (!card) return;
+
+    // Find this card's index and layers
+    int cardIndex = -1;
+    vector<DrawableObject*> allLayers;
+
+    for (size_t i = 0; i < views.size(); ++i) {
+        vector<DrawableObject*> layers = getAllImagesFromView(views[i]);
+        for (DrawableObject* layer : layers) {
+            if (dynamic_cast<ImageObject*>(layer) == card) {
+                cardIndex = static_cast<int>(i);
+                allLayers = layers;
+                break;
+            }
+        }
+        if (cardIndex >= 0) break;
+    }
+
+    if (cardIndex < 0 || allLayers.empty()) return;
+
+    // Remove layers from current position in objectsList
+    for (DrawableObject* layer : allLayers) {
+        auto it = std::find(objectsList.begin(), objectsList.end(), layer);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+    }
+
+    // Find correct insertion point (before the next card's layers)
+    size_t insertionPoint = objectsList.size();
+
+    if (cardIndex < static_cast<int>(views.size()) - 1) {
+        for (size_t nextCardIdx = cardIndex + 1; nextCardIdx < views.size(); ++nextCardIdx) {
+            std::vector<DrawableObject*> nextCardLayers = getAllImagesFromView(views[nextCardIdx]);
+            if (!nextCardLayers.empty()) {
+                for (size_t i = 0; i < objectsList.size(); ++i) {
+                    if (objectsList[i] == nextCardLayers[0]) {
+                        insertionPoint = i;
+                        break;
+                    }
+                }
+                if (insertionPoint < objectsList.size()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Reinsert at correct position
+    for (DrawableObject* layer : allLayers) {
+        objectsList.insert(objectsList.begin() + insertionPoint, layer);
+        insertionPoint++;
+    }
+
+    // Recalculate all positions
+    layoutViews();
+}
+
+vector<DrawableObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
 {
     if (!anyLayer) return {};
     
@@ -599,14 +684,7 @@ vector<ImageObject*> Hand::GetAllLayersForCard(ImageObject* anyLayer)
         std::vector<DrawableObject*> layers = getAllImagesFromView(cv);
         for (DrawableObject* layer : layers) {
             if (dynamic_cast<ImageObject*>(layer) == anyLayer) {
-                // Convert DrawableObject* vector to ImageObject* vector
-                std::vector<ImageObject*> imageLayers;
-                for (DrawableObject* l : layers) {
-                    if (ImageObject* img = dynamic_cast<ImageObject*>(l)) {
-                        imageLayers.push_back(img);
-                    }
-                }
-                return imageLayers;
+                return layers;
             }
         }
     }
