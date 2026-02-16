@@ -569,6 +569,7 @@ void Level::HandleMouse(int type, int x, int y)
         // RE-DRAW BUTTON (LEFT) - Left Click to DRAW from deck
         if (drawPileButton && IsPointInsideZone(mousePos, drawPileButton))
         {
+			cout << "============================" << endl;
             cout << "[UI] Draw from Deck (Discard current hand)" << endl;
             
             // 1) Collect all card data from current hand
@@ -578,7 +579,7 @@ void Level::HandleMouse(int type, int x, int y)
             if (!cardsInHand.empty())
             {
                 discard.insert(discard.end(), cardsInHand.begin(), cardsInHand.end());
-                cout << "  Discarded " << cardsInHand.size() << " cards from hand" << endl;
+               /* cout << "  Discarded " << cardsInHand.size() << " cards from hand" << endl;*/
             }
             
             // 3) Clear the visual hand
@@ -626,8 +627,7 @@ void Level::HandleMouse(int type, int x, int y)
         // DISCARD PILE BUTTON (LEFT) - Left Click to view discard pile
         if (discardPileButton && IsPointInsideZone(mousePos, discardPileButton))
         {
-            cout << "[UI] View Discard Pile" << endl;
-            cout << "=== DISCARD PILE CONTENTS ===" << endl;
+            cout << "==== DISCARD PILE CONTENTS ====" << endl;
             cout << "Total cards in discard pile: " << discard.size() << endl;
             
             if (!discard.empty())
@@ -1097,7 +1097,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
         Card* cardData = hand.FindCardByImage(draggingCard);
 
         const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
-        std::cout << "[DropZone] Dropped in zone: " << zoneNames[dz] << std::endl;
+        /*std::cout << "[DropZone] Dropped in zone: " << zoneNames[dz] << std::endl;*/
 
         int moveSteps = 0;
 
