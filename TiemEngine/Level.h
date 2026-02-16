@@ -102,8 +102,8 @@ private:
     std::vector<Card*> discard; // re-draw
 
     //Deck Ui
-	ImageObject* viewDeckButton = nullptr;
-	ImageObject* reDrawButton = nullptr;
+	ImageObject* drawPileButton = nullptr;
+	ImageObject* discardPileButton = nullptr;
 
     // Drop zones
     GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };

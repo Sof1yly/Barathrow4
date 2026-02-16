@@ -180,20 +180,20 @@ void Level::LevelInit()
 
 
     // ------------------------
-    // Re-Draw button (LEFT)
-    reDrawButton = new ImageObject();
-    reDrawButton->SetSize(260.0f, -275.0f);
-    reDrawButton->SetPosition(glm::vec3(-800.0f, -385.0f, 10.0f));  // LEFT
-    reDrawButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
-    objectsList.push_back(reDrawButton);
+    // Discard pile (LEFT) - Shows discard pile contents on click
+    discardPileButton = new ImageObject();
+    discardPileButton->SetSize(260.0f, -275.0f);
+    discardPileButton->SetPosition(glm::vec3(-800.0f, -385.0f, 10.0f));  // LEFT
+    discardPileButton->SetTexture("../Resource/Texture/cards/DiscardPile.png"); 
+    objectsList.push_back(discardPileButton);
 
     // ------------------------
-    // View-Deck button (RIGHT)
-    viewDeckButton = new ImageObject();
-    viewDeckButton->SetSize(260.0f, -275.0f);
-    viewDeckButton->SetPosition(glm::vec3(800.0f, -385.0f, 10.0f));  // RIGHT
-    viewDeckButton->SetTexture("../Resource/Texture/cards/DiscardPile.png");
-    objectsList.push_back(viewDeckButton);
+    // Draw Pile (RIGHT) - Discards hand and draws new cards
+    drawPileButton = new ImageObject();
+    drawPileButton->SetSize(260.0f, -275.0f);
+    drawPileButton->SetPosition(glm::vec3(800.0f, -385.0f, 10.0f));  // RIGHT
+    drawPileButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
+    objectsList.push_back(drawPileButton);
 
 
     // Drop zones
@@ -566,11 +566,10 @@ void Level::HandleMouse(int type, int x, int y)
             }
         }
 
-        // RE-DRAW BUTTON (LEFT) - Left Click
- 
-        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
+        // RE-DRAW BUTTON (LEFT) - Left Click to DRAW from deck
+        if (drawPileButton && IsPointInsideZone(mousePos, drawPileButton))
         {
-            cout << "[UI] Re-Draw Button clicked" << endl;
+            cout << "[UI] Draw from Deck (Discard current hand)" << endl;
             
             // 1) Collect all card data from current hand
             std::vector<Card*> cardsInHand = hand.CollectAllCardData();
@@ -624,40 +623,30 @@ void Level::HandleMouse(int type, int x, int y)
             return; // button handled
         }
 
-        // ------------------------------
-        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
-        // ------------------------------
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
+        // DISCARD PILE BUTTON (LEFT) - Left Click to view discard pile
+        if (discardPileButton && IsPointInsideZone(mousePos, discardPileButton))
         {
-            // Do nothing on left-click for discard pile button
-            return;
-        }
-
-        // ------------------------------
-        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
-        // ------------------------------
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
-        {
-            // Do nothing on left-click for discard pile button
-            return;
-        }
-
-        // ------------------------------
-        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
-        // ------------------------------
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
-        {
-            // Do nothing on left-click for discard pile button
-            return;
-        }
-
-        // ------------------------------
-        // DISCARD PILE BUTTON (RIGHT) - Left Click does NOTHING
-        // ------------------------------
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
-        {
-            // Do nothing on left-click for discard pile button
-            return;
+            cout << "[UI] View Discard Pile" << endl;
+            cout << "=== DISCARD PILE CONTENTS ===" << endl;
+            cout << "Total cards in discard pile: " << discard.size() << endl;
+            
+            if (!discard.empty())
+            {
+                for (size_t i = 0; i < discard.size(); i++)
+                {
+                    Card* c = discard[i];
+                    if (c != nullptr) {
+                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
+                    }
+                }
+            }
+            else
+            {
+                cout << "  Discard pile is empty!" << endl;
+            }
+            cout << "=============================" << endl;
+            
+            return; // button handled
         }
 
         // ------------------------------
@@ -699,12 +688,12 @@ void Level::HandleMouse(int type, int x, int y)
     // ----------------------------------------------------
     if (type == 2)
     {
-        // Check if right-clicked on RE-DRAW BUTTON to view re-draw deck
-        if (reDrawButton && IsPointInsideZone(mousePos, reDrawButton))
+        // Check if right-clicked on DRAW PILE BUTTON (RIGHT) to view draw deck
+        if (drawPileButton && IsPointInsideZone(mousePos, drawPileButton))
         {
-            cout << "[UI] View Re-Draw Deck (Right Click)" << endl;
-            cout << "=== RE-DRAW DECK CONTENTS ===" << endl;
-            cout << "Total cards in re-draw deck: " << deck.size() << endl;
+            cout << "[UI] View Draw Deck" << endl;
+            cout << "=== DRAW DECK CONTENTS ===" << endl;
+            cout << "Total cards in draw deck: " << deck.size() << endl;
             
             if (!deck.empty())
             {
@@ -718,33 +707,7 @@ void Level::HandleMouse(int type, int x, int y)
             }
             else
             {
-                cout << "  Re-draw deck is empty!" << endl;
-            }
-            cout << "=============================" << endl;
-            
-            return; // button handled
-        }
-
-        // Check if right-clicked on VIEW-DECK BUTTON to view discard pile
-        if (viewDeckButton && IsPointInsideZone(mousePos, viewDeckButton))
-        {
-            cout << "[UI] View Discard Pile (Right Click)" << endl;
-            cout << "=== DISCARD PILE CONTENTS ===" << endl;
-            cout << "Total cards in discard pile: " << discard.size() << endl;
-            
-            if (!discard.empty())
-            {
-                for (size_t i = 0; i < discard.size(); i++)
-                {
-                    Card* c = discard[i];
-                    if (c != nullptr) {
-                        std::cout << "  [" << (i + 1) << "] " << c->getName() << std::endl;
-                    }
-                }
-            }
-            else
-            {
-                cout << "  Discard pile is empty!" << endl;
+                cout << "  Draw deck is empty!" << endl;
             }
             cout << "=============================" << endl;
             
@@ -1199,7 +1162,7 @@ void Level::EndDrag(const glm::vec3& mouseWorld)
                     case 1:
                         if (nowCol > GridStartCol)
                         {
-                            playersprite->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0f));
+                            playersprite->Translate(glm::vec3(0.0f, (GridHigh + distanceBetweenGridY), 0.0));
                             nowCol--;
                         }
                         break;
@@ -1575,9 +1538,10 @@ void Level::LevelRestart()
     testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
-    reDrawButton = nullptr;
-    viewDeckButton = nullptr;
+    discardPileButton = nullptr;
+    drawPileButton = nullptr;
     playersprite = nullptr;
+
     deck = dataLoader.getCards();  
     discard.clear();
     ShuffleDeck();
@@ -1616,55 +1580,68 @@ void Level::LevelRestart()
     playersprite = playerSprite;
 
     // Demo objects
-    GameObject* obj = new GameObject();
-    obj->SetColor(1.0f, 0.0f, 0.0f);
-    obj->SetSize(200.0f, 200.0f);
-    objectsList.push_back(obj);
-    player = obj;
+    {
+        GameObject* obj = new GameObject();
+        obj->SetColor(1.0f, 0.0f, 0.0f);
+        obj->SetSize(200.0f, 200.0f);
+        objectsList.push_back(obj);
+        player = obj;
+    }
 
-    GameObject* obj2 = new GameObject();
-    obj2->SetColor(0.0f, 1.0f, 0.0f);
-    obj2->SetSize(50.0f, 50.0f);
-    obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-    objectsList.push_back(obj2);
+    {
+        GameObject* obj2 = new GameObject();
+        obj2->SetColor(0.0f, 1.0f, 0.0f);
+        obj2->SetSize(50.0f, 50.0f);
+        obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+        objectsList.push_back(obj2);
+    }
 
-    GameObject* obj3 = new GameObject();
-    obj3->SetColor(0.0f, 0.0f, 1.0f);
-    obj3->SetSize(100.0f, 100.0f);
-    obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    objectsList.push_back(obj3);
-    testMove = obj3;
+    {
+        GameObject* obj3 = new GameObject();
+        obj3->SetColor(0.0f, 0.0f, 1.0f);
+        obj3->SetSize(100.0f, 100.0f);
+        obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+        objectsList.push_back(obj3);
+        testMove = obj3;
+    }
+
     testMoveTarget = testMove->GetPosition();
+    testMoveMoving = false;
 
-    // UI
-    ImageObject* img = new ImageObject();
-    img->SetSize(50.0f, -50.0f);
-    img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-    img->SetTexture("../Resource/Texture/menu.png");
-    objectsList.push_back(img);
 
-    ImageObject* menu = new ImageObject();
-    menu->SetSize(1000.0f, -400.0f);
-    menu->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f));
-    menu->SetTexture("../Resource/Texture/MainMenu.png");
-    objectsList.push_back(menu);
-    mainMenu = menu;
+    //  Menu button + UI
+    {
+        ImageObject* img = new ImageObject();
+        img->SetSize(50.0f, -50.0f);
+        img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+        img->SetTexture("../Resource/Texture/menu.png");
+        objectsList.push_back(img);
+    }
+
+    {
+        ImageObject* menu = new ImageObject();
+        menu->SetSize(1000.0f, -400.0f);
+        menu->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f)); // hidden
+        menu->SetTexture("../Resource/Texture/MainMenu.png");
+        objectsList.push_back(menu);
+        mainMenu = menu;
+    }
 
     // Deal new hand
     DealNewHand(5);
 
     // Buttons
-    reDrawButton = new ImageObject();
-    reDrawButton->SetSize(200.0f, -260.0f);
-    reDrawButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
-    reDrawButton->SetTexture("../Resource/Texture/cards/reDeck.png");
-    objectsList.push_back(reDrawButton);
+    discardPileButton = new ImageObject();
+    discardPileButton->SetSize(200.0f, -260.0f);
+    discardPileButton->SetPosition(glm::vec3(-800.0f, -220.0f, 10.0f));
+    discardPileButton->SetTexture("../Resource/Texture/cards/DiscardPile.png");
+    objectsList.push_back(discardPileButton);
 
-    viewDeckButton = new ImageObject();
-    viewDeckButton->SetSize(200.0f, -260.0f);
-    viewDeckButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
-    viewDeckButton->SetTexture("../Resource/Texture/cards/deck.png");
-    objectsList.push_back(viewDeckButton);
+    drawPileButton = new ImageObject();
+    drawPileButton->SetSize(200.0f, -260.0f);
+    drawPileButton->SetPosition(glm::vec3(800.0f, -220.0f, 10.0f));
+    drawPileButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
+    objectsList.push_back(drawPileButton);
 
     CreateDropZones(objectsList);
 
