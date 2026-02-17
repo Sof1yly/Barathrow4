@@ -12,6 +12,8 @@
 
 #include <unordered_map>
 
+class TextObject;
+
 class CardSystem
 {
 private:
@@ -32,6 +34,11 @@ private:
     ImageObject* discardPileBG = nullptr;
     glm::vec3 drawPileBGPos = glm::vec3(0.0f);
     glm::vec3 discardPileBGPos = glm::vec3(0.0f);
+
+    // Draw pile turn counter
+    int drawPileTurns = 4;
+    static const int DRAW_PILE_MAX_TURNS = 4;
+    TextObject* drawPileTurnText = nullptr;
 
     // Drop zones (LEFT=0, TOP=1, BOTTOM=2, RIGHT=3)
     GameObject* dropZones[4] = { nullptr, nullptr, nullptr, nullptr };
@@ -62,6 +69,7 @@ private:
     void HideBezier();
     bool IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) const;
     void UpdatePileVisuals();
+    void UpdateDrawPileTurnText();
 
 public:
     CardSystem();
@@ -122,4 +130,10 @@ public:
 
     const std::vector<Card*>& GetDeck() const { return deck; }
     const std::vector<Card*>& GetDiscard() const { return discard; }
+
+    // Draw pile turn counter
+    bool UseDrawPileTurn();       // returns true if turn should end (turns was > 0)
+    void ResetDrawPileTurns();    // resets counter back to max
+    void DecrementDrawPileTurn(); //  counter when player ends turn by playing a card
+    int  GetDrawPileTurns() const { return drawPileTurns; }
 };

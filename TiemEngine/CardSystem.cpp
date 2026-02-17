@@ -69,6 +69,13 @@ void CardSystem::InitUI(vector<DrawableObject*>& objectsList)
     drawPileButton->SetTexture("../Resource/Texture/cards/DrawPile.png");
     objectsList.push_back(drawPileButton);
 
+    // Draw pile turn counter text
+    drawPileTurnText = new TextObject();
+    drawPileTurnText->SetPosition(glm::vec3(800.0f, -440.0f, 11.0f));
+    SDL_Color drawTextCol = { 235, 206, 135 }; // (why it become B,G,R order)
+    drawPileTurnText->LoadText(std::to_string(drawPileTurns),drawTextCol, 40);
+    objectsList.push_back(drawPileTurnText);
+
     // Create drop zones
     CreateDropZones(objectsList);
 
@@ -554,6 +561,9 @@ void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
     discardPileButton = nullptr;
     drawPileBG = nullptr;
     discardPileBG = nullptr;
+    drawPileTurnText = nullptr;
+
+    drawPileTurns = DRAW_PILE_MAX_TURNS;
 
     deck = dataLoader.getCards();
     discard.clear();
@@ -630,19 +640,25 @@ void CardSystem::UpdatePileVisuals()
     // Discard pile BG: show only when discard has cards
     if (discardPileBG)
     {
-        if (!discard.empty())
+        if (!discard.empty()) {
             discardPileBG->SetPosition(discardPileBGPos);
-        else
+        } 
+        else {
             discardPileBG->SetPosition(glm::vec3(discardPileBGPos.x, HIDDEN_Y, discardPileBGPos.z));
+        }
+            
     }
 
     // Draw pile BG: show only when deck has cards
     if (drawPileBG)
     {
-        if (!deck.empty())
+        if (!deck.empty()) {
             drawPileBG->SetPosition(drawPileBGPos);
-        else
+        }
+        else {
             drawPileBG->SetPosition(glm::vec3(drawPileBGPos.x, HIDDEN_Y, drawPileBGPos.z));
+        }
+            
     }
 }
 
@@ -657,4 +673,48 @@ bool CardSystem::IsPointInsideZone(const glm::vec3& p, DrawableObject* zone) con
     float halfH = std::abs(zsize.y) * 0.5f;
 
     return (p.x >= zpos.x - halfW && p.x <= zpos.x + halfW && p.y >= zpos.y - halfH && p.y <= zpos.y + halfH);
+}
+
+void CardSystem::UpdateDrawPileTurnText()
+{
+    if (!drawPileTurnText) return;
+    SDL_Color drawTextCol = { 235, 206, 135 };
+    drawPileTurnText->LoadText(std::to_string(drawPileTurns), drawTextCol, 40);
+}
+
+bool CardSystem::UseDrawPileTurn()
+{
+    if (drawPileTurns > 0)
+    {
+        // Counter is 1-4: reset to max and end turn
+        cout << "[DrawPile] Counter was " << drawPileTurns << ", reset to " << DRAW_PILE_MAX_TURNS << " (end turn)" << endl;
+        drawPileTurns = DRAW_PILE_MAX_TURNS;
+        UpdateDrawPileTurnText();
+        return true;  // turn should end
+    }
+    else
+    {
+        // Count to 0 free redraw, reset to max, no turn end
+        cout << "[DrawPile] Counter was 0, free redraw! Reset to " << DRAW_PILE_MAX_TURNS << endl;
+        drawPileTurns = DRAW_PILE_MAX_TURNS;
+        UpdateDrawPileTurnText();
+        return false; // turn does NOT end
+    }
+}
+
+void CardSystem::ResetDrawPileTurns()
+{
+    drawPileTurns = DRAW_PILE_MAX_TURNS;
+    UpdateDrawPileTurnText();
+    cout << "[DrawPile] Turns reset to " << drawPileTurns << endl;
+}
+
+void CardSystem::DecrementDrawPileTurn()
+{
+    if (drawPileTurns > 0)
+    {
+        drawPileTurns--;
+        UpdateDrawPileTurnText();
+        cout << "[DrawPile] Turn used (card played). Remaining: " << drawPileTurns << endl;
+    }
 }

@@ -214,7 +214,7 @@ void Level::LevelUpdate()
                 playerState = PlayerState::IDLE;
                 UpdatePlayerAnimation();
 
-                turnState = TurnState::ENEMY_TURN;
+                turnState = TurnState::PLAYER_TURN;
             }
         }
 
@@ -527,7 +527,12 @@ void Level::HandleMouse(int type, int x, int y)
         // DRAW PILE BUTTON (RIGHT) - Left Click to discard hand and draw new cards
         if (cardSystem.IsDrawPileClicked(mousePos))
         {
+            bool shouldEndTurn = cardSystem.UseDrawPileTurn();
             cardSystem.DiscardHandAndDraw(5, objectsList);
+            if (shouldEndTurn)
+            {
+                turnState = TurnState::ENEMY_TURN;
+            }
             return;
         }
 
@@ -678,6 +683,7 @@ void Level::HandleMouse(int type, int x, int y)
                         pendingMoveSteps = moveSteps;
                         pendingMoveZone = dz;
 
+                        cardSystem.DecrementDrawPileTurn();
                         turnState = TurnState::PLAYER_MOVING;
                     }
                     else if (moveSteps > 0 && playersprite)
@@ -688,6 +694,7 @@ void Level::HandleMouse(int type, int x, int y)
                         playerState = PlayerState::WALK;
                         UpdatePlayerAnimation();
 
+                        cardSystem.DecrementDrawPileTurn();
                         turnState = TurnState::PLAYER_MOVING;
 
                         std::cout << "[Card Move] Player will walk "
@@ -698,7 +705,7 @@ void Level::HandleMouse(int type, int x, int y)
                         playerState = PlayerState::IDLE;
                         UpdatePlayerAnimation();
 
-                        turnState = TurnState::ENEMY_TURN;
+                        cardSystem.DecrementDrawPileTurn();
                     }
 
                     for (const PendingAttackInfo& pa : pendingAttacks)
