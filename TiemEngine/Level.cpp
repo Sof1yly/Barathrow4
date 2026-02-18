@@ -141,6 +141,14 @@ void Level::LevelInit()
     }
 
     {
+        ImageObject* HPbg = new ImageObject();
+        HPbg->SetSize(300.0f, -80.0f);
+        HPbg->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
+        HPbg->SetTexture("../Resource/Texture/UI/Blank_HPbar.PNG");
+        objectsList.push_back(HPbg);
+    }
+
+    {
         ImageObject* Setting = new ImageObject();
         Setting->SetSize(80.0f, -80.0f);
         Setting->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
