@@ -149,6 +149,14 @@ void Level::LevelInit()
     }
 
     {
+        ImageObject* Shieldbg = new ImageObject();
+        Shieldbg->SetSize(300.0f, -80.0f);
+        Shieldbg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); //make it hidden first//real pos -450.0,500.0
+        Shieldbg->SetTexture("../Resource/Texture/UI/Blank_Shieldbar.PNG");
+        objectsList.push_back(Shieldbg);
+    }
+
+    {
         ImageObject* Setting = new ImageObject();
         Setting->SetSize(80.0f, -80.0f);
         Setting->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
