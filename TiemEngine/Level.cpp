@@ -103,41 +103,65 @@ void Level::LevelInit()
 
     // 4) Demo objects
     {
-        GameObject* obj = new GameObject();
+        /*GameObject* obj = new GameObject();
         obj->SetColor(1.0f, 0.0f, 0.0f);
         obj->SetSize(200.0f, 200.0f);
         objectsList.push_back(obj);
-        player = obj;
+        player = obj;*/
     }
 
     {
-        GameObject* obj2 = new GameObject();
+        /*GameObject* obj2 = new GameObject();
         obj2->SetColor(0.0f, 1.0f, 0.0f);
         obj2->SetSize(50.0f, 50.0f);
         obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);
+        objectsList.push_back(obj2);*/
     }
 
     {
-        GameObject* obj3 = new GameObject();
+        /*GameObject* obj3 = new GameObject();
         obj3->SetColor(0.0f, 0.0f, 1.0f);
         obj3->SetSize(100.0f, 100.0f);
         obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         objectsList.push_back(obj3);
-        testMove = obj3;
+        testMove = obj3;*/
     }
 
-    testMoveTarget = testMove->GetPosition();
-    testMoveMoving = false;
+    //testMoveTarget = testMove->GetPosition();
+    //testMoveMoving = false;
 
 
     //  Menu button + UI
     {
-        ImageObject* img = new ImageObject();
+        /*ImageObject* img = new ImageObject();
         img->SetSize(50.0f, -50.0f);
         img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
         img->SetTexture("../Resource/Texture/menu.png");
-        objectsList.push_back(img);
+        objectsList.push_back(img);*/
+    }
+
+    {
+        ImageObject* Setting = new ImageObject();
+        Setting->SetSize(80.0f, -80.0f);
+        Setting->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+        Setting->SetTexture("../Resource/Texture/UI/Setting.PNG");
+        objectsList.push_back(Setting);
+    }
+
+    {
+        ImageObject* Info = new ImageObject();
+        Info->SetSize(80.0f, -80.0f);
+        Info->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
+        Info->SetTexture("../Resource/Texture/UI/Info.PNG");
+        objectsList.push_back(Info);
+    }
+
+    {
+        ImageObject* ViewDeck = new ImageObject();
+        ViewDeck->SetSize(80.0f, -80.0f);
+        ViewDeck->SetPosition(glm::vec3(710.0f, 500.0f, 0.0f));
+        ViewDeck->SetTexture("../Resource/Texture/UI/ViewDeck.PNG");
+        objectsList.push_back(ViewDeck);
     }
 
     {
@@ -302,7 +326,7 @@ void Level::LevelUpdate()
 
 
     // Smooth move testMove object
-    if (testMoveMoving && testMove) {
+    /*if (testMoveMoving && testMove) {
         glm::vec3 cur = testMove->GetPosition();
         glm::vec3 diff = testMoveTarget - cur;
         float dist = glm::length(diff);
@@ -316,7 +340,7 @@ void Level::LevelUpdate()
             testMove->SetPosition(testMoveTarget);
             testMoveMoving = false;
         }
-    }
+    }*/
 
     if (playerMoving && playersprite)
     {
@@ -508,7 +532,7 @@ void Level::HandleMouse(int type, int x, int y)
     if (type == 0)
     {
         // menu toggle
-        if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470)
+        if (realX >= 875 && realX <= 925 && realY <= 530 && realY >= 470)
         {
             if (!Button::getMenu()) {
                 Button::setMenu(true);
@@ -551,10 +575,10 @@ void Level::HandleMouse(int type, int x, int y)
         ImageObject* peek = cardSystem.PeekAt(mousePos);
         cardSystem.SetPendingCard(peek);
 
-        if (testMove) {
+        /*if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0);
             testMoveMoving = true;
-        }
+        }*/
     }
 
     // ----------------------------------------------------
@@ -795,9 +819,9 @@ void Level::HandleMouse(int type, int x, int y)
         HideAttackHighlights();
     }
 
-    if (player) {
+    /*if (player) {
         player->SetPosition(glm::vec3(realX, realY, 0));
-    }
+    }*/
 }
 
 
@@ -1075,7 +1099,7 @@ void Level::LevelRestart()
     nowCol = 0;
     playerHealth = 10;
     turnState = TurnState::PLAYER_TURN;
-    testMove = nullptr;
+    //testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
     playersprite = nullptr;
@@ -1130,16 +1154,16 @@ void Level::LevelRestart()
     }
 
     {
-        GameObject* obj3 = new GameObject();
+        /*GameObject* obj3 = new GameObject();
         obj3->SetColor(0.0f, 0.0f, 1.0f);
         obj3->SetSize(100.0f, 100.0f);
         obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         objectsList.push_back(obj3);
-        testMove = obj3;
+        testMove = obj3;*/
     }
 
-    testMoveTarget = testMove->GetPosition();
-    testMoveMoving = false;
+    //testMoveTarget = testMove->GetPosition();
+    //testMoveMoving = false;
 
     //  Menu button + UI
     {
