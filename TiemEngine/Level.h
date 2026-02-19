@@ -45,7 +45,7 @@ private:
 
     bool playerAttacking = false;
     float attackTimer = 0.0f;
-    const float ATTACK_TIME = 350.0f;
+    const float ATTACK_TIME = 800.0f;
 
     bool pendingAttack = false;
 

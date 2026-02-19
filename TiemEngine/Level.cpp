@@ -82,7 +82,7 @@ void Level::LevelInit()
     // 3) Player sprite (3x4, 192x256)
     {
         SpriteObject* playerSprite =
-            new SpriteObject("../Resource/Texture/Player_sprite1.png", 6,10);
+            new SpriteObject("../Resource/Texture/Player_sprite2.png", 6,16);
 
         playerSprite->SetSize(200.0f, -200.0f);
 
@@ -1245,20 +1245,20 @@ void Level::UpdatePlayerAnimation()
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 2, 150); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 8, 4, 150); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 4, 150); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 12, 4, 150); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 4, 4, 150); break;
         }
     }
     else if (playerState == PlayerState::ATTACK)
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 5, 100); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 6, 5, 100); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 5, 100); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 6, 5, 100); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 8, 100); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 8, 8, 100); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 8, 100); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 8, 8, 100); break;
         }
     }
 }
