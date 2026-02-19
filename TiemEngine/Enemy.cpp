@@ -30,7 +30,7 @@ Enemy::Enemy()
     };
     hpText = new TextObject();
     SDL_Color white = { 255,255,255 };
-    hpText->LoadText("HP: 5", white, 24);
+    hpText->LoadText("HP: 10", white, 24);
 
 }
 void Enemy::setHealth(int h)

@@ -38,7 +38,7 @@ public:
     void UpdateTextPosition();
     void Update(float dt);
 private:
-    int maxHealth = 5;
+    int maxHealth = 10;
     int health = maxHealth;
     int damage = 1;
 
