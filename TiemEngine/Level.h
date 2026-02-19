@@ -19,6 +19,10 @@ class Level
 private:
 
 	int playerHealth = 5;//delete later
+    // UI HP bar
+    ImageObject* hpBar = nullptr;
+    int maxPlayerHealth = 10;
+    ImageObject* hpMask = nullptr;
     // Render list
     std::vector<DrawableObject*> objectsList;
 
@@ -153,5 +157,7 @@ public:
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
 	void PreviewEnemyAttack();
+
+    void UpdateHPBar();
 
 };

@@ -44,6 +44,7 @@ void Level::LevelInit()
     playerDir = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     UpdatePlayerAnimation();
+    maxPlayerHealth = playerHealth;
 
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
@@ -149,11 +150,19 @@ void Level::LevelInit()
     }
 
     {
-        ImageObject* HP = new ImageObject();
-        HP->SetSize(300.0f, -80.0f);
-        HP->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
-        HP->SetTexture("../Resource/Texture/UI/HPbar.PNG");
-        objectsList.push_back(HP);
+        hpBar = new ImageObject();
+        hpBar->SetSize(300.0f, -80.0f);
+        hpBar->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
+        hpBar->SetTexture("../Resource/Texture/UI/HPbar.PNG");
+        objectsList.push_back(hpBar);
+    }
+
+    {
+        hpMask = new ImageObject();
+        hpMask->SetSize(0.0f, -80.0f);  // starts hidden
+        hpMask->SetPosition(glm::vec3(-800.0f, 500.0f, 5.0f));
+        hpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+        objectsList.push_back(hpMask);
     }
 
     {
@@ -985,6 +994,7 @@ void Level::ApplyEnemyAttack()
         {
             playerHealth--;
             cout << "    HIT PLAYER!!! New HP = " << playerHealth << endl;
+            UpdateHPBar();
         }
     }
 
@@ -1466,3 +1476,25 @@ void Level::PreviewEnemyAttack()
         index++;
     }
 }
+void Level::UpdateHPBar()
+{
+    if (!hpBar || !hpMask) return;
+
+    float fullWidth = 300.0f;
+
+    playerHealth = std::max(0, std::min(playerHealth, maxPlayerHealth));
+
+    float percent = (float)playerHealth / (float)maxPlayerHealth;
+
+    hpBar->SetSize(fullWidth, -80.0f);
+
+    float missingWidth = fullWidth * (1.0f - percent);
+
+
+    hpMask->SetSize(missingWidth, -80.0f);
+    float barLeftX = -800.0f;
+    float maskX = barLeftX + (fullWidth - missingWidth) / 2.0f;
+
+    hpMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
+}
+
