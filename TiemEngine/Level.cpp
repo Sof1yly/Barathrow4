@@ -149,6 +149,14 @@ void Level::LevelInit()
     }
 
     {
+        ImageObject* HP = new ImageObject();
+        HP->SetSize(300.0f, -80.0f);
+        HP->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
+        HP->SetTexture("../Resource/Texture/UI/HPbar.PNG");
+        objectsList.push_back(HP);
+    }
+
+    {
         ImageObject* Shieldbg = new ImageObject();
         Shieldbg->SetSize(300.0f, -80.0f);
         Shieldbg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); //make it hidden first//real pos -450.0,500.0
