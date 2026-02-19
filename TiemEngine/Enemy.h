@@ -1,11 +1,11 @@
 #pragma once
 #include "ImageObject.h"
 #include "AttackPattern.h"
+#include "TextObject.h"
 
 class Enemy {
 public:
     Enemy();
-
     AttackPattern getCurrentPattern() const {
         return patterns[currentPatternIndex];
     }
@@ -30,8 +30,15 @@ public:
     void setObject(ImageObject* obj) { objImg = obj; }
     ImageObject* getObject() { return objImg; }
 
+    TextObject* getHPText() { return hpText; }
+
+    void showAttackText() {
+        attackTextTimer = 1.0f;
+    }
+    void UpdateTextPosition();
+    void Update(float dt);
 private:
-    int maxHealth = 3;
+    int maxHealth = 5;
     int health = maxHealth;
     int damage = 1;
 
@@ -41,4 +48,10 @@ private:
     ImageObject* objImg = nullptr;
     std::vector<AttackPattern> patterns;
     int currentPatternIndex = 0;
+
+    TextObject* hpText = nullptr;
+
+    float attackTextTimer = 0.0f;
+
+
 };

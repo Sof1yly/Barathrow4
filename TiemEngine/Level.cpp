@@ -44,6 +44,7 @@ void Level::LevelInit()
     playerDir = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     UpdatePlayerAnimation();
+    maxPlayerHealth = playerHealth;
 
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
@@ -77,12 +78,14 @@ void Level::LevelInit()
 
 	objectsList.push_back(enemyObj); 
     enemy->setObject(enemyObj);
+    enemy->UpdateTextPosition();
+    objectsList.push_back(enemy->getHPText());
 
 
     // 3) Player sprite (3x4, 192x256)
     {
         SpriteObject* playerSprite =
-            new SpriteObject("../Resource/Texture/Player_sprite1.png", 6,10);
+            new SpriteObject("../Resource/Texture/Player_sprite2.png", 6,16);
 
         playerSprite->SetSize(200.0f, -200.0f);
 
@@ -103,41 +106,97 @@ void Level::LevelInit()
 
     // 4) Demo objects
     {
-        GameObject* obj = new GameObject();
+        /*GameObject* obj = new GameObject();
         obj->SetColor(1.0f, 0.0f, 0.0f);
         obj->SetSize(200.0f, 200.0f);
         objectsList.push_back(obj);
-        player = obj;
+        player = obj;*/
     }
 
     {
-        GameObject* obj2 = new GameObject();
+        /*GameObject* obj2 = new GameObject();
         obj2->SetColor(0.0f, 1.0f, 0.0f);
         obj2->SetSize(50.0f, 50.0f);
         obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);
+        objectsList.push_back(obj2);*/
     }
 
     {
-        GameObject* obj3 = new GameObject();
+        /*GameObject* obj3 = new GameObject();
         obj3->SetColor(0.0f, 0.0f, 1.0f);
         obj3->SetSize(100.0f, 100.0f);
         obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         objectsList.push_back(obj3);
-        testMove = obj3;
+        testMove = obj3;*/
     }
 
-    testMoveTarget = testMove->GetPosition();
-    testMoveMoving = false;
+    //testMoveTarget = testMove->GetPosition();
+    //testMoveMoving = false;
 
 
     //  Menu button + UI
     {
-        ImageObject* img = new ImageObject();
+        /*ImageObject* img = new ImageObject();
         img->SetSize(50.0f, -50.0f);
         img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
         img->SetTexture("../Resource/Texture/menu.png");
-        objectsList.push_back(img);
+        objectsList.push_back(img);*/
+    }
+
+    {
+        ImageObject* HPbg = new ImageObject();
+        HPbg->SetSize(300.0f, -80.0f);
+        HPbg->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
+        HPbg->SetTexture("../Resource/Texture/UI/Blank_HPbar.PNG");
+        objectsList.push_back(HPbg);
+    }
+
+    {
+        hpBar = new ImageObject();
+        hpBar->SetSize(300.0f, -80.0f);
+        hpBar->SetPosition(glm::vec3(-800.0f, 500.0f, 0.0f));
+        hpBar->SetTexture("../Resource/Texture/UI/HPbar.PNG");
+        objectsList.push_back(hpBar);
+    }
+
+    {
+        hpMask = new ImageObject();
+        hpMask->SetSize(0.0f, -80.0f);  // starts hidden
+        hpMask->SetPosition(glm::vec3(-800.0f, 500.0f, 5.0f));
+        hpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+        objectsList.push_back(hpMask);
+    }
+
+    {
+        ImageObject* Shieldbg = new ImageObject();
+        Shieldbg->SetSize(300.0f, -80.0f);
+        Shieldbg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); //make it hidden first//real pos -450.0,500.0
+        Shieldbg->SetTexture("../Resource/Texture/UI/Blank_Shieldbar.PNG");
+        objectsList.push_back(Shieldbg);
+    }
+
+    {
+        ImageObject* Setting = new ImageObject();
+        Setting->SetSize(80.0f, -80.0f);
+        Setting->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+        Setting->SetTexture("../Resource/Texture/UI/Setting.PNG");
+        objectsList.push_back(Setting);
+    }
+
+    {
+        ImageObject* Info = new ImageObject();
+        Info->SetSize(80.0f, -80.0f);
+        Info->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
+        Info->SetTexture("../Resource/Texture/UI/Info.PNG");
+        objectsList.push_back(Info);
+    }
+
+    {
+        ImageObject* ViewDeck = new ImageObject();
+        ViewDeck->SetSize(80.0f, -80.0f);
+        ViewDeck->SetPosition(glm::vec3(710.0f, 500.0f, 0.0f));
+        ViewDeck->SetTexture("../Resource/Texture/UI/ViewDeck.PNG");
+        objectsList.push_back(ViewDeck);
     }
 
     {
@@ -190,7 +249,11 @@ void Level::LevelUpdate()
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
     UpdateTurn();
-
+    if (enemy)
+    {
+        enemy->UpdateTextPosition();
+        enemy->Update(deltaTime / 1000.0f);
+    }
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
@@ -284,10 +347,8 @@ void Level::LevelUpdate()
     if (enemy && enemy->getHealth() <= 0)
     {
         ImageObject* obj = enemy->getObject();
-
         if (obj)
         {
-            // remove from vector
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end())
                 objectsList.erase(it);
@@ -296,13 +357,23 @@ void Level::LevelUpdate()
             enemy->setObject(nullptr);
         }
 
+        TextObject* hp = enemy->getHPText();
+        if (hp)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), hp);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+
+            delete hp;
+        }
         delete enemy;
         enemy = nullptr;
+
     }
 
 
     // Smooth move testMove object
-    if (testMoveMoving && testMove) {
+    /*if (testMoveMoving && testMove) {
         glm::vec3 cur = testMove->GetPosition();
         glm::vec3 diff = testMoveTarget - cur;
         float dist = glm::length(diff);
@@ -316,7 +387,7 @@ void Level::LevelUpdate()
             testMove->SetPosition(testMoveTarget);
             testMoveMoving = false;
         }
-    }
+    }*/
 
     if (playerMoving && playersprite)
     {
@@ -508,7 +579,7 @@ void Level::HandleMouse(int type, int x, int y)
     if (type == 0)
     {
         // menu toggle
-        if (realX >= 850 && realX <= 900 && realY <= 530 && realY >= 470)
+        if (realX >= 875 && realX <= 925 && realY <= 530 && realY >= 470)
         {
             if (!Button::getMenu()) {
                 Button::setMenu(true);
@@ -551,10 +622,10 @@ void Level::HandleMouse(int type, int x, int y)
         ImageObject* peek = cardSystem.PeekAt(mousePos);
         cardSystem.SetPendingCard(peek);
 
-        if (testMove) {
+        /*if (testMove) {
             testMoveTarget = glm::vec3(realX, realY, 0);
             testMoveMoving = true;
-        }
+        }*/
     }
 
     // ----------------------------------------------------
@@ -795,9 +866,9 @@ void Level::HandleMouse(int type, int x, int y)
         HideAttackHighlights();
     }
 
-    if (player) {
+    /*if (player) {
         player->SetPosition(glm::vec3(realX, realY, 0));
-    }
+    }*/
 }
 
 
@@ -916,7 +987,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 void Level::ApplyEnemyAttack()
 {
     if (!enemy) return;
-
+    enemy->showAttackText();
     auto attacks = enemy->getCurrentPattern().applyTo(enemy->getNowRow(), enemy->getNowCol());
 
     cout << "[Enemy Attack]\n";
@@ -937,6 +1008,7 @@ void Level::ApplyEnemyAttack()
         {
             playerHealth--;
             cout << "    HIT PLAYER!!! New HP = " << playerHealth << endl;
+            UpdateHPBar();
         }
     }
 
@@ -1075,7 +1147,7 @@ void Level::LevelRestart()
     nowCol = 0;
     playerHealth = 10;
     turnState = TurnState::PLAYER_TURN;
-    testMove = nullptr;
+    //testMove = nullptr;
     player = nullptr;
     mainMenu = nullptr;
     playersprite = nullptr;
@@ -1130,16 +1202,16 @@ void Level::LevelRestart()
     }
 
     {
-        GameObject* obj3 = new GameObject();
+        /*GameObject* obj3 = new GameObject();
         obj3->SetColor(0.0f, 0.0f, 1.0f);
         obj3->SetSize(100.0f, 100.0f);
         obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         objectsList.push_back(obj3);
-        testMove = obj3;
+        testMove = obj3;*/
     }
 
-    testMoveTarget = testMove->GetPosition();
-    testMoveMoving = false;
+    //testMoveTarget = testMove->GetPosition();
+    //testMoveMoving = false;
 
     //  Menu button + UI
     {
@@ -1205,20 +1277,20 @@ void Level::UpdatePlayerAnimation()
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 2, 150); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 8, 4, 150); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 4, 150); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 12, 4, 150); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 4, 4, 150); break;
         }
     }
     else if (playerState == PlayerState::ATTACK)
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 5, 100); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 6, 5, 100); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 5, 100); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 6, 5, 100); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 8, 100); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 8, 8, 100); break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 8, 100); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 8, 8, 100); break;
         }
     }
 }
@@ -1418,3 +1490,25 @@ void Level::PreviewEnemyAttack()
         index++;
     }
 }
+void Level::UpdateHPBar()
+{
+    if (!hpBar || !hpMask) return;
+
+    float fullWidth = 300.0f;
+
+    playerHealth = std::max(0, std::min(playerHealth, maxPlayerHealth));
+
+    float percent = (float)playerHealth / (float)maxPlayerHealth;
+
+    hpBar->SetSize(fullWidth, -80.0f);
+
+    float missingWidth = fullWidth * (1.0f - percent);
+
+
+    hpMask->SetSize(missingWidth, -80.0f);
+    float barLeftX = -800.0f;
+    float maskX = barLeftX + (fullWidth - missingWidth) / 2.0f;
+
+    hpMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
+}
+
