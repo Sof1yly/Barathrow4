@@ -24,6 +24,7 @@ private:
     // Piles
     std::vector<Card*> deck;
     std::vector<Card*> discard;
+    std::vector<Card*> deletePile;
 
     // Pile UI buttons
     ImageObject* drawPileButton = nullptr;
@@ -95,6 +96,7 @@ public:
     void UpdateDrag(const glm::vec3& mouseWorld);
     void EndDragCancel(const glm::vec3& mouseWorld, std::vector<DrawableObject*>& objectsList);
     void EndDragConfirm(ImageObject* card, std::vector<DrawableObject*>& objectsList);
+    void EndDragConfirmDelete(ImageObject* card, std::vector<DrawableObject*>& objectsList);
 
     // Hand queries / hover
     void UpdateHover(const glm::vec3& mousePos, bool dragging, std::vector<DrawableObject*>& objectsList);

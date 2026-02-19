@@ -14,6 +14,11 @@ private:
     string rarityCode;  
     string typeCode;    
     vector<Action*> actions;
+
+    bool isFast = false;
+    bool isTemp = false;
+    bool isDeleteAfterUse = false;
+    int overclockValue = 0;
     
     // Visual rendering data
     ImageObject* background = nullptr;
@@ -40,6 +45,15 @@ public:
     void setLevel(int lv) { level = lv; }
     void setRarityCode(const string& code) { rarityCode = code; }
     void setTypeCode(const string& code) { typeCode = code; }
+
+    bool getIsFast() const { return isFast; }
+    void setIsFast(bool v) { isFast = v; }
+    bool getIsTemp() const { return isTemp; }
+    void setIsTemp(bool v) { isTemp = v; }
+    bool getIsDeleteAfterUse() const { return isDeleteAfterUse; }
+    void setIsDeleteAfterUse(bool v) { isDeleteAfterUse = v; }
+    int getOverclockValue() const { return overclockValue; }
+    void setOverclockValue(int v) { overclockValue = v; }
     
     const vector<Action*>& getActions() const;
     void addAction(Action* action);

@@ -579,9 +579,19 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, vector<Draw
                     cout << " Attack: " << atk->getValue();
                 }
                 else if(auto* mv = dynamic_cast<MoveAction*>(a)) {
-                    cout << " Move: " << mv->getValue();
+                    if (mv->isRetreat())
+                        cout << " Retreat: " << mv->getValue();
+                    else
+                        cout << " Move: " << mv->getValue();
+                }
+                else {
+                    cout << " " << a->getActionCode() << ": " << a->getValue();
                 }
             }
+            if (cardData->getIsFast()) cout << " [Fast]";
+            if (cardData->getIsTemp()) cout << " [Temp]";
+            if (cardData->getIsDeleteAfterUse()) cout << " [Delete]";
+            if (cardData->getOverclockValue() > 0) cout << " [Overclock: " << cardData->getOverclockValue() << "]";
             cout << endl;
         }
     }

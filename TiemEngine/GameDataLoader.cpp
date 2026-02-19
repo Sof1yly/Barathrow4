@@ -76,7 +76,19 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
 
     auto flushCurrent = [&]() {
         if (!currentId.empty() && !grid.empty()) {
-            AttackPattern p = AttackPattern::fromGrid(grid, 'X');
+            int oCol = -1;
+            int oRow = -1;
+            for (int r = 0; r < (int)grid.size(); ++r) {
+                for (int c = 0; c < (int)grid[r].size(); ++c) {
+                    if (grid[r][c] == 'O') {
+                        oRow = r;
+                        oCol = c;
+                        break;
+                    }
+                }
+                if (oRow >= 0) break;
+            }
+            AttackPattern p = AttackPattern::fromGrid(grid, 'X', oCol, oRow);
             patternMap[currentId] = p;
         }
         currentId.clear();
@@ -94,7 +106,7 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
             continue;
         }
 
-        if (!trimmed.empty() && (trimmed[0] == '.' || trimmed[0] == 'X')) {
+        if (!trimmed.empty() && (trimmed[0] == '.' || trimmed[0] == 'X' || trimmed[0] == 'O')) {
             grid.push_back(trimmed);
             continue;
         }
@@ -233,13 +245,35 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
         card->setLevel(level);
         card->setRarityCode(rarityCode);
         card->setTypeCode(typeCode);
+        card->setDescription(description);
 
         // Process each action entry in order
         for (auto& entry : actionEntries) {
             const std::string& code = entry.first;
             const std::string& sVal = entry.second;
 
-            // Parse value (may contain multiplier after 'x', e.g. "3x0.5")
+            // Card flags (no value needed)
+            if (code == "fas") {
+                card->setIsFast(true);
+                continue;
+            }
+            if (code == "te") {
+                card->setIsTemp(true);
+                continue;
+            }
+            if (code == "del") {
+                card->setIsDeleteAfterUse(true);
+                continue;
+            }
+            if (code == "oc") {
+                int ocVal = 0;
+                try { if (!sVal.empty()) ocVal = std::stoi(sVal); }
+                catch (...) {}
+                card->setOverclockValue(ocVal);
+                continue;
+            }
+
+            // Parse value
             int value = 0;
             float multiplier = 1.0f;
             {
@@ -292,40 +326,14 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
                     actionPattern[a] = pat;
                 }
             }
-            else if (code == "mov") {
+            else if (code == "mov" || code == "re") {
                 auto* a = new MoveAction();
                 a->setValue(value);
                 a->setMultiplier(multiplier);
                 a->setActionCode(code);
                 newAction = a;
             }
-            else if (code == "wk" || code == "cr" || code == "dl" || code == "re") {
-                auto* a = new DebuffAction(multiplier);
-                a->setValue(value);
-                a->setActionCode(code);
-                newAction = a;
-
-                if (!patternId.empty()) {
-                    const AttackPattern* pat = findPatternByName(patternId);
-                    if (pat) actionPattern[a] = pat;
-                }
-            }
-            else if (code == "sh" || code == "ba" || code == "he" || code == "oc") {
-                auto* a = new BuffAction();
-                a->setValue(value);
-                a->setMultiplier(multiplier);
-                a->setActionCode(code);
-                newAction = a;
-            }
-            else if (code == "ge" || code == "en" || code == "co" || code == "gc") {
-                auto* a = new EnergyAction();
-                a->setValue(value);
-                a->setMultiplier(multiplier);
-                a->setActionCode(code);
-                newAction = a;
-            }
             else {
-                // Unknown code: default to attack
                 auto* a = new AttackAction();
                 a->setValue(value);
                 a->setMultiplier(multiplier);

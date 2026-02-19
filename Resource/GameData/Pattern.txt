@@ -1,16 +1,50 @@
 PatternAttack	
-A1	.X.
-	XXX
-	.X.
+A1	O
 	
-A2	XXX
-	XXX
+A2	OX
+	
+A3	OXX
+	
+A4	.X
+	OX
+	.X
+	
+A5	X.
+	OX
+	X.
+	
+A6	XX.
+	OXX
+	XX.
+	
+A7	XXX
+	XOX
 	XXX
 	
-A3	..X..
+A8	..X..
 	.XXX.
-	XXXXX
+	XXOXX
 	.XXX.
 	..X..
 	
-A4	...XX
+A9	.XX
+	XXX
+	OXX
+	XXX
+	.XX
+	
+A10	.X.
+	XOX
+	.X.
+	
+A11	..X.
+	OXXX
+	..X.
+	
+A12	XX
+	OX
+	XX
+	
+A13	X.
+	OX
+	X.

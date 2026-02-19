@@ -12,9 +12,6 @@
 #include "Action.h"
 #include "AttackAction.h"
 #include "MoveAction.h"
-#include "BuffAction.h"
-#include "DebuffAction.h"
-#include "EnergyAction.h"
 #include "AttackPattern.h"
 
 class GameDataLoader

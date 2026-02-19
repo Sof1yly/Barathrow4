@@ -444,6 +444,32 @@ void CardSystem::EndDragConfirm(ImageObject* card, std::vector<DrawableObject*>&
     UpdatePileVisuals();
 }
 
+void CardSystem::EndDragConfirmDelete(ImageObject* card, std::vector<DrawableObject*>& objectsList)
+{
+    if (!card) return;
+
+    Card* cardData = hand.FindCardByImage(card);
+
+    hand.ClearDragging();
+    hand.RemoveView(card, objectsList);
+
+    if (cardData) {
+        cardData->DestroyVisuals();
+        deletePile.push_back(cardData);
+        std::cout << "[Card Deleted] " << cardData->getName() << " moved to delete pile." << std::endl;
+    }
+
+    dragLayerOffsets.clear();
+    HideBezier();
+    HideDropZones();
+
+    isDragging = false;
+    draggingCard = nullptr;
+    pendingCard = nullptr;
+
+    UpdatePileVisuals();
+}
+
 // ============================================================
 // Hand Queries / Hover
 // ============================================================
@@ -539,6 +565,7 @@ void CardSystem::Clear(std::vector<DrawableObject*>& objectsList)
     bezierSegments.clear();
     deck.clear();
     discard.clear();
+    deletePile.clear();
 }
 
 void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
@@ -567,6 +594,7 @@ void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
 
     deck = dataLoader.getCards();
     discard.clear();
+    deletePile.clear();
     ShuffleDeck();
 }
 

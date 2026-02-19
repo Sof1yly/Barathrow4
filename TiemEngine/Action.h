@@ -5,7 +5,7 @@
 using namespace std;
 
 enum class ActionType {
-	Attack, Move, Energy, Buff, Debuff
+	Attack, Move, Debuff
 };
 
 class Action {

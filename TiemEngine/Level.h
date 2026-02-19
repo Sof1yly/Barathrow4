@@ -90,6 +90,7 @@ private:
 
     int pendingMoveSteps = 0;
     int pendingMoveZone = -1;
+    bool pendingFastCard = false;
 
 
     // Movement

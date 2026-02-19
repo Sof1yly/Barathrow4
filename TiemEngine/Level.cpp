@@ -277,7 +277,16 @@ void Level::LevelUpdate()
                 playerState = PlayerState::IDLE;
                 UpdatePlayerAnimation();
 
-                turnState = TurnState::PLAYER_TURN;
+                if (pendingFastCard)
+                {
+                    std::cout << "[Fast Card] Returning to PLAYER_TURN.\n";
+                    turnState = TurnState::PLAYER_TURN;
+                    pendingFastCard = false;
+                }
+                else
+                {
+                    turnState = TurnState::ENEMY_TURN;
+                }
             }
         }
 
@@ -310,7 +319,15 @@ void Level::LevelUpdate()
             playerState = PlayerState::IDLE;
             UpdatePlayerAnimation();
 
-            turnState = TurnState::ENEMY_TURN;
+            if (pendingFastCard)
+            {
+                turnState = TurnState::PLAYER_TURN;
+                pendingFastCard = false;
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
+            }
             return;
         }
 
@@ -324,7 +341,15 @@ void Level::LevelUpdate()
             playerState = PlayerState::IDLE;
             UpdatePlayerAnimation();
 
-            turnState = TurnState::ENEMY_TURN;
+            if (pendingFastCard)
+            {
+                turnState = TurnState::PLAYER_TURN;
+                pendingFastCard = false;
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
+            }
             return;
         }
 
@@ -415,8 +440,17 @@ void Level::LevelUpdate()
 
             if (turnState == TurnState::PLAYER_MOVING)
             {
-                std::cout << "[Card Move Finished] Enemy Turn Begins!\n";
-                turnState = TurnState::ENEMY_TURN;
+                if (pendingFastCard)
+                {
+                    std::cout << "[Fast Card] Move finished. Returning to PLAYER_TURN.\n";
+                    turnState = TurnState::PLAYER_TURN;
+                    pendingFastCard = false;
+                }
+                else
+                {
+                    std::cout << "[Card Move Finished] Enemy Turn Begins!\n";
+                    turnState = TurnState::ENEMY_TURN;
+                }
             }
             else
             {
@@ -698,6 +732,7 @@ void Level::HandleMouse(int type, int x, int y)
                 const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
 
                 int moveSteps = 0;
+                int retreatSteps = 0;
 
                 struct PendingAttackInfo {
                     AttackAction* atk;
@@ -727,19 +762,42 @@ void Level::HandleMouse(int type, int x, int y)
                         }
                         else if (auto* mv = dynamic_cast<MoveAction*>(a))
                         {
-                            moveSteps += mv->getValue();
-                            std::cout << "  MoveAction: " << mv->getValue() << std::endl;
+                            if (mv->isRetreat())
+                            {
+                                retreatSteps += mv->getValue();
+                                std::cout << "  RetreatAction: " << mv->getValue() << std::endl;
+                            }
+                            else
+                            {
+                                moveSteps += mv->getValue();
+                                std::cout << "  MoveAction: " << mv->getValue() << std::endl;
+                            }
                         }
                     }
 
-                    if (moveSteps > 0 && playersprite)
+                    // Determine move direction
+                    // Retreat goes OPPOSITE of dz (attack forward, move backward)
+                    int retreatDir = dz;
+                    switch (dz)
                     {
-                        std::cout << "Applying MoveAction steps = " << moveSteps
-                            << " toward " << zoneNames[dz] << std::endl;
-                        std::cout << "Player grid index is now (" << nowRow << ", " << nowCol << ")\n";
+                    case 0: retreatDir = 3; break; // LEFT -> RIGHT
+                    case 1: retreatDir = 2; break; // UP -> DOWN
+                    case 2: retreatDir = 1; break; // DOWN -> UP
+                    case 3: retreatDir = 0; break; // RIGHT -> LEFT
+                    }
+
+                    // Combine: forward move uses dz, retreat uses opposite
+                    // For cards with both (e.g. atk + re), retreat happens after attack
+                    int totalMoveSteps = moveSteps + retreatSteps;
+                    int moveDir = dz;
+                    if (retreatSteps > 0 && moveSteps == 0)
+                    {
+                        moveDir = retreatDir;
                     }
 
                     bool hasAttack = !pendingAttacks.empty();
+                    bool isFastCard = cardData->getIsFast();
+                    pendingFastCard = isFastCard;
 
                     if (hasAttack)
                     {
@@ -751,16 +809,25 @@ void Level::HandleMouse(int type, int x, int y)
 
                         std::cout << "[Attack Animation Started]\n";
 
-                        pendingMoveSteps = moveSteps;
-                        pendingMoveZone = dz;
+                        // After attack: retreat in opposite direction
+                        if (retreatSteps > 0)
+                        {
+                            pendingMoveSteps = retreatSteps;
+                            pendingMoveZone = retreatDir;
+                        }
+                        else
+                        {
+                            pendingMoveSteps = moveSteps;
+                            pendingMoveZone = dz;
+                        }
 
                         cardSystem.DecrementDrawPileTurn();
                         turnState = TurnState::PLAYER_MOVING;
                     }
-                    else if (moveSteps > 0 && playersprite)
+                    else if (totalMoveSteps > 0 && playersprite)
                     {
-                        pendingMoveSteps = moveSteps;
-                        pendingMoveZone = dz;
+                        pendingMoveSteps = totalMoveSteps;
+                        pendingMoveZone = moveDir;
 
                         playerState = PlayerState::WALK;
                         UpdatePlayerAnimation();
@@ -769,7 +836,7 @@ void Level::HandleMouse(int type, int x, int y)
                         turnState = TurnState::PLAYER_MOVING;
 
                         std::cout << "[Card Move] Player will walk "
-                            << pendingMoveSteps << " steps\n";
+                            << pendingMoveSteps << " steps toward " << zoneNames[moveDir] << "\n";
                     }
                     else
                     {
@@ -777,6 +844,11 @@ void Level::HandleMouse(int type, int x, int y)
                         UpdatePlayerAnimation();
 
                         cardSystem.DecrementDrawPileTurn();
+
+                        if (!isFastCard)
+                        {
+                            turnState = TurnState::ENEMY_TURN;
+                        }
                     }
 
                     for (const PendingAttackInfo& pa : pendingAttacks)
@@ -844,15 +916,30 @@ void Level::HandleMouse(int type, int x, int y)
                             }
                         }
                     }
+
+                    // Handle del (delete) vs normal discard
+                    if (cardData->getIsDeleteAfterUse())
+                    {
+                        std::cout << "[Del] Card moved to delete pile.\n";
+                        cardSystem.EndDragConfirmDelete(dragCard, objectsList);
+                    }
+                    else
+                    {
+                        cardSystem.EndDragConfirm(dragCard, objectsList);
+                    }
+
+                    if (isFastCard)
+                    {
+                        std::cout << "[Fast] Will not consume player turn.\n";
+                    }
                 }
                 else
                 {
                     std::cout << "[Warning] No Card* bound to this image" << std::endl;
+                    cardSystem.EndDragConfirm(dragCard, objectsList);
                 }
 
                 std::cout << "----------------------------------------" << std::endl;
-
-                cardSystem.EndDragConfirm(dragCard, objectsList);
             }
             else
             {
@@ -1014,6 +1101,7 @@ void Level::ApplyEnemyAttack()
 
     cout << endl;
 }
+
 void Level::MoveEnemyTowardPlayer()
 {
     if (!enemy) return;
@@ -1021,32 +1109,29 @@ void Level::MoveEnemyTowardPlayer()
     int er = enemy->getNowRow();
     int ec = enemy->getNowCol();
 
-    int pr = nowRow;  // player's grid row
-    int pc = nowCol;  // player's grid col
+    int pr = nowRow;
+    int pc = nowCol;
 
     int newR = er;
     int newC = ec;
 
-    //  Move one step toward the player 
     if (er < pr) newR = er + 1;
     else if (er > pr) newR = er - 1;
     else if (ec < pc) newC = ec + 1;
     else if (ec > pc) newC = ec - 1;
 
-    // clamp to grid
     newR = std::max(GridStartRow, std::min(newR, GridEndRow - 1));
     newC = std::max(GridStartCol, std::min(newC, GridEndCol - 1));
 
-    // update enemy grid
     enemy->setNowPosition(newR, newC);
 
-    // update sprite position
     glm::vec3 world = GridToWorld(newR, newC);
     if (enemy->getObject())
         enemy->getObject()->SetPosition(world);
 
     std::cout << "Enemy moved to (" << newR << ", " << newC << ")\n";
 }
+
 bool Level::EnemyCanAttackPlayer()
 {
     int er = enemy->getNowRow();
@@ -1073,13 +1158,12 @@ void Level::UpdateTurn()
             return;
         }
 
-
         if (enemyPreparingAttack)
         {
             cout << "[ENEMY TURN] Enemy attacks now!\n";
 
-            HideEnemyAttackHighlights();  // remove warning
-            ApplyEnemyAttack();       // real attack
+            HideEnemyAttackHighlights();
+            ApplyEnemyAttack();
 
             enemyPreparingAttack = false;
 
@@ -1093,7 +1177,6 @@ void Level::UpdateTurn()
 
             enemyPreparingAttack = true;
 
-            // SHOW enemy attack highlight
             PreviewEnemyAttack();
 
             turnState = TurnState::PLAYER_TURN;
@@ -1102,12 +1185,11 @@ void Level::UpdateTurn()
 
         cout << "[ENEMY TURN] Enemy moves toward player\n";
 
-        HideAttackHighlights();       // no attack warning
+        HideAttackHighlights();
         MoveEnemyTowardPlayer();
 
         turnState = TurnState::PLAYER_TURN;
     }
-
 }
 
 void Level::LevelRestart() 

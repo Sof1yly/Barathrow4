@@ -8,7 +8,12 @@ public:
 		setMultiplier(1.0f);
 	}
 
+	bool isRetreat() const { return getActionCode() == "re"; }
+
 	void do_action() {
-		cout << "move " << getValue() << endl;
+		if (isRetreat())
+			cout << "retreat " << getValue() << endl;
+		else
+			cout << "move " << getValue() << endl;
 	}
 };
