@@ -78,6 +78,8 @@ void Level::LevelInit()
 
 	objectsList.push_back(enemyObj); 
     enemy->setObject(enemyObj);
+    enemy->UpdateTextPosition();
+    objectsList.push_back(enemy->getHPText());
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -247,7 +249,11 @@ void Level::LevelUpdate()
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
     UpdateTurn();
-
+    if (enemy)
+    {
+        enemy->UpdateTextPosition();
+        enemy->Update(deltaTime / 1000.0f);
+    }
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
 
@@ -341,10 +347,8 @@ void Level::LevelUpdate()
     if (enemy && enemy->getHealth() <= 0)
     {
         ImageObject* obj = enemy->getObject();
-
         if (obj)
         {
-            // remove from vector
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end())
                 objectsList.erase(it);
@@ -353,8 +357,18 @@ void Level::LevelUpdate()
             enemy->setObject(nullptr);
         }
 
+        TextObject* hp = enemy->getHPText();
+        if (hp)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), hp);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+
+            delete hp;
+        }
         delete enemy;
         enemy = nullptr;
+
     }
 
 
@@ -973,7 +987,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 void Level::ApplyEnemyAttack()
 {
     if (!enemy) return;
-
+    enemy->showAttackText();
     auto attacks = enemy->getCurrentPattern().applyTo(enemy->getNowRow(), enemy->getNowCol());
 
     cout << "[Enemy Attack]\n";
