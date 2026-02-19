@@ -200,6 +200,15 @@
     <ClInclude Include="CardSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DebuffAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuffAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnergyAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Resource\Shader\fragment.shd">

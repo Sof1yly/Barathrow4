@@ -1,6 +1,5 @@
 #include "Action.h"
 
-
 int Action::getValue() const
 {
 	return value;
@@ -14,17 +13,39 @@ int Action::getRotation() const
 {
 	return rotation;
 }
+
+void Action::setRotation(int r) {
+	rotation = r;
+}
+
 ActionType Action::getType() const
 {
 	return type;
 }
-string Action::getDescription()
+
+void Action::setType(ActionType t) {
+	type = t;
+}
+
+float Action::getMultiplier() const
 {
-	return "";
+	return multiplier;
+}
+
+void Action::setMultiplier(float m) {
+	multiplier = m;
+}
+
+const string& Action::getActionCode() const
+{
+	return actionCode;
+}
+
+void Action::setActionCode(const string& code) {
+	actionCode = code;
 }
 
 Action::~Action()
 {
-
 }
 

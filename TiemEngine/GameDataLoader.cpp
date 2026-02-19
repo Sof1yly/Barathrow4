@@ -179,88 +179,167 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             continue;
         }
 
-        // Columns: Name, Damage, Move, Pattern, Level, RarityCode, TypeCode, Desc
-        std::string name = cells.size() > 0 ? cells[0] : "";
-        std::string sDmg = cells.size() > 1 ? cells[1] : "";
-        std::string sMove = cells.size() > 2 ? cells[2] : "";
-        std::string patternId = cells.size() > 3 ? cells[3] : "";
-        std::string sLevel = cells.size() > 4 ? cells[4] : "0";    
-        std::string rarityCode = cells.size() > 5 ? cells[5] : "sta";
-        std::string typeCode = cells.size() > 6 ? cells[6] : "atk";
-        std::string description = cells.size() > 7 ? cells[7] : "";
+        // Columns: Name, Action, Pattern, Level, RarityCode, TypeCode, Desc
+        std::string name       = cells.size() > 0 ? cells[0] : "";
+        std::string actionStr  = cells.size() > 1 ? cells[1] : "";
+        std::string patternId  = cells.size() > 2 ? cells[2] : "";
+        std::string sLevel     = cells.size() > 3 ? cells[3] : "0";
+        std::string rarityCode = cells.size() > 4 ? cells[4] : "sta";
+        std::string typeCode   = cells.size() > 5 ? cells[5] : "atk";
+        std::string description= cells.size() > 6 ? cells[6] : "";
 
         if (name.empty()) {
             continue;
         }
 
-        int damage = 0;
-        int move = 0;
         int level = 0;
-
         try {
-            if (!sDmg.empty())
-                damage = std::stoi(sDmg);
-        }
-        catch (...) {
-            if (outError) *outError = "Invalid damage: " + sDmg;
-            return false;
-        }
-
-        try {
-            if (!sMove.empty())
-                move = std::stoi(sMove);
-        }
-        catch (...) { 
-            if (outError) *outError = "Invalid move: " + sMove;
-            return false;
-        }
-        
-        try {
-            if(!sLevel.empty())
+            if (!sLevel.empty())
                 level = std::stoi(sLevel);
         }
         catch (...) {
-            if (outError)*outError = "Invalid level: " + sLevel;
+            if (outError) *outError = "Invalid level: " + sLevel;
             return false;
         }
 
-        if (damage <= 0 && move <= 0) {
-            if (outError) *outError =
-                "Card must have either damage or move: " + name;
+        // Parse the action string: semicolon-separated entries of code:value
+        std::vector<std::pair<std::string, std::string>> actionEntries;
+        {
+            std::istringstream ss(actionStr);
+            std::string token;
+            while (std::getline(ss, token, ';')) {
+                token = trim_(token);
+                if (token.empty()) continue;
+                std::string code, val;
+                size_t colonPos = token.find(':');
+                if (colonPos != std::string::npos) {
+                    code = trim_(token.substr(0, colonPos));
+                    val  = trim_(token.substr(colonPos + 1));
+                }
+                else {
+                    code = token;
+                    val  = "0";
+                }
+                actionEntries.push_back({ code, val });
+            }
+        }
+
+        if (actionEntries.empty()) {
+            if (outError) *outError = "Card has no actions: " + name;
             return false;
         }
 
         Card* card = new Card(name);
-
         card->setLevel(level);
         card->setRarityCode(rarityCode);
         card->setTypeCode(typeCode);
-        card->setDescription(description);
 
-        if (damage > 0) {
-            auto* atk = new AttackAction();
-            atk->setValue(damage);
-            actions_list.push_back(atk);
-            card->addAction(atk);
+        // Process each action entry in order
+        for (auto& entry : actionEntries) {
+            const std::string& code = entry.first;
+            const std::string& sVal = entry.second;
 
-            if (!patternId.empty()) {
-                const AttackPattern* pat = findPatternByName(patternId);
-                if (!pat) {
-                    if (outError) {
-                        *outError = "Unknown pattern id '" + patternId +"' for card '" + name + "'";
+            // Parse value (may contain multiplier after 'x', e.g. "3x0.5")
+            int value = 0;
+            float multiplier = 1.0f;
+            {
+                size_t xPos = sVal.find('x');
+                if (xPos != std::string::npos) {
+                    std::string sV = sVal.substr(0, xPos);
+                    std::string sM = sVal.substr(xPos + 1);
+                    try { if (!sV.empty()) value = std::stoi(sV); }
+                    catch (...) {
+                        if (outError) *outError = "Invalid value in action '" + code + "': " + sV;
+                        delete card;
+                        return false;
                     }
-                    delete card;
-                    return false;
+                    try { if (!sM.empty()) multiplier = std::stof(sM); }
+                    catch (...) {
+                        if (outError) *outError = "Invalid multiplier in action '" + code + "': " + sM;
+                        delete card;
+                        return false;
+                    }
                 }
-                actionPattern[atk] = pat;
+                else {
+                    try { if (!sVal.empty()) value = std::stoi(sVal); }
+                    catch (...) {
+                        if (outError) *outError = "Invalid value in action '" + code + "': " + sVal;
+                        delete card;
+                        return false;
+                    }
+                }
             }
-        }
 
-        if (move > 0) {
-            auto* mv = new MoveAction();
-            mv->setValue(move);
-            actions_list.push_back(mv);
-            card->addAction(mv);
+            Action* newAction = nullptr;
+
+            if (code == "atk") {
+                auto* a = new AttackAction();
+                a->setValue(value);
+                a->setMultiplier(multiplier);
+                a->setActionCode(code);
+                newAction = a;
+
+                if (!patternId.empty()) {
+                    const AttackPattern* pat = findPatternByName(patternId);
+                    if (!pat) {
+                        if (outError) {
+                            *outError = "Unknown pattern id '" + patternId + "' for card '" + name + "'";
+                        }
+                        delete a;
+                        delete card;
+                        return false;
+                    }
+                    actionPattern[a] = pat;
+                }
+            }
+            else if (code == "mov") {
+                auto* a = new MoveAction();
+                a->setValue(value);
+                a->setMultiplier(multiplier);
+                a->setActionCode(code);
+                newAction = a;
+            }
+            else if (code == "wk" || code == "cr" || code == "dl" || code == "re") {
+                auto* a = new DebuffAction(multiplier);
+                a->setValue(value);
+                a->setActionCode(code);
+                newAction = a;
+
+                if (!patternId.empty()) {
+                    const AttackPattern* pat = findPatternByName(patternId);
+                    if (pat) actionPattern[a] = pat;
+                }
+            }
+            else if (code == "sh" || code == "ba" || code == "he" || code == "oc") {
+                auto* a = new BuffAction();
+                a->setValue(value);
+                a->setMultiplier(multiplier);
+                a->setActionCode(code);
+                newAction = a;
+            }
+            else if (code == "ge" || code == "en" || code == "co" || code == "gc") {
+                auto* a = new EnergyAction();
+                a->setValue(value);
+                a->setMultiplier(multiplier);
+                a->setActionCode(code);
+                newAction = a;
+            }
+            else {
+                // Unknown code: default to attack
+                auto* a = new AttackAction();
+                a->setValue(value);
+                a->setMultiplier(multiplier);
+                a->setActionCode(code);
+                newAction = a;
+
+                if (!patternId.empty()) {
+                    const AttackPattern* pat = findPatternByName(patternId);
+                    if (pat) actionPattern[a] = pat;
+                }
+            }
+
+            actions_list.push_back(newAction);
+            card->addAction(newAction);
         }
 
         cards.push_back(card);

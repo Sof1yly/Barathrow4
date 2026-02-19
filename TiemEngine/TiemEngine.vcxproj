@@ -54,13 +54,16 @@
     <ClInclude Include="Action.h" />
     <ClInclude Include="AttackAction.h" />
     <ClInclude Include="AttackPattern.h" />
+    <ClInclude Include="BuffAction.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="CardSystem.h" />
     <ClInclude Include="CombineObject.h" />
+    <ClInclude Include="DebuffAction.h" />
     <ClInclude Include="Deck.h" />
     <ClInclude Include="DrawableObject.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnergyAction.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="GameDataLoader.h" />
     <ClInclude Include="GameEngine.h" />

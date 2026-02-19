@@ -12,6 +12,9 @@
 #include "Action.h"
 #include "AttackAction.h"
 #include "MoveAction.h"
+#include "BuffAction.h"
+#include "DebuffAction.h"
+#include "EnergyAction.h"
 #include "AttackPattern.h"
 
 class GameDataLoader
@@ -41,7 +44,8 @@ public:
     bool loadPatternsFromFile(const std::string& filename,
         std::string* outError = nullptr);
 
-    // CardAction.txt  (Card / Name,Damage,Move,Pattern)
+    // CardAction.txt  (Card / Name,Action,Pattern,Level,Rarity,Type,Desc)
+    // Action column: semicolon-separated code:value pairs, e.g. "atk:5;mov:2;re:1"
     bool loadFromFile(const std::string& filename,
         std::string* outError = nullptr);
 
