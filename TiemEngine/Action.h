@@ -5,12 +5,13 @@
 using namespace std;
 
 enum class ActionType {
-	Attack, Move, Debuff
+	Attack, Move, Debuff, Buff, Energy
 };
 
 class Action {
 private:
 	int value;
+	int baseValue;
 	int rotation;
 	ActionType type;
 	float multiplier;
@@ -21,6 +22,9 @@ public:
 
 	int getValue() const;
 	void setValue(int v);
+	int getBaseValue() const;
+	void setBaseValue(int v);
+	void resetToBase();
 	int getRotation() const;
 	void setRotation(int r);
 	ActionType getType() const;

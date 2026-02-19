@@ -1,15 +1,15 @@
 Card												
 Name	Effects	Pattern	Level	Rarity	Type	Desc						
-Basic Attack	atk:5	A2	1	sta	atk	Deal 5 Damage						
-Sweep Attack	atk:3	A3	1	sta	atk	Deal 3 Damage						
-Sprint	mov:3	A1	1	sta	mov	Move3						
-Panic Roll	mov:1;fas;te	A1	1	sta	mov	Move 1 Fast Temp						
-Walk	mov:1	A1	1	sta	mov	Move 1						
-Perfected Roll	mov:1;fas;del	A1	1	rar	mov	Move 1 Fast Delete						
-Onslaught	atk:10;del	A2	1	rar	atk	Deal 10 Damage Delete						
-Feint Attack	atk:3;re:1	A5	1	rar	atk	Deal 3 Damage Retreat 1						
+Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage						
+Sweep Attack	atk:3	A3	1	sta	atk	Deal {atk} Damage						
+Sprint	mov:3	A1	1	sta	mov	Move {mov}						
+Panic Roll	mov:1;fas;te	A1	1	sta	mov	Move {atk} Fast Temp						
+Walk	mov:1	A1	1	sta	mov	Move {mov}						
+Perfected Roll	mov:1;fas;del	A1	1	rar	mov	Move {mov} Fast Delete						
+Onslaught	atk:10;del	A2	1	rar	atk	Deal {atk} Damage Delete						
+Feint Attack	atk:3;re:1	A5	1	rar	atk	Deal {atk} Damage Retreat 1						
 Strength	oc:3	A1	1	com	buf	Overclock 3						
-Stomp	atk:5	A7	1	com	atk	Deal 5 Damage						
+Stomp	atk:5	A7	1	com	atk	Deal {atk} Damage						
 												
 												
 												

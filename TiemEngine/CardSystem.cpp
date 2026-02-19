@@ -591,6 +591,7 @@ void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
     drawPileTurnText = nullptr;
 
     drawPileTurns = DRAW_PILE_MAX_TURNS;
+    overclockBonus = 0;
 
     deck = dataLoader.getCards();
     discard.clear();
@@ -745,4 +746,59 @@ void CardSystem::DecrementDrawPileTurn()
         UpdateDrawPileTurnText();
         cout << "[DrawPile] Turn used (card played). Remaining: " << drawPileTurns << endl;
     }
+}
+
+void CardSystem::ApplyOverclock(int amount)
+{
+    overclockBonus += amount;
+    cout << "[Overclock] Adding +" << amount << " to all atk cards. Total bonus: " << overclockBonus << endl;
+
+    auto boostCards = [&](std::vector<Card*>& cards) {
+        for (Card* c : cards) {
+            if (!c) continue;
+            for (Action* a : c->getActions()) {
+                if (a->getActionCode() == "atk") {
+                    a->setValue(a->getBaseValue() + overclockBonus);
+                    cout << "  " << c->getName() << " atk -> " << a->getValue()
+                         << " (base:" << a->getBaseValue() << " + oc:" << overclockBonus << ")" << endl;
+                }
+            }
+            c->RefreshDescriptionText();
+        }
+    };
+
+    // Boost cards in hand
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    boostCards(handCards);
+
+    // Boost cards in deck
+    boostCards(deck);
+
+    // Boost cards in discard
+    boostCards(discard);
+}
+
+void CardSystem::ResetOverclock()
+{
+    if (overclockBonus == 0) return;
+
+    cout << "[Overclock] Resetting all atk cards to base values (was +" << overclockBonus << ")" << endl;
+    overclockBonus = 0;
+
+    auto resetCards = [&](std::vector<Card*>& cards) {
+        for (Card* c : cards) {
+            if (!c) continue;
+            for (Action* a : c->getActions()) {
+                if (a->getActionCode() == "atk") {
+                    a->resetToBase();
+                }
+            }
+            c->RefreshDescriptionText();
+        }
+    };
+
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    resetCards(handCards);
+    resetCards(deck);
+    resetCards(discard);
 }

@@ -62,6 +62,7 @@ public:
     // Visual rendering methods
     void CreateVisuals();
     void DestroyVisuals();
+    void RefreshDescriptionText();
     bool HasVisuals() const { return visualsCreated; }
     
     vector<DrawableObject*> GetAllLayers() const;

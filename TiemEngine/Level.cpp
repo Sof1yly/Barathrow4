@@ -114,11 +114,11 @@ void Level::LevelInit()
     }
 
     {
-        /*GameObject* obj2 = new GameObject();
+        GameObject* obj2 = new GameObject();
         obj2->SetColor(0.0f, 1.0f, 0.0f);
         obj2->SetSize(50.0f, 50.0f);
         obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);*/
+        objectsList.push_back(obj2);
     }
 
     {
@@ -212,8 +212,7 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt",
-                             "../Resource/GameData/CardAction.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt","../Resource/GameData/CardAction.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
@@ -680,13 +679,31 @@ void Level::HandleMouse(int type, int x, int y)
                 {
                     Card* cardData = cardSystem.FindCardByImage(cardSystem.GetDraggingCard());
                     PreviewAttackPattern(cardData, dz);
+
                     int moveSteps = 0;
+                    int retreatSteps = 0;
                     for (Action* a : cardData->getActions())
                     {
-                        if (auto* mv = dynamic_cast<MoveAction*>(a))
-                            moveSteps = mv->getValue();
+                        if (auto* mv = dynamic_cast<MoveAction*>(a)) {
+                            if (mv->isRetreat())
+                                retreatSteps += mv->getValue();
+                            else
+                                moveSteps += mv->getValue();
+                        }
                     }
-                    if (moveSteps > 0)
+
+                    int retreatDir = dz;
+                    switch (dz)
+                    {
+                    case 0: retreatDir = 3; break;
+                    case 1: retreatDir = 2; break;
+                    case 2: retreatDir = 1; break;
+                    case 3: retreatDir = 0; break;
+                    }
+
+                    if (retreatSteps > 0)
+                        PreviewMovePath(retreatSteps, retreatDir);
+                    else if (moveSteps > 0)
                         PreviewMovePath(moveSteps, dz);
                 }
                 else
@@ -744,6 +761,12 @@ void Level::HandleMouse(int type, int x, int y)
                 {
                     std::cout << "[Card] " << cardData->getName() << std::endl;
                     
+                    // Apply overclock if this card has overclock value
+                    if (cardData->getOverclockValue() > 0)
+                    {
+                        cardSystem.ApplyOverclock(cardData->getOverclockValue());
+                    }
+
                     const auto& acts = cardData->getActions();
                     for (Action* a : acts)
                     {
@@ -915,6 +938,12 @@ void Level::HandleMouse(int type, int x, int y)
                                 }
                             }
                         }
+                    }
+
+                    // Reset overclock after an attack card is played
+                    if (hasAttack)
+                    {
+                        cardSystem.ResetOverclock();
                     }
 
                     // Handle del (delete) vs normal discard

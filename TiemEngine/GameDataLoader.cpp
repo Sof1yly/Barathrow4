@@ -309,6 +309,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             if (code == "atk") {
                 auto* a = new AttackAction();
                 a->setValue(value);
+                a->setBaseValue(value);
                 a->setMultiplier(multiplier);
                 a->setActionCode(code);
                 newAction = a;
@@ -329,6 +330,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             else if (code == "mov" || code == "re") {
                 auto* a = new MoveAction();
                 a->setValue(value);
+                a->setBaseValue(value);
                 a->setMultiplier(multiplier);
                 a->setActionCode(code);
                 newAction = a;
@@ -336,6 +338,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,
             else {
                 auto* a = new AttackAction();
                 a->setValue(value);
+                a->setBaseValue(value);
                 a->setMultiplier(multiplier);
                 a->setActionCode(code);
                 newAction = a;

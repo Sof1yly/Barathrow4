@@ -1,4 +1,8 @@
 #include "Card.h"
+#include <sstream>
+
+
+using namespace std;
 
 
 static string getCardFrameName(const string& rarityCode)
@@ -34,6 +38,18 @@ static string getStarOverlayName(int level)
 static string getBackgroundName()
 {
     return "BG_card/card_bg.png";
+}
+
+static string replacePlaceholder(const string& text, const string& token, int value)
+{
+    string result = text;
+    string placeholder = "{" + token + "}";
+    size_t pos = 0;
+    while ((pos = result.find(placeholder, pos)) != string::npos) {
+        result.replace(pos, placeholder.size(), to_string(value));
+        pos += to_string(value).size();
+    }
+    return result;
 }
 
 Card::Card(const string& n)
@@ -114,11 +130,21 @@ void Card::CreateVisuals()
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 18);
 
-    // 7. Description Text
+    // 7. Description Text — resolve {atk}, {mov}, {re}, {oc} placeholders
     if (!description.empty()) {
+        string resolved = description;
+        for (Action* a : actions) {
+            const string& code = a->getActionCode();
+            if (code == "atk" || code == "mov" || code == "re" || code == "oc") {
+                resolved = replacePlaceholder(resolved, code, a->getValue());
+            }
+        }
+        if (overclockValue > 0)
+            resolved = replacePlaceholder(resolved, "oc", overclockValue);
+
         descriptionText = new TextObject();
         SDL_Color descColor = { 220, 220, 220, 255 };
-        descriptionText->LoadTextWrapped(description, descColor, 16, 240);
+        descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
     }
     
     visualsCreated = true;
@@ -137,6 +163,26 @@ void Card::DestroyVisuals()
     if (descriptionText) { delete descriptionText; descriptionText = nullptr; }
     
     visualsCreated = false;
+}
+
+void Card::RefreshDescriptionText()
+{
+    if (!visualsCreated || description.empty()) return;
+
+    string resolved = description;
+    for (Action* a : actions) {
+        const string& code = a->getActionCode();
+        if (code == "atk" || code == "mov" || code == "re" || code == "oc") {
+            resolved = replacePlaceholder(resolved, code, a->getValue());
+        }
+    }
+    if (overclockValue > 0)
+        resolved = replacePlaceholder(resolved, "oc", overclockValue);
+
+    if (descriptionText) {
+        SDL_Color descColor = { 220, 220, 220, 255 };
+        descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
+    }
 }
 
 vector<DrawableObject*> Card::GetAllLayers() const

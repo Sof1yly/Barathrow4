@@ -9,6 +9,19 @@ void Action::setValue(int v) {
 	value = v;
 }
 
+int Action::getBaseValue() const
+{
+	return baseValue;
+}
+
+void Action::setBaseValue(int v) {
+	baseValue = v;
+}
+
+void Action::resetToBase() {
+	value = baseValue;
+}
+
 int Action::getRotation() const
 {
 	return rotation;

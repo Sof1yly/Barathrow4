@@ -26,6 +26,9 @@ private:
     std::vector<Card*> discard;
     std::vector<Card*> deletePile;
 
+    // Track total overclock bonus applied
+    int overclockBonus = 0;
+
     // Pile UI buttons
     ImageObject* drawPileButton = nullptr;
     ImageObject* discardPileButton = nullptr;
@@ -138,4 +141,9 @@ public:
     void ResetDrawPileTurns();    // resets counter back to max
     void DecrementDrawPileTurn(); //  counter when player ends turn by playing a card
     int  GetDrawPileTurns() const { return drawPileTurns; }
+
+    // Overclock
+    void ApplyOverclock(int amount);
+    void ResetOverclock();
+    int  GetOverclockBonus() const { return overclockBonus; }
 };
