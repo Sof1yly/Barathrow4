@@ -130,7 +130,7 @@ void Card::CreateVisuals()
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 18);
 
-    // 7. Description Text — resolve {atk}, {mov}, {re}, {oc} placeholders
+    // 7. Description Text resolve {atk}, {mov}
     if (!description.empty()) {
         string resolved = description;
         for (Action* a : actions) {

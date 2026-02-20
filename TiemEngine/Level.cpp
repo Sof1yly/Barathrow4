@@ -635,6 +635,7 @@ void Level::HandleMouse(int type, int x, int y)
             cardSystem.DiscardHandAndDraw(5, objectsList);
             if (shouldEndTurn)
             {
+                tempDiscardDone = true;
                 turnState = TurnState::ENEMY_TURN;
             }
             return;
@@ -870,6 +871,7 @@ void Level::HandleMouse(int type, int x, int y)
 
                         if (!isFastCard)
                         {
+                            tempDiscardDone = false;
                             turnState = TurnState::ENEMY_TURN;
                         }
                     }
@@ -1177,7 +1179,7 @@ void Level::UpdateTurn()
         return;
 
     if (turnState == TurnState::PLAYER_TURN) {
-        // Player turn - nothing to do here
+        tempDiscardDone = false;
     }
     else if (turnState == TurnState::ENEMY_TURN)
     {
@@ -1185,6 +1187,12 @@ void Level::UpdateTurn()
         {
             turnState = TurnState::PLAYER_TURN;
             return;
+        }
+
+        if (!tempDiscardDone)
+        {
+            cardSystem.DiscardTempCardsFromHand(objectsList);
+            tempDiscardDone = true;
         }
 
         if (enemyPreparingAttack)

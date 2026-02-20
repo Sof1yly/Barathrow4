@@ -88,6 +88,7 @@ public:
     void DealNewHand(int cardCount, std::vector<DrawableObject*>& objectsList);
     void DiscardHandAndDraw(int cardCount, std::vector<DrawableObject*>& objectsList);
     void DiscardCard(Card* card);
+    void DiscardTempCardsFromHand(std::vector<DrawableObject*>& objectsList);
 
     // Drop zones
     void ShowDropZones();

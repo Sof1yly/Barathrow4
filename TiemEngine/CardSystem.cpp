@@ -187,6 +187,31 @@ void CardSystem::DiscardCard(Card* card)
     }
 }
 
+void CardSystem::DiscardTempCardsFromHand(std::vector<DrawableObject*>& objectsList)
+{
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    std::vector<Card*> tempCards;
+
+    for (Card* c : handCards) {
+        if (c && c->getIsTemp()) {
+            tempCards.push_back(c);
+        }
+    }
+
+    for (Card* c : tempCards) {
+        ImageObject* bg = c->GetBackground();
+        if (bg) {
+            hand.RemoveView(bg, objectsList);
+        }
+        discard.push_back(c);
+        std::cout << "[Temp] " << c->getName() << " discarded (unplayed temp card)." << std::endl;
+    }
+
+    if (!tempCards.empty()) {
+        UpdatePileVisuals();
+    }
+}
+
 // ============================================================
 // Drop Zones
 // ============================================================

@@ -117,6 +117,7 @@ private:
     };
 
     TurnState turnState = TurnState::PLAYER_TURN;
+    bool tempDiscardDone = false;
 	//end gameloop
 
 
