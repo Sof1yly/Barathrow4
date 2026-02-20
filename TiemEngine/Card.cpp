@@ -59,9 +59,6 @@ Card::Card(const string& n)
 
 Card::~Card()
 {
-    for (Action* a : actions) {
-        delete a;
-    }
     actions.clear();
     
     DestroyVisuals();

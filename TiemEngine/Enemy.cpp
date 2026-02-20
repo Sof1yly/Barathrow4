@@ -71,3 +71,11 @@ void Enemy::Update(float dt)
     hpText->SetPosition(glm::vec3(pos.x, pos.y + 80, 200));
 
 }
+
+Enemy::~Enemy()
+{
+    if (hpText) {
+        delete hpText;
+        hpText = nullptr;
+    }
+}

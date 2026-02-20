@@ -14,7 +14,10 @@ TextObject::TextObject()
 
 TextObject::~TextObject()
 {
-
+	if (texture != 0) {
+		glDeleteTextures(1, &texture);
+		texture = 0;
+	}
 }
 
 void TextObject::Render(glm::mat4 globalModelTransform)

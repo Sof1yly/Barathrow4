@@ -1,4 +1,3 @@
-
 #include "ImageObject.h"
 #include "GameEngine.h"
 #include "SquareMeshVbo.h"
@@ -12,6 +11,10 @@ ImageObject::ImageObject()
 
 ImageObject::~ImageObject()
 {
+	if (texture != 0) {
+		glDeleteTextures(1, &texture);
+		texture = 0;
+	}
 }
 
 void ImageObject::SetTexture(string path)

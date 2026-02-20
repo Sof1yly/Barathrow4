@@ -150,12 +150,10 @@ const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
     return it->second;
 }
 
-// Factory: creates the correct Action subclass for a given code.
-// Returns nullptr and sets outError on failure.
-// Card-level flags (fas, te, del, oc) must be handled BEFORE calling this.
-Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier,
-                                     const std::string& patternId, Card* card,
-                                     std::string* outError)
+
+// Card-level flags (fas, te, del, oc) 
+Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier,const std::string& patternId, Card* card,
+    std::string* outError)
 {
     Action* newAction = nullptr;
 
@@ -169,9 +167,9 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         if (!patternId.empty()) {
             const AttackPattern* pat = findPatternByName(patternId);
             if (!pat) {
-                if (outError)
-                    *outError = "Unknown pattern id '" + patternId +
-                                "' for card '" + card->getName() + "'";
+                if (outError) {
+                    *outError = "Unknown pattern id '" + patternId + "' for card '" + card->getName() + "'";
+                } 
                 delete a;
                 return nullptr;
             }
@@ -222,8 +220,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
     return newAction;
 }
 
-bool GameDataLoader::loadFromFile(const std::string& filename,
-    std::string* outError)
+bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outError)
 {
     for (Card* c : cards)          delete c;
     cards.clear();

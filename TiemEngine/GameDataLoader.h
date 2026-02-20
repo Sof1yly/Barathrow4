@@ -21,23 +21,21 @@ class GameDataLoader
 {
 private:
     struct NameAction {
-        std::string name;
+        string name;
         Action* action;
     };
 
-    std::vector<Card*>      cards;
-    std::vector<NameAction> actions;
-    std::vector<Action*>    actions_list;
+    vector<Card*>      cards;
+    vector<NameAction> actions;
+    vector<Action*>    actions_list;
 
     std::unordered_map<std::string, AttackPattern>          patternMap;
     std::unordered_map<const Action*, const AttackPattern*> actionPattern;
 
-    const AttackPattern* findPatternByName(const std::string& id) const;
+    const AttackPattern* findPatternByName(const string& id) const;
 
     // Factory: creates the correct Action subclass for a given code
-    Action* createAction(const std::string& code, int value, float multiplier,
-                         const std::string& patternId, Card* card,
-                         std::string* outError);
+    Action* createAction(const std::string& code, int value, float multiplier,const std::string& patternId, Card* card,std::string* outError);
 
 public:
     GameDataLoader();
@@ -48,9 +46,7 @@ public:
         std::string* outError = nullptr);
 
     // CardAction.txt  (Card / Name,Action,Pattern,Level,Rarity,Type,Desc)
-    // Action column: semicolon-separated code:value pairs, e.g. "atk:5;mov:2;re:1"
-    bool loadFromFile(const std::string& filename,
-        std::string* outError = nullptr);
+    bool loadFromFile(const std::string& filename,std::string* outError = nullptr);
 
     std::vector<Card*> getCards() const { return cards; }  
     const std::vector<Action*>& getActions() const { return actions_list; }

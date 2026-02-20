@@ -1,4 +1,3 @@
-
 #include "GLRenderer.h"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
@@ -168,11 +167,10 @@ MeshVbo * GLRenderer::GetMesh(string name)
 
 void GLRenderer::ClearMesh()
 {
-	for (map<string, MeshVbo*>::iterator it = --shapes.end(); it != shapes.begin(); it--)
+	for (auto& pair : shapes)
 	{
-		delete it->second;
+		delete pair.second;
 	}
-		
 	shapes.clear();
 }
 

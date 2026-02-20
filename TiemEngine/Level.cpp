@@ -387,12 +387,10 @@ void Level::LevelUpdate()
             auto it = std::find(objectsList.begin(), objectsList.end(), hp);
             if (it != objectsList.end())
                 objectsList.erase(it);
-
-            delete hp;
+            // Do NOT delete hp here — Enemy destructor owns and frees it.
         }
-        delete enemy;
+        delete enemy;  // Enemy::~Enemy() deletes hpText
         enemy = nullptr;
-
     }
 
 
@@ -468,22 +466,64 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
-    // Clear card system first
+    // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
-    
-    // Delete remaining objects
-    for (auto* obj : objectsList) {
-        if (obj) {
-            delete obj;
-        }
-    }
-    objectsList.clear();
-    
-    // Delete enemy
+
+    // 2. Remove enemy-owned objects from objectsList before deleting enemy,
+    //    to avoid double-free when the objectsList loop runs.
     if (enemy) {
-        delete enemy;
+        ImageObject* eObj = enemy->getObject();
+        if (eObj) {
+            auto it = std::find(objectsList.begin(), objectsList.end(), eObj);
+            if (it != objectsList.end()) objectsList.erase(it);
+            delete eObj;
+            enemy->setObject(nullptr);
+        }
+
+        TextObject* hpTxt = enemy->getHPText();
+        if (hpTxt) {
+            auto it = std::find(objectsList.begin(), objectsList.end(), hpTxt);
+            if (it != objectsList.end()) objectsList.erase(it);
+            // Do NOT delete hpTxt here — Enemy destructor owns and frees it.
+        }
+
+        delete enemy;  // Enemy::~Enemy() deletes hpText
         enemy = nullptr;
     }
+
+    // 3. Delete all remaining objects
+    for (auto* obj : objectsList) {
+        if (obj) delete obj;
+    }
+    objectsList.clear();
+
+    // 4. Reset highlight state so LevelInit can recreate them
+    attackHighlights.clear();
+    highlightCreated = false;
+    moveHighlights.clear();
+    moveHighlightCreated = false;
+    enemyAttackHighlights.clear();
+    enemyHighlightCreated = false;
+
+    // 5. Reset game state
+    nowRow = 0;
+    nowCol = 0;
+    playerHealth = 5;
+    playerMoving = false;
+    playerAttacking = false;
+    attackTimer = 0.0f;
+    pendingAttack = false;
+    pendingMoveSteps = 0;
+    pendingMoveZone = -1;
+    pendingFastCard = false;
+    enemyPreparingAttack = false;
+    tempDiscardDone = false;
+    turnState = TurnState::PLAYER_TURN;
+    player = nullptr;
+    playersprite = nullptr;
+    mainMenu = nullptr;
+    hpBar = nullptr;
+    hpMask = nullptr;
 
     cout << "Free Level" << endl;
 }
@@ -499,13 +539,15 @@ void Level::LevelUnload()
 
 void Level::HandleKey(char key)
 {
+    // Restart and quit are always allowed, regardless of turn state
+    if (key == 'r') { GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; return; }
+    if (key == 'q') { GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    return; }
+
     if (turnState != TurnState::PLAYER_TURN)
         return;
 
     switch (key)
     {
-    case 'q': GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    break;
-    case 'r': GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; break;
     case 'e': GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL2;  break;
     default: break;
     }
@@ -1233,147 +1275,10 @@ void Level::LevelRestart()
 {
     cout << "=== RESTART START ===" << endl;
 
-    // 1. Clear card system
-    cardSystem.Clear(objectsList);
-
-    // 2. Delete enemy
-    if (enemy)
-    {
-        ImageObject* obj = enemy->getObject();
-        if (obj)
-        {
-            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
-            if (it != objectsList.end())
-                objectsList.erase(it);
-            delete obj;
-            enemy->setObject(nullptr);
-        }
-        delete enemy;
-        enemy = nullptr;
-    }
-
-    // 3. Delete all remaining objects
-    for (auto* obj : objectsList) {
-        if (obj) delete obj;
-    }
-    objectsList.clear();
-
-    // 4. Reset card system
-    cardSystem.Reset(objectsList);
-
-    // 5. Reset variables
-    nowRow = 0;
-    nowCol = 0;
-    playerHealth = 10;
-    turnState = TurnState::PLAYER_TURN;
-    //testMove = nullptr;
-    player = nullptr;
-    mainMenu = nullptr;
-    playersprite = nullptr;
-
-    // Tiles
-    for (int i = GridStartRow; i < GridEndRow; ++i) {
-        for (int j = GridStartCol; j < GridEndCol; ++j) {
-            ImageObject* tile = new ImageObject();
-            tile->SetTexture("../Resource/Texture/tile.png");
-            tile->SetSize(GridWide, GridHigh);
-            tile->SetPosition(glm::vec3(i * 101.0f - 404.0f, j * -105.0f + 352.0f, 0.0f));
-            objectsList.push_back(tile);
-        }
-    }
-
-    // Enemy
-    enemy = new Enemy();
-    enemy->setNowPosition(8, 0);
-    ImageObject* enemyObj = new ImageObject();
-    enemyObj->SetSize(100.0f, -100.0f);
-    enemyObj->SetTexture("../Resource/Texture/doro.png");
-    glm::vec3 pos = GridToWorld(8, 0);
-    enemyObj->SetPosition(pos);
-    objectsList.push_back(enemyObj);
-    enemy->setObject(enemyObj);
-
-    // Player sprite
-    SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite.png", 4, 3);
-    playerSprite->SetSize(84.0f, -90.0f);
-    glm::vec3 startPos = GridToWorld(0, 0);
-    playerSprite->SetPosition(startPos);
-    playerSprite->SetAnimationLoop(0, 0, 0, 150);
-    playerSprite->NextAnimation();
-    objectsList.push_back(playerSprite);
-    playersprite = playerSprite;
-
-    // Demo objects
-    {
-        GameObject* obj = new GameObject();
-        obj->SetColor(1.0f, 0.0f, 0.0f);
-        obj->SetSize(200.0f, 200.0f);
-        objectsList.push_back(obj);
-        player = obj;
-    }
-
-    {
-        GameObject* obj2 = new GameObject();
-        obj2->SetColor(0.0f, 1.0f, 0.0f);
-        obj2->SetSize(50.0f, 50.0f);
-        obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);
-    }
-
-    {
-        /*GameObject* obj3 = new GameObject();
-        obj3->SetColor(0.0f, 0.0f, 1.0f);
-        obj3->SetSize(100.0f, 100.0f);
-        obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        objectsList.push_back(obj3);
-        testMove = obj3;*/
-    }
-
-    //testMoveTarget = testMove->GetPosition();
-    //testMoveMoving = false;
-
-    //  Menu button + UI
-    {
-        ImageObject* img = new ImageObject();
-        img->SetSize(50.0f, -50.0f);
-        img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        img->SetTexture("../Resource/Texture/menu.png");
-        objectsList.push_back(img);
-    }
-
-    {
-        ImageObject* menu = new ImageObject();
-        menu->SetSize(1000.0f, -400.0f);
-        menu->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f)); // hidden
-        menu->SetTexture("../Resource/Texture/MainMenu.png");
-        objectsList.push_back(menu);
-        mainMenu = menu;
-    }
-
-    // Deal new hand
-    cardSystem.DealNewHand(5, objectsList);
-
-    // Card system UI (buttons + drop zones)
-    cardSystem.InitUI(objectsList);
-
-    // Test sprites
-    SpriteObject* sprite = new SpriteObject("../Resource/Texture/TestSprite.png", 4, 7);
-    sprite->SetSize(50.0f, -50.0f);
-    sprite->SetPosition(glm::vec3(800.0f, 0.0f, 0.0f));
-    sprite->SetAnimationLoop(0, 0, 27, 50);
-    sprite->NextAnimation();
-    objectsList.push_back(sprite);
-
-    CombineObject* cb = new CombineObject();
-    cb->SetSize(100.0f, 100.0f);
-    cb->SetPosition(glm::vec3(800.0f, 200.0f, 0.0f));
-    cb->SetColor2(1.0f, 0.0f, 0.0f);
-    cb->SetColor3(0.0f, 1.0f, 0.0f);
-    objectsList.push_back(cb);
-
-    playerDir = PlayerDir::DOWN;
-    playerState = PlayerState::IDLE;
-    UpdatePlayerAnimation();
+    LevelFree();
+    LevelUnload();
+    LevelLoad();
+    LevelInit();
 
     cout << "=== RESTART COMPLETE ===" << endl;
 }

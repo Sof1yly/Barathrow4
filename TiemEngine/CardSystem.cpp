@@ -587,11 +587,36 @@ void CardSystem::PrintDrawDeck() const
 void CardSystem::Clear(std::vector<DrawableObject*>& objectsList)
 {
     hand.Clear(objectsList);
+
+    for (int i = 0; i < 4; ++i)
+        dropZones[i] = nullptr;
+
     bezierSegments.clear();
+    bezierCreated = false;
+
+    dropZonesCreated = false;
+    dropZonesVisible = false;
+
+    isDragging = false;
+    isHolding = false;
+    draggingCard = nullptr;
+    pendingCard = nullptr;
+
+    drawPileButton    = nullptr;
+    discardPileButton = nullptr;
+    drawPileBG        = nullptr;
+    discardPileBG     = nullptr;
+    drawPileTurnText  = nullptr;
+
+    drawPileTurns  = DRAW_PILE_MAX_TURNS;
+    overclockBonus = 0;
+
     deck.clear();
     discard.clear();
     deletePile.clear();
 }
+
+
 
 void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
 {

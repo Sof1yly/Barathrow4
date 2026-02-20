@@ -4,9 +4,9 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 #include <string>
-class ImageObject :public DrawableObject
+class ImageObject : public DrawableObject
 {
-	unsigned int texture;
+	unsigned int texture = 0;
 
 public:
 	ImageObject();

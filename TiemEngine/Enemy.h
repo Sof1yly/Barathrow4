@@ -6,6 +6,8 @@
 class Enemy {
 public:
     Enemy();
+    ~Enemy();
+
     AttackPattern getCurrentPattern() const {
         return patterns[currentPatternIndex];
     }

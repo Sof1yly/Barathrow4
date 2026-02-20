@@ -13,8 +13,8 @@ protected:
 	GLuint texAttribId = -1;
 
 public:
-
 	MeshVbo();
+	virtual ~MeshVbo();
 	virtual void LoadData() = 0;
 	virtual string GetMeshName() = 0;
 	GLuint GetPosId();
