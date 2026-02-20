@@ -1,23 +1,41 @@
 #pragma once
 #include "Action.h"
 
+enum class DebuffSubType {
+    Weaken,  // wk - reduce enemy attack
+    Delay,   // dl - delay enemy turn or action
+    Cripple, // cr - reduce enemy movement
+    Unknown
+};
+
 class DebuffAction : public Action {
+private:
+    DebuffSubType subType = DebuffSubType::Unknown;
+
 public:
-	DebuffAction() {
-		setType(ActionType::Debuff);
-		setMultiplier(1.0f);
-	}
+    DebuffAction() {
+        setType(ActionType::Debuff);
+        setMultiplier(1.0f);
+    }
 
-	DebuffAction(float mult) {
-		setType(ActionType::Debuff);
-		setMultiplier(mult);
-	}
+    explicit DebuffAction(DebuffSubType sub) : DebuffAction() {
+        subType = sub;
+    }
 
-	void do_action() {
-		cout << "debuff " << getActionCode() << " " << getValue();
-		if (getMultiplier() != 1.0f) {
-			cout << " x" << getMultiplier();
-		}
-		cout << endl;
-	}
+    DebuffSubType getSubType() const { return subType; }
+    void setSubType(DebuffSubType s) { subType = s; }
+
+    static DebuffSubType codeToSubType(const std::string& code) {
+        if (code == "wk") return DebuffSubType::Weaken;
+        if (code == "dl") return DebuffSubType::Delay;
+        if (code == "cr") return DebuffSubType::Cripple;
+        return DebuffSubType::Unknown;
+    }
+
+    void do_action() override {
+        cout << "debuff [" << getActionCode() << "] " << getValue();
+        if (getMultiplier() != 1.0f)
+            cout << " x" << getMultiplier();
+        cout << endl;
+    }
 };

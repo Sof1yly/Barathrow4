@@ -9,7 +9,7 @@ public:
 		setMultiplier(1.0f);
 	}
 
-	void do_action() {
+	void do_action() override {
 		cout << "attack " << getValue() << endl;
 	}
 };

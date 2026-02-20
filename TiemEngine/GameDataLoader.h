@@ -12,6 +12,9 @@
 #include "Action.h"
 #include "AttackAction.h"
 #include "MoveAction.h"
+#include "BuffAction.h"
+#include "DebuffAction.h"
+#include "EnergyAction.h"
 #include "AttackPattern.h"
 
 class GameDataLoader
@@ -23,15 +26,18 @@ private:
     };
 
     std::vector<Card*>      cards;
-    std::vector<NameAction> actions;       // not really used now, but kept
-    std::vector<Action*>    actions_list;  // all allocated actions
+    std::vector<NameAction> actions;
+    std::vector<Action*>    actions_list;
 
-    // Pattern id -> pattern data
     std::unordered_map<std::string, AttackPattern>          patternMap;
-    // Specific Action* (AttackAction) -> pattern to use
     std::unordered_map<const Action*, const AttackPattern*> actionPattern;
 
     const AttackPattern* findPatternByName(const std::string& id) const;
+
+    // Factory: creates the correct Action subclass for a given code
+    Action* createAction(const std::string& code, int value, float multiplier,
+                         const std::string& patternId, Card* card,
+                         std::string* outError);
 
 public:
     GameDataLoader();
