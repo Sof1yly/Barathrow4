@@ -17,12 +17,18 @@
 class Level
 {
 private:
-
+	int turnCount = 0;
 	int playerHealth = 5;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
     int maxPlayerHealth = 10;
     ImageObject* hpMask = nullptr;
+    int playerShield = 0;
+    int maxShield = 0;
+
+    ImageObject* shieldBar = nullptr;
+    ImageObject* shieldMask = nullptr;
+    ImageObject* shieldBg = nullptr;
     // Render list
     std::vector<DrawableObject*> objectsList;
 
@@ -113,6 +119,7 @@ private:
         PLAYER_TURN,
         PLAYER_MOVING,
         ENEMY_TURN,
+        END_TURN,
         GAME_OVER
     };
 
@@ -161,5 +168,8 @@ public:
 	void PreviewEnemyAttack();
 
     void UpdateHPBar();
+	void UpdateShieldBar();
+
+    void EndTurn();
 
 };
