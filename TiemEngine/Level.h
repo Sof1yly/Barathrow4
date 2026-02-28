@@ -13,11 +13,15 @@
 #include "AttackPattern.h"
 #include "CardSystem.h"
 #include "Enemy.h"
+#include "HighlightManager.h"
 
 class Level
 {
 private:
 	int turnCount = 0;
+
+    HighlightManager highlightManager;
+
 	int playerHealth = 5;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
@@ -58,16 +62,6 @@ private:
     const float ATTACK_TIME = 800.0f;
 
     bool pendingAttack = false;
-
-    vector<GameObject*> attackHighlights;
-    bool highlightCreated = false;
-
-    vector<GameObject*> moveHighlights;
-    bool moveHighlightCreated = false;
-
-    vector<GameObject*> enemyAttackHighlights;
-	bool enemyHighlightCreated = false;
-
 
     // Facing / animation
     enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
@@ -126,17 +120,6 @@ private:
     TurnState turnState = TurnState::PLAYER_TURN;
     bool tempDiscardDone = false;
 	//end gameloop
-
-
-    // helpers
-    void AttackHighlights(std::vector<DrawableObject*>& list);
-    void HideAttackHighlights();
-
-    void MoveHighlights(std::vector<DrawableObject*>& list);
-	void HideMoveHighlights();
-
-    void EnemyAttackHighlights(std::vector<DrawableObject*>& list);
-	void HideEnemyAttackHighlights();
 
 public:
     virtual void LevelLoad();
