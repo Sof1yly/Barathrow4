@@ -7,7 +7,7 @@
 class Player {
 private:
 	int hp;
-	int armor;
+	int shield;
 	vector<Card>cards;
 	Deck deck;
 	Hand hand;
@@ -15,7 +15,7 @@ private:
 
 public:
 	int getHp()const;
-	int getArmor()const;
+	int getShield()const;
 	const vector<Card>& getCards()const;
 	Deck& getDeck();
 	Hand& getHand();

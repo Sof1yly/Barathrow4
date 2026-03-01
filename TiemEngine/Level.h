@@ -13,16 +13,26 @@
 #include "AttackPattern.h"
 #include "CardSystem.h"
 #include "Enemy.h"
+#include "HighlightManager.h"
 
 class Level
 {
 private:
+	int turnCount = 0;
+
+    HighlightManager highlightManager;
 
 	int playerHealth = 5;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
     int maxPlayerHealth = 10;
     ImageObject* hpMask = nullptr;
+    int playerShield = 0;
+    int maxShield = 0;
+
+    ImageObject* shieldBar = nullptr;
+    ImageObject* shieldMask = nullptr;
+    ImageObject* shieldBg = nullptr;
     // Render list
     std::vector<DrawableObject*> objectsList;
 
@@ -52,16 +62,6 @@ private:
     const float ATTACK_TIME = 800.0f;
 
     bool pendingAttack = false;
-
-    vector<GameObject*> attackHighlights;
-    bool highlightCreated = false;
-
-    vector<GameObject*> moveHighlights;
-    bool moveHighlightCreated = false;
-
-    vector<GameObject*> enemyAttackHighlights;
-	bool enemyHighlightCreated = false;
-
 
     // Facing / animation
     enum class PlayerDir { DOWN, UP, RIGHT, LEFT };
@@ -113,23 +113,13 @@ private:
         PLAYER_TURN,
         PLAYER_MOVING,
         ENEMY_TURN,
+        END_TURN,
         GAME_OVER
     };
 
     TurnState turnState = TurnState::PLAYER_TURN;
     bool tempDiscardDone = false;
 	//end gameloop
-
-
-    // helpers
-    void AttackHighlights(std::vector<DrawableObject*>& list);
-    void HideAttackHighlights();
-
-    void MoveHighlights(std::vector<DrawableObject*>& list);
-	void HideMoveHighlights();
-
-    void EnemyAttackHighlights(std::vector<DrawableObject*>& list);
-	void HideEnemyAttackHighlights();
 
 public:
     virtual void LevelLoad();
@@ -161,5 +151,8 @@ public:
 	void PreviewEnemyAttack();
 
     void UpdateHPBar();
+	void UpdateShieldBar();
+
+    void EndTurn();
 
 };

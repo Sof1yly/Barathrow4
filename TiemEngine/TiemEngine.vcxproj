@@ -36,6 +36,7 @@
     <ClCompile Include="GameStateController.cpp" />
     <ClCompile Include="GLRenderer.cpp" />
     <ClCompile Include="Hand.cpp" />
+    <ClCompile Include="HighlightManager.cpp" />
     <ClCompile Include="ImageObject.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="Level3.cpp" />
@@ -72,6 +73,7 @@
     <ClInclude Include="GameStateList.h" />
     <ClInclude Include="GLRenderer.h" />
     <ClInclude Include="Hand.h" />
+    <ClInclude Include="HighlightManager.h" />
     <ClInclude Include="Level3.h" />
     <ClInclude Include="MoveAction.h" />
     <ClInclude Include="Player.h" />

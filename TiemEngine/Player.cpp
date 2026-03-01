@@ -5,9 +5,9 @@ int Player::getHp() const
 	return hp;
 }
 
-int Player::getArmor() const
+int Player::getShield() const
 {
-	return armor;
+	return shield;
 }
 
 const vector<Card>& Player::getCards() const

@@ -61,8 +61,7 @@ void Level::LevelInit()
         }
     }
 
-    AttackHighlights(objectsList);
-    HideAttackHighlights();
+    highlightManager.Init(objectsList, GridWide, GridHigh);
 
     //Enemy
 	enemy = new Enemy();
@@ -168,11 +167,27 @@ void Level::LevelInit()
     }
 
     {
-        ImageObject* Shieldbg = new ImageObject();
-        Shieldbg->SetSize(300.0f, -80.0f);
-        Shieldbg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); //make it hidden first//real pos -450.0,500.0
-        Shieldbg->SetTexture("../Resource/Texture/UI/Blank_Shieldbar.PNG");
-        objectsList.push_back(Shieldbg);
+        shieldBg = new ImageObject();
+        shieldBg->SetSize(300.0f, -80.0f);
+        shieldBg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); // hidden
+        shieldBg->SetTexture("../Resource/Texture/UI/Blank_Shieldbar.PNG");
+        objectsList.push_back(shieldBg);
+    }
+
+    {
+        shieldBar = new ImageObject();
+        shieldBar->SetSize(300.0f, -80.0f);
+        shieldBar->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f)); // hidden
+        shieldBar->SetTexture("../Resource/Texture/UI/Shieldbar.PNG");
+        objectsList.push_back(shieldBar);
+    }
+
+    {
+        shieldMask = new ImageObject();
+        shieldMask->SetSize(0.0f, -80.0f);
+        shieldMask->SetPosition(glm::vec3(-450.0f, 10000.0f, 5.0f));
+        shieldMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+        objectsList.push_back(shieldMask);
     }
 
     {
@@ -354,7 +369,7 @@ void Level::LevelUpdate()
 
 
         playerMoving = true;
-        HideMoveHighlights();
+        highlightManager.HideAllPlayer();
         playerMoveTimer = 0.0f;
 
         playerMoveStart = playersprite->GetPosition();
@@ -498,12 +513,7 @@ void Level::LevelFree()
     objectsList.clear();
 
     // 4. Reset highlight state so LevelInit can recreate them
-    attackHighlights.clear();
-    highlightCreated = false;
-    moveHighlights.clear();
-    moveHighlightCreated = false;
-    enemyAttackHighlights.clear();
-    enemyHighlightCreated = false;
+    highlightManager.Reset();
 
     // 5. Reset game state
     nowRow = 0;
@@ -565,7 +575,7 @@ void Level::HandleKey(char key)
 		std::cout << "Switched to pattern #" << currentPatternIndex + 1 << std::endl;
 	}
 	if (key == 'x') {
-		currentRotation = (currentRotation + 90) % 360;
+		/*currentRotation = (currentRotation + 90) % 360;
 
 		rotatedPattern = patterns[currentPatternIndex];
 		int times = currentRotation / 90;
@@ -573,6 +583,11 @@ void Level::HandleKey(char key)
 			rotatedPattern = rotatedPattern.rotated90CW();
 
 		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
+        */
+        maxShield = 10;
+        playerShield = 10;
+
+        UpdateShieldBar();
 	}
 	if (key == ' ') {
         auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
@@ -751,8 +766,7 @@ void Level::HandleMouse(int type, int x, int y)
                 }
                 else
                 {
-                    HideMoveHighlights();
-                    HideAttackHighlights();
+                    highlightManager.HideAllPlayer();
                 }
             }
         }
@@ -1022,8 +1036,7 @@ void Level::HandleMouse(int type, int x, int y)
 
         cardSystem.SetPendingCard(nullptr);
         cardSystem.UpdateHover(mousePos, false, objectsList);
-        HideMoveHighlights();
-        HideAttackHighlights();
+        highlightManager.HideAllPlayer();
     }
 
     /*if (player) {
@@ -1037,78 +1050,6 @@ glm::vec3 Level::GridToWorld(int row, int col) const
     float x = row * 101.0f - 404.0f;
     float y = col * -105.0f + 352.0f;
     return glm::vec3(x, y, 0.0f);
-}
-
-void Level::AttackHighlights(std::vector<DrawableObject*>& list)
-{
-    if (highlightCreated) return;
-    highlightCreated = true;
-
-    attackHighlights.reserve(20);
-
-    for (int i = 0; i < 20; i++)
-    {
-        GameObject* h = new GameObject();
-        h->SetSize(GridWide, GridHigh);
-        h->SetColor(1, 1, 1, 0.4f);
-        h->SetPosition(glm::vec3(99999, 99999, 5));
-        attackHighlights.push_back(h);
-        list.push_back(h);
-    }
-}
-
-void Level::HideAttackHighlights()
-{
-    for (auto* h : attackHighlights)
-        h->SetPosition(glm::vec3(99999, 99999, 50));
-}
-
-void Level::MoveHighlights(std::vector<DrawableObject*>& list)
-{
-    if (moveHighlightCreated) return;
-    moveHighlightCreated = true;
-
-    moveHighlights.reserve(10);
-
-    for (int i = 0; i < 10; i++)
-    {
-        GameObject* h = new GameObject();
-        h->SetSize(GridWide/2, GridHigh/2);
-        h->SetColor(0.2f, 0.5f, 1.0f, 0.4f);
-        h->SetPosition(glm::vec3(99999, 99999, 5));
-        moveHighlights.push_back(h);
-        list.push_back(h);
-    }
-}
-
-void Level::HideMoveHighlights()
-{
-    for (auto* h : moveHighlights)
-        h->SetPosition(glm::vec3(99999, 99999, 50));
-}
-
-void Level::EnemyAttackHighlights(std::vector<DrawableObject*>& list)
-{
-    if (enemyHighlightCreated) return;
-    enemyHighlightCreated = true;
-
-    enemyAttackHighlights.reserve(20);
-
-    for (int i = 0; i < 20; i++)
-    {
-        GameObject* h = new GameObject();
-        h->SetSize(GridWide, GridHigh);
-        h->SetColor(1.0f, 0.2f, 0.2f, 0.45f);
-        h->SetPosition(glm::vec3(99999, 99999, 5));
-        enemyAttackHighlights.push_back(h);
-        list.push_back(h);
-    }
-}
-
-void Level::HideEnemyAttackHighlights()
-{
-    for (auto* h : enemyAttackHighlights)
-        h->SetPosition(glm::vec3(99999, 99999, 50));
 }
 
 // Apply attack pattern (player)
@@ -1166,9 +1107,24 @@ void Level::ApplyEnemyAttack()
 
         if (nowRow == x && nowCol == y)
         {
-            playerHealth--;
-            cout << "    HIT PLAYER!!! New HP = " << playerHealth << endl;
-            UpdateHPBar();
+			int damage = 1; //need to change to enemy attack value later
+
+            if (playerShield > 0)
+            {
+                playerShield -= damage;
+                std::cout << "    Shield absorbed damage! Shield = "
+                    << playerShield << std::endl;
+
+                UpdateShieldBar();
+            }
+            else
+            {
+                playerHealth -= damage;
+                std::cout << "    HIT PLAYER!!! New HP = "
+                    << playerHealth << std::endl;
+
+                UpdateHPBar();
+            }
         }
     }
 
@@ -1220,10 +1176,14 @@ void Level::UpdateTurn()
     if (turnState == TurnState::PLAYER_MOVING)
         return;
 
-    if (turnState == TurnState::PLAYER_TURN) {
-        tempDiscardDone = false;
-    }
-    else if (turnState == TurnState::ENEMY_TURN)
+    switch (turnState)
+    {
+    case TurnState::PLAYER_TURN:
+        // Do nothing.
+        // Player input drives this state.
+        break;
+
+    case TurnState::ENEMY_TURN:
     {
         if (!enemy)
         {
@@ -1241,12 +1201,12 @@ void Level::UpdateTurn()
         {
             cout << "[ENEMY TURN] Enemy attacks now!\n";
 
-            HideEnemyAttackHighlights();
+            highlightManager.HideAllEnemy();
             ApplyEnemyAttack();
 
             enemyPreparingAttack = false;
 
-            turnState = TurnState::PLAYER_TURN;
+            turnState = TurnState::END_TURN;
             return;
         }
 
@@ -1257,17 +1217,23 @@ void Level::UpdateTurn()
             enemyPreparingAttack = true;
 
             PreviewEnemyAttack();
-
-            turnState = TurnState::PLAYER_TURN;
-            return;
+        
+        turnState = TurnState::END_TURN;
+        return;
+        }
+        if (!EnemyCanAttackPlayer()) {
+            MoveEnemyTowardPlayer();
+            cout << "[ENEMY TURN] Enemy moves toward player\n";
         }
 
-        cout << "[ENEMY TURN] Enemy moves toward player\n";
+        highlightManager.HideAllEnemy();
+    }
 
-        HideAttackHighlights();
-        MoveEnemyTowardPlayer();
-
-        turnState = TurnState::PLAYER_TURN;
+    case TurnState::END_TURN:
+    {
+        EndTurn();
+        break;
+    }
     }
 }
 
@@ -1344,9 +1310,6 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
 {
     if (!cardData) return;
 
-    AttackHighlights(objectsList);
-    HideAttackHighlights();
-
     AttackAction* atk = nullptr;
     const AttackPattern* pat = nullptr;
 
@@ -1367,10 +1330,10 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
 
     switch (dz)
     {
-        case 0: rotateTimes = 2; break; // LEFT
-        case 1: rotateTimes = 1; break; // UP
-        case 2: rotateTimes = 3; break; // DOWN
-        case 3: rotateTimes = 0; break; // RIGHT
+    case 0: rotateTimes = 2; break;
+    case 1: rotateTimes = 1; break;
+    case 2: rotateTimes = 3; break;
+    case 3: rotateTimes = 0; break;
     }
 
     for (int i = 0; i < rotateTimes; i++)
@@ -1378,112 +1341,32 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
 
     auto cells = oriented.applyTo(nowRow, nowCol);
 
-    int index = 0;
-    for (auto& cell : cells)
-    {
-        int gx = cell.first.x;
-        int gy = cell.first.y;
-
-        if (gx < GridStartRow || gx >= GridEndRow ||
-            gy < GridStartCol || gy >= GridEndCol)
-            continue;
-
-        if (index >= attackHighlights.size()) break;
-
-        glm::vec3 world = GridToWorld(gx, gy);
-        attackHighlights[index]->SetPosition(glm::vec3(world.x, world.y, 30));
-        index++;
-    }
+    highlightManager.ShowAttackPattern(
+        cells,
+        GridStartRow, GridEndRow,
+        GridStartCol, GridEndCol,
+        [this](int r, int c) { return GridToWorld(r, c); }
+    );
 }
 
 void Level::PreviewMovePath(int steps, int dir)
 {
-    MoveHighlights(objectsList);
-    HideMoveHighlights();
-
-    int r = nowRow;
-    int c = nowCol;
-
-    int lastValidR = r;
-    int lastValidC = c;
-
-    for (int i = 0; i < steps; i++)
-    {
-        switch (dir)
-        {
-        case 0: r--; break; // LEFT
-        case 1: c--; break; // UP
-        case 2: c++; break; // DOWN
-        case 3: r++; break; // RIGHT
-        }
-
-        if (r < GridStartRow || r >= GridEndRow ||
-            c < GridStartCol || c >= GridEndCol)
-        {
-            break;
-        }
-
-        if (enemy && enemy->getNowRow() == r && enemy->getNowCol() == c)
-        {
-            break;
-        }
-
-        lastValidR = r;
-        lastValidC = c;
-    }
-
-    glm::vec3 world = GridToWorld(lastValidR, lastValidC);
-
-    if (!moveHighlights.empty())
-    {
-        moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 60));
-    }
+    highlightManager.ShowMovePreview(
+        nowRow,
+        nowCol,
+        steps,
+        dir,
+        GridStartRow, GridEndRow,
+        GridStartCol, GridEndCol,
+        [this](int r, int c) { return GridToWorld(r, c); },
+        enemy ? enemy->getNowRow() : -999,
+        enemy ? enemy->getNowCol() : -999
+    );
 }
 
-
-/*//Highlight the entire path (old version)
-void Level::PreviewMovePath(int steps, int dir)
-{
-    MoveHighlights(objectsList);
-
-    int r = nowRow;
-    int c = nowCol;
-
-    // simulate movement until final tile
-    for (int i = 0; i < steps; i++)
-    {
-        switch (dir)
-        {
-        case 0: r--; break; // LEFT
-        case 1: c--; break; // UP
-        case 2: c++; break; // DOWN
-        case 3: r++; break; // RIGHT
-        }
-
-        // stop if out of bounds
-        if (r < GridStartRow || r >= GridEndRow ||
-            c < GridStartCol || c >= GridEndCol)
-            return;
-
-        // stop if enemy blocks
-        if (enemy && enemy->getNowRow() == r && enemy->getNowCol() == c)
-            return;
-    }
-
-    HideMoveHighlights();
-
-    glm::vec3 world = GridToWorld(r, c);
-
-    if (!moveHighlights.empty())
-        moveHighlights[0]->SetPosition(glm::vec3(world.x, world.y, 40));
-}
-*/
 void Level::PreviewEnemyAttack()
 {
     if (!enemy) return;
-
-    EnemyAttackHighlights(objectsList);
-    HideEnemyAttackHighlights();
 
     auto cells =
         enemy->getCurrentPattern().applyTo(
@@ -1491,28 +1374,12 @@ void Level::PreviewEnemyAttack()
             enemy->getNowCol()
         );
 
-    int index = 0;
-
-    for (auto& cell : cells)
-    {
-        int gx = cell.first.x;
-        int gy = cell.first.y;
-
-        if (gx < GridStartRow || gx >= GridEndRow ||
-            gy < GridStartCol || gy >= GridEndCol)
-            continue;
-
-        if (index >= enemyAttackHighlights.size())
-            break;
-
-        glm::vec3 world = GridToWorld(gx, gy);
-
-        enemyAttackHighlights[index]->SetPosition(
-            glm::vec3(world.x, world.y, 40)
-        );
-
-        index++;
-    }
+    highlightManager.ShowEnemyAttack(
+        cells,
+        GridStartRow, GridEndRow,
+        GridStartCol, GridEndCol,
+        [this](int r, int c) { return GridToWorld(r, c); }
+    );
 }
 void Level::UpdateHPBar()
 {
@@ -1536,3 +1403,49 @@ void Level::UpdateHPBar()
     hpMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
 }
 
+void Level::UpdateShieldBar()
+{
+    if (!shieldBar || !shieldMask || !shieldBg) return;
+
+    if (playerShield <= 0)
+    {
+        // Hide shield UI
+        shieldBg->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f));
+        shieldBar->SetPosition(glm::vec3(-450.0f, 10000.0f, 0.0f));
+        shieldMask->SetPosition(glm::vec3(-450.0f, 10000.0f, 5.0f));
+        return;
+    }
+
+    // Show shield UI
+    shieldBg->SetPosition(glm::vec3(-450.0f, 500.0f, 0.0f));
+    shieldBar->SetPosition(glm::vec3(-450.0f, 500.0f, 0.0f));
+
+    float fullWidth = 300.0f;
+
+    playerShield = std::max(0, std::min(playerShield, maxShield));
+    float percent = (float)playerShield / (float)maxShield;
+
+    shieldBar->SetSize(fullWidth, -80.0f);
+
+    float missingWidth = fullWidth * (1.0f - percent);
+    shieldMask->SetSize(missingWidth, -80.0f);
+
+    float barLeftX = -450.0f;
+    float maskX = barLeftX + (fullWidth - missingWidth) / 2.0f;
+
+    shieldMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
+}
+
+void Level::EndTurn()
+{
+    turnCount++;
+    if (playerShield > 0)
+    {
+        playerShield = 0;
+        maxShield = 0;
+        UpdateShieldBar();
+    }
+	cout << "\n\n\n\n\n";
+	cout << "=== END OF TURN , Now Turn  =  " << turnCount << " ===\n\n";
+    turnState = TurnState::PLAYER_TURN;
+}
