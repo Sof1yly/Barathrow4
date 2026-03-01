@@ -236,25 +236,25 @@ void CardSystem::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZones[0] = new GameObject();
     dropZones[0]->SetSize(SIDE_W, SIDE_H);
     dropZones[0]->SetPosition(glm::vec3(-SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
+    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
 
     // TOP
     dropZones[1] = new GameObject();
     dropZones[1]->SetSize(MID_W, MID_H);
     dropZones[1]->SetPosition(glm::vec3(0.0f, UPPER_Y, Z));
-    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
+    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
 
     // BOTTOM
     dropZones[2] = new GameObject();
     dropZones[2]->SetSize(MID_W, MID_H);
     dropZones[2]->SetPosition(glm::vec3(0.0f, BOTTOM_Y, Z));
-    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
+    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
 
     // RIGHT
     dropZones[3] = new GameObject();
     dropZones[3]->SetSize(SIDE_W, SIDE_H);
     dropZones[3]->SetPosition(glm::vec3(SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.0f);
+    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
 
     for (int i = 0; i < 4; ++i) {
         list.push_back(dropZones[i]);
