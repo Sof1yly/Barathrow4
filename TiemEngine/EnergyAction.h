@@ -2,9 +2,9 @@
 #include "Action.h"
 
 enum class EnergySubType {
-    Gain,      // en  - gain energy points
-    Convert,   // co  - convert resource to energy
-    GainCard,  // gc  - gain energy and draw a card
+    EnergyCard,  // enr - energy card that's always in the player's hand
+    Generate,    // gen - generate energy cards (gen:2 = generate 2 energy cards)
+    Consume,     // con - requires energy cards in hand to play (con:2 = need 2 energy cards)
     Unknown
 };
 
@@ -26,9 +26,9 @@ public:
     void setSubType(EnergySubType s) { subType = s; }
 
     static EnergySubType codeToSubType(const std::string& code) {
-        if (code == "en") return EnergySubType::Gain;
-        if (code == "co") return EnergySubType::Convert;
-        if (code == "gc") return EnergySubType::GainCard;
+        if (code == "enr") return EnergySubType::EnergyCard;
+        if (code == "gen") return EnergySubType::Generate;
+        if (code == "con") return EnergySubType::Consume;
         return EnergySubType::Unknown;
     }
 

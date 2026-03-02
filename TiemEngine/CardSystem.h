@@ -66,6 +66,9 @@ private:
     bool  bezierCreated = false;
     float screenCenterY = 0.0f;
 
+    // Energy card pool (dynamically created enr cards, owned by CardSystem)
+    std::vector<Card*> energyCardPool;
+
     // Internal helpers
     void CreateDropZones(std::vector<DrawableObject*>& list);
     void EnsureBezierSegments(std::vector<DrawableObject*>& list);
@@ -147,4 +150,9 @@ public:
     void ApplyOverclock(int amount);
     void ResetOverclock();
     int  GetOverclockBonus() const { return overclockBonus; }
+
+    // Energy system
+    int CountEnergyCardsInHand() const;
+    bool CanPlayCard(Card* card) const;
+    void GenerateEnergyCards(int count, std::vector<DrawableObject*>& objectsList);
 };

@@ -6,6 +6,7 @@
 #include "Action.h"
 #include "MoveAction.h"
 #include "AttackAction.h"
+#include "EnergyAction.h"
 #include "CombineObject.h"
 #include "TextObject.h"
 
@@ -816,6 +817,29 @@ void Level::HandleMouse(int type, int x, int y)
 
                 if (cardData)
                 {
+                    // Check energy (con) requirement before allowing play
+                    if (!cardSystem.CanPlayCard(cardData))
+                    {
+                        if (cardData->isEnergyCard())
+                        {
+                            std::cout << "[Blocked] " << cardData->getName()
+                                      << " is an energy card and cannot be played." << std::endl;
+                        }
+                        else
+                        {
+                            int conReq = cardData->getConsumeRequirement();
+                            int enrCount = cardSystem.CountEnergyCardsInHand();
+                            std::cout << "[Blocked] " << cardData->getName()
+                                      << " requires " << conReq << " energy card(s), but only "
+                                      << enrCount << " in hand." << std::endl;
+                        }
+                        cardSystem.EndDragCancel(mousePos, objectsList);
+                        cardSystem.SetPendingCard(nullptr);
+                        cardSystem.UpdateHover(mousePos, false, objectsList);
+                        highlightManager.HideAllPlayer();
+                        return;
+                    }
+
                     std::cout << "[Card] " << cardData->getName() << std::endl;
                     
                     // Apply overclock if this card has overclock value
@@ -1002,6 +1026,14 @@ void Level::HandleMouse(int type, int x, int y)
                     if (hasAttack)
                     {
                         cardSystem.ResetOverclock();
+                    }
+
+                    // Generate energy cards if this card has gen action
+                    int genCount = cardData->getGenerateCount();
+                    if (genCount > 0)
+                    {
+                        std::cout << "[Energy] Card generates " << genCount << " energy card(s)." << std::endl;
+                        cardSystem.GenerateEnergyCards(genCount, objectsList);
                     }
 
                     // Handle del (delete) vs normal discard

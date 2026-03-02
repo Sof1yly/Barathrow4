@@ -202,7 +202,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "en" || code == "co" || code == "gc") {
+    else if (code == "enr" || code == "gen" || code == "con") {
         auto* a = new EnergyAction(EnergyAction::codeToSubType(code));
         a->setValue(value);
         a->setBaseValue(value);
@@ -362,4 +362,14 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
     }
 
     return true;
+}
+
+Card* GameDataLoader::findEnergyCard() const
+{
+    for (Card* c : cards) {
+        if (c && c->isEnergyCard()) {
+            return c;
+        }
+    }
+    return nullptr;
 }

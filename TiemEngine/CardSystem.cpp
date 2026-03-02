@@ -1,5 +1,6 @@
 #include "CardSystem.h"
 #include "TextObject.h"
+#include "EnergyAction.h"
 
 #include <iostream>
 #include <algorithm>
@@ -611,6 +612,12 @@ void CardSystem::Clear(std::vector<DrawableObject*>& objectsList)
     drawPileTurns  = DRAW_PILE_MAX_TURNS;
     overclockBonus = 0;
 
+    // Clean up dynamically created energy cards
+    for (Card* c : energyCardPool) {
+        if (c) delete c;
+    }
+    energyCardPool.clear();
+
     deck.clear();
     discard.clear();
     deletePile.clear();
@@ -643,10 +650,15 @@ void CardSystem::Reset(std::vector<DrawableObject*>& objectsList)
     drawPileTurns = DRAW_PILE_MAX_TURNS;
     overclockBonus = 0;
 
+    // Clean up dynamically created energy cards
+    for (Card* c : energyCardPool) {
+        if (c) delete c;
+    }
+    energyCardPool.clear();
+
     deck = dataLoader.getCards();
     discard.clear();
     deletePile.clear();
-    ShuffleDeck();
 }
 
 
@@ -851,4 +863,64 @@ void CardSystem::ResetOverclock()
     resetCards(handCards);
     resetCards(deck);
     resetCards(discard);
+}
+
+int CardSystem::CountEnergyCardsInHand() const
+{
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    int count = 0;
+    for (Card* c : handCards) {
+        if (c && c->isEnergyCard()) {
+            count++;
+        }
+    }
+    return count;
+}
+
+bool CardSystem::CanPlayCard(Card* card) const
+{
+    if (!card) return false;
+
+    // Energy cards (enr) cannot be played - they just sit in hand as a resource
+    if (card->isEnergyCard()) return false;
+
+    // Check consume (con) requirement
+    int conReq = card->getConsumeRequirement();
+    if (conReq <= 0) return true;
+    return CountEnergyCardsInHand() >= conReq;
+}
+
+void CardSystem::GenerateEnergyCards(int count, std::vector<DrawableObject*>& objectsList)
+{
+    if (count <= 0) return;
+
+    Card* templateCard = dataLoader.findEnergyCard();
+    if (!templateCard) {
+        std::cout << "[Energy] No energy card (enr) found in card data!" << std::endl;
+        return;
+    }
+
+    std::vector<Card*> newCards;
+    for (int i = 0; i < count; ++i) {
+        Card* enrCard = new Card(templateCard->getName());
+        enrCard->setLevel(templateCard->getLevel());
+        enrCard->setRarityCode(templateCard->getRarityCode());
+        enrCard->setTypeCode(templateCard->getTypeCode());
+        enrCard->setDescription(templateCard->getDescription());
+
+        EnergyAction* ea = new EnergyAction(EnergySubType::EnergyCard);
+        ea->setValue(0);
+        ea->setBaseValue(0);
+        ea->setMultiplier(1.0f);
+        ea->setActionCode("enr");
+        enrCard->addAction(ea);
+
+        energyCardPool.push_back(enrCard);
+        newCards.push_back(enrCard);
+
+        std::cout << "[Energy] Generated energy card: " << enrCard->getName() << std::endl;
+    }
+
+    hand.AddCards(newCards, objectsList);
+    std::cout << "[Energy] Added " << count << " energy card(s) to hand." << std::endl;
 }

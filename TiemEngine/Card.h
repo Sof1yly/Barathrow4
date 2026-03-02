@@ -54,7 +54,12 @@ public:
     void setIsDeleteAfterUse(bool v) { isDeleteAfterUse = v; }
     int getOverclockValue() const { return overclockValue; }
     void setOverclockValue(int v) { overclockValue = v; }
-    
+
+    // Energy system helpers
+    bool isEnergyCard() const;
+    int getConsumeRequirement() const;
+    int getGenerateCount() const;
+
     const vector<Action*>& getActions() const;
     void addAction(Action* action);
     void do_action();

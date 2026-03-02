@@ -1,4 +1,5 @@
 #include "Card.h"
+#include "EnergyAction.h"
 #include <sstream>
 
 
@@ -11,7 +12,7 @@ static string getCardFrameName(const string& rarityCode)
     if (rarityCode == "com") return "BG_Frame/card_fr_gn.png";
     if (rarityCode == "rar") return "BG_Frame/card_fr_br.png";
     if (rarityCode == "leg") return "BG_Frame/card_fr_or.png";
-    if (rarityCode == "spc") return "BG_Frame/card_fr_pk.png";
+    if (rarityCode == "misc") return "BG_Frame/card_fr_pk.png";
     return "BG_Frame/card_fr_gy.png";
 }
 
@@ -193,4 +194,37 @@ vector<DrawableObject*> Card::GetAllLayers() const
     if (nameText) layers.push_back(nameText);
     if (descriptionText) layers.push_back(descriptionText);
     return layers;
+}
+
+bool Card::isEnergyCard() const
+{
+    for (Action* a : actions) {
+        if (auto* ea = dynamic_cast<EnergyAction*>(a)) {
+            if (ea->getSubType() == EnergySubType::EnergyCard)
+                return true;
+        }
+    }
+    return false;
+}
+
+int Card::getConsumeRequirement() const
+{
+    for (Action* a : actions) {
+        if (auto* ea = dynamic_cast<EnergyAction*>(a)) {
+            if (ea->getSubType() == EnergySubType::Consume)
+                return ea->getValue();
+        }
+    }
+    return 0;
+}
+
+int Card::getGenerateCount() const
+{
+    for (Action* a : actions) {
+        if (auto* ea = dynamic_cast<EnergyAction*>(a)) {
+            if (ea->getSubType() == EnergySubType::Generate)
+                return ea->getValue();
+        }
+    }
+    return 0;
 }

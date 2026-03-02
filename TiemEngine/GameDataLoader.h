@@ -52,4 +52,6 @@ public:
     const std::vector<Action*>& getActions() const { return actions_list; }
 
     const AttackPattern* getPatternForAction(const Action* a) const;
+
+    Card* findEnergyCard() const;
 };
