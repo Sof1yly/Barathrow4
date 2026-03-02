@@ -841,7 +841,14 @@ void Level::HandleMouse(int type, int x, int y)
                     }
 
                     std::cout << "[Card] " << cardData->getName() << std::endl;
-                    
+
+                    // Consume energy cards if this card has con requirement
+                    int conReq = cardData->getConsumeRequirement();
+                    if (conReq > 0)
+                    {
+                        cardSystem.ConsumeEnergyCards(conReq, objectsList);
+                    }
+
                     // Apply overclock if this card has overclock value
                     if (cardData->getOverclockValue() > 0)
                     {

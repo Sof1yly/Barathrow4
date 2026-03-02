@@ -155,4 +155,5 @@ public:
     int CountEnergyCardsInHand() const;
     bool CanPlayCard(Card* card) const;
     void GenerateEnergyCards(int count, std::vector<DrawableObject*>& objectsList);
+    void ConsumeEnergyCards(int count, std::vector<DrawableObject*>& objectsList);
 };

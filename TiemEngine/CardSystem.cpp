@@ -133,7 +133,7 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     // 1) Collect all card data from current hand
     std::vector<Card*> cardsInHand = hand.CollectAllCardData();
 
-    // 2) Move all cards from hand to discard pile
+    // 2) Move all cards from hand to discard pile (including energy cards)
     if (!cardsInHand.empty())
     {
         discard.insert(discard.end(), cardsInHand.begin(), cardsInHand.end());
@@ -923,4 +923,29 @@ void CardSystem::GenerateEnergyCards(int count, std::vector<DrawableObject*>& ob
 
     hand.AddCards(newCards, objectsList);
     std::cout << "[Energy] Added " << count << " energy card(s) to hand." << std::endl;
+}
+
+void CardSystem::ConsumeEnergyCards(int count, std::vector<DrawableObject*>& objectsList)
+{
+    if (count <= 0) return;
+
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    int consumed = 0;
+
+    for (Card* c : handCards) {
+        if (consumed >= count) break;
+        if (c && c->isEnergyCard()) {
+            ImageObject* bg = c->GetBackground();
+            if (bg) {
+                hand.RemoveView(bg, objectsList);
+            }
+            c->DestroyVisuals();
+            deletePile.push_back(c);
+            consumed++;
+            std::cout << "[Energy] Consumed energy card -> delete pile." << std::endl;
+        }
+    }
+
+    std::cout << "[Energy] Consumed " << consumed << " energy card(s)." << std::endl;
+    UpdatePileVisuals();
 }
