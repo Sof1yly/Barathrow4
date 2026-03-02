@@ -30,7 +30,7 @@ public:
 
     static BuffSubType codeToSubType(const std::string& code) {
         if (code == "oc")  return BuffSubType::Overclock;
-        if (code == "sh")  return BuffSubType::Shield;
+        if (code == "sh" || code == "shi")  return BuffSubType::Shield;
         if (code == "ba")  return BuffSubType::Barrier;
         if (code == "ge")  return BuffSubType::Guard;
         if (code == "he")  return BuffSubType::Heal;

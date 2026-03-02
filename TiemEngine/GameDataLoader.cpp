@@ -185,7 +185,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "sh" || code == "ba" || code == "ge" ||
+    else if (code == "shi" || code == "ba" || code == "ge" ||
              code == "he" || code == "fas") {
         auto* a = new BuffAction(BuffAction::codeToSubType(code));
         a->setValue(value);

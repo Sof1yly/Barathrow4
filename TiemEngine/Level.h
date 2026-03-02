@@ -14,6 +14,7 @@
 #include "CardSystem.h"
 #include "Enemy.h"
 #include "HighlightManager.h"
+#include "Player.h"
 
 class Level
 {
@@ -27,12 +28,9 @@ private:
     ImageObject* hpBar = nullptr;
     int maxPlayerHealth = 10;
     ImageObject* hpMask = nullptr;
-    int playerShield = 0;
-    int maxShield = 0;
 
-    ImageObject* shieldBar = nullptr;
-    ImageObject* shieldMask = nullptr;
-    ImageObject* shieldBg = nullptr;
+    Player playerData;
+
     // Render list
     std::vector<DrawableObject*> objectsList;
 
@@ -151,7 +149,6 @@ public:
 	void PreviewEnemyAttack();
 
     void UpdateHPBar();
-	void UpdateShieldBar();
 
     void EndTurn();
 

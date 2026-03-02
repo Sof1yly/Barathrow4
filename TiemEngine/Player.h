@@ -1,24 +1,37 @@
 #pragma once
-#include "Card.h"
-#include "Deck.h"
-#include "Hand.h"
-#include "Modify.h"
+#include "ImageObject.h"
+#include <algorithm>
+#include <iostream>
 
 class Player {
 private:
-	int hp;
-	int shield;
-	vector<Card>cards;
-	Deck deck;
-	Hand hand;
-	vector<Modify>modifyAttack;
+	int hp = 5;
+	int maxHp = 10;
+	int shield = 0;
+	int maxShield = 0;
+
+	// Shield UI
+	ImageObject* shieldBg = nullptr;
+	ImageObject* shieldBar = nullptr;
+	ImageObject* shieldMask = nullptr;
 
 public:
-	int getHp()const;
-	int getShield()const;
-	const vector<Card>& getCards()const;
-	Deck& getDeck();
-	Hand& getHand();
-	const vector<Modify>& getModifyAttack()const;
-	
+	int getHp() const;
+	void setHp(int value);
+	int getMaxHp() const;
+	void setMaxHp(int value);
+
+	int getShield() const;
+	int getMaxShield() const;
+
+	void AddShield(int amount);
+	void ResetShield();
+	int AbsorbDamage(int damage);
+
+	void InitShieldUI(std::vector<DrawableObject*>& objectsList);
+	void UpdateShieldBar();
+
+	ImageObject* GetShieldBg() const { return shieldBg; }
+	ImageObject* GetShieldBar() const { return shieldBar; }
+	ImageObject* GetShieldMask() const { return shieldMask; }
 };
