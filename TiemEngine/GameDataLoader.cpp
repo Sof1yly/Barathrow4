@@ -306,6 +306,10 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             if (code == "fas") { card->setIsFast(true);         continue; }
             if (code == "te")  { card->setIsTemp(true);         continue; }
             if (code == "del") { card->setIsDeleteAfterUse(true); continue; }
+            if (code == "per") { card->setIsPersist(true);      continue; }
+            if (code == "lag") { card->setIsLag(true);          continue; }
+            if (code == "pre") { continue; } // pre-load: handled elsewhere or ignored for now
+            if (code == "temp") { card->setIsTemp(true);        continue; }
             if (code == "oc") {
                 int ocVal = 0;
                 try { if (!sVal.empty()) ocVal = std::stoi(sVal); } catch (...) {}

@@ -4,7 +4,7 @@
 enum class DebuffSubType {
     Weaken,  // wk - reduce enemy attack
     Delay,   // dl - delay enemy turn or action
-    Cripple, // cr - reduce enemy movement
+    Lag, // lag - skip player next turn
     Unknown
 };
 
@@ -28,7 +28,7 @@ public:
     static DebuffSubType codeToSubType(const std::string& code) {
         if (code == "wk") return DebuffSubType::Weaken;
         if (code == "dl") return DebuffSubType::Delay;
-        if (code == "cr") return DebuffSubType::Cripple;
+        if (code == "lag") return DebuffSubType::Lag;
         return DebuffSubType::Unknown;
     }
 

@@ -5,9 +5,9 @@ enum class BuffSubType {
     Overclock,  // oc  - boost atk value
     Shield,     // sh  - grant shield
     Barrier,    // ba  - grant barrier
-    Guard,      // ge  - guard effect
     Heal,       // he  - restore HP
     Fast,       // fas - this action executes without consuming a turn
+    Persist, // per - this card remain on hand until player uses it
     Unknown
 };
 
@@ -31,8 +31,8 @@ public:
     static BuffSubType codeToSubType(const std::string& code) {
         if (code == "oc")  return BuffSubType::Overclock;
         if (code == "sh" || code == "shi")  return BuffSubType::Shield;
+		if (code == "per") return BuffSubType::Persist;
         if (code == "ba")  return BuffSubType::Barrier;
-        if (code == "ge")  return BuffSubType::Guard;
         if (code == "he")  return BuffSubType::Heal;
         if (code == "fas") return BuffSubType::Fast;
         return BuffSubType::Unknown;

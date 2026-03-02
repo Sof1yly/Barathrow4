@@ -591,6 +591,8 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, vector<Draw
             if (cardData->getIsFast()) cout << " [Fast]";
             if (cardData->getIsTemp()) cout << " [Temp]";
             if (cardData->getIsDeleteAfterUse()) cout << " [Delete]";
+            if (cardData->getIsPersist()) cout << " [Persist]";
+            if (cardData->getIsLag()) cout << " [Lag]";
             if (cardData->getOverclockValue() > 0) cout << " [Overclock: " << cardData->getOverclockValue() << "]";
             cout << endl;
         }

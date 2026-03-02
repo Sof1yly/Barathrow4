@@ -133,16 +133,27 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     // 1) Collect all card data from current hand
     std::vector<Card*> cardsInHand = hand.CollectAllCardData();
 
-    // 2) Move all cards from hand to discard pile (including energy cards)
-    if (!cardsInHand.empty())
-    {
-        discard.insert(discard.end(), cardsInHand.begin(), cardsInHand.end());
+    // 2) Separate persist cards from non-persist cards
+    std::vector<Card*> persistCards;
+    std::vector<Card*> nonPersistCards;
+    for (Card* c : cardsInHand) {
+        if (c && c->getIsPersist()) {
+            persistCards.push_back(c);
+        } else {
+            nonPersistCards.push_back(c);
+        }
     }
 
-    // 3) Clear the visual hand
+    // 3) Move only non-persist cards to discard pile
+    if (!nonPersistCards.empty())
+    {
+        discard.insert(discard.end(), nonPersistCards.begin(), nonPersistCards.end());
+    }
+
+    // 4) Clear the visual hand
     hand.Clear(objectsList);
 
-    // 4) If deck is empty, shuffle discard pile back into deck
+    // 5) If deck is empty, shuffle discard pile back into deck
     if (deck.empty() && !discard.empty())
     {
         cout << "  Deck is empty. Moving " << discard.size()<< " cards from discard to deck" << endl;
@@ -151,28 +162,38 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
         ShuffleDeck();
     }
 
-    // 5) Draw new hand
+    // 6) Draw new hand
     int drawCount = std::min(cardCount, (int)deck.size());
 
+    std::vector<Card*> drawn;
     if (drawCount > 0)
     {
-        std::vector<Card*> drawn;
         for (int i = 0; i < drawCount; ++i)
         {
             drawn.push_back(deck.back());
             deck.pop_back();
         }
+    }
 
+    // 7) Re-add persist cards first, then drawn cards
+    if (!persistCards.empty())
+    {
+        hand.AddCards(persistCards, objectsList);
+        cout << "  Kept " << persistCards.size() << " persist card(s) in hand" << endl;
+    }
+
+    if (!drawn.empty())
+    {
         hand.AddCards(drawn, objectsList);
 
-        cout << "  Drew " << drawCount << " new cards" << endl;
+        cout << "  Drew " << drawn.size() << " new cards" << endl;
         for (Card* c : drawn) {
             if (c != nullptr) {
                 std::cout << "    - " << c->getName() << std::endl;
             }
         }
     }
-    else
+    else if (persistCards.empty())
     {
         cout << "  No cards available to draw!" << endl;
     }

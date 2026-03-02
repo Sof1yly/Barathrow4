@@ -480,6 +480,7 @@ void Level::LevelFree()
     pendingMoveSteps = 0;
     pendingMoveZone = -1;
     pendingFastCard = false;
+    lagTurns = 0;
     enemyPreparingAttack = false;
     tempDiscardDone = false;
     turnState = TurnState::PLAYER_TURN;
@@ -1015,6 +1016,12 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         std::cout << "[Fast] Will not consume player turn.\n";
                     }
+
+                    if (cardData->getIsLag())
+                    {
+                        lagTurns++;
+                        std::cout << "[Lag] Player will skip next turn. Lag turns: " << lagTurns << std::endl;
+                    }
                 }
                 else
                 {
@@ -1399,5 +1406,16 @@ void Level::EndTurn()
     playerData.ResetShield();
 	cout << "\n\n\n\n\n";
 	cout << "=== END OF TURN , Now Turn  =  " << turnCount << " ===\n\n";
-    turnState = TurnState::PLAYER_TURN;
+
+    if (lagTurns > 0)
+    {
+        lagTurns--;
+        std::cout << "[Lag] Skipping player turn! Remaining lag: " << lagTurns << std::endl;
+        tempDiscardDone = false;
+        turnState = TurnState::ENEMY_TURN;
+    }
+    else
+    {
+        turnState = TurnState::PLAYER_TURN;
+    }
 }
