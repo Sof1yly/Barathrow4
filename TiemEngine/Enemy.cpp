@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include <iostream>
 
 Enemy::Enemy()
 {
@@ -70,6 +71,25 @@ void Enemy::Update(float dt)
     // HP above enemy
     hpText->SetPosition(glm::vec3(pos.x, pos.y + 80, 200));
 
+}
+
+void Enemy::addDelay(int turns)
+{
+    delayTurns += turns;
+    std::cout << "[Delay] Enemy delayed by " << turns << " turn(s). Total delay: " << delayTurns << std::endl;
+}
+
+bool Enemy::isDelayed() const
+{
+    return delayTurns > 0;
+}
+
+void Enemy::decrementDelay()
+{
+    if (delayTurns > 0) {
+        delayTurns--;
+        std::cout << "[Delay] Enemy delay decremented. Remaining: " << delayTurns << std::endl;
+    }
 }
 
 Enemy::~Enemy()

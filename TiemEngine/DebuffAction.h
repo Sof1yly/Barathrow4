@@ -27,7 +27,7 @@ public:
 
     static DebuffSubType codeToSubType(const std::string& code) {
         if (code == "wk") return DebuffSubType::Weaken;
-        if (code == "dl") return DebuffSubType::Delay;
+        if (code == "dl" || code == "de") return DebuffSubType::Delay;
         if (code == "lag") return DebuffSubType::Lag;
         return DebuffSubType::Unknown;
     }

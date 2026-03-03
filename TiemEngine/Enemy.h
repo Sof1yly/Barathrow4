@@ -39,6 +39,11 @@ public:
     }
     void UpdateTextPosition();
     void Update(float dt);
+
+    void addDelay(int turns);
+    bool isDelayed() const;
+    int getDelayTurns() const { return delayTurns; }
+    void decrementDelay();
 private:
     int maxHealth = 10;
     int health = maxHealth;
@@ -55,5 +60,5 @@ private:
 
     float attackTextTimer = 0.0f;
 
-
+    int delayTurns = 0;
 };

@@ -3,10 +3,10 @@ Name	Effects	Pattern	Level	Rarity	Type	Desc
 Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage						
 Sweep Attack	atk:3	A3	1	sta	atk	Deal {atk} Damage						
 Sprint	mov:3	A1	1	sta	mov	Move {mov}						
-Panic Roll	mov:1	A1	1	sta	mov	Move {mov} Fast Temp						
+Panic Roll	mov:1;fas;temp	A1	1	sta	mov	Move {mov} Fast Temp						
 Walk	mov:1	A1	1	sta	mov	Move {mov}						
-Perfected Roll	mov:1	A1	1	rar	mov	Move {mov} Fast Delete						
-Onslaught	atk:10	A2	1	rar	atk	Deal {atk} Damage Delete						
+Perfected Roll	mov:1;fas;del	A1	1	rar	mov	Move {mov} Fast Delete						
+Onslaught	atk:10;del	A2	1	rar	atk	Deal {atk} Damage Delete						
 Feint Attack	atk:3;re:1	A5	1	rar	atk	Deal {atk} Damage Retreat 1						
 Strength	oc:3	A1	1	com	buf	Overclock 3						
 Stomp	atk:5	A7	1	com	atk	Deal {atk} Damage						
@@ -20,31 +20,4 @@ Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage Delay 3 Delete
 Delaying Strike	atk:5;de:1	A4	1	com	dbuf	Deal {atk} Damage Delay 1						
 Desperate Strength	oc:5;del	A1	1	rar	buf	Overclock 5 Delete						
 Energy	enr	A1	1	misc	en	Energy						
-Charge	oc:5;con:2	A1	1	com	buf	Overclock 5 Consume 1						
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
-												
+Charge	oc:5;con:2	A1	1	com	buf	Overclock 5 Consume 1					

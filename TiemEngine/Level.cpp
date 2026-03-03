@@ -7,6 +7,7 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "BuffAction.h"
+#include "DebuffAction.h"
 #include "EnergyAction.h"
 #include "CombineObject.h"
 #include "TextObject.h"
@@ -765,6 +766,7 @@ void Level::HandleMouse(int type, int x, int y)
                     const AttackPattern* pattern;
                 };
                 std::vector<PendingAttackInfo> pendingAttacks;
+                int pendingDelayTurns = 0;
 
                 if (cardData)
                 {
@@ -840,6 +842,14 @@ void Level::HandleMouse(int type, int x, int y)
                             if (buff->getSubType() == BuffSubType::Shield)
                             {
                                 playerData.AddShield(buff->getValue());
+                            }
+                        }
+                        else if (auto* debuff = dynamic_cast<DebuffAction*>(a))
+                        {
+                            if (debuff->getSubType() == DebuffSubType::Delay)
+                            {
+                                pendingDelayTurns += debuff->getValue();
+                                std::cout << "  DelayAction: " << debuff->getValue() << std::endl;
                             }
                         }
                     }
@@ -979,6 +989,11 @@ void Level::HandleMouse(int type, int x, int y)
                             {
                                 enemy->getDamage(atk->getValue());
                                 std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
+
+                                if (pendingDelayTurns > 0)
+                                {
+                                    enemy->addDelay(pendingDelayTurns);
+                                }
 
                                 if (enemy->getHealth() <= 0) {
                                     std::cout << "        Enemy died!\n";
@@ -1192,6 +1207,15 @@ void Level::UpdateTurn()
         {
             cardSystem.DiscardTempCardsFromHand(objectsList);
             tempDiscardDone = true;
+        }
+
+        if (enemy->isDelayed())
+        {
+            cout << "[ENEMY TURN] Enemy is delayed! Skipping action. Delay: " << enemy->getDelayTurns() << endl;
+            enemy->decrementDelay();
+            highlightManager.HideAllEnemy();
+            turnState = TurnState::END_TURN;
+            return;
         }
 
         if (enemyPreparingAttack)
