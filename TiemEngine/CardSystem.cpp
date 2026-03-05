@@ -103,7 +103,26 @@ void CardSystem::DealNewHand(int cardCount,std::vector<DrawableObject*>& objects
 
     hand.Clear(objectsList);
 
-    int drawCount = std::min(cardCount, (int)deck.size());
+    // Pull preload cards from deck first (guaranteed in first hand)
+    std::vector<Card*> preloadCards;
+    for (auto it = deck.begin(); it != deck.end(); )
+    {
+        if ((*it)->getIsPreLoad())
+        {
+            preloadCards.push_back(*it);
+            it = deck.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    // Calculate how many more cards to draw from deck
+    int remaining = cardCount - (int)preloadCards.size();
+    if (remaining < 0) remaining = 0;
+
+    int drawCount = std::min(remaining, (int)deck.size());
     std::vector<Card*> drawn;
     for (int i = 0; i < drawCount && !deck.empty(); ++i)
     {
@@ -111,13 +130,20 @@ void CardSystem::DealNewHand(int cardCount,std::vector<DrawableObject*>& objects
         deck.pop_back();
     }
 
-    if (!drawn.empty())
-    {
-        hand.AddCards(drawn, objectsList);
+    // Add preload cards first, then drawn cards
+    std::vector<Card*> fullHand;
+    fullHand.insert(fullHand.end(), preloadCards.begin(), preloadCards.end());
+    fullHand.insert(fullHand.end(), drawn.begin(), drawn.end());
 
-        for (Card* c : drawn) {
+    if (!fullHand.empty())
+    {
+        hand.AddCards(fullHand, objectsList);
+
+        for (Card* c : fullHand) {
             if (c != nullptr) {
-                std::cout << c->getName() << std::endl;
+                std::cout << c->getName();
+                if (c->getIsPreLoad()) std::cout << " [PreLoad]";
+                std::cout << std::endl;
             }
         }
     }

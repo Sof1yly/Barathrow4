@@ -20,6 +20,7 @@ private:
     bool isDeleteAfterUse = false;
     bool isPersist = false;
     bool isLag = false;
+    bool isPreLoad = false;
     int overclockValue = 0;
     
     // Visual rendering data
@@ -58,6 +59,8 @@ public:
     void setIsPersist(bool v) { isPersist = v; }
     bool getIsLag() const { return isLag; }
     void setIsLag(bool v) { isLag = v; }
+    bool getIsPreLoad() const { return isPreLoad; }
+    void setIsPreLoad(bool v) { isPreLoad = v; }
     int getOverclockValue() const { return overclockValue; }
     void setOverclockValue(int v) { overclockValue = v; }
 
