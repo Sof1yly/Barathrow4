@@ -91,44 +91,54 @@ void Card::do_action()
 void Card::CreateVisuals()
 {
     if (visualsCreated) return;
-    
+
     string basePath = "../Resource/Texture/cards/";
-    
+
     // RENDER ORDER 
-    
-    // 1. Background (bottom layer)
+
+    // 1. Background (bottom layer) - This will be the parent for all other layers
     background = new ImageObject();
     background->SetSize(280.0f, -410.0f);
     background->SetTexture(basePath + getBackgroundName());
-    
-    // 2. Star Overlay 
+
+    // 2. Star Overlay - Make it a child of background
     if (level > 0) {
         starOverlay = new ImageObject();
         starOverlay->SetSize(280.0f, -410.0f);
         starOverlay->SetTexture(basePath + getStarOverlayName(level));
+        starOverlay->SetParent(background);
+        starOverlay->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
     }
-    
-    // 3. Type Icon
+
+    // 3. Type Icon - Make it a child of background
     typeIcon = new ImageObject();
     typeIcon->SetSize(280.0f, -410.0f);
     typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
-    
-    // 4. Main Visual
+    typeIcon->SetParent(background);
+    typeIcon->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
+
+    // 4. Main Visual - Make it a child of background
     visual = new ImageObject();
     visual->SetSize(280.0f, -410.0f);
     visual->SetTexture(basePath + "BG_visual/" + name + ".png");
-    
-    // 5. Card Frame (based on rarity)
+    visual->SetParent(background);
+    visual->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
+
+    // 5. Card Frame (based on rarity) - Make it a child of background
     cardFrame = new ImageObject();
     cardFrame->SetSize(280.0f, -410.0f);
     cardFrame->SetTexture(basePath + getCardFrameName(rarityCode));
-    
-    // 6. Card Name Text 
+    cardFrame->SetParent(background);
+    cardFrame->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
+
+    // 6. Card Name Text - Make it a child of background
     nameText = new TextObject();
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 18);
+    nameText->SetParent(background);
+    nameText->SetLocalPosition(glm::vec3(0, 0.354f, 0)); // Normalized: 0.354 of parent height
 
-    // 7. Description Text resolve {atk}, {mov}
+    // 7. Description Text - Make it a child of background
     if (!description.empty()) {
         string resolved = description;
         for (Action* a : actions) {
@@ -143,8 +153,10 @@ void Card::CreateVisuals()
         descriptionText = new TextObject();
         SDL_Color descColor = { 220, 220, 220, 255 };
         descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
+        descriptionText->SetParent(background);
+        descriptionText->SetLocalPosition(glm::vec3(0, -0.256f, 0)); // Normalized: -0.256 of parent height
     }
-    
+
     visualsCreated = true;
 }
 

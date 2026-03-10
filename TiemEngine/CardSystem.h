@@ -26,6 +26,9 @@ private:
     std::vector<Card*> discard;
     std::vector<Card*> deletePile;
 
+    // Fixed snapshot of all cards (never changes after load)
+    std::vector<Card*> fullCollection;
+
     // Track total overclock bonus applied
     int overclockBonus = 0;
 
@@ -139,6 +142,12 @@ public:
 
     const std::vector<Card*>& GetDeck() const { return deck; }
     const std::vector<Card*>& GetDiscard() const { return discard; }
+
+    // Get ALL cards the player owns (deck + hand + discard)
+    std::vector<Card*> GetAllCards() const;
+
+    // Get the fixed snapshot of all cards (never changes)
+    const std::vector<Card*>& GetFullCollection() const { return fullCollection; }
 
     // Draw pile turn counter
     bool UseDrawPileTurn();       // returns true if turn should end (turns was > 0)

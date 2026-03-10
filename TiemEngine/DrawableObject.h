@@ -11,8 +11,13 @@ protected:
 	glm::vec3 size;
 	float angle;
 
+	// Parent-child transform system
+	DrawableObject* parent = nullptr;
+	glm::vec3 localPos;  // Normalized position relative to parent (fraction of parent size)
+
 public:
 	glm::mat4 getTransform();
+	glm::mat4 getLocalTransform();
 
 	DrawableObject();
 	~DrawableObject();
@@ -26,6 +31,15 @@ public:
 	glm::vec3 GetPosition() const { return pos; }
 	glm::vec2 GetSize() const { return size; }
 	float GetRotate() const { return angle; }
+
+	// Parent-child relationship
+	void SetParent(DrawableObject* p);
+	DrawableObject* GetParent() const { return parent; }
+	void SetLocalPosition(glm::vec3 localPos);
+	glm::vec3 GetLocalPosition() const { return localPos; }
+
+	// Update world position based on parent
+	void UpdateFromParent();
 
 	//Rotate, Scale ???
 

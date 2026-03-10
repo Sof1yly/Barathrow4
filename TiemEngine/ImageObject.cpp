@@ -11,7 +11,7 @@ ImageObject::ImageObject()
 
 ImageObject::~ImageObject()
 {
-	if (texture != 0) {
+	if (texture != 0 && ownsTexture) {
 		glDeleteTextures(1, &texture);
 		texture = 0;
 	}
@@ -52,7 +52,7 @@ void ImageObject::Render(glm::mat4 globalModelTransform)
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
 		glUniform1i(renderModeId, 2);
-		glUniform4f(colorId, 1.0f, 1.0f, 1.0f, 1.0f);
+		glUniform4f(colorId, 1.0f, 1.0f, 1.0f, alpha);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		squareMesh->Render();
 	}

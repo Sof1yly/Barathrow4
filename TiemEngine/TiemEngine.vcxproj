@@ -27,6 +27,7 @@
     <ClCompile Include="CardSystem.cpp" />
     <ClCompile Include="CombineObject.cpp" />
     <ClCompile Include="Deck.cpp" />
+    <ClCompile Include="DeckViewer.cpp" />
     <ClCompile Include="DrawableObject.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="GameData.cpp" />
@@ -62,6 +63,7 @@
     <ClInclude Include="CombineObject.h" />
     <ClInclude Include="DebuffAction.h" />
     <ClInclude Include="Deck.h" />
+    <ClInclude Include="DeckViewer.h" />
     <ClInclude Include="DrawableObject.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="EnergyAction.h" />

@@ -141,6 +141,7 @@ int main(int argc, char* argv[])
 					case SDLK_p: gameStateController->currentLevel->HandleKey('p'); break;
 					case SDLK_o: gameStateController->currentLevel->HandleKey('o'); break;
 					case SDLK_l: gameStateController->currentLevel->HandleKey('l'); break;
+					case SDLK_v: gameStateController->currentLevel->HandleKey('v'); break;
 					}
 				}
 
@@ -154,6 +155,11 @@ int main(int argc, char* argv[])
 						SDL_GetMouseState(&mouseX, &mouseY);
 						gameStateController->currentLevel->HandleMouse(0, mouseX, mouseY);
 					}
+					else if (sdlEvent.button.button == SDL_BUTTON_RIGHT)
+					{
+						SDL_GetMouseState(&mouseX, &mouseY);
+						gameStateController->currentLevel->HandleMouse(4, mouseX, mouseY);
+					}
 				}
 
 				// Mouse released
@@ -164,6 +170,11 @@ int main(int argc, char* argv[])
 						mouseHeld = false;
 						SDL_GetMouseState(&mouseX, &mouseY);
 						gameStateController->currentLevel->HandleMouse(2, mouseX, mouseY);
+					}
+					else if (sdlEvent.button.button == SDL_BUTTON_RIGHT)
+					{
+						SDL_GetMouseState(&mouseX, &mouseY);
+						gameStateController->currentLevel->HandleMouse(5, mouseX, mouseY);
 					}
 				}
 

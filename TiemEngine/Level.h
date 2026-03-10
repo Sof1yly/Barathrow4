@@ -15,6 +15,7 @@
 #include "Enemy.h"
 #include "HighlightManager.h"
 #include "Player.h"
+#include "DeckViewer.h"
 
 class Level
 {
@@ -94,10 +95,13 @@ private:
 
     // Movement
     glm::vec3 testMoveTarget = glm::vec3(0.0f);
-    bool      testMoveMoving = false;
+    bool testMoveMoving = false;
 
     // Card system (deck, discard, drag, drop zones, bezier)
     CardSystem cardSystem;
+
+    // Deck viewer for viewing all cards in deck
+    DeckViewer deckViewer;
 
     // Patterns
     std::vector<AttackPattern> patterns;

@@ -14,7 +14,7 @@ TextObject::TextObject()
 
 TextObject::~TextObject()
 {
-	if (texture != 0) {
+	if (texture != 0 && ownsTexture) {
 		glDeleteTextures(1, &texture);
 		texture = 0;
 	}

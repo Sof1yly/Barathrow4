@@ -31,6 +31,10 @@ bool CardSystem::LoadData(const string& patternFile,const string& cardFile,strin
         return false;
 
     deck = dataLoader.getCards();
+
+    // Save a fixed snapshot of all cards for the deck viewer
+    fullCollection = deck;
+
     return true;
 }
 
@@ -628,6 +632,19 @@ void CardSystem::PrintDrawDeck() const
         cout << "  Draw deck is empty!" << endl;
     }
     cout << "=============================" << endl;
+}
+
+std::vector<Card*> CardSystem::GetAllCards() const
+{
+    std::vector<Card*> all;
+    // Draw pile
+    all.insert(all.end(), deck.begin(), deck.end());
+    // Hand
+    std::vector<Card*> handCards = hand.CollectAllCardData();
+    all.insert(all.end(), handCards.begin(), handCards.end());
+    // Discard pile
+    all.insert(all.end(), discard.begin(), discard.end());
+    return all;
 }
 
 

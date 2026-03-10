@@ -509,6 +509,23 @@ void Level::HandleKey(char key)
     if (key == 'r') { GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; return; }
     if (key == 'q') { GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    return; }
 
+    // Toggle deck viewer with 'v' key
+    if (key == 'v')
+    {
+        if (deckViewer.IsActive())
+        {
+            deckViewer.Hide(objectsList);
+        }
+        else
+        {
+            // Show fixed snapshot of all cards (never changes when cards are played)
+            const vector<Card*>& allCards = cardSystem.GetFullCollection();
+            deckViewer.SetDeck(allCards);
+            deckViewer.Show(objectsList);
+        }
+        return;
+    }
+
     if (turnState != TurnState::PLAYER_TURN)
         return;
 
@@ -598,9 +615,7 @@ void Level::HandleKey(char key)
 
 void Level::HandleMouse(int type, int x, int y)
 {
-    if (turnState != TurnState::PLAYER_TURN)
-        return;
-
+    // Calculate mouse position (needed for all mouse operations)
     int winW = GameEngine::GetInstance()->GetWindowWidth();
     int winH = GameEngine::GetInstance()->GetWindowHeight();
     float scaleW = GameEngine::GetInstance()->GetDrawAreaWidth();
@@ -609,6 +624,40 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    // ----------------------------------------------------
+    // Right-Click Down (type 4) - Next page in deck viewer
+    // ----------------------------------------------------
+    if (type == 4)
+    {
+        if (deckViewer.IsActive())
+        {
+            deckViewer.NextPage(objectsList);
+        }
+        return;
+    }
+
+    // ----------------------------------------------------
+    // Right-Click Release (type 5) - Currently unused
+    // ----------------------------------------------------
+    if (type == 5)
+    {
+        return;
+    }
+
+    // If deck viewer is active, handle navigation
+    if (deckViewer.IsActive())
+    {
+        // Left click goes to previous page
+        if (type == 0 || type == 2)
+        {
+            deckViewer.PrevPage(objectsList);
+        }
+        return;
+    }
+
+    if (turnState != TurnState::PLAYER_TURN)
+        return;
 
     // ----------------------------------------------------
     // Hover
