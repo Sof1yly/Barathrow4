@@ -82,6 +82,7 @@ void Level::LevelInit()
     enemy->setObject(enemyObj);
     enemy->UpdateTextPosition();
     objectsList.push_back(enemy->getHPText());
+    objectsList.push_back(enemy->getCorruptText());
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -899,6 +900,13 @@ void Level::HandleMouse(int type, int x, int y)
                             {
                                 pendingDelayTurns += debuff->getValue();
                                 std::cout << "  DelayAction: " << debuff->getValue() << std::endl;
+                            }
+                            else if (debuff->getSubType() == DebuffSubType::Corrupt)
+                            {
+                                if (enemy)
+                                {
+                                    enemy->addCorruption(debuff->getValue());
+                                }
                             }
                         }
                     }

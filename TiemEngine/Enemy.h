@@ -33,6 +33,7 @@ public:
     ImageObject* getObject() { return objImg; }
 
     TextObject* getHPText() { return hpText; }
+    TextObject* getCorruptText() { return corruptText; }
 
     void showAttackText() {
         attackTextTimer = 1.0f;
@@ -44,6 +45,9 @@ public:
     bool isDelayed() const;
     int getDelayTurns() const { return delayTurns; }
     void decrementDelay();
+
+    void addCorruption(int stacks);
+    int getCorruption() const { return corruptionStacks; }
 private:
     int maxHealth = 10;
     int health = maxHealth;
@@ -57,8 +61,10 @@ private:
     int currentPatternIndex = 0;
 
     TextObject* hpText = nullptr;
+    TextObject* corruptText = nullptr;
 
     float attackTextTimer = 0.0f;
 
     int delayTurns = 0;
+    int corruptionStacks = 0;
 };

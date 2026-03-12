@@ -5,6 +5,7 @@ enum class DebuffSubType {
     Weaken,  // wk - reduce enemy attack
     Delay,   // dl - delay enemy turn or action
     Lag, // lag - skip player next turn
+    Corrupt, // cor - apply corruption, enemy takes extra damage
     Unknown
 };
 
@@ -29,6 +30,7 @@ public:
         if (code == "wk") return DebuffSubType::Weaken;
         if (code == "dl" || code == "de") return DebuffSubType::Delay;
         if (code == "lag") return DebuffSubType::Lag;
+        if (code == "cor") return DebuffSubType::Corrupt;
         return DebuffSubType::Unknown;
     }
 
