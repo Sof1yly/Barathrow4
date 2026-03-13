@@ -10,6 +10,7 @@
 #include "SquareMeshVbo.h"
 #include "GameEngine.h"
 #include "GameStateController.h"
+#include "LevelManager.h"
 
 using namespace std;
 
@@ -99,6 +100,8 @@ int main(int argc, char* argv[])
 	gameStateController = new GameStateController();
 	gameStateController->Init(GameState::GS_LEVEL1);
 
+
+	LevelManager levelMap;//dubug map
 	// Game Loop
 	while (GameData::GetInstance()->gGameStateCurr != GameState::GS_QUIT)
 	{
@@ -204,6 +207,20 @@ int main(int argc, char* argv[])
 			// ---------------------------------------------
 			if (gameStateController->currentLevel)
 			{
+				static bool debugMapRun = false;
+
+				if (!debugMapRun)
+				{
+					levelMap.PrintMap();
+
+					cout << "Choose path: ";
+					int c;
+					cin >> c;
+
+					levelMap.ChoosePath(c);
+
+				}
+
 				gameStateController->currentLevel->LevelUpdate();
 				
 				SDL_GetMouseState(&mouseX, &mouseY);
