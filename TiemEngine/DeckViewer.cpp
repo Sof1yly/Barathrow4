@@ -143,10 +143,21 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* src = card->GetNameText();
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
-            copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Respect card text local position so Card.cpp layout changes are reflected in deck view
+            float nameW = src->GetSize().x-2.0f;
+            float nameH = src->GetSize().y-2.5f;
+            if (nameH < 0.0f) 
+            { 
+                nameH += 2.0f; 
+            }
+            else 
+            { 
+                nameH -= 2.0f; 
+            }
+            copy->SetSize(nameW, nameH);
             glm::vec3 local = src->GetLocalPosition();
-            copy->SetPosition(glm::vec3(cardPos.x + (local.x * W), cardPos.y + (local.y * H), 0));
+            float leftAnchorX = (cardPos.x - (W * 0.5f)) + (local.x * W);
+            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) +55.0f;
+            copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }
@@ -157,9 +168,11 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
             copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Respect card text local position so Card.cpp layout changes are reflected in deck view
+            // Left-anchor X using local offset as margin from card's left edge
             glm::vec3 local = src->GetLocalPosition();
-            copy->SetPosition(glm::vec3(cardPos.x + (local.x * W), cardPos.y + (local.y * H), 0));
+            float leftAnchorX = (cardPos.x - (W * 0.5f)) + (local.x * W);
+            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f);
+            copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }

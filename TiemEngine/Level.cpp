@@ -650,7 +650,7 @@ void Level::HandleMouse(int type, int x, int y)
     if (deckViewer.IsActive())
     {
         // Left click goes to previous page
-        if (type == 0 || type == 2)
+        if (type == 0)
         {
             deckViewer.PrevPage(objectsList);
         }
