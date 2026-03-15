@@ -144,8 +144,9 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
             copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Position name at top of card
-            copy->SetPosition(glm::vec3(cardPos.x, cardPos.y + H * 0.354f, 0));
+            // Respect card text local position so Card.cpp layout changes are reflected in deck view
+            glm::vec3 local = src->GetLocalPosition();
+            copy->SetPosition(glm::vec3(cardPos.x + (local.x * W), cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }
@@ -156,8 +157,9 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
             copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Position description at bottom of card
-            copy->SetPosition(glm::vec3(cardPos.x, cardPos.y - H * 0.256f, 0));
+            // Respect card text local position so Card.cpp layout changes are reflected in deck view
+            glm::vec3 local = src->GetLocalPosition();
+            copy->SetPosition(glm::vec3(cardPos.x + (local.x * W), cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }

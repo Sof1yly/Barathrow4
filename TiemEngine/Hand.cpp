@@ -163,13 +163,13 @@ void Hand::layoutViews()
             if (!isDraggedCard) {
                 if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
                     textObjectCount++;
-                    float textOffsetX = 35.0f;
+                    float textOffsetX = 45.0f;
                     float textOffsetY;
                     
                     if (textObjectCount == 1) {
                         textOffsetY = 130.0f; // Name position (top)
                     } else {
-                        textOffsetY = -80.0f; // Description position (below main visual)
+                        textOffsetY = -89.0f; // Description position (below main visual)
                     }
 				    
                     float angleRad = rotDeg * (PI / 180.0f);
@@ -250,13 +250,13 @@ void Hand::liftForHover(ImageObject* v, vector<DrawableObject*>& objectsList)
         
         if (TextObject* textObj = dynamic_cast<TextObject*>(layer)) {
             textObjectCount++;
-            float textOffsetX = 22.5f * HOVER_SCALE;
+            float textOffsetX = 29.0f * HOVER_SCALE;
             float textOffsetY;
             
             if (textObjectCount == 1) {
                 textOffsetY = 135.0f * HOVER_SCALE; // Name position (top) 135
             } else {
-                textOffsetY = -80.0f * HOVER_SCALE; // Description position (below main visual)
+                textOffsetY = -84.0f * HOVER_SCALE; // Description position (below main visual)
             }
             
             textObj->SetPosition(glm::vec3(basePos.x + textOffsetX, basePos.y + HOVER_OFFSET_Y + textOffsetY, layerZ));

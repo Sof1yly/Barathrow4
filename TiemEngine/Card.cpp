@@ -96,12 +96,12 @@ void Card::CreateVisuals()
 
     // RENDER ORDER 
 
-    // 1. Background (bottom layer) - This will be the parent for all other layers
+    // 1. Background (bottom layer) 
     background = new ImageObject();
     background->SetSize(280.0f, -410.0f);
     background->SetTexture(basePath + getBackgroundName());
 
-    // 2. Star Overlay - Make it a child of background
+    // 2. Star Overlay
     if (level > 0) {
         starOverlay = new ImageObject();
         starOverlay->SetSize(280.0f, -410.0f);
@@ -110,35 +110,35 @@ void Card::CreateVisuals()
         starOverlay->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
     }
 
-    // 3. Type Icon - Make it a child of background
+    // 3. Type Icon 
     typeIcon = new ImageObject();
     typeIcon->SetSize(280.0f, -410.0f);
     typeIcon->SetTexture(basePath + getTypeIconName(typeCode));
     typeIcon->SetParent(background);
     typeIcon->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
 
-    // 4. Main Visual - Make it a child of background
+    // 4. Main Visual 
     visual = new ImageObject();
     visual->SetSize(280.0f, -410.0f);
     visual->SetTexture(basePath + "BG_visual/" + name + ".png");
     visual->SetParent(background);
     visual->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
 
-    // 5. Card Frame (based on rarity) - Make it a child of background
+    // 5. Card Frame (based on rarity) 
     cardFrame = new ImageObject();
     cardFrame->SetSize(280.0f, -410.0f);
     cardFrame->SetTexture(basePath + getCardFrameName(rarityCode));
     cardFrame->SetParent(background);
     cardFrame->SetLocalPosition(glm::vec3(0, 0, 0)); // Same position as parent
 
-    // 6. Card Name Text - Make it a child of background
+    // 6. Card Name Text 
     nameText = new TextObject();
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 18);
     nameText->SetParent(background);
-    nameText->SetLocalPosition(glm::vec3(0, 0.354f, 0)); // Normalized: 0.354 of parent height
+    nameText->SetLocalPosition(glm::vec3(0.12f, 0.34f, 0)); // Normalized: 0.354 of parent height
 
-    // 7. Description Text - Make it a child of background
+    // 7. Description Text 
     if (!description.empty()) {
         string resolved = description;
         for (Action* a : actions) {
@@ -154,7 +154,7 @@ void Card::CreateVisuals()
         SDL_Color descColor = { 220, 220, 220, 255 };
         descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
         descriptionText->SetParent(background);
-        descriptionText->SetLocalPosition(glm::vec3(0, -0.256f, 0)); // Normalized: -0.256 of parent height
+        descriptionText->SetLocalPosition(glm::vec3(0.21f, -0.235f, 0)); // Normalized: -0.256 of parent height
     }
 
     visualsCreated = true;
