@@ -274,10 +274,10 @@ void CardSystem::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZonesCreated = true;
 
     const float Z = 1.0f;
-    const float SIDE_W = 390.0f;
-    const float SIDE_H = 530.0f;
-    const float MID_W = 710.0f;
-    const float MID_H = 290.0f;
+    const float SIDE_W = 420.0f;
+    const float SIDE_H = 680.0f;
+    const float MID_W = 770.0f;
+    const float MID_H = 357.5f;
     const float BOARD_CENTER_Y = 200.0f;
     const float SIDE_X_OFFSET = 600.0f;
     const float SIDE_Y = BOARD_CENTER_Y;
