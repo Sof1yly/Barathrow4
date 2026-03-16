@@ -817,6 +817,7 @@ void Level::HandleMouse(int type, int x, int y)
                 };
                 std::vector<PendingAttackInfo> pendingAttacks;
                 int pendingDelayTurns = 0;
+                int pendingCorruptionStacks = 0;
 
                 if (cardData)
                 {
@@ -903,10 +904,8 @@ void Level::HandleMouse(int type, int x, int y)
                             }
                             else if (debuff->getSubType() == DebuffSubType::Corrupt)
                             {
-                                if (enemy)
-                                {
-                                    enemy->addCorruption(debuff->getValue());
-                                }
+                                pendingCorruptionStacks += debuff->getValue();
+                                std::cout << "  CorruptAction: " << debuff->getValue() << std::endl;
                             }
                         }
                     }
@@ -988,6 +987,7 @@ void Level::HandleMouse(int type, int x, int y)
                         }
                     }
 
+                    bool corruptionApplied = false;
                     for (const PendingAttackInfo& pa : pendingAttacks)
                     {
                         AttackAction* atk = pa.atk;
@@ -1050,6 +1050,12 @@ void Level::HandleMouse(int type, int x, int y)
                                 if (pendingDelayTurns > 0)
                                 {
                                     enemy->addDelay(pendingDelayTurns);
+                                }
+
+                                if (!corruptionApplied && pendingCorruptionStacks > 0)
+                                {
+                                    enemy->addCorruption(pendingCorruptionStacks);
+                                    corruptionApplied = true;
                                 }
 
                                 if (enemy->getHealth() <= 0) {
