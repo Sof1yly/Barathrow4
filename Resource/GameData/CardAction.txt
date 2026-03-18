@@ -20,4 +20,4 @@ Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage,Delay 3,Delete
 Delaying Strike	atk:5;de:1	A4	1	com	dbuf	Deal {atk} Damage,Delay 1						
 Desperate Strength	oc:5;del	A1	1	rar	buf	Overclock 5,Delete						
 Energy	enr	A1	1	misc	en	Energy						
-Charge	oc:5;con:2	A1	1	com	buf	Overclock 5,Consume 1					
+Charge	oc:5;con:1	A1	1	com	buf	Overclock 5,Consume 1					

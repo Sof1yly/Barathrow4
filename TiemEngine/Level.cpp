@@ -377,6 +377,15 @@ void Level::LevelUpdate()
                 objectsList.erase(it);
             // Do NOT delete hp here — Enemy destructor owns and frees it.
         }
+
+        TextObject* cor = enemy->getCorruptText();
+        if (cor)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), cor);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+            // Do NOT delete cor here — Enemy destructor owns and frees it.
+        }
         delete enemy;  // Enemy::~Enemy() deletes hpText
         enemy = nullptr;
     }
@@ -456,6 +465,13 @@ void Level::LevelFree()
             auto it = std::find(objectsList.begin(), objectsList.end(), hpTxt);
             if (it != objectsList.end()) objectsList.erase(it);
             // Do NOT delete hpTxt here — Enemy destructor owns and frees it.
+        }
+
+        TextObject* corTxt = enemy->getCorruptText();
+        if (corTxt) {
+            auto it = std::find(objectsList.begin(), objectsList.end(), corTxt);
+            if (it != objectsList.end()) objectsList.erase(it);
+            // Do NOT delete corTxt here — Enemy destructor owns and frees it.
         }
 
         delete enemy;  // Enemy::~Enemy() deletes hpText
@@ -572,8 +588,10 @@ void Level::HandleKey(char key)
 	}
 
     if (key == 'o') {
-        enemy->rotatePattern();
-        cout << "Enemy rotated pattern.\n";
+        if (enemy) {
+            enemy->rotatePattern();
+            cout << "Enemy rotated pattern.\n";
+        }
     }
 
 	//test player movement
@@ -1238,6 +1256,8 @@ void Level::MoveEnemyTowardPlayer()
 
 bool Level::EnemyCanAttackPlayer()
 {
+    if (!enemy) return false;
+
     int er = enemy->getNowRow();
     int ec = enemy->getNowCol();
     int pr = nowRow;
