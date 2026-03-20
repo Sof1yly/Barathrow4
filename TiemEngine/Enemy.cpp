@@ -130,18 +130,29 @@ void Enemy::Update(float dt)
     if (corruptText)
         corruptText->SetPosition(glm::vec3(pos.x, pos.y + 55, 200));
 
-    //Timer
+	//Reset to idle after damage/attack animation
     if (isTakingDamage)
     {
         damageTimer += dt;
 
         if (damageTimer >= damageDuration)
         {
-            // back to idle animation
             objSprite->SetAnimationLoop(0, 0, 2, 200);
 
             isTakingDamage = false;
             damageTimer = 0.0f;
+        }
+    }
+    if (isAttacking)
+    {
+        attackTimer += dt;
+
+        if (attackTimer >= attackDuration)
+        {
+            objSprite->SetAnimationLoop(0, 0, 2, 200);
+
+            isAttacking = false;
+            attackTimer = 0.0f;
         }
     }
 
@@ -164,6 +175,45 @@ void Enemy::decrementDelay()
         delayTurns--;
         std::cout << "[Delay] Enemy delay decremented. Remaining: " << delayTurns << std::endl;
     }
+}
+
+void Enemy::PlayAttackAnimation(glm::vec3 playerPos)
+{
+    if (!objSprite) return;
+
+    glm::vec3 enemyPos = objSprite->GetPosition();
+
+    float dx = playerPos.x - enemyPos.x;
+    float dy = playerPos.y - enemyPos.y;
+
+    if (abs(dx) > abs(dy))
+    {
+        if (dx > 0)
+        {
+			cout << "Enemy attacks right!" << endl;
+            objSprite->SetAnimationLoop(2, 7, 6, 200);
+        }
+        else
+        {
+			cout << "Enemy attacks left!" << endl;
+            objSprite->SetAnimationLoop(2, 0, 6, 200);
+        }
+    }
+    else
+    {
+        if (dy > 0)
+        {
+			cout << "Enemy attacks down!" << endl;
+            objSprite->SetAnimationLoop(1, 7, 6, 200);
+        }
+        else
+        {
+			cout << "Enemy attacks up!" << endl;
+            objSprite->SetAnimationLoop(1, 0, 6, 200);
+        }
+    }
+    isAttacking = true;
+    attackTimer = 0.0f;
 }
 
 Enemy::~Enemy()

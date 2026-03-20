@@ -47,6 +47,8 @@ public:
     int getDelayTurns() const { return delayTurns; }
     void decrementDelay();
 
+    void PlayAttackAnimation(glm::vec3 playerPos);
+
     void addCorruption(int stacks);
     int getCorruption() const { return corruptionStacks; }
 private:
@@ -60,6 +62,10 @@ private:
     bool isTakingDamage = false;
     float damageTimer = 0.0f;
     float damageDuration = 2.0f;
+
+    bool isAttacking = false;
+    float attackTimer = 0.0f;
+    float attackDuration = 0.6f;
 
     SpriteObject* objSprite = nullptr;
     std::vector<AttackPattern> patterns;

@@ -1160,11 +1160,12 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 void Level::ApplyEnemyAttack()
 {
     if (!enemy) return;
+    enemy->PlayAttackAnimation(playersprite->GetPosition());
     enemy->showAttackText();
     auto attacks = enemy->getCurrentPattern().applyTo(enemy->getNowRow(), enemy->getNowCol());
 
     cout << "[Enemy Attack]\n";
-
+    
     for (auto& cell : attacks)
     {
         int x = cell.first.x;
