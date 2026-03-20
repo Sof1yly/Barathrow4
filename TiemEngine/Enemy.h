@@ -1,5 +1,5 @@
 #pragma once
-#include "ImageObject.h"
+#include "SpriteObject.h"
 #include "AttackPattern.h"
 #include "TextObject.h"
 
@@ -29,8 +29,8 @@ public:
 
     void getDamage(int damage);
 
-    void setObject(ImageObject* obj) { objImg = obj; }
-    ImageObject* getObject() { return objImg; }
+    void setObject(SpriteObject* obj) { objSprite = obj; }
+    SpriteObject* getObject() { return objSprite; }
 
     TextObject* getHPText() { return hpText; }
     TextObject* getCorruptText() { return corruptText; }
@@ -56,7 +56,7 @@ private:
     int nowRow = 0;
     int nowCol = 0;
 
-    ImageObject* objImg = nullptr;
+    SpriteObject* objSprite = nullptr;
     std::vector<AttackPattern> patterns;
     int currentPatternIndex = 0;
 

@@ -70,16 +70,22 @@ void Level::LevelInit()
 	enemy = new Enemy();
     enemy->setNowPosition(8, 0); //row=8,col=0
 
-	ImageObject* enemyObj = new ImageObject();
-	enemyObj->SetSize(100.0f, -100.0f);
-    enemyObj->SetTexture("../Resource/Texture/Enemy/Enemy1.png");
+    SpriteObject* enemyObj = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+	enemyObj->SetAnimationLoop(
+        0,      // start frame
+        0,      // row
+        2,      // end frame
+        200     // ms per frame
+    );
 
-	//glm::vec3 pos = GridToWorld(enemy->getNowRow(), enemy->getNowCol()); //  glm::vec3 pos = GridToWorld(8, 0);
+    enemyObj->SetSize(200.0f, -200.0f);
+
     glm::vec3 pos = GridToWorld(8, 0);
-	enemyObj->SetPosition(pos);
+    enemyObj->SetPosition(pos);
 
-	objectsList.push_back(enemyObj); 
+    objectsList.push_back(enemyObj);
     enemy->setObject(enemyObj);
+
     enemy->UpdateTextPosition();
     objectsList.push_back(enemy->getHPText());
     objectsList.push_back(enemy->getCorruptText());
@@ -358,7 +364,7 @@ void Level::LevelUpdate()
 
     if (enemy && enemy->getHealth() <= 0)
     {
-        ImageObject* obj = enemy->getObject();
+        SpriteObject* obj = enemy->getObject();
         if (obj)
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
@@ -443,7 +449,7 @@ void Level::LevelFree()
     // 2. Remove enemy-owned objects from objectsList before deleting enemy,
     //    to avoid double-free when the objectsList loop runs.
     if (enemy) {
-        ImageObject* eObj = enemy->getObject();
+        SpriteObject* eObj = enemy->getObject();
         if (eObj) {
             auto it = std::find(objectsList.begin(), objectsList.end(), eObj);
             if (it != objectsList.end()) objectsList.erase(it);

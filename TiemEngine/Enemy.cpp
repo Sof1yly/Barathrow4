@@ -68,9 +68,9 @@ void Enemy::addCorruption(int stacks)
 
 void Enemy::UpdateTextPosition()
 {
-    if (!objImg) return;
+    if (!objSprite) return;
 
-    glm::vec3 pos = objImg->GetPosition();
+    glm::vec3 pos = objSprite->GetPosition();
 
     if (hpText)
         hpText->SetPosition(glm::vec3(pos.x, pos.y + 80.0f, 100));
@@ -81,9 +81,9 @@ void Enemy::rotatePattern() {
 }
 void Enemy::Update(float dt)
 {
-    if (!objImg) return;
+    if (!objSprite) return;
 
-    glm::vec3 pos = objImg->GetPosition();
+    glm::vec3 pos = objSprite->GetPosition();
 
     // HP above enemy
     hpText->SetPosition(glm::vec3(pos.x, pos.y + 80, 200));
