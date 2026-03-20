@@ -40,6 +40,7 @@ public:
     }
     void UpdateTextPosition();
     void Update(float dt);
+    void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
     bool isDelayed() const;

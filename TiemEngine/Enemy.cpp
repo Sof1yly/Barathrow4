@@ -3,40 +3,56 @@
 
 Enemy::Enemy()
 {
-	health = maxHealth;
+    health = maxHealth;
+
     patterns = {
-            AttackPattern::fromGrid({
-                ".X.",
-                "XXX",
-                ".X."
-            }, 'X'),
+        AttackPattern::fromGrid({
+            ".X.",
+            "XXX",
+            ".X."
+        }, 'X'),
 
-            AttackPattern::fromGrid({
-                "XXX",
-                "XXX",
-                "XXX"
-            }, 'X'),
+        AttackPattern::fromGrid({
+            "XXX",
+            "XXX",
+            "XXX"
+        }, 'X'),
 
-            AttackPattern::fromGrid({
-                "..X..",
-                ".XXX.",
-                "XXXXX",
-                ".XXX.",
-                "..X.."
-            }, 'X'),
+        AttackPattern::fromGrid({
+            "..X..",
+            ".XXX.",
+            "XXXXX",
+            ".XXX.",
+            "..X.."
+        }, 'X'),
 
-            AttackPattern::fromGrid({
-                "...XX",
-            }, 'X'),
+        AttackPattern::fromGrid({
+            "...XX",
+        }, 'X'),
     };
+
+    // TEXT 
     hpText = new TextObject();
     SDL_Color white = { 255,255,255 };
     hpText->LoadText("HP: 10", white, 24);
 
     corruptText = new TextObject();
-    corruptText->SetSize(0, 0); // hidden initially
+    corruptText->SetSize(0, 0);
 
+	//Sprite Create
+    objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+
+    objSprite->SetAnimationLoop(
+        0,   // start frame
+        0,   // row
+        2,   // end frame
+        200  // ms per frame
+    );
+    objSprite->SetSize(200.0f, -200.0f);
+    // default position
+    setNowPosition(8, 0);
 }
+
 void Enemy::setHealth(int h)
 {
 	health = h;
@@ -115,6 +131,10 @@ void Enemy::decrementDelay()
 
 Enemy::~Enemy()
 {
+    if (objSprite) {
+        delete objSprite;
+        objSprite = nullptr;
+    }
     if (corruptText) {
         delete corruptText;
         corruptText = nullptr;
@@ -123,4 +143,11 @@ Enemy::~Enemy()
         delete hpText;
         hpText = nullptr;
     }
+}
+void Enemy::SetWorldPosition(glm::vec3 pos)
+{
+    if (objSprite)
+        objSprite->SetPosition(pos);
+
+    UpdateTextPosition();
 }

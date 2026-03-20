@@ -67,26 +67,11 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
     //Enemy
-	enemy = new Enemy();
-    enemy->setNowPosition(8, 0); //row=8,col=0
-
-    SpriteObject* enemyObj = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
-	enemyObj->SetAnimationLoop(
-        0,      // start frame
-        0,      // row
-        2,      // end frame
-        200     // ms per frame
-    );
-
-    enemyObj->SetSize(200.0f, -200.0f);
-
+    enemy = new Enemy();
+    enemy->setNowPosition(8, 0);
     glm::vec3 pos = GridToWorld(8, 0);
-    enemyObj->SetPosition(pos);
-
-    objectsList.push_back(enemyObj);
-    enemy->setObject(enemyObj);
-
-    enemy->UpdateTextPosition();
+    enemy->SetWorldPosition(pos);
+    objectsList.push_back(enemy->getObject());
     objectsList.push_back(enemy->getHPText());
     objectsList.push_back(enemy->getCorruptText());
 
