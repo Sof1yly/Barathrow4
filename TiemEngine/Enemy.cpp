@@ -63,6 +63,28 @@ void Enemy::getDamage(int damage)
 	int total = damage + corruptionStacks;
 	health -= total;
 	if (health < 0) health = 0;
+    if (health == 0&& objSprite) {
+        objSprite->SetAnimationLoop(
+            3,
+            0,
+            6,
+            100
+        );
+
+        isTakingDamage = true;
+        damageTimer = 0.0f;
+    }else
+    {
+        objSprite->SetAnimationLoop(
+            3,
+            0, 
+            3,
+            100 
+        );
+
+        isTakingDamage = true;
+        damageTimer = 0.0f;
+    }
 
 	if (corruptionStacks > 0)
 		std::cout << "[Corrupt] Enemy takes " << corruptionStacks << " extra damage (total " << total << ")" << std::endl;
@@ -107,6 +129,21 @@ void Enemy::Update(float dt)
     // Corruption text below HP
     if (corruptText)
         corruptText->SetPosition(glm::vec3(pos.x, pos.y + 55, 200));
+
+    //Timer
+    if (isTakingDamage)
+    {
+        damageTimer += dt;
+
+        if (damageTimer >= damageDuration)
+        {
+            // back to idle animation
+            objSprite->SetAnimationLoop(0, 0, 2, 200);
+
+            isTakingDamage = false;
+            damageTimer = 0.0f;
+        }
+    }
 
 }
 

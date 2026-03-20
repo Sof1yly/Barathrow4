@@ -57,6 +57,10 @@ private:
     int nowRow = 0;
     int nowCol = 0;
 
+    bool isTakingDamage = false;
+    float damageTimer = 0.0f;
+    float damageDuration = 2.0f;
+
     SpriteObject* objSprite = nullptr;
     std::vector<AttackPattern> patterns;
     int currentPatternIndex = 0;
