@@ -207,19 +207,19 @@ int main(int argc, char* argv[])
 			// ---------------------------------------------
 			if (gameStateController->currentLevel)
 			{
-				static bool debugMapRun = false;
+				//static bool debugMapRun = false;
 
-				if (!debugMapRun)
-				{
-					levelMap.PrintMap();
+				//if (!debugMapRun)
+				//{
+				//	levelMap.PrintMap();
 
-					cout << "Choose path: ";
-					int c;
-					cin >> c;
+				//	cout << "Choose path: ";
+				//	int c;
+				//	cin >> c;
 
-					levelMap.ChoosePath(c);
+				//	levelMap.ChoosePath(c);
 
-				}
+				//}
 
 				gameStateController->currentLevel->LevelUpdate();
 				
