@@ -1,5 +1,5 @@
 #pragma once
-#include "ImageObject.h"
+#include "SpriteObject.h"
 #include "AttackPattern.h"
 #include "TextObject.h"
 
@@ -29,8 +29,8 @@ public:
 
     void getDamage(int damage);
 
-    void setObject(ImageObject* obj) { objImg = obj; }
-    ImageObject* getObject() { return objImg; }
+    void setObject(SpriteObject* obj) { objSprite = obj; }
+    SpriteObject* getObject() { return objSprite; }
 
     TextObject* getHPText() { return hpText; }
     TextObject* getCorruptText() { return corruptText; }
@@ -40,11 +40,14 @@ public:
     }
     void UpdateTextPosition();
     void Update(float dt);
+    void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
     bool isDelayed() const;
     int getDelayTurns() const { return delayTurns; }
     void decrementDelay();
+
+    void PlayAttackAnimation(glm::vec3 playerPos);
 
     void addCorruption(int stacks);
     int getCorruption() const { return corruptionStacks; }
@@ -56,7 +59,15 @@ private:
     int nowRow = 0;
     int nowCol = 0;
 
-    ImageObject* objImg = nullptr;
+    bool isTakingDamage = false;
+    float damageTimer = 0.0f;
+    float damageDuration = 2.0f;
+
+    bool isAttacking = false;
+    float attackTimer = 0.0f;
+    float attackDuration = 0.6f;
+
+    SpriteObject* objSprite = nullptr;
     std::vector<AttackPattern> patterns;
     int currentPatternIndex = 0;
 
