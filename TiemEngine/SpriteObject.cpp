@@ -31,10 +31,15 @@ void SpriteObject::Render(glm::mat4 globalModelTransform)
 
 	GLuint modelMatixId = GameEngine::GetInstance()->GetRenderer()->GetModelMatrixAttrId();
 	GLuint modeId = GameEngine::GetInstance()->GetRenderer()->GetModeUniformId();
+	GLuint colorId = GameEngine::GetInstance()->GetRenderer()->GetColorUniformId();
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	if (modelMatixId == -1) {
 		cout << "Error: Can't perform transformation " << endl;
+		return;
+	}
+	if (colorId == -1) {
+		cout << "Error: Can't set color in SpriteObject " << endl;
 		return;
 	}
 
@@ -44,6 +49,7 @@ void SpriteObject::Render(glm::mat4 globalModelTransform)
 
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
+     glUniform4f(colorId, 1.0f, 1.0f, 1.0f, 1.0f);
 		glUniform1i(modeId, 1);
 		spriteMesh->AdjustTexcoord(uv);
 		spriteMesh->Render();
