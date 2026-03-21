@@ -377,6 +377,15 @@ void Level::LevelUpdate()
                 objectsList.erase(it);
             // Do NOT delete hp here — Enemy destructor owns and frees it.
         }
+
+        TextObject* cor = enemy->getCorruptText();
+        if (cor)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), cor);
+            if (it != objectsList.end())
+                objectsList.erase(it);
+            // Do NOT delete cor here — Enemy destructor owns and frees it.
+        }
         delete enemy;  // Enemy::~Enemy() deletes hpText
         enemy = nullptr;
     }
@@ -456,6 +465,13 @@ void Level::LevelFree()
             auto it = std::find(objectsList.begin(), objectsList.end(), hpTxt);
             if (it != objectsList.end()) objectsList.erase(it);
             // Do NOT delete hpTxt here — Enemy destructor owns and frees it.
+        }
+
+        TextObject* corTxt = enemy->getCorruptText();
+        if (corTxt) {
+            auto it = std::find(objectsList.begin(), objectsList.end(), corTxt);
+            if (it != objectsList.end()) objectsList.erase(it);
+            // Do NOT delete corTxt here — Enemy destructor owns and frees it.
         }
 
         delete enemy;  // Enemy::~Enemy() deletes hpText
@@ -572,8 +588,10 @@ void Level::HandleKey(char key)
 	}
 
     if (key == 'o') {
-        enemy->rotatePattern();
-        cout << "Enemy rotated pattern.\n";
+        if (enemy) {
+            enemy->rotatePattern();
+            cout << "Enemy rotated pattern.\n";
+        }
     }
 
 	//test player movement
@@ -650,7 +668,7 @@ void Level::HandleMouse(int type, int x, int y)
     if (deckViewer.IsActive())
     {
         // Left click goes to previous page
-        if (type == 0 || type == 2)
+        if (type == 0)
         {
             deckViewer.PrevPage(objectsList);
         }
@@ -817,6 +835,7 @@ void Level::HandleMouse(int type, int x, int y)
                 };
                 std::vector<PendingAttackInfo> pendingAttacks;
                 int pendingDelayTurns = 0;
+                int pendingCorruptionStacks = 0;
 
                 if (cardData)
                 {
@@ -903,10 +922,8 @@ void Level::HandleMouse(int type, int x, int y)
                             }
                             else if (debuff->getSubType() == DebuffSubType::Corrupt)
                             {
-                                if (enemy)
-                                {
-                                    enemy->addCorruption(debuff->getValue());
-                                }
+                                pendingCorruptionStacks += debuff->getValue();
+                                std::cout << "  CorruptAction: " << debuff->getValue() << std::endl;
                             }
                         }
                     }
@@ -988,6 +1005,7 @@ void Level::HandleMouse(int type, int x, int y)
                         }
                     }
 
+                    bool corruptionApplied = false;
                     for (const PendingAttackInfo& pa : pendingAttacks)
                     {
                         AttackAction* atk = pa.atk;
@@ -1050,6 +1068,12 @@ void Level::HandleMouse(int type, int x, int y)
                                 if (pendingDelayTurns > 0)
                                 {
                                     enemy->addDelay(pendingDelayTurns);
+                                }
+
+                                if (!corruptionApplied && pendingCorruptionStacks > 0)
+                                {
+                                    enemy->addCorruption(pendingCorruptionStacks);
+                                    corruptionApplied = true;
                                 }
 
                                 if (enemy->getHealth() <= 0) {
@@ -1232,6 +1256,8 @@ void Level::MoveEnemyTowardPlayer()
 
 bool Level::EnemyCanAttackPlayer()
 {
+    if (!enemy) return false;
+
     int er = enemy->getNowRow();
     int ec = enemy->getNowCol();
     int pr = nowRow;

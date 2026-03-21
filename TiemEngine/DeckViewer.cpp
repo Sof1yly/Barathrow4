@@ -143,9 +143,21 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* src = card->GetNameText();
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
-            copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Position name at top of card
-            copy->SetPosition(glm::vec3(cardPos.x, cardPos.y + H * 0.354f, 0));
+            float nameW = src->GetSize().x-2.0f;
+            float nameH = src->GetSize().y-2.5f;
+            if (nameH < 0.0f) 
+            { 
+                nameH += 2.0f; 
+            }
+            else 
+            { 
+                nameH -= 2.0f; 
+            }
+            copy->SetSize(nameW, nameH);
+            glm::vec3 local = src->GetLocalPosition();
+            float leftAnchorX = (cardPos.x - (W * 0.5f)) + (local.x * W);
+            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) +55.0f;
+            copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }
@@ -156,8 +168,11 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
             copy->SetSize(src->GetSize().x, src->GetSize().y);
-            // Position description at bottom of card
-            copy->SetPosition(glm::vec3(cardPos.x, cardPos.y - H * 0.256f, 0));
+            // Left-anchor X using local offset as margin from card's left edge
+            glm::vec3 local = src->GetLocalPosition();
+            float leftAnchorX = (cardPos.x - (W * 0.5f)) + (local.x * W);
+            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f);
+            copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
         }

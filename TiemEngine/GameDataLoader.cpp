@@ -40,6 +40,23 @@ static std::vector<std::string> splitCsvRowRespectQuotes_(const std::string& lin
     return out;
 }
 
+static std::string parseDescription_(const std::string& rawDescription)
+{
+    std::istringstream ss(rawDescription);
+    std::string part;
+    std::string result;
+    bool first = true;
+
+    while (std::getline(ss, part, ',')) {
+        part = trim_(part);
+        if (!first) result += "\n";
+        result += part;
+        first = false;
+    }
+
+    return result;
+}
+
 GameDataLoader::GameDataLoader()
 {
 }
@@ -259,7 +276,7 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
         std::string sLevel      = cells.size() > 3 ? cells[3] : "0";
         std::string rarityCode  = cells.size() > 4 ? cells[4] : "sta";
         std::string typeCode    = cells.size() > 5 ? cells[5] : "atk";
-        std::string description = cells.size() > 6 ? cells[6] : "";
+        std::string description = cells.size() > 6 ? parseDescription_(cells[6]) : "";
 
         if (name.empty()) continue;
 
