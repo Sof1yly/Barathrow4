@@ -1622,7 +1622,7 @@ void Level::ShowCardInspect(Card* cardData)
         if (!src) return;
         ImageObject* copy = new ImageObject();
         copy->SetTextureId(src->GetTextureId());
-        copy->SetSize(360.0f, -525.0f);
+        copy->SetSize(364.0f, -533.0f);
         copy->SetPosition(glm::vec3(-640.0f, 40.0f, 910.0f));
         cardInspectObjects.push_back(copy);
         objectsList.push_back(copy);
@@ -1634,8 +1634,8 @@ void Level::ShowCardInspect(Card* cardData)
     cloneCardLayer(cardData->GetVisual());
     cloneCardLayer(cardData->GetCardFrame());
 
-    const float inspectCardW = 360.0f;
-    const float inspectCardH = 525.0f;
+    const float inspectCardW = 364.0f;
+    const float inspectCardH = 533.0f;
     const glm::vec3 inspectCardPos(-640.0f, 40.0f, 910.0f);
 
     if (cardData->GetNameText())
