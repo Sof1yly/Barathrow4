@@ -1,0 +1,3 @@
+Act_Name	Description
+atk	Deal Damage to enemy in grid
+oc	Increase the next played card damage by X

@@ -31,6 +31,7 @@ private:
 
     std::unordered_map<std::string, AttackPattern>          patternMap;
     std::unordered_map<const Action*, const AttackPattern*> actionPattern;
+    std::unordered_map<std::string, std::string>            actionDescriptions;
 
     const AttackPattern* findPatternByName(const string& id) const;
 
@@ -45,6 +46,10 @@ public:
     bool loadPatternsFromFile(const std::string& filename,
         std::string* outError = nullptr);
 
+    // CardDesc.txt (Act_Name, Description)
+    bool loadActionDescriptionsFromFile(const std::string& filename,
+        std::string* outError = nullptr);
+
     // CardAction.txt  (Card / Name,Action,Pattern,Level,Rarity,Type,Desc)
     bool loadFromFile(const std::string& filename,std::string* outError = nullptr);
 
@@ -52,6 +57,7 @@ public:
     const std::vector<Action*>& getActions() const { return actions_list; }
 
     const AttackPattern* getPatternForAction(const Action* a) const;
+    std::string getActionDescription(const std::string& actionCode) const;
 
     Card* findEnergyCard() const;
 };

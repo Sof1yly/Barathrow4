@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 #include "GameEngine.h"
 #include "GameObject.h"
@@ -103,6 +104,11 @@ private:
     // Deck viewer for viewing all cards in deck
     DeckViewer deckViewer;
 
+    // Card inspect popup (right click)
+    bool cardInspectVisible = false;
+    Card* inspectedCard = nullptr;
+    std::vector<DrawableObject*> cardInspectObjects;
+
     // Patterns
     std::vector<AttackPattern> patterns;
     AttackPattern rotatedPattern;
@@ -152,6 +158,12 @@ public:
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
 	void PreviewEnemyAttack();
+
+    void ShowCardInspect(Card* cardData);
+    void HideCardInspect();
+    void BuildCardInspectGrid(Card* cardData);
+    std::string BuildCardInspectText(Card* cardData) const;
+    std::string GetKeywordTitle(const std::string& code) const;
 
     void UpdateHPBar();
 

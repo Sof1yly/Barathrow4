@@ -25,10 +25,20 @@ CardSystem::~CardSystem() {}
 
 bool CardSystem::LoadData(const string& patternFile,const string& cardFile,string* outError)
 {
+    return LoadData(patternFile, cardFile, "", outError);
+}
+
+bool CardSystem::LoadData(const string& patternFile, const string& cardFile, const string& cardDescFile, string* outError)
+{
     if (!dataLoader.loadPatternsFromFile(patternFile, outError))
         return false;
     if (!dataLoader.loadFromFile(cardFile, outError))
         return false;
+
+    if (!cardDescFile.empty()) {
+        if (!dataLoader.loadActionDescriptionsFromFile(cardDescFile, outError))
+            return false;
+    }
 
     deck = dataLoader.getCards();
 

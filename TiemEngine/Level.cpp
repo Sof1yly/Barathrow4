@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <unordered_set>
+#include <unordered_map>
 
 // Lifecycle
 void Level::LevelLoad()
@@ -200,7 +202,7 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt","../Resource/GameData/CardAction.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
@@ -437,6 +439,8 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    HideCardInspect();
+
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
 
@@ -520,6 +524,8 @@ void Level::HandleKey(char key)
     // Toggle deck viewer with 'v' key
     if (key == 'v')
     {
+        HideCardInspect();
+
         if (deckViewer.IsActive())
         {
             deckViewer.Hide(objectsList);
@@ -643,6 +649,24 @@ void Level::HandleMouse(int type, int x, int y)
         if (deckViewer.IsActive())
         {
             deckViewer.NextPage(objectsList);
+            return;
+        }
+
+        ImageObject* hit = cardSystem.PeekAt(mousePos);
+        Card* cardData = hit ? cardSystem.FindCardByImage(hit) : nullptr;
+
+        if (cardData)
+        {
+            if (cardInspectVisible && inspectedCard == cardData) {
+                HideCardInspect();
+            }
+            else {
+                ShowCardInspect(cardData);
+            }
+        }
+        else
+        {
+            HideCardInspect();
         }
         return;
     }
@@ -1400,6 +1424,347 @@ void Level::SetPlayerWalk(PlayerDir dir)
     case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
     case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
     }
+}
+
+void Level::HideCardInspect()
+{
+    if (!cardInspectVisible && cardInspectObjects.empty()) return;
+
+    for (DrawableObject* obj : cardInspectObjects)
+    {
+        if (!obj) continue;
+
+        auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+
+        delete obj;
+    }
+
+    cardInspectObjects.clear();
+    inspectedCard = nullptr;
+    cardInspectVisible = false;
+}
+
+std::string Level::GetKeywordTitle(const std::string& code) const
+{
+    if (code == "atk") return "Attack";
+    if (code == "mov") return "Move";
+    if (code == "re")  return "Retreat";
+    if (code == "oc")  return "Overclock";
+    if (code == "shi") return "Shield";
+    if (code == "de")  return "Delay";
+    if (code == "cor") return "Corrupt";
+    if (code == "gen") return "Generate";
+    if (code == "con") return "Consume";
+    if (code == "enr") return "Energy";
+    return code;
+}
+
+std::string Level::BuildCardInspectText(Card* cardData) const
+{
+    if (!cardData) return "";
+
+    const GameDataLoader& loader = cardSystem.GetDataLoader();
+    std::unordered_set<std::string> seen;
+    std::vector<std::string> orderedCodes;
+    std::unordered_map<std::string, int> values;
+
+    for (Action* a : cardData->getActions())
+    {
+        if (!a) continue;
+
+        std::string code = a->getActionCode();
+        if (code.empty()) continue;
+
+        if (seen.insert(code).second) {
+            orderedCodes.push_back(code);
+        }
+
+        values[code] = a->getValue();
+    }
+
+    if (cardData->getOverclockValue() > 0)
+    {
+        std::string ocCode = "oc";
+        if (seen.insert(ocCode).second) {
+            orderedCodes.push_back(ocCode);
+        }
+        values[ocCode] = cardData->getOverclockValue();
+    }
+
+    std::string out;
+    bool first = true;
+
+    std::string detail = cardData->getDescription();
+    for (Action* a : cardData->getActions())
+    {
+        if (!a) continue;
+        const std::string token = "{" + a->getActionCode() + "}";
+        const std::string value = std::to_string(a->getValue());
+
+        std::size_t pos = 0;
+        while ((pos = detail.find(token, pos)) != std::string::npos)
+        {
+            detail.replace(pos, token.size(), value);
+            pos += value.size();
+        }
+    }
+
+    if (cardData->getOverclockValue() > 0)
+    {
+        const std::string token = "{oc}";
+        const std::string value = std::to_string(cardData->getOverclockValue());
+        std::size_t pos = 0;
+        while ((pos = detail.find(token, pos)) != std::string::npos)
+        {
+            detail.replace(pos, token.size(), value);
+            pos += value.size();
+        }
+    }
+
+    if (!detail.empty())
+    {
+        out += "Card Detail\n" + detail;
+        first = false;
+    }
+
+    std::string tags;
+    if (cardData->getIsFast()) tags += "Fast  ";
+    if (cardData->getIsTemp()) tags += "Temp  ";
+    if (cardData->getIsDeleteAfterUse()) tags += "Delete  ";
+    if (cardData->getIsPersist()) tags += "Persist  ";
+    if (cardData->getIsLag()) tags += "Lag  ";
+    if (cardData->getIsPreLoad()) tags += "Pre-Load  ";
+    if (!tags.empty())
+    {
+        if (!first) out += "\n\n";
+        out += "Card Tags\n" + tags;
+        first = false;
+    }
+
+    for (const std::string& code : orderedCodes)
+    {
+        std::string desc = loader.getActionDescription(code);
+        if (desc.empty()) continue;
+
+        auto it = values.find(code);
+        if (it != values.end())
+        {
+            const std::string valueText = std::to_string(it->second);
+            std::size_t pos = 0;
+            while ((pos = desc.find("X", pos)) != std::string::npos)
+            {
+                desc.replace(pos, 1, valueText);
+                pos += valueText.size();
+            }
+        }
+
+        if (!first) out += "\n\n";
+        out += GetKeywordTitle(code) + "\n" + desc;
+        first = false;
+    }
+
+    return out;
+}
+
+void Level::BuildCardInspectGrid(Card* cardData)
+{
+    std::vector<std::pair<IVec2, int>> cells;
+
+    if (cardData)
+    {
+        for (Action* a : cardData->getActions())
+        {
+            AttackAction* atk = dynamic_cast<AttackAction*>(a);
+            if (!atk) continue;
+
+            const AttackPattern* pat = cardSystem.GetDataLoader().getPatternForAction(a);
+            if (pat) {
+                cells = pat->applyTo(0, 0);
+                break;
+            }
+        }
+    }
+
+    int minX = 0, maxX = 0, minY = 0, maxY = 0;
+    for (const auto& c : cells)
+    {
+        minX = std::min(minX, c.first.x);
+        maxX = std::max(maxX, c.first.x);
+        minY = std::min(minY, c.first.y);
+        maxY = std::max(maxY, c.first.y);
+    }
+
+    const float cellSize = 78.0f;
+    const float centerX = 560.0f;
+    const float centerY = 30.0f;
+    const float z = 915.0f;
+
+    const float totalW = (maxX - minX + 1) * cellSize;
+    const float totalH = (maxY - minY + 1) * cellSize;
+    const float left = centerX - totalW * 0.5f + cellSize * 0.5f;
+    const float top = centerY + totalH * 0.5f - cellSize * 0.5f;
+
+    std::unordered_set<long long> attackSet;
+    for (const auto& c : cells)
+    {
+        long long key = (static_cast<long long>(c.first.x) << 32) ^ static_cast<unsigned int>(c.first.y);
+        attackSet.insert(key);
+    }
+
+    for (int gx = minX; gx <= maxX; ++gx)
+    {
+        for (int gy = minY; gy <= maxY; ++gy)
+        {
+            GameObject* tile = new GameObject();
+            tile->SetSize(cellSize - 10.0f, -(cellSize - 10.0f));
+
+            float px = left + (gx - minX) * cellSize;
+            float py = top - (gy - minY) * cellSize;
+            tile->SetPosition(glm::vec3(px, py, z));
+
+            const bool isOrigin = (gx == 0 && gy == 0);
+            long long key = (static_cast<long long>(gx) << 32) ^ static_cast<unsigned int>(gy);
+            const bool isAttack = attackSet.find(key) != attackSet.end();
+
+            if (isOrigin) {
+                tile->SetColor(0.95f, 0.95f, 0.95f, 0.95f);
+            }
+            else if (isAttack) {
+                tile->SetColor(0.95f, 0.25f, 0.15f, 0.95f);
+            }
+            else {
+                tile->SetColor(0.80f, 0.80f, 0.80f, 0.90f);
+            }
+
+            cardInspectObjects.push_back(tile);
+            objectsList.push_back(tile);
+        }
+    }
+}
+
+void Level::ShowCardInspect(Card* cardData)
+{
+    if (!cardData) {
+        HideCardInspect();
+        return;
+    }
+
+    HideCardInspect();
+
+    GameObject* panel = new GameObject();
+    panel->SetSize(1750.0f, -840.0f);
+    panel->SetPosition(glm::vec3(0.0f, 20.0f, 900.0f));
+    panel->SetColor(0.33f, 0.33f, 0.33f, 0.88f);
+    cardInspectObjects.push_back(panel);
+    objectsList.push_back(panel);
+
+    if (!cardData->HasVisuals()) {
+        cardData->CreateVisuals();
+    }
+
+    auto cloneCardLayer = [&](ImageObject* src) {
+        if (!src) return;
+        ImageObject* copy = new ImageObject();
+        copy->SetTextureId(src->GetTextureId());
+        copy->SetSize(360.0f, -525.0f);
+        copy->SetPosition(glm::vec3(-640.0f, 40.0f, 910.0f));
+        cardInspectObjects.push_back(copy);
+        objectsList.push_back(copy);
+    };
+
+    cloneCardLayer(cardData->GetBackground());
+    cloneCardLayer(cardData->GetStarOverlay());
+    cloneCardLayer(cardData->GetTypeIcon());
+    cloneCardLayer(cardData->GetVisual());
+    cloneCardLayer(cardData->GetCardFrame());
+
+    const float inspectCardW = 360.0f;
+    const float inspectCardH = 525.0f;
+    const glm::vec3 inspectCardPos(-640.0f, 40.0f, 910.0f);
+
+    if (cardData->GetNameText())
+    {
+        TextObject* nameOnCard = new TextObject();
+        SDL_Color cardNameColor = { 245, 245, 245, 255 };
+        nameOnCard->LoadText(cardData->getName(), cardNameColor, 22);
+
+        glm::vec3 local = cardData->GetNameText()->GetLocalPosition();
+        float leftAnchorX = (inspectCardPos.x - (inspectCardW * 0.5f)) + (local.x * inspectCardW);
+        float centeredX = leftAnchorX + (nameOnCard->GetSize().x * 0.5f);
+        float centeredY = inspectCardPos.y + (local.y * inspectCardH);
+        nameOnCard->SetPosition(glm::vec3(centeredX, centeredY, 912.0f));
+
+        cardInspectObjects.push_back(nameOnCard);
+        objectsList.push_back(nameOnCard);
+    }
+
+    if (cardData->GetDescriptionText())
+    {
+        std::string cardDesc = cardData->getDescription();
+        for (Action* a : cardData->getActions())
+        {
+            if (!a) continue;
+            const std::string token = "{" + a->getActionCode() + "}";
+            const std::string value = std::to_string(a->getValue());
+            std::size_t pos = 0;
+            while ((pos = cardDesc.find(token, pos)) != std::string::npos)
+            {
+                cardDesc.replace(pos, token.size(), value);
+                pos += value.size();
+            }
+        }
+
+        if (cardData->getOverclockValue() > 0)
+        {
+            const std::string token = "{oc}";
+            const std::string value = std::to_string(cardData->getOverclockValue());
+            std::size_t pos = 0;
+            while ((pos = cardDesc.find(token, pos)) != std::string::npos)
+            {
+                cardDesc.replace(pos, token.size(), value);
+                pos += value.size();
+            }
+        }
+
+        TextObject* descOnCard = new TextObject();
+        SDL_Color cardDescColor = { 220, 220, 220, 255 };
+        descOnCard->LoadTextWrapped(cardDesc, cardDescColor, 18, 300);
+
+        glm::vec3 local = cardData->GetDescriptionText()->GetLocalPosition();
+        float leftAnchorX = (inspectCardPos.x - (inspectCardW * 0.5f)) + (local.x * inspectCardW);
+        float centeredX = leftAnchorX + (descOnCard->GetSize().x * 0.5f);
+        float centeredY = inspectCardPos.y + (local.y * inspectCardH);
+        descOnCard->SetPosition(glm::vec3(centeredX, centeredY, 912.0f));
+
+        cardInspectObjects.push_back(descOnCard);
+        objectsList.push_back(descOnCard);
+    }
+
+    TextObject* title = new TextObject();
+    title->SetPosition(glm::vec3(-220.0f, 250.0f, 920.0f));
+    SDL_Color titleColor = { 245, 245, 245, 255 };
+    title->LoadText(cardData->getName(), titleColor, 46);
+    cardInspectObjects.push_back(title);
+    objectsList.push_back(title);
+
+    std::string keywordText = BuildCardInspectText(cardData);
+    if (!keywordText.empty())
+    {
+        TextObject* body = new TextObject();
+        body->SetPosition(glm::vec3(-240.0f, 105.0f, 920.0f));
+        SDL_Color bodyColor = { 230, 230, 230, 255 };
+        body->LoadTextWrapped(keywordText, bodyColor, 28, 700);
+        cardInspectObjects.push_back(body);
+        objectsList.push_back(body);
+    }
+
+    BuildCardInspectGrid(cardData);
+
+    inspectedCard = cardData;
+    cardInspectVisible = true;
 }
 
 void Level::PreviewAttackPattern(Card* cardData, int dz)

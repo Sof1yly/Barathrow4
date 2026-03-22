@@ -11,6 +11,14 @@ static std::string trim_(const std::string& s)
     return s.substr(a, b - a);
 }
 
+static std::string toLower_(std::string s)
+{
+    for (char& ch : s) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return s;
+}
+
 static std::vector<std::string> splitCsvRowRespectQuotes_(const std::string& line)
 {
     std::vector<std::string> out;
@@ -153,6 +161,45 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
     return true;
 }
 
+bool GameDataLoader::loadActionDescriptionsFromFile(const std::string& filename,
+    std::string* outError)
+{
+    actionDescriptions.clear();
+
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        if (outError) *outError = "Failed to open action description file: " + filename;
+        return false;
+    }
+
+    std::string line;
+    bool headerSkipped = false;
+
+    while (std::getline(file, line)) {
+        std::string trimmed = trim_(line);
+        if (trimmed.empty()) continue;
+
+        if (!headerSkipped) {
+            headerSkipped = true;
+            if (trimmed == "Act_Name\tDescription" || trimmed == "Act_Name") {
+                continue;
+            }
+        }
+
+        std::vector<std::string> cells = splitCsvRowRespectQuotes_(line);
+        for (auto& c : cells) c = trim_(c);
+        if (cells.size() < 2) continue;
+
+        std::string code = toLower_(cells[0]);
+        std::string desc = cells[1];
+        if (code.empty() || desc.empty()) continue;
+
+        actionDescriptions[code] = desc;
+    }
+
+    return true;
+}
+
 const AttackPattern* GameDataLoader::findPatternByName(const std::string& id) const
 {
     auto it = patternMap.find(id);
@@ -164,6 +211,14 @@ const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
 {
     auto it = actionPattern.find(a);
     if (it == actionPattern.end()) return nullptr;
+    return it->second;
+}
+
+std::string GameDataLoader::getActionDescription(const std::string& actionCode) const
+{
+    std::string code = toLower_(trim_(actionCode));
+    auto it = actionDescriptions.find(code);
+    if (it == actionDescriptions.end()) return "";
     return it->second;
 }
 

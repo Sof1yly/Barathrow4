@@ -87,6 +87,7 @@ public:
 
     // Initialization
     bool LoadData(const std::string& patternFile, const std::string& cardFile, std::string* outError = nullptr);
+    bool LoadData(const std::string& patternFile, const std::string& cardFile, const std::string& cardDescFile, std::string* outError);
     void InitUI(std::vector<DrawableObject*>& objectsList);
 
     // Deck management
