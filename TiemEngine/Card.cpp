@@ -136,7 +136,7 @@ void Card::CreateVisuals()
     SDL_Color textColor = { 255, 255, 255, 255 }; 
     nameText->LoadText(name, textColor, 18);
     nameText->SetParent(background);
-    nameText->SetLocalPosition(glm::vec3(0.12f, 0.34f, 0)); // Normalized: 0.354 of parent height
+    nameText->SetLocalPosition(glm::vec3(0.31f, 0.34f, 0)); // Normalized: 0.354 of parent height
 
     // 7. Description Text 
     if (!description.empty()) {

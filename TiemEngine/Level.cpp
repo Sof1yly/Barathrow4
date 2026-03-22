@@ -1497,53 +1497,6 @@ std::string Level::BuildCardInspectText(Card* cardData) const
     std::string out;
     bool first = true;
 
-    std::string detail = cardData->getDescription();
-    for (Action* a : cardData->getActions())
-    {
-        if (!a) continue;
-        const std::string token = "{" + a->getActionCode() + "}";
-        const std::string value = std::to_string(a->getValue());
-
-        std::size_t pos = 0;
-        while ((pos = detail.find(token, pos)) != std::string::npos)
-        {
-            detail.replace(pos, token.size(), value);
-            pos += value.size();
-        }
-    }
-
-    if (cardData->getOverclockValue() > 0)
-    {
-        const std::string token = "{oc}";
-        const std::string value = std::to_string(cardData->getOverclockValue());
-        std::size_t pos = 0;
-        while ((pos = detail.find(token, pos)) != std::string::npos)
-        {
-            detail.replace(pos, token.size(), value);
-            pos += value.size();
-        }
-    }
-
-    if (!detail.empty())
-    {
-        out += "Card Detail\n" + detail;
-        first = false;
-    }
-
-    std::string tags;
-    if (cardData->getIsFast()) tags += "Fast  ";
-    if (cardData->getIsTemp()) tags += "Temp  ";
-    if (cardData->getIsDeleteAfterUse()) tags += "Delete  ";
-    if (cardData->getIsPersist()) tags += "Persist  ";
-    if (cardData->getIsLag()) tags += "Lag  ";
-    if (cardData->getIsPreLoad()) tags += "Pre-Load  ";
-    if (!tags.empty())
-    {
-        if (!first) out += "\n\n";
-        out += "Card Tags\n" + tags;
-        first = false;
-    }
-
     for (const std::string& code : orderedCodes)
     {
         std::string desc = loader.getActionDescription(code);
@@ -1744,7 +1697,7 @@ void Level::ShowCardInspect(Card* cardData)
     }
 
     TextObject* title = new TextObject();
-    title->SetPosition(glm::vec3(-220.0f, 250.0f, 920.0f));
+    title->SetPosition(glm::vec3(-120.0f, 250.0f, 920.0f));
     SDL_Color titleColor = { 245, 245, 245, 255 };
     title->LoadText(cardData->getName(), titleColor, 46);
     cardInspectObjects.push_back(title);
@@ -1753,8 +1706,8 @@ void Level::ShowCardInspect(Card* cardData)
     std::string keywordText = BuildCardInspectText(cardData);
     if (!keywordText.empty())
     {
-        TextObject* body = new TextObject();
-        body->SetPosition(glm::vec3(-240.0f, 105.0f, 920.0f));
+        TextObject* body = new TextObject(); 
+        body->SetPosition(glm::vec3(-80.0f, 105.0f, 920.0f));
         SDL_Color bodyColor = { 230, 230, 230, 255 };
         body->LoadTextWrapped(keywordText, bodyColor, 28, 700);
         cardInspectObjects.push_back(body);
