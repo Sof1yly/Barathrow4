@@ -5,7 +5,13 @@
 
 class Enemy {
 public:
-    Enemy();
+    enum class EnemyType {
+        A1,//Basic
+        A2,//Range
+
+    };
+
+    Enemy(EnemyType type);
     ~Enemy();
 
     AttackPattern getCurrentPattern() const {
@@ -59,6 +65,9 @@ public:
     void markDead() { isDead = true; }
 
 private:
+
+    EnemyType type;
+
     int maxHealth = 10;
     int health = maxHealth;
     int damage = 1;

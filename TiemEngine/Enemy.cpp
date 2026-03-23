@@ -1,56 +1,72 @@
 #include "Enemy.h"
 #include <iostream>
 
-Enemy::Enemy()
+Enemy::Enemy(EnemyType type)
 {
+    this->type = type;
+
+    switch (type)
+    {
+    case EnemyType::A1: // Basic (cross)
+    default:
+        maxHealth = 10;
+        damage = 2;
+        patterns = {
+            AttackPattern::fromGrid({
+                ".X.",
+                "XXX",
+                ".X."
+            }, 'X')
+        };
+        break;
+
+    case EnemyType::A2: // Range (horizontal)
+        maxHealth = 8;
+        damage = 3;
+        patterns = {
+            AttackPattern::fromGrid({
+                "XXXXX"
+            }, 'X')
+        };
+        break;
+    }
     health = maxHealth;
-
-    patterns = {
-        AttackPattern::fromGrid({
-            ".X.",
-            "XXX",
-            ".X."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "XXX",
-            "XXX",
-            "XXX"
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "..X..",
-            ".XXX.",
-            "XXXXX",
-            ".XXX.",
-            "..X.."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "...XX",
-        }, 'X'),
-    };
-
     // TEXT 
     hpText = new TextObject();
     SDL_Color white = { 255,255,255 };
-    hpText->LoadText("HP: 10", white, 24);
+    hpText->LoadText("HP: " + std::to_string(health), white, 24);
 
     corruptText = new TextObject();
     corruptText->SetSize(0, 0);
 
 	//Sprite Create
-    objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+    switch (type)
+    {
+    case EnemyType::A1:
+    default:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
 
-    objSprite->SetAnimationLoop(
-        0,   // start frame
-        0,   // row
-        2,   // end frame
-        200  // ms per frame
-    );
-    objSprite->SetSize(200.0f, -200.0f);
-    // default position
+    case EnemyType::A2:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy2.png", 5, 8);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            4,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(150.0f, -150.0f);
+        break;
+    }
     setNowPosition(8, 0);
+    
 }
 
 void Enemy::setHealth(int h)
@@ -62,7 +78,7 @@ void Enemy::getDamage(int damage)
 {
 	int total = damage + corruptionStacks;
 	health -= total;
-    if (health < 0) {
+    if (health <= 0) {
         health = 0;
         isDead = true;
     }

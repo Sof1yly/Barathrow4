@@ -67,11 +67,11 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
     //Enemy
-    Enemy* e1 = new Enemy();
+    Enemy* e1 = new Enemy(Enemy::EnemyType::A1);
     e1->setNowPosition(8, 0);
     e1->SetWorldPosition(GridToWorld(8, 0));
 
-    Enemy* e2 = new Enemy();
+    Enemy* e2 = new Enemy(Enemy::EnemyType::A2);
     e2->setNowPosition(5, 2);
     e2->SetWorldPosition(GridToWorld(5, 2));
 
