@@ -43,7 +43,7 @@ private:
     ImageObject* mainMenu = nullptr;
     ImageObject* testEnemy;
 	ImageObject* Background;
-    Enemy* enemy;
+    vector<Enemy*> enemies;
 
 
     //////////////////////////////
@@ -142,9 +142,8 @@ public:
     virtual void HandleMouse(int type, int x, int y);
 
     void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
-    void ApplyEnemyAttack();
-    void MoveEnemyTowardPlayer();
-    bool EnemyCanAttackPlayer();
+    void ApplyEnemyAttack(Enemy* e);
+    bool EnemyCanAttackPlayer(Enemy* e);
 
     void UpdateTurn();
 
@@ -157,7 +156,7 @@ public:
 
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
-	void PreviewEnemyAttack();
+	void PreviewEnemyAttack(Enemy* e);
 
     void ShowCardInspect(Card* cardData);
     void HideCardInspect();

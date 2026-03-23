@@ -1,56 +1,74 @@
 #include "Enemy.h"
 #include <iostream>
 
-Enemy::Enemy()
+Enemy::Enemy(EnemyType type)
 {
+    this->type = type;
+
+    switch (type)
+    {
+    case EnemyType::A1: // Basic (cross)
+    default:
+        maxHealth = 10;
+        damage = 2;
+        patterns = {
+            AttackPattern::fromGrid({
+                ".X.",
+                "XXX",
+                ".X."
+            }, 'X')
+        };
+        break;
+
+    case EnemyType::A2: // Range (horizontal)
+        maxHealth = 8;
+        damage = 3;
+        patterns = {
+            AttackPattern::fromGrid({
+                "...X...",
+                "XXXXXXX",
+                "...X..."
+            }, 'X')
+        };
+        break;
+    }
     health = maxHealth;
-
-    patterns = {
-        AttackPattern::fromGrid({
-            ".X.",
-            "XXX",
-            ".X."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "XXX",
-            "XXX",
-            "XXX"
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "..X..",
-            ".XXX.",
-            "XXXXX",
-            ".XXX.",
-            "..X.."
-        }, 'X'),
-
-        AttackPattern::fromGrid({
-            "...XX",
-        }, 'X'),
-    };
-
     // TEXT 
     hpText = new TextObject();
     SDL_Color white = { 255,255,255 };
-    hpText->LoadText("HP: 10", white, 24);
+    hpText->LoadText("HP: " + std::to_string(health), white, 24);
 
     corruptText = new TextObject();
     corruptText->SetSize(0, 0);
 
 	//Sprite Create
-    objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+    switch (type)
+    {
+    case EnemyType::A1:
+    default:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
 
-    objSprite->SetAnimationLoop(
-        0,   // start frame
-        0,   // row
-        2,   // end frame
-        200  // ms per frame
-    );
-    objSprite->SetSize(200.0f, -200.0f);
-    // default position
+    case EnemyType::A2:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy2.png", 5, 8);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            4,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(150.0f, -150.0f);
+        break;
+    }
     setNowPosition(8, 0);
+    
 }
 
 void Enemy::setHealth(int h)
@@ -62,7 +80,10 @@ void Enemy::getDamage(int damage)
 {
 	int total = damage + corruptionStacks;
 	health -= total;
-	if (health < 0) health = 0;
+    if (health <= 0) {
+        health = 0;
+        isDead = true;
+    }
     if (health == 0&& objSprite) {
         objSprite->SetAnimationLoop(
             3,
@@ -92,6 +113,37 @@ void Enemy::getDamage(int damage)
 	SDL_Color white = { 255, 255, 255 };
 	hpText->LoadText("HP: " + std::to_string(health), white, 24);
 }
+
+void Enemy::MoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int gridEndRow,int gridStartCol, int gridEndCol,const std::vector<Enemy*>& allEnemies)
+{
+    int er = getNowRow();
+    int ec = getNowCol();
+
+    int newR = er;
+    int newC = ec;
+
+    if (er < playerRow) newR++;
+    else if (er > playerRow) newR--;
+    else if (ec < playerCol) newC++;
+    else if (ec > playerCol) newC--;
+
+    newR = std::max(gridStartRow, std::min(newR, gridEndRow - 1));
+    newC = std::max(gridStartCol, std::min(newC, gridEndCol - 1));
+
+    for (auto* other : allEnemies)
+    {
+        if (other != this &&
+            other->getNowRow() == newR &&
+            other->getNowCol() == newC)
+        {
+            return;
+        }
+    }
+
+    setNowPosition(newR, newC);
+}
+
+
 
 void Enemy::addCorruption(int stacks)
 {
@@ -237,4 +289,14 @@ void Enemy::SetWorldPosition(glm::vec3 pos)
         objSprite->SetPosition(pos);
 
     UpdateTextPosition();
+}
+
+bool Enemy::isPreparingAttack() const
+{
+    return preparingAttack;
+}
+
+void Enemy::setPreparingAttack(bool value)
+{
+    preparingAttack = value;
 }

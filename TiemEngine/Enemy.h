@@ -5,7 +5,13 @@
 
 class Enemy {
 public:
-    Enemy();
+    enum class EnemyType {
+        A1,//Basic
+        A2,//Range
+
+    };
+
+    Enemy(EnemyType type);
     ~Enemy();
 
     AttackPattern getCurrentPattern() const {
@@ -29,6 +35,14 @@ public:
 
     void getDamage(int damage);
 
+    void MoveTowardPlayer(
+        int playerRow,
+        int playerCol,
+        int gridStartRow, int gridEndRow,
+        int gridStartCol, int gridEndCol,
+        const std::vector<Enemy*>& allEnemies
+    );
+
     void setObject(SpriteObject* obj) { objSprite = obj; }
     SpriteObject* getObject() { return objSprite; }
 
@@ -51,13 +65,26 @@ public:
 
     void addCorruption(int stacks);
     int getCorruption() const { return corruptionStacks; }
+
+    bool isPreparingAttack()const;
+    void setPreparingAttack(bool value);
+
+    bool getIsDead() const { return isDead; }
+    void markDead() { isDead = true; }
+
 private:
+
+    EnemyType type;
+
     int maxHealth = 10;
     int health = maxHealth;
     int damage = 1;
 
     int nowRow = 0;
     int nowCol = 0;
+
+    bool preparingAttack = false;
+    bool isDead = false;
 
     bool isTakingDamage = false;
     float damageTimer = 0.0f;
