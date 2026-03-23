@@ -51,6 +51,13 @@ public:
 
     void addCorruption(int stacks);
     int getCorruption() const { return corruptionStacks; }
+
+    bool isPreparingAttack()const;
+    void setPreparingAttack(bool value);
+
+    bool getIsDead() const { return isDead; }
+    void markDead() { isDead = true; }
+
 private:
     int maxHealth = 10;
     int health = maxHealth;
@@ -58,6 +65,9 @@ private:
 
     int nowRow = 0;
     int nowCol = 0;
+
+    bool preparingAttack = false;
+    bool isDead = false;
 
     bool isTakingDamage = false;
     float damageTimer = 0.0f;

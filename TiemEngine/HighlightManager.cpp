@@ -92,7 +92,7 @@ void HighlightManager::ShowMovePreview(
     int gridStartRow, int gridEndRow,
     int gridStartCol, int gridEndCol,
     std::function<glm::vec3(int, int)> gridToWorld,
-    int enemyRow, int enemyCol)
+    const std::vector<std::pair<int, int>>& enemyPositions)
 {
     Hide(moveHighlights);
 
@@ -101,7 +101,6 @@ void HighlightManager::ShowMovePreview(
 
     std::vector<std::pair<int, int>> validTiles;
 
-    // ---- First: calculate all valid tiles ----
     for (int i = 0; i < steps; i++)
     {
         int nextR = r;
@@ -115,40 +114,39 @@ void HighlightManager::ShowMovePreview(
         case 3: nextR++; break; // down
         }
 
-        // Out of bounds
         if (nextR < gridStartRow || nextR >= gridEndRow ||
             nextC < gridStartCol || nextC >= gridEndCol)
             break;
 
-        // Enemy blocking
-        if (nextR == enemyRow && nextC == enemyCol)
-            break;
+        bool blocked = false;
+        for (auto& pos : enemyPositions)
+        {
+            if (nextR == pos.first && nextC == pos.second)
+            {
+                blocked = true;
+                break;
+            }
+        }
+        if (blocked) break;
 
         r = nextR;
         c = nextC;
 
-        validTiles.push_back({ r, c });
+        validTiles.emplace_back(r, c);
     }
 
-    // ---- Second: draw highlights ----
     for (int i = 0; i < validTiles.size() && i < moveHighlights.size(); i++)
     {
         int tileR = validTiles[i].first;
         int tileC = validTiles[i].second;
 
         glm::vec3 world = gridToWorld(tileR, tileC);
-
         moveHighlights[i]->SetPosition(glm::vec3(world.x, world.y, 60));
 
-        // Last tile = green
         if (i == validTiles.size() - 1)
-        {
-            moveHighlights[i]->SetColor(0.2f, 1.0f, 0.2f, 0.6f); // green
-        }
+            moveHighlights[i]->SetColor(0.2f, 1.0f, 0.2f, 0.6f);
         else
-        {
-            moveHighlights[i]->SetColor(0.2f, 0.5f, 1.0f, 0.4f); // blue
-        }
+            moveHighlights[i]->SetColor(0.2f, 0.5f, 1.0f, 0.4f);
     }
 }
 

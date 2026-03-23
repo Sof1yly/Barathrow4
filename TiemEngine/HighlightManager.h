@@ -18,12 +18,14 @@ public:
         int gridStartCol, int gridEndCol,
         std::function<glm::vec3(int, int)> gridToWorld);
 
-    void ShowMovePreview(int row, int col,
+    void ShowMovePreview(
+        int row, int col,
         int steps, int dir,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
         std::function<glm::vec3(int, int)> gridToWorld,
-        int enemyRow, int enemyCol);
+        const std::vector<std::pair<int, int>>& enemyPositions
+    );
 
     void ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>& cells,
         int gridStartRow, int gridEndRow,

@@ -67,13 +67,24 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
     //Enemy
-    enemy = new Enemy();
-    enemy->setNowPosition(8, 0);
-    glm::vec3 pos = GridToWorld(8, 0);
-    enemy->SetWorldPosition(pos);
-    objectsList.push_back(enemy->getObject());
-    objectsList.push_back(enemy->getHPText());
-    objectsList.push_back(enemy->getCorruptText());
+    Enemy* e1 = new Enemy();
+    e1->setNowPosition(8, 0);
+    e1->SetWorldPosition(GridToWorld(8, 0));
+
+    Enemy* e2 = new Enemy();
+    e2->setNowPosition(5, 2);
+    e2->SetWorldPosition(GridToWorld(5, 2));
+
+    enemies.push_back(e1);
+    enemies.push_back(e2);
+
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+    }
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -226,11 +237,14 @@ void Level::LevelUpdate()
 {
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
+    
+
     UpdateTurn();
-    if (enemy)
+    for (auto* e : enemies)
     {
-        enemy->UpdateTextPosition();
-        enemy->Update(deltaTime / 1000.0f);
+        if (!e || e->getIsDead()) continue;
+        e->UpdateTextPosition();
+        e->Update(deltaTime / 1000.0f);
     }
     for (auto* obj : objectsList)
         obj->Update((float)deltaTime);
@@ -283,32 +297,34 @@ void Level::LevelUpdate()
         case 1: if (nowCol > GridStartCol) targetCol--; break;
         case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
         }
-
-        if (enemy &&
-            enemy->getNowRow() == targetRow &&
-            enemy->getNowCol() == targetCol)
+        for (auto* e : enemies)
         {
-            std::cout << "[Move Blocked] Enemy blocks the tile ("
-                << targetRow << "," << targetCol << ")\n";
-
-            pendingMoveSteps = 0;
-            playerMoving = false;
-
-            playerState = PlayerState::IDLE;
-            UpdatePlayerAnimation();
-
-            if (pendingFastCard)
+            if (!e || e->getIsDead()) continue;
+            if (e &&
+                e->getNowRow() == targetRow &&
+                e->getNowCol() == targetCol)
             {
-                turnState = TurnState::PLAYER_TURN;
-                pendingFastCard = false;
+                std::cout << "[Move Blocked] Enemy blocks the tile ("
+                    << targetRow << "," << targetCol << ")\n";
+
+                pendingMoveSteps = 0;
+                playerMoving = false;
+
+                playerState = PlayerState::IDLE;
+                UpdatePlayerAnimation();
+
+                if (pendingFastCard)
+                {
+                    turnState = TurnState::PLAYER_TURN;
+                    pendingFastCard = false;
+                }
+                else
+                {
+                    turnState = TurnState::ENEMY_TURN;
+                }
+                return;
             }
-            else
-            {
-                turnState = TurnState::ENEMY_TURN;
-            }
-            return;
         }
-
         if (targetRow == nowRow && targetCol == nowCol)
         {
             std::cout << "[Card Move Blocked] Edge reached.\n";
@@ -344,43 +360,6 @@ void Level::LevelUpdate()
 
         pendingMoveSteps--;
     }
-
-
-
-    if (enemy && enemy->getHealth() <= 0)
-    {
-        SpriteObject* obj = enemy->getObject();
-        if (obj)
-        {
-            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
-            if (it != objectsList.end())
-                objectsList.erase(it);
-
-            delete obj;
-            enemy->setObject(nullptr);
-        }
-
-        TextObject* hp = enemy->getHPText();
-        if (hp)
-        {
-            auto it = std::find(objectsList.begin(), objectsList.end(), hp);
-            if (it != objectsList.end())
-                objectsList.erase(it);
-            // Do NOT delete hp here — Enemy destructor owns and frees it.
-        }
-
-        TextObject* cor = enemy->getCorruptText();
-        if (cor)
-        {
-            auto it = std::find(objectsList.begin(), objectsList.end(), cor);
-            if (it != objectsList.end())
-                objectsList.erase(it);
-            // Do NOT delete cor here — Enemy destructor owns and frees it.
-        }
-        delete enemy;  // Enemy::~Enemy() deletes hpText
-        enemy = nullptr;
-    }
-
 
     if (playerMoving && playersprite) 
     {
@@ -428,6 +407,42 @@ void Level::LevelUpdate()
 
 
     }
+    for (auto it = enemies.begin(); it != enemies.end(); )
+    {
+        Enemy* e = *it;
+
+        if (e && e->getIsDead())
+        {
+            auto obj = e->getObject();
+            auto hpText = e->getHPText();
+            auto corruptText = e->getCorruptText();
+
+            if (obj)
+            {
+                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), obj), objectsList.end());
+                delete obj;
+            }
+
+            if (hpText)
+            {
+                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), hpText), objectsList.end());
+                delete hpText;
+            }
+
+            if (corruptText)
+            {
+                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), corruptText), objectsList.end());
+                delete corruptText;
+            }
+
+            delete e;
+            it = enemies.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 void Level::LevelDraw()
@@ -442,32 +457,20 @@ void Level::LevelFree()
 
     // 2. Remove enemy-owned objects from objectsList before deleting enemy,
     //    to avoid double-free when the objectsList loop runs.
-    if (enemy) {
-        SpriteObject* eObj = enemy->getObject();
-        if (eObj) {
-            auto it = std::find(objectsList.begin(), objectsList.end(), eObj);
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        SpriteObject* obj = e->getObject();
+        if (obj)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end()) objectsList.erase(it);
-            delete eObj;
-            enemy->setObject(nullptr);
+            delete obj;
         }
 
-        TextObject* hpTxt = enemy->getHPText();
-        if (hpTxt) {
-            auto it = std::find(objectsList.begin(), objectsList.end(), hpTxt);
-            if (it != objectsList.end()) objectsList.erase(it);
-            // Do NOT delete hpTxt here — Enemy destructor owns and frees it.
-        }
-
-        TextObject* corTxt = enemy->getCorruptText();
-        if (corTxt) {
-            auto it = std::find(objectsList.begin(), objectsList.end(), corTxt);
-            if (it != objectsList.end()) objectsList.erase(it);
-            // Do NOT delete corTxt here — Enemy destructor owns and frees it.
-        }
-
-        delete enemy;  // Enemy::~Enemy() deletes hpText
-        enemy = nullptr;
+        delete e;
     }
+    enemies.clear();
 
     // 3. Delete all remaining objects
     for (auto* obj : objectsList) {
@@ -568,21 +571,15 @@ void Level::HandleKey(char key)
         playerData.AddShield(10);
 	}
 	if (key == ' ') {
-        auto attacks = rotatedPattern.applyTo(nowRow, nowCol);
-        ApplyAttackCells(attacks);
+
 	}
     if (key == 'p') {
-        ApplyEnemyAttack();
     }
     if(key == 'l'){
-        MoveEnemyTowardPlayer();
 	}
 
     if (key == 'o') {
-        if (enemy) {
-            enemy->rotatePattern();
-            cout << "Enemy rotated pattern.\n";
-        }
+        
     }
 
 	//test player movement
@@ -1048,27 +1045,30 @@ void Level::HandleMouse(int type, int x, int y)
                             }
 
                             std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
-
-                            if (enemy &&
-                                enemy->getNowRow() == gx &&
-                                enemy->getNowCol() == gy)
+                            for (auto* e : enemies)
                             {
-                                enemy->getDamage(atk->getValue());
-                                std::cout << "        HIT enemy! HP: " << enemy->getHealth() << std::endl;
-
-                                if (pendingDelayTurns > 0)
+                                if (!e || e->getIsDead()) continue;
+                                if (e &&
+                                    e->getNowRow() == gx &&
+                                    e->getNowCol() == gy)
                                 {
-                                    enemy->addDelay(pendingDelayTurns);
-                                }
+                                    e->getDamage(atk->getValue());
+                                    std::cout << "        HIT enemy! HP: " << e->getHealth() << std::endl;
 
-                                if (!corruptionApplied && pendingCorruptionStacks > 0)
-                                {
-                                    enemy->addCorruption(pendingCorruptionStacks);
-                                    corruptionApplied = true;
-                                }
+                                    if (pendingDelayTurns > 0)
+                                    {
+                                        e->addDelay(pendingDelayTurns);
+                                    }
 
-                                if (enemy->getHealth() <= 0) {
-                                    std::cout << "        Enemy died!\n";
+                                    if (!corruptionApplied && pendingCorruptionStacks > 0)
+                                    {
+                                        e->addCorruption(pendingCorruptionStacks);
+                                        corruptionApplied = true;
+                                    }
+
+                                    if (e->getHealth() <= 0) {
+                                        std::cout << "        Enemy died!\n";
+                                    }
                                 }
                             }
                         }
@@ -1162,12 +1162,13 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
         cout << "attack at (" << x << ", " << y << ")\n";
 
         // Check if enemy is hit
-        if (enemy && enemy->getNowRow() == x && enemy->getNowCol() == y) {
-            enemy->getDamage(1);
-            cout << "  HIT!!! Enemy HP: " << enemy->getHealth() << endl;
-
-            if (enemy->getHealth() <= 0) {
-                cout << "  Enemy died!" << endl;
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+            if (e->getNowRow() == x && e->getNowCol() == y)
+            {
+                e->getDamage(1);
+                cout << "  HIT!!! Enemy HP: " << e->getHealth() << endl;
             }
         }
     }
@@ -1175,53 +1176,41 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
     cout << endl;
 }
 
-void Level::ApplyEnemyAttack()
+void Level::ApplyEnemyAttack(Enemy* e)
 {
-    if (!enemy) return;
-    enemy->PlayAttackAnimation(playersprite->GetPosition());
-    enemy->showAttackText();
-    auto attacks = enemy->getCurrentPattern().applyTo(enemy->getNowRow(), enemy->getNowCol());
+    if (!e) return;
 
-    cout << "[Enemy Attack]\n";
-    
+    e->PlayAttackAnimation(playersprite->GetPosition());
+    e->showAttackText();
+
+    auto attacks = e->getCurrentPattern().applyTo(
+        e->getNowRow(), e->getNowCol());
+
     for (auto& cell : attacks)
     {
         int x = cell.first.x;
         int y = cell.first.y;
 
-        if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
-            cout << "  Skip (" << x << ", " << y << ") out of bounds\n";
-            continue;
-        }
-
-        cout << "  Enemy attacks (" << x << ", " << y << ")\n";
-
         if (nowRow == x && nowCol == y)
         {
-			int damage = 1; //need to change to enemy attack value later
-
+            int damage = 1;
             damage = playerData.AbsorbDamage(damage);
 
             if (damage > 0)
             {
                 playerHealth -= damage;
-                std::cout << "    HIT PLAYER!!! New HP = "
-                    << playerHealth << std::endl;
-
                 UpdateHPBar();
             }
         }
     }
-
-    cout << endl;
 }
 
-void Level::MoveEnemyTowardPlayer()
+void Level::MoveEnemyTowardPlayer(Enemy* e)
 {
-    if (!enemy) return;
+    if (!e) return;
 
-    int er = enemy->getNowRow();
-    int ec = enemy->getNowCol();
+    int er = e->getNowRow();
+    int ec = e->getNowCol();
 
     int pr = nowRow;
     int pc = nowCol;
@@ -1237,25 +1226,33 @@ void Level::MoveEnemyTowardPlayer()
     newR = std::max(GridStartRow, std::min(newR, GridEndRow - 1));
     newC = std::max(GridStartCol, std::min(newC, GridEndCol - 1));
 
-    enemy->setNowPosition(newR, newC);
+    for (auto* other : enemies)
+    {
+        if (other != e &&
+            other->getNowRow() == newR &&
+            other->getNowCol() == newC)
+        {
+            return; // blocked
+        }
+    }
+
+    e->setNowPosition(newR, newC);
 
     glm::vec3 world = GridToWorld(newR, newC);
-    if (enemy->getObject())
-        enemy->getObject()->SetPosition(world);
+    if (e->getObject())
+        e->getObject()->SetPosition(world);
 
     std::cout << "Enemy moved to (" << newR << ", " << newC << ")\n";
 }
 
-bool Level::EnemyCanAttackPlayer()
+bool Level::EnemyCanAttackPlayer(Enemy* e)
 {
-    if (!enemy) return false;
+    if (!e) return false;
 
-    int er = enemy->getNowRow();
-    int ec = enemy->getNowCol();
-    int pr = nowRow;
-    int pc = nowCol;
+    int er = e->getNowRow();
+    int ec = e->getNowCol();
 
-    return (abs(er - pr) <= 1 && abs(ec - pc) <= 1);
+    return (abs(er - nowRow) <= 1 && abs(ec - nowCol) <= 1);
 }
 
 void Level::UpdateTurn()
@@ -1272,7 +1269,8 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
-        if (!enemy)
+
+        if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
             return;
@@ -1283,46 +1281,35 @@ void Level::UpdateTurn()
             cardSystem.DiscardTempCardsFromHand(objectsList);
             tempDiscardDone = true;
         }
-
-        if (enemy->isDelayed())
-        {
-            cout << "[ENEMY TURN] Enemy is delayed! Skipping action. Delay: " << enemy->getDelayTurns() << endl;
-            enemy->decrementDelay();
-            highlightManager.HideAllEnemy();
-            turnState = TurnState::END_TURN;
-            return;
-        }
-
-        if (enemyPreparingAttack)
-        {
-            cout << "[ENEMY TURN] Enemy attacks now!\n";
-
-            highlightManager.HideAllEnemy();
-            ApplyEnemyAttack();
-
-            enemyPreparingAttack = false;
-
-            turnState = TurnState::END_TURN;
-            return;
-        }
-
-        if (EnemyCanAttackPlayer())
-        {
-            cout << "[ENEMY TURN] Enemy prepares attack (SHOW WARNING)!\n";
-
-            enemyPreparingAttack = true;
-
-            PreviewEnemyAttack();
-        
-        turnState = TurnState::END_TURN;
-        return;
-        }
-        if (!EnemyCanAttackPlayer()) {
-            MoveEnemyTowardPlayer();
-            cout << "[ENEMY TURN] Enemy moves toward player\n";
-        }
-
         highlightManager.HideAllEnemy();
+
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+            if (e->isDelayed())
+            {
+                e->decrementDelay();
+                continue;
+            }
+
+            if (e->isPreparingAttack())
+            {
+                ApplyEnemyAttack(e);
+                e->setPreparingAttack(false);
+            }
+            else if (EnemyCanAttackPlayer(e))
+            {
+                e->setPreparingAttack(true);
+                PreviewEnemyAttack(e);
+            }
+            else
+            {
+                MoveEnemyTowardPlayer(e);
+            }
+        }
+        turnState = TurnState::END_TURN;
+        break;
+
     }
 
     case TurnState::END_TURN:
@@ -1447,6 +1434,20 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
 
 void Level::PreviewMovePath(int steps, int dir)
 {
+    std::vector<std::pair<int, int>> enemyPositions;
+
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        if (e)
+        {
+            enemyPositions.emplace_back(
+                e->getNowRow(),
+                e->getNowCol()
+            );
+        }
+    }
+
     highlightManager.ShowMovePreview(
         nowRow,
         nowCol,
@@ -1455,20 +1456,18 @@ void Level::PreviewMovePath(int steps, int dir)
         GridStartRow, GridEndRow,
         GridStartCol, GridEndCol,
         [this](int r, int c) { return GridToWorld(r, c); },
-        enemy ? enemy->getNowRow() : -999,
-        enemy ? enemy->getNowCol() : -999
+        enemyPositions
     );
 }
 
-void Level::PreviewEnemyAttack()
+void Level::PreviewEnemyAttack(Enemy* e)
 {
-    if (!enemy) return;
+    if (!e) return;
 
-    auto cells =
-        enemy->getCurrentPattern().applyTo(
-            enemy->getNowRow(),
-            enemy->getNowCol()
-        );
+    auto cells = e->getCurrentPattern().applyTo(
+        e->getNowRow(),
+        e->getNowCol()
+    );
 
     highlightManager.ShowEnemyAttack(
         cells,

@@ -62,7 +62,10 @@ void Enemy::getDamage(int damage)
 {
 	int total = damage + corruptionStacks;
 	health -= total;
-	if (health < 0) health = 0;
+    if (health < 0) {
+        health = 0;
+        isDead = true;
+    }
     if (health == 0&& objSprite) {
         objSprite->SetAnimationLoop(
             3,
@@ -237,4 +240,14 @@ void Enemy::SetWorldPosition(glm::vec3 pos)
         objSprite->SetPosition(pos);
 
     UpdateTextPosition();
+}
+
+bool Enemy::isPreparingAttack() const
+{
+    return preparingAttack;
+}
+
+void Enemy::setPreparingAttack(bool value)
+{
+    preparingAttack = value;
 }
