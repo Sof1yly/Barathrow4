@@ -1189,46 +1189,6 @@ void Level::ApplyEnemyAttack(Enemy* e)
     }
 }
 
-void Level::MoveEnemyTowardPlayer(Enemy* e)
-{
-    if (!e) return;
-
-    int er = e->getNowRow();
-    int ec = e->getNowCol();
-
-    int pr = nowRow;
-    int pc = nowCol;
-
-    int newR = er;
-    int newC = ec;
-
-    if (er < pr) newR = er + 1;
-    else if (er > pr) newR = er - 1;
-    else if (ec < pc) newC = ec + 1;
-    else if (ec > pc) newC = ec - 1;
-
-    newR = std::max(GridStartRow, std::min(newR, GridEndRow - 1));
-    newC = std::max(GridStartCol, std::min(newC, GridEndCol - 1));
-
-    for (auto* other : enemies)
-    {
-        if (other != e &&
-            other->getNowRow() == newR &&
-            other->getNowCol() == newC)
-        {
-            return; // blocked
-        }
-    }
-
-    e->setNowPosition(newR, newC);
-
-    glm::vec3 world = GridToWorld(newR, newC);
-    if (e->getObject())
-        e->getObject()->SetPosition(world);
-
-    std::cout << "Enemy moved to (" << newR << ", " << newC << ")\n";
-}
-
 bool Level::EnemyCanAttackPlayer(Enemy* e)
 {
     if (!e) return false;
@@ -1288,7 +1248,14 @@ void Level::UpdateTurn()
             }
             else
             {
-                MoveEnemyTowardPlayer(e);
+                e->MoveTowardPlayer(
+                    nowRow, nowCol,
+                    GridStartRow, GridEndRow,
+                    GridStartCol, GridEndCol,
+                    enemies
+                );
+                glm::vec3 world = GridToWorld(e->getNowRow(), e->getNowCol());
+                e->SetWorldPosition(world);
             }
         }
         turnState = TurnState::END_TURN;

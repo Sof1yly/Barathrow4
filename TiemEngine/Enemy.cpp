@@ -112,6 +112,37 @@ void Enemy::getDamage(int damage)
 	hpText->LoadText("HP: " + std::to_string(health), white, 24);
 }
 
+void Enemy::MoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int gridEndRow,int gridStartCol, int gridEndCol,const std::vector<Enemy*>& allEnemies)
+{
+    int er = getNowRow();
+    int ec = getNowCol();
+
+    int newR = er;
+    int newC = ec;
+
+    if (er < playerRow) newR++;
+    else if (er > playerRow) newR--;
+    else if (ec < playerCol) newC++;
+    else if (ec > playerCol) newC--;
+
+    newR = std::max(gridStartRow, std::min(newR, gridEndRow - 1));
+    newC = std::max(gridStartCol, std::min(newC, gridEndCol - 1));
+
+    for (auto* other : allEnemies)
+    {
+        if (other != this &&
+            other->getNowRow() == newR &&
+            other->getNowCol() == newC)
+        {
+            return;
+        }
+    }
+
+    setNowPosition(newR, newC);
+}
+
+
+
 void Enemy::addCorruption(int stacks)
 {
 	corruptionStacks += stacks;

@@ -35,6 +35,14 @@ public:
 
     void getDamage(int damage);
 
+    void MoveTowardPlayer(
+        int playerRow,
+        int playerCol,
+        int gridStartRow, int gridEndRow,
+        int gridStartCol, int gridEndCol,
+        const std::vector<Enemy*>& allEnemies
+    );
+
     void setObject(SpriteObject* obj) { objSprite = obj; }
     SpriteObject* getObject() { return objSprite; }
 

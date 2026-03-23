@@ -137,7 +137,6 @@ public:
 
     void ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells);
     void ApplyEnemyAttack(Enemy* e);
-    void MoveEnemyTowardPlayer(Enemy* e);
     bool EnemyCanAttackPlayer(Enemy* e);
 
     void UpdateTurn();
