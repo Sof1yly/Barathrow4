@@ -37,6 +37,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	srand(time(NULL));
 	ImageObject* Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
 	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -68,15 +69,23 @@ void Level::LevelInit()
 
     //Enemy
     Enemy* e1 = new Enemy(Enemy::EnemyType::A1);
-    e1->setNowPosition(8, 0);
-    e1->SetWorldPosition(GridToWorld(8, 0));
-
+	int ran1 = rand() % 8+1;
+    e1->setNowPosition(ran1, 0);
+    e1->SetWorldPosition(GridToWorld(ran1, 0));
+	int ran2 = rand() % 8 + 1;
     Enemy* e2 = new Enemy(Enemy::EnemyType::A2);
-    e2->setNowPosition(5, 2);
-    e2->SetWorldPosition(GridToWorld(5, 2));
+    e2->setNowPosition(ran2, 2);
+    e2->SetWorldPosition(GridToWorld(ran2, 2));
+	Enemy* e3 = new Enemy(Enemy::EnemyType::A1);
+	int ran3 = rand() % 8 + 1;
+	e3->setNowPosition(ran3, 4);
+	e3->SetWorldPosition(GridToWorld(ran3, 4));
+
+
 
     enemies.push_back(e1);
     enemies.push_back(e2);
+	enemies.push_back(e3);
 
     for (auto* e : enemies)
     {
