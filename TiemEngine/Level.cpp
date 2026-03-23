@@ -235,6 +235,7 @@ void Level::LevelInit()
 
 void Level::LevelUpdate()
 {
+    
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
     
@@ -413,27 +414,9 @@ void Level::LevelUpdate()
 
         if (e && e->getIsDead())
         {
-            auto obj = e->getObject();
-            auto hpText = e->getHPText();
-            auto corruptText = e->getCorruptText();
-
-            if (obj)
-            {
-                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), obj), objectsList.end());
-                delete obj;
-            }
-
-            if (hpText)
-            {
-                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), hpText), objectsList.end());
-                delete hpText;
-            }
-
-            if (corruptText)
-            {
-                objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), corruptText), objectsList.end());
-                delete corruptText;
-            }
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
 
             delete e;
             it = enemies.erase(it);
@@ -443,6 +426,7 @@ void Level::LevelUpdate()
             ++it;
         }
     }
+    
 }
 
 void Level::LevelDraw()
