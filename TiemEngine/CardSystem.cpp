@@ -173,11 +173,15 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     // 1) Collect all card data from current hand
     std::vector<Card*> cardsInHand = hand.CollectAllCardData();
 
-    // 2) Separate persist cards from non-persist cards
+    // 2) Separate persist cards, energy cards, and normal cards
     std::vector<Card*> persistCards;
+    std::vector<Card*> energyCards;
     std::vector<Card*> nonPersistCards;
     for (Card* c : cardsInHand) {
-        if (c && c->getIsPersist()) {
+        if (c && c->isEnergyCard()) {
+            energyCards.push_back(c);
+        }
+        else if (c && c->getIsPersist()) {
             persistCards.push_back(c);
         } else {
             nonPersistCards.push_back(c);
@@ -192,6 +196,13 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
 
     // 4) Clear the visual hand
     hand.Clear(objectsList);
+
+    for (Card* c : energyCards)
+    {
+        if (!c) continue;
+        c->DestroyVisuals();
+        deletePile.push_back(c);
+    }
 
     // 5) If deck is empty, shuffle discard pile back into deck
     if (deck.empty() && !discard.empty())
@@ -244,7 +255,13 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
 void CardSystem::DiscardCard(Card* card)
 {
     if (card) {
-        discard.push_back(card);
+        if (card->isEnergyCard()) {
+            card->DestroyVisuals();
+            deletePile.push_back(card);
+        }
+        else {
+            discard.push_back(card);
+        }
         UpdatePileVisuals();
     }
 }
@@ -265,8 +282,15 @@ void CardSystem::DiscardTempCardsFromHand(std::vector<DrawableObject*>& objectsL
         if (bg) {
             hand.RemoveView(bg, objectsList);
         }
-        discard.push_back(c);
-        std::cout << "[Temp] " << c->getName() << " discarded (unplayed temp card)." << std::endl;
+        if (c->isEnergyCard()) {
+            c->DestroyVisuals();
+            deletePile.push_back(c);
+            std::cout << "[Energy] " << c->getName() << " deleted (unplayed energy card)." << std::endl;
+        }
+        else {
+            discard.push_back(c);
+            std::cout << "[Temp] " << c->getName() << " discarded (unplayed temp card)." << std::endl;
+        }
     }
 
     if (!tempCards.empty()) {

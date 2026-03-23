@@ -632,10 +632,36 @@ void Level::HandleMouse(int type, int x, int y)
     glm::vec3 mousePos(realX, realY, 0.0f);
 
     // ----------------------------------------------------
-    // Right-Click Down (type 4) - Next page in deck viewer
+    // Right-Click Down (type 4)
     // ----------------------------------------------------
     if (type == 4)
     {
+        if (cardSystem.IsDrawPileClicked(mousePos))
+        {
+            HideCardInspect();
+            if (deckViewer.IsActive()) {
+                deckViewer.Hide(objectsList);
+            }
+
+            const vector<Card*>& drawCards = cardSystem.GetDeck();
+            deckViewer.SetDeck(drawCards);
+            deckViewer.Show(objectsList);
+            return;
+        }
+
+        if (cardSystem.IsDiscardPileClicked(mousePos))
+        {
+            HideCardInspect();
+            if (deckViewer.IsActive()) {
+                deckViewer.Hide(objectsList);
+            }
+
+            const vector<Card*>& discardCards = cardSystem.GetDiscard();
+            deckViewer.SetDeck(discardCards);
+            deckViewer.Show(objectsList);
+            return;
+        }
+
         if (deckViewer.IsActive())
         {
             deckViewer.NextPage(objectsList);
