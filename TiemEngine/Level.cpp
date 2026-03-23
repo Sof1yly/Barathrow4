@@ -664,7 +664,21 @@ void Level::HandleMouse(int type, int x, int y)
 
         if (deckViewer.IsActive())
         {
-            deckViewer.NextPage(objectsList);
+            Card* cardData = deckViewer.PeekAt(mousePos);
+            if (cardData)
+            {
+                if (cardInspectVisible && inspectedCard == cardData) {
+                    HideCardInspect();
+                }
+                else {
+                    ShowCardInspect(cardData);
+                }
+            }
+            else
+            {
+                HideCardInspect();
+                deckViewer.NextPage(objectsList);
+            }
             return;
         }
 

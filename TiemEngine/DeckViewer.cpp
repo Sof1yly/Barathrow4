@@ -66,6 +66,26 @@ ImageObject* DeckViewer::cloneImage(ImageObject* src, const glm::vec3& pos, floa
     return copy;
 }
 
+bool DeckViewer::isPointInsideCard(const glm::vec3& p, const DeckCardView& view) const
+{
+    const float halfW = view.cardW * 0.5f;
+    const float halfH = view.cardH * 0.5f;
+    return p.x >= (view.cardPos.x - halfW) && p.x <= (view.cardPos.x + halfW) &&
+           p.y >= (view.cardPos.y - halfH) && p.y <= (view.cardPos.y + halfH);
+}
+
+Card* DeckViewer::PeekAt(const glm::vec3& mousePos) const
+{
+    for (int i = (int)cardViews.size() - 1; i >= 0; --i)
+    {
+        const DeckCardView& view = cardViews[i];
+        if (view.cardData && isPointInsideCard(mousePos, view)) {
+            return view.cardData;
+        }
+    }
+    return nullptr;
+}
+
 void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
 {
     clearCardVisuals(objectsList);
@@ -100,6 +120,10 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             card->CreateVisuals();
 
         DeckCardView view;
+        view.cardData = card;
+        view.cardPos = cardPos;
+        view.cardW = W;
+        view.cardH = H;
 
         // Clone each image layer from the card (sharing textures)
         if (card->GetBackground())
