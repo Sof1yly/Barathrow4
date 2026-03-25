@@ -232,6 +232,17 @@ void Level::LevelInit()
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
 
+    {
+        gameOverText = new TextObject();
+        SDL_Color color = { 255, 255, 255 };
+
+        gameOverText->LoadText("GAME OVER", color, 80);
+        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        gameOverText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
+
+        objectsList.push_back(gameOverText);
+    }
+
 
     //TextObject* text = new TextObject();
     //text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
@@ -247,7 +258,19 @@ void Level::LevelUpdate()
     
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
-    
+    if (!isGameOver && playerHealth <= 0)
+    {
+        isGameOver = true;
+
+        std::cout << "GAME OVER\n";
+
+        if (gameOverText)
+        {
+            gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+
+        return;
+    }
 
     UpdateTurn();
     for (auto* e : enemies)

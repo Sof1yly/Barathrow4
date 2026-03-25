@@ -13,9 +13,9 @@ Enemy::Enemy(EnemyType type)
         damage = 2;
         patterns = {
             AttackPattern::fromGrid({
-                ".X.",
                 "XXX",
-                ".X."
+                "XXX",
+                "XXX"
             }, 'X')
         };
         break;
@@ -25,9 +25,9 @@ Enemy::Enemy(EnemyType type)
         damage = 3;
         patterns = {
             AttackPattern::fromGrid({
+                "..X.X..",
                 "...X...",
-                "XXXXXXX",
-                "...X..."
+                "..X.X.."
             }, 'X')
         };
         break;

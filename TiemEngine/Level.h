@@ -24,6 +24,9 @@ private:
 
     HighlightManager highlightManager;
 
+    TextObject* gameOverText = nullptr;
+    bool isGameOver = false;
+
 	int playerHealth = 5;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
