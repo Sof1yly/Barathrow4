@@ -118,43 +118,12 @@ void Level::LevelInit()
         playersprite = playerSprite;
     }
 
-    // 4) Demo objects
     {
-        /*GameObject* obj = new GameObject();
-        obj->SetColor(1.0f, 0.0f, 0.0f);
-        obj->SetSize(200.0f, 200.0f);
-        objectsList.push_back(obj);
-        player = obj;*/
-    }
-
-    {
-        GameObject* obj2 = new GameObject();
+        /*GameObject* obj2 = new GameObject();
         obj2->SetColor(0.0f, 1.0f, 0.0f);
         obj2->SetSize(50.0f, 50.0f);
         obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);
-    }
-
-    {
-        /*GameObject* obj3 = new GameObject();
-        obj3->SetColor(0.0f, 0.0f, 1.0f);
-        obj3->SetSize(100.0f, 100.0f);
-        obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        objectsList.push_back(obj3);
-        testMove = obj3;*/
-    }
-
-    //testMoveTarget = testMove->GetPosition();
-    //testMoveMoving = false;
-
-
-    //  Menu button + UI
-    {
-        /*ImageObject* img = new ImageObject();
-        img->SetSize(50.0f, -50.0f);
-        img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        img->SetTexture("../Resource/Texture/menu.png");
-        objectsList.push_back(img);*/
+		objectsList.push_back(obj2);*/ //Green obj dont delete, for testing and save UI position
     }
 
     {
@@ -242,13 +211,6 @@ void Level::LevelInit()
 
         objectsList.push_back(gameOverText);
     }
-
-
-    //TextObject* text = new TextObject();
-    //text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
-    //SDL_Color color = {0, 255,0 };
-    //text->LoadText("hello world!", color, 20);
-    //objectsList.push_back(text);
 
     std::cout << "Init Level" << std::endl;
 }
@@ -484,10 +446,8 @@ void Level::LevelFree()
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end()) objectsList.erase(it);
-            delete obj;
         }
 
-        delete e;
     }
     enemies.clear();
 
