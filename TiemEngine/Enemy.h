@@ -76,7 +76,7 @@ public:
 	bool getIsMoving() const { return isMoving; }
 
     void StartMove(glm::vec3 targetWorld);
-
+    int highlightIndex;
 private:
 
     EnemyType type;

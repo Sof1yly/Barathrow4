@@ -420,7 +420,7 @@ void Level::LevelUpdate()
         if (e && e->getIsDead())
         {
 
-            highlightManager.HideEnemyAttack(enemyHighlightIndex);
+            highlightManager.HideEnemyAttack(e->highlightIndex);
 
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
@@ -1263,6 +1263,7 @@ void Level::UpdateTurn()
             if (e->isPreparingAttack())
             {
                 ApplyEnemyAttack(e);
+                highlightManager.HideEnemyAttack(e->highlightIndex);
                 e->setPreparingAttack(false);
 
                 enemyActing = false;
@@ -1280,7 +1281,6 @@ void Level::UpdateTurn()
             }
 			else if (e->isPreparingAttack() == false)
             {
-                highlightManager.HideEnemyAttack(enemyHighlightIndex);
                 int newR, newC;
                 if (e->TryMoveTowardPlayer(
                     nowRow, nowCol,
