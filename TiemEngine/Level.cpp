@@ -214,6 +214,15 @@ void Level::LevelInit()
         objectsList.push_back(gameOverText);
     }
 
+    {
+		winText = new TextObject();
+        SDL_Color color = { 255, 255, 255 };
+        winText->LoadText("YOU WIN!", color, 80);
+        winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
+		objectsList.push_back(winText);
+    }
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -425,6 +434,14 @@ void Level::LevelUpdate()
             ++it;
         }
     }
+    if(enemies.empty() && !isGameOver)
+    {
+        if (winText)
+        {
+            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+        turnState = TurnState::GAME_OVER;
+	}
     
 }
 

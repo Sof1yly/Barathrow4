@@ -25,6 +25,7 @@ private:
     HighlightManager highlightManager;
 
     TextObject* gameOverText = nullptr;
+	TextObject* winText = nullptr;
     bool isGameOver = false;
 
 	int playerHealth = 5;//delete later
