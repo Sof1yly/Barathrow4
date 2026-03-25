@@ -4,10 +4,10 @@
 
 DeckViewer::DeckViewer()
 {
-    background = new ImageObject();
-    background->SetSize(1280, 720);
+    background = new GameObject();
+    background->SetSize(1920, 1080);
     background->SetPosition(glm::vec3(0, 0, 0));
-    background->SetAlpha(0.7f);
+    background->SetColor(0.0f, 0.0f, 0.0f, 0.7f);
 }
 
 DeckViewer::~DeckViewer()
@@ -167,8 +167,8 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             TextObject* src = card->GetNameText();
             TextObject* copy = new TextObject();
             copy->SetTextureId(src->GetTextureId());
-            float nameW = src->GetSize().x-2.0f;
-            float nameH = src->GetSize().y-2.5f;
+            float nameW = src->GetSize().x-2.5f;
+            float nameH = src->GetSize().y-1.5f;
             if (nameH < 0.0f) 
             { 
                 nameH += 2.0f; 
@@ -180,7 +180,7 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
             copy->SetSize(nameW, nameH);
             glm::vec3 local = src->GetLocalPosition();
             float leftAnchorX = (cardPos.x - (W * 0.5f)) + (local.x * W);
-            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) +55.0f;
+            float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) +12.0f;
             copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * H), 0));
             view.layers.push_back(copy);
             objectsList.push_back(copy);
@@ -213,8 +213,10 @@ void DeckViewer::clearCardVisuals(vector<DrawableObject*>& objectsList)
         for (auto* layer : view.layers)
         {
             auto it = find(objectsList.begin(), objectsList.end(), layer);
-            if (it != objectsList.end())
+            if (it != objectsList.end()) {
                 objectsList.erase(it);
+            }
+                
             delete layer;
         }
     }
@@ -226,8 +228,10 @@ void DeckViewer::NextPage(vector<DrawableObject*>& objectsList)
     if (!isActive) return;
 
     currentPage++;
-    if (currentPage >= totalPages)
+    if (currentPage >= totalPages) {
         currentPage = totalPages - 1;
+    }
+       
 
     createCardVisuals(objectsList);
 }
@@ -237,8 +241,10 @@ void DeckViewer::PrevPage(vector<DrawableObject*>& objectsList)
     if (!isActive) return;
 
     currentPage--;
-    if (currentPage < 0)
+    if (currentPage < 0) {
         currentPage = 0;
+    }
+        
 
     createCardVisuals(objectsList);
 }

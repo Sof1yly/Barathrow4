@@ -631,6 +631,12 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    if (cardInspectVisible && type != 4)
+    {
+        cardSystem.UpdateHover(mousePos, true, objectsList);
+        return;
+    }
+
     // ----------------------------------------------------
     // Right-Click Down (type 4)
     // ----------------------------------------------------
@@ -1593,11 +1599,12 @@ void Level::ShowCardInspect(Card* cardData)
     }
 
     HideCardInspect();
+    cardSystem.UpdateHover(glm::vec3(0.0f, 0.0f, 0.0f), true, objectsList);
 
     GameObject* panel = new GameObject();
-    panel->SetSize(1750.0f, -840.0f);
-    panel->SetPosition(glm::vec3(0.0f, 20.0f, 900.0f));
-    panel->SetColor(0.33f, 0.33f, 0.33f, 0.88f);
+    panel->SetSize(1920.0f, 1080.0f);
+    panel->SetPosition(glm::vec3(0.0f, 0.0f, 900.0f));
+    panel->SetColor(0.0f, 0.0f, 0.0f, 0.7f);
     cardInspectObjects.push_back(panel);
     objectsList.push_back(panel);
 

@@ -4,6 +4,7 @@
 #include "Card.h"
 #include "DrawableObject.h"
 #include "ImageObject.h"
+#include "GameObject.h"
 #include "TextObject.h"
 
 // One independent visual copy of a card for the deck viewer
@@ -21,7 +22,7 @@ class DeckViewer
 private:
     vector<Card*> deck;
     vector<DeckCardView> cardViews;
-    ImageObject* background = nullptr;
+    GameObject* background = nullptr;
 
     int currentPage = 0;
     int cardsPerPage = 10;
