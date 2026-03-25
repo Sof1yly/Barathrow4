@@ -173,6 +173,18 @@ void HighlightManager::ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>&
     }
 }
 
+void HighlightManager::HideEnemyAttack(int& index)
+{
+    if (index <= 0) return;
+
+    for (int i = 0; i < index && i < enemyHighlights.size(); i++)
+    {
+        enemyHighlights[i]->SetPosition(glm::vec3(99999, 99999, 50));
+    }
+
+    index = 0;
+}
+
 void HighlightManager::Reset()
 {
     attackHighlights.clear();

@@ -262,7 +262,7 @@ void Level::LevelUpdate()
         if (attackTimer >= ATTACK_TIME)
         {
             playerAttacking = false;
-            pendingAttack = false;
+            pendingAttack = false; 
 
             std::cout << "[Attack Animation Finished]\n";
             if (pendingMoveSteps > 0)
@@ -420,7 +420,7 @@ void Level::LevelUpdate()
         if (e && e->getIsDead())
         {
 
-            highlightManager.HideAllEnemy();
+            highlightManager.HideEnemyAttack(enemyHighlightIndex);
 
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
@@ -1278,8 +1278,9 @@ void Level::UpdateTurn()
                 currentEnemyIndex++;
                 return;
             }
-            else
+			else if (e->isPreparingAttack() == false)
             {
+                highlightManager.HideEnemyAttack(enemyHighlightIndex);
                 int newR, newC;
                 if (e->TryMoveTowardPlayer(
                     nowRow, nowCol,
@@ -1472,9 +1473,7 @@ void Level::PreviewMovePath(int steps, int dir)
 }*/
 void Level::PreviewAllEnemyAttacks()
 {
-    highlightManager.HideAllEnemy();
-
-    int highlightIndex = 0;
+    highlightManager.HideEnemyAttack(enemyHighlightIndex);
 
     for (auto* e : enemies)
     {
@@ -1491,7 +1490,7 @@ void Level::PreviewAllEnemyAttacks()
             GridStartRow, GridEndRow,
             GridStartCol, GridEndCol,
             [this](int r, int c) { return GridToWorld(r, c); },
-            highlightIndex
+            enemyHighlightIndex
         );
     }
 }

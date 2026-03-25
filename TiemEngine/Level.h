@@ -116,7 +116,7 @@ private:
     int currentRotation = 0;
 
 	glm::vec3 GridToWorld(int row, int col) const;
-
+    int enemyHighlightIndex = 0;
     //gameloop
     enum class TurnState {
         PLAYER_TURN,

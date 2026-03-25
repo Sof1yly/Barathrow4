@@ -32,7 +32,7 @@ public:
         int gridStartCol, int gridEndCol,
         std::function<glm::vec3(int, int)> gridToWorld,
         int& index);
-
+    void HideEnemyAttack(int& index);
     void HideAllPlayer();
 	void HideAllEnemy();
 	void Reset();
