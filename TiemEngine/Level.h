@@ -154,6 +154,8 @@ public:
     void PreviewMovePath(int steps, int dir);
 	void PreviewEnemyAttack(Enemy* e);
 
+    void PreviewAllEnemyAttacks();
+
     void UpdateHPBar();
 
     void EndTurn();

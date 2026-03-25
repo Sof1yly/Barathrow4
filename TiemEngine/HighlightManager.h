@@ -30,7 +30,8 @@ public:
     void ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>& cells,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
-        std::function<glm::vec3(int, int)> gridToWorld);
+        std::function<glm::vec3(int, int)> gridToWorld,
+        int& index);
 
     void HideAllPlayer();
 	void HideAllEnemy();

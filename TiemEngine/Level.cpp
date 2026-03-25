@@ -423,6 +423,9 @@ void Level::LevelUpdate()
 
         if (e && e->getIsDead())
         {
+
+            highlightManager.HideAllEnemy();
+
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
@@ -1171,7 +1174,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
 void Level::ApplyEnemyAttack(Enemy* e)
 {
-    if (!e) return;
+    if (!e || e->getIsDead()) return;
 
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
@@ -1267,7 +1270,7 @@ void Level::UpdateTurn()
             else if (EnemyCanAttackPlayer(e))
             {
                 e->setPreparingAttack(true);
-                PreviewEnemyAttack(e);
+                PreviewAllEnemyAttacks();
 
                 enemyActing = false;
                 currentEnemyIndex++;
@@ -1449,7 +1452,7 @@ void Level::PreviewMovePath(int steps, int dir)
     );
 }
 
-void Level::PreviewEnemyAttack(Enemy* e)
+/*void Level::PreviewEnemyAttack(Enemy* e)
 {
     if (!e) return;
 
@@ -1464,6 +1467,31 @@ void Level::PreviewEnemyAttack(Enemy* e)
         GridStartCol, GridEndCol,
         [this](int r, int c) { return GridToWorld(r, c); }
     );
+}*/
+void Level::PreviewAllEnemyAttacks()
+{
+    highlightManager.HideAllEnemy();
+
+    int highlightIndex = 0;
+
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        if (!e->isPreparingAttack()) continue;
+
+        auto cells = e->getCurrentPattern().applyTo(
+            e->getNowRow(),
+            e->getNowCol()
+        );
+
+        highlightManager.ShowEnemyAttack(
+            cells,
+            GridStartRow, GridEndRow,
+            GridStartCol, GridEndCol,
+            [this](int r, int c) { return GridToWorld(r, c); },
+            highlightIndex
+        );
+    }
 }
 void Level::UpdateHPBar()
 {
