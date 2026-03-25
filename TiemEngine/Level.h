@@ -47,6 +47,8 @@ private:
 
     //////////////////////////////
 	// //Enemy state
+    int currentEnemyIndex = 0;
+    bool enemyActing = false;
     bool enemyPreparingAttack = false;
 	// Player state
     // Smooth grid movement

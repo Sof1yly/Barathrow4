@@ -1222,54 +1222,83 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
-
         if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
             return;
         }
 
-        if (!tempDiscardDone)
+        if (!enemyActing)
         {
-            cardSystem.DiscardTempCardsFromHand(objectsList);
-            tempDiscardDone = true;
-        }
-        highlightManager.HideAllEnemy();
+            if (currentEnemyIndex >= enemies.size())
+            {
+                currentEnemyIndex = 0;
+                turnState = TurnState::END_TURN;
+                return;
+            }
 
-        for (auto* e : enemies)
-        {
-            if (!e || e->getIsDead()) continue;
+            Enemy* e = enemies[currentEnemyIndex];
+
+            if (!e || e->getIsDead())
+            {
+                currentEnemyIndex++;
+                return;
+            }
+
+            enemyActing = true;
+
             if (e->isDelayed())
             {
                 e->decrementDelay();
-                continue;
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
 
             if (e->isPreparingAttack())
             {
                 ApplyEnemyAttack(e);
                 e->setPreparingAttack(false);
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
             else if (EnemyCanAttackPlayer(e))
             {
                 e->setPreparingAttack(true);
                 PreviewEnemyAttack(e);
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
             else
             {
-                e->MoveTowardPlayer(
+                int newR, newC;
+                if (e->TryMoveTowardPlayer(
                     nowRow, nowCol,
                     GridStartRow, GridEndRow,
                     GridStartCol, GridEndCol,
-                    enemies
-                );
-                glm::vec3 world = GridToWorld(e->getNowRow(), e->getNowCol());
-                e->SetWorldPosition(world);
+                    enemies,
+                    newR, newC))
+                {
+                    e->setNowPosition(newR, newC);
+
+                    glm::vec3 world = GridToWorld(newR, newC);
+                    e->StartMove(world);
+                }
             }
         }
-        turnState = TurnState::END_TURN;
-        break;
 
+        Enemy* e = enemies[currentEnemyIndex];
+        if (e && !e->getIsMoving())
+        {
+            enemyActing = false;
+            currentEnemyIndex++;
+        }
+
+        break;
     }
 
     case TurnState::END_TURN:
