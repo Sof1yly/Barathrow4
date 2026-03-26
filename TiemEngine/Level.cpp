@@ -628,6 +628,24 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    // ViewDeck button 
+    if (type == 0 && realX >= 670.0f && realX <= 750.0f && realY >= 460.0f && realY <= 540.0f)
+    {
+        cardInspect.Hide(objectsList);
+
+        if (deckViewer.IsActive())
+        {
+            deckViewer.Hide(objectsList);
+        }
+        else
+        {
+            const vector<Card*>& allCards = cardSystem.GetFullCollection();
+            deckViewer.SetDeck(allCards);
+            deckViewer.Show(objectsList);
+        }
+        return;
+    }
+
     if (cardInspect.IsVisible() && type != 4)
     {
         cardSystem.UpdateHover(mousePos, true, objectsList);

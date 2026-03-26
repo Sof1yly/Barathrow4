@@ -1,4 +1,5 @@
 Act_Name	Description
+atk	Deal Damage to enemy in grid
 oc	Your next Attack deal X additional damage
 mov	Move forward X tile
 fas	This card does not consume your turn
