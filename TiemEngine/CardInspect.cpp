@@ -351,7 +351,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<Drawa
     }
 
     TextObject* title = new TextObject();
-    title->SetPosition(glm::vec3(-10.0f, 470.0f, 920.0f));
+    title->SetPosition(glm::vec3(-10.0f, 420.0f, 920.0f));
     SDL_Color titleColor = { 245, 245, 245, 255 };
     title->LoadText(cardData->getName(), titleColor, 46);
     inspectObjects.push_back(title);

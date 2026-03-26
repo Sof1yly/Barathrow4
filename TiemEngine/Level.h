@@ -46,6 +46,8 @@ private:
     GameObject* testMove = nullptr;
     SpriteObject* playersprite = nullptr; //Real Player
     ImageObject* mainMenu = nullptr;
+    Button viewDeckButton;
+    Button skipTurnButton;
     ImageObject* testEnemy;
 	ImageObject* Background;
     vector<Enemy*> enemies;

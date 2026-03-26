@@ -166,11 +166,12 @@ void Level::LevelInit()
     }
 
     {
-        ImageObject* ViewDeck = new ImageObject();
-        ViewDeck->SetSize(80.0f, -80.0f);
-        ViewDeck->SetPosition(glm::vec3(710.0f, 500.0f, 0.0f));
-        ViewDeck->SetTexture("../Resource/Texture/UI/ViewDeck.PNG");
-        objectsList.push_back(ViewDeck);
+        viewDeckButton.Init(
+            "../Resource/Texture/UI/ViewDeck.PNG",
+            glm::vec3(710.0f, 500.0f, 0.0f),
+            glm::vec2(80.0f, -80.0f),
+            objectsList
+        );
     }
 
     {
@@ -197,6 +198,15 @@ void Level::LevelInit()
 
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
+
+    {
+        skipTurnButton.Init(
+            "../Resource/Texture/UI/SkipBut.png",
+            glm::vec3(800.0f, -90.0f, 12.0f),
+            glm::vec2(100.0f, -100.0f),
+            objectsList
+        );
+    }
 
     {
         gameOverText = new TextObject();
@@ -495,6 +505,8 @@ void Level::LevelFree()
     mainMenu = nullptr;
     hpBar = nullptr;
     hpMask = nullptr;
+    viewDeckButton.Reset();
+    skipTurnButton.Reset();
 
     cout << "Free Level" << endl;
 }
@@ -629,7 +641,7 @@ void Level::HandleMouse(int type, int x, int y)
     glm::vec3 mousePos(realX, realY, 0.0f);
 
     // ViewDeck button 
-    if (type == 0 && realX >= 670.0f && realX <= 750.0f && realY >= 460.0f && realY <= 540.0f)
+    if (type == 0 && viewDeckButton.IsClicked(realX, realY))
     {
         cardInspect.Hide(objectsList);
 
@@ -770,6 +782,15 @@ void Level::HandleMouse(int type, int x, int y)
                     mainMenu->SetPosition(glm::vec3(0, 20000, 0));
                 }
             }
+        }
+
+        // SKIP TURN BUTTON 
+        if (skipTurnButton.IsClicked(realX, realY))
+        {
+            cardSystem.UpdateHover(mousePos, false, objectsList);
+            highlightManager.HideAllPlayer();
+            turnState = TurnState::ENEMY_TURN;
+            return;
         }
 
         // DRAW PILE BUTTON (RIGHT) - Left Click to discard hand and draw new cards
