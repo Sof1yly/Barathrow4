@@ -420,7 +420,7 @@ void Level::LevelUpdate()
         if (e && e->getIsDead())
         {
 
-            highlightManager.HideEnemyAttack(e->highlightIndex);
+            highlightManager.HideEnemyAttack(enemyHighlightIndex);
 
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
