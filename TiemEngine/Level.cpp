@@ -107,7 +107,7 @@ void Level::LevelInit()
 
         playerSprite->SetSize(200.0f, -200.0f);
 
-        glm::vec3 startPos = GridToWorld(0, 0);
+        glm::vec3 startPos = GridToWorld(nowRow, nowCol);
         playerSprite->SetPosition(startPos);
 
         playerSprite->SetAnimationLoop(

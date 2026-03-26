@@ -91,8 +91,9 @@ private:
     int distanceBetweenGridX = 11;
     int distanceBetweenGridY = 21;
 
-    int nowRow = 0;
-    int nowCol = 0;
+	//Set player start position
+    int nowRow = 3;
+    int nowCol = 3;
 
     int pendingMoveSteps = 0;
     int pendingMoveZone = -1;
