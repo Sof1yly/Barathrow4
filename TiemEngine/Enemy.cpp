@@ -13,9 +13,9 @@ Enemy::Enemy(EnemyType type)
         damage = 2;
         patterns = {
             AttackPattern::fromGrid({
-                ".X.",
                 "XXX",
-                ".X."
+                "XXX",
+                "XXX"
             }, 'X')
         };
         break;
@@ -25,9 +25,9 @@ Enemy::Enemy(EnemyType type)
         damage = 3;
         patterns = {
             AttackPattern::fromGrid({
+                "..X.X..",
                 "...X...",
-                "XXXXXXX",
-                "...X..."
+                "..X.X.."
             }, 'X')
         };
         break;
@@ -114,7 +114,7 @@ void Enemy::getDamage(int damage)
 	hpText->LoadText("HP: " + std::to_string(health), white, 24);
 }
 
-void Enemy::MoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int gridEndRow,int gridStartCol, int gridEndCol,const std::vector<Enemy*>& allEnemies)
+bool Enemy::TryMoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int gridEndRow,int gridStartCol, int gridEndCol,const std::vector<Enemy*>& allEnemies, int& outR, int& outC)
 {
     int er = getNowRow();
     int ec = getNowCol();
@@ -136,11 +136,14 @@ void Enemy::MoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int g
             other->getNowRow() == newR &&
             other->getNowCol() == newC)
         {
-            return;
+            return false;
         }
     }
 
-    setNowPosition(newR, newC);
+    outR = newR;
+    outC = newC;
+    return true;
+	
 }
 
 
@@ -205,6 +208,23 @@ void Enemy::Update(float dt)
 
             isAttacking = false;
             attackTimer = 0.0f;
+        }
+    }
+    if (isMoving)
+    {
+        moveTimer += dt;
+        float t = moveTimer / moveDuration;
+        t = std::min(t, 1.0f);
+
+        glm::vec3 newPos = moveStart + (moveTarget - moveStart) * t;
+        objSprite->SetPosition(newPos);
+
+        if (t >= 1.0f)
+        {
+            objSprite->SetPosition(moveTarget);
+            isMoving = false;
+
+            objSprite->SetAnimationLoop(0, 0, 2, 200);
         }
     }
 
@@ -299,4 +319,16 @@ bool Enemy::isPreparingAttack() const
 void Enemy::setPreparingAttack(bool value)
 {
     preparingAttack = value;
+}
+
+void Enemy::StartMove(glm::vec3 targetWorld)
+{
+    if (!objSprite) return;
+
+    moveStart = objSprite->GetPosition();
+    moveTarget = targetWorld;
+    moveTimer = 0.0f;
+    isMoving = true;
+
+    objSprite->SetAnimationLoop(1, 0, 2, 150);
 }

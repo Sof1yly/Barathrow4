@@ -150,15 +150,8 @@ void HighlightManager::ShowMovePreview(
     }
 }
 
-void HighlightManager::ShowEnemyAttack(
-    const std::vector<std::pair<IVec2, int>>& cells,
-    int gridStartRow, int gridEndRow,
-    int gridStartCol, int gridEndCol,
-    std::function<glm::vec3(int, int)> gridToWorld)
+void HighlightManager::ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>& cells, int gridStartRow, int gridEndRow, int gridStartCol, int gridEndCol, std::function<glm::vec3(int, int)> gridToWorld, int& index)
 {
-    Hide(enemyHighlights);
-
-    int index = 0;
     for (auto& cell : cells)
     {
         int gx = cell.first.x;
@@ -169,7 +162,7 @@ void HighlightManager::ShowEnemyAttack(
             continue;
 
         if (index >= enemyHighlights.size())
-            break;
+            return;
 
         glm::vec3 world = gridToWorld(gx, gy);
         enemyHighlights[index]->SetPosition(
@@ -178,6 +171,18 @@ void HighlightManager::ShowEnemyAttack(
 
         index++;
     }
+}
+
+void HighlightManager::HideEnemyAttack(int& index)
+{
+    if (index <= 0) return;
+
+    for (int i = 0; i < index && i < enemyHighlights.size(); i++)
+    {
+        enemyHighlights[i]->SetPosition(glm::vec3(99999, 99999, 50));
+    }
+
+    index = 0;
 }
 
 void HighlightManager::Reset()

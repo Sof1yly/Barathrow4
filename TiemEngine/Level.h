@@ -25,6 +25,10 @@ private:
 
     HighlightManager highlightManager;
 
+    TextObject* gameOverText = nullptr;
+	TextObject* winText = nullptr;
+    bool isGameOver = false;
+
 	int playerHealth = 5;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
@@ -48,6 +52,8 @@ private:
 
     //////////////////////////////
 	// //Enemy state
+    int currentEnemyIndex = 0;
+    bool enemyActing = false;
     bool enemyPreparingAttack = false;
 	// Player state
     // Smooth grid movement
@@ -116,7 +122,7 @@ private:
     int currentRotation = 0;
 
 	glm::vec3 GridToWorld(int row, int col) const;
-
+    int enemyHighlightIndex = 0;
     //gameloop
     enum class TurnState {
         PLAYER_TURN,
@@ -163,6 +169,7 @@ public:
     void BuildCardInspectGrid(Card* cardData);
     std::string BuildCardInspectText(Card* cardData) const;
     std::string GetKeywordTitle(const std::string& code) const;
+    void PreviewAllEnemyAttacks();
 
     void UpdateHPBar();
 

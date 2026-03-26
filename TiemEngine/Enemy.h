@@ -35,12 +35,13 @@ public:
 
     void getDamage(int damage);
 
-    void MoveTowardPlayer(
+    bool TryMoveTowardPlayer(
         int playerRow,
         int playerCol,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
-        const std::vector<Enemy*>& allEnemies
+        const std::vector<Enemy*>& allEnemies,
+		int& outR, int& outC
     );
 
     void setObject(SpriteObject* obj) { objSprite = obj; }
@@ -72,6 +73,10 @@ public:
     bool getIsDead() const { return isDead; }
     void markDead() { isDead = true; }
 
+	bool getIsMoving() const { return isMoving; }
+
+    void StartMove(glm::vec3 targetWorld);
+    int highlightIndex;
 private:
 
     EnemyType type;
@@ -82,6 +87,12 @@ private:
 
     int nowRow = 0;
     int nowCol = 0;
+
+    bool isMoving = false;
+    glm::vec3 moveStart;
+    glm::vec3 moveTarget;
+    float moveTimer = 0.0f;
+    float moveDuration = 0.25f;
 
     bool preparingAttack = false;
     bool isDead = false;

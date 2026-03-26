@@ -70,18 +70,20 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
     //Enemy
-    Enemy* e1 = new Enemy(Enemy::EnemyType::A1);
-	int ran1 = rand() % 8+1;
+    Enemy* e1 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    int ran1 = rand() % 8 + 1;
     e1->setNowPosition(ran1, 0);
     e1->SetWorldPosition(GridToWorld(ran1, 0));
-	int ran2 = rand() % 8 + 1;
-    Enemy* e2 = new Enemy(Enemy::EnemyType::A2);
+
+    Enemy* e2 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    int ran2 = rand() % 8 + 1;
     e2->setNowPosition(ran2, 2);
     e2->SetWorldPosition(GridToWorld(ran2, 2));
-	Enemy* e3 = new Enemy(Enemy::EnemyType::A1);
-	int ran3 = rand() % 8 + 1;
-	e3->setNowPosition(ran3, 4);
-	e3->SetWorldPosition(GridToWorld(ran3, 4));
+
+    Enemy* e3 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    int ran3 = rand() % 8 + 1;
+    e3->setNowPosition(ran3, 4);
+    e3->SetWorldPosition(GridToWorld(ran3, 4));
 
 
 
@@ -120,43 +122,12 @@ void Level::LevelInit()
         playersprite = playerSprite;
     }
 
-    // 4) Demo objects
     {
-        /*GameObject* obj = new GameObject();
-        obj->SetColor(1.0f, 0.0f, 0.0f);
-        obj->SetSize(200.0f, 200.0f);
-        objectsList.push_back(obj);
-        player = obj;*/
-    }
-
-    {
-        GameObject* obj2 = new GameObject();
+        /*GameObject* obj2 = new GameObject();
         obj2->SetColor(0.0f, 1.0f, 0.0f);
         obj2->SetSize(50.0f, 50.0f);
         obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        objectsList.push_back(obj2);
-    }
-
-    {
-        /*GameObject* obj3 = new GameObject();
-        obj3->SetColor(0.0f, 0.0f, 1.0f);
-        obj3->SetSize(100.0f, 100.0f);
-        obj3->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        objectsList.push_back(obj3);
-        testMove = obj3;*/
-    }
-
-    //testMoveTarget = testMove->GetPosition();
-    //testMoveMoving = false;
-
-
-    //  Menu button + UI
-    {
-        /*ImageObject* img = new ImageObject();
-        img->SetSize(50.0f, -50.0f);
-        img->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-        img->SetTexture("../Resource/Texture/menu.png");
-        objectsList.push_back(img);*/
+		objectsList.push_back(obj2);*/ //Green obj dont delete, for testing and save UI position
     }
 
     {
@@ -234,12 +205,25 @@ void Level::LevelInit()
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
 
+    {
+        gameOverText = new TextObject();
+        SDL_Color color = { 255, 255, 255 };
 
-    //TextObject* text = new TextObject();
-    //text->SetPosition((glm::vec3(500.0f, 200.0f, 0.0f)));
-    //SDL_Color color = {0, 255,0 };
-    //text->LoadText("hello world!", color, 20);
-    //objectsList.push_back(text);
+        gameOverText->LoadText("GAME OVER", color, 80);
+        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        gameOverText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
+
+        objectsList.push_back(gameOverText);
+    }
+
+    {
+		winText = new TextObject();
+        SDL_Color color = { 255, 255, 255 };
+        winText->LoadText("YOU WIN!", color, 80);
+        winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
+		objectsList.push_back(winText);
+    }
 
     std::cout << "Init Level" << std::endl;
 }
@@ -249,7 +233,19 @@ void Level::LevelUpdate()
     
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 
-    
+    if (!isGameOver && playerHealth <= 0)
+    {
+        isGameOver = true;
+
+        std::cout << "GAME OVER\n";
+
+        if (gameOverText)
+        {
+            gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+
+        return;
+    }
 
     UpdateTurn();
     for (auto* e : enemies)
@@ -268,7 +264,7 @@ void Level::LevelUpdate()
         if (attackTimer >= ATTACK_TIME)
         {
             playerAttacking = false;
-            pendingAttack = false;
+            pendingAttack = false; 
 
             std::cout << "[Attack Animation Finished]\n";
             if (pendingMoveSteps > 0)
@@ -425,6 +421,9 @@ void Level::LevelUpdate()
 
         if (e && e->getIsDead())
         {
+
+            highlightManager.HideEnemyAttack(enemyHighlightIndex);
+
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
@@ -437,6 +436,14 @@ void Level::LevelUpdate()
             ++it;
         }
     }
+    if(enemies.empty() && !isGameOver)
+    {
+        if (winText)
+        {
+            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+        turnState = TurnState::GAME_OVER;
+	}
     
 }
 
@@ -462,10 +469,8 @@ void Level::LevelFree()
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
             if (it != objectsList.end()) objectsList.erase(it);
-            delete obj;
         }
 
-        delete e;
     }
     enemies.clear();
 
@@ -1241,7 +1246,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
 void Level::ApplyEnemyAttack(Enemy* e)
 {
-    if (!e) return;
+    if (!e || e->getIsDead()) return;
 
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
@@ -1292,54 +1297,84 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
-
         if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
             return;
         }
 
-        if (!tempDiscardDone)
+        if (!enemyActing)
         {
-            cardSystem.DiscardTempCardsFromHand(objectsList);
-            tempDiscardDone = true;
-        }
-        highlightManager.HideAllEnemy();
+            if (currentEnemyIndex >= enemies.size())
+            {
+                currentEnemyIndex = 0;
+                turnState = TurnState::END_TURN;
+                return;
+            }
 
-        for (auto* e : enemies)
-        {
-            if (!e || e->getIsDead()) continue;
+            Enemy* e = enemies[currentEnemyIndex];
+
+            if (!e || e->getIsDead())
+            {
+                currentEnemyIndex++;
+                return;
+            }
+
+            enemyActing = true;
+
             if (e->isDelayed())
             {
                 e->decrementDelay();
-                continue;
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
 
             if (e->isPreparingAttack())
             {
                 ApplyEnemyAttack(e);
+                highlightManager.HideEnemyAttack(e->highlightIndex);
                 e->setPreparingAttack(false);
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
             else if (EnemyCanAttackPlayer(e))
             {
                 e->setPreparingAttack(true);
-                PreviewEnemyAttack(e);
+                PreviewAllEnemyAttacks();
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
             }
-            else
+			else if (e->isPreparingAttack() == false)
             {
-                e->MoveTowardPlayer(
+                int newR, newC;
+                if (e->TryMoveTowardPlayer(
                     nowRow, nowCol,
                     GridStartRow, GridEndRow,
                     GridStartCol, GridEndCol,
-                    enemies
-                );
-                glm::vec3 world = GridToWorld(e->getNowRow(), e->getNowCol());
-                e->SetWorldPosition(world);
+                    enemies,
+                    newR, newC))
+                {
+                    e->setNowPosition(newR, newC);
+
+                    glm::vec3 world = GridToWorld(newR, newC);
+                    e->StartMove(world);
+                }
             }
         }
-        turnState = TurnState::END_TURN;
-        break;
 
+        Enemy* e = enemies[currentEnemyIndex];
+        if (e && !e->getIsMoving())
+        {
+            enemyActing = false;
+            currentEnemyIndex++;
+        }
+
+        break;
     }
 
     case TurnState::END_TURN:
@@ -1785,7 +1820,7 @@ void Level::PreviewMovePath(int steps, int dir)
     );
 }
 
-void Level::PreviewEnemyAttack(Enemy* e)
+/*void Level::PreviewEnemyAttack(Enemy* e)
 {
     if (!e) return;
 
@@ -1800,6 +1835,29 @@ void Level::PreviewEnemyAttack(Enemy* e)
         GridStartCol, GridEndCol,
         [this](int r, int c) { return GridToWorld(r, c); }
     );
+}*/
+void Level::PreviewAllEnemyAttacks()
+{
+    highlightManager.HideEnemyAttack(enemyHighlightIndex);
+
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        if (!e->isPreparingAttack()) continue;
+
+        auto cells = e->getCurrentPattern().applyTo(
+            e->getNowRow(),
+            e->getNowCol()
+        );
+
+        highlightManager.ShowEnemyAttack(
+            cells,
+            GridStartRow, GridEndRow,
+            GridStartCol, GridEndCol,
+            [this](int r, int c) { return GridToWorld(r, c); },
+            enemyHighlightIndex
+        );
+    }
 }
 void Level::UpdateHPBar()
 {
