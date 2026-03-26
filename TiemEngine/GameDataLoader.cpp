@@ -218,6 +218,12 @@ std::string GameDataLoader::getActionDescription(const std::string& actionCode) 
 {
     std::string code = toLower_(trim_(actionCode));
     auto it = actionDescriptions.find(code);
+    if (it == actionDescriptions.end()) {
+        if (code == "dl") code = "de";
+        else if (code == "sh") code = "shi";
+        else if (code == "te") code = "temp";
+        it = actionDescriptions.find(code);
+    }
     if (it == actionDescriptions.end()) return "";
     return it->second;
 }

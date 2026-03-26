@@ -17,6 +17,7 @@
 #include "HighlightManager.h"
 #include "Player.h"
 #include "DeckViewer.h"
+#include "CardInspect.h"
 
 class Level
 {
@@ -113,10 +114,7 @@ private:
     // Deck viewer for viewing all cards in deck
     DeckViewer deckViewer;
 
-    // Card inspect popup (right click)
-    bool cardInspectVisible = false;
-    Card* inspectedCard = nullptr;
-    std::vector<DrawableObject*> cardInspectObjects;
+    CardInspect cardInspect;
 
     // Patterns
     std::vector<AttackPattern> patterns;
@@ -167,11 +165,6 @@ public:
     void PreviewMovePath(int steps, int dir);
 	void PreviewEnemyAttack(Enemy* e);
 
-    void ShowCardInspect(Card* cardData);
-    void HideCardInspect();
-    void BuildCardInspectGrid(Card* cardData);
-    std::string BuildCardInspectText(Card* cardData) const;
-    std::string GetKeywordTitle(const std::string& code) const;
     void PreviewAllEnemyAttacks();
 
     void UpdateHPBar();

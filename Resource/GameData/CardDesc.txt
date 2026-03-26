@@ -1,3 +1,16 @@
 Act_Name	Description
-atk	Deal Damage to enemy in grid
-oc	Increase the next played card damage by X
+oc	Your next Attack deal X additional damage
+mov	Move forward X tile
+fas	This card does not consume your turn
+del	This card will be removed from this combat after being played
+re	Move backward X tile
+gen 	Create X amount of Energy Card in hand
+lag	This card will stun the player after being play
+per	This card will be kept in your hand after re-drawing
+pre	This card will always start in the opening hand
+temp	This card will be Delete if its in your hand at the end of your round
+con	"This card require X amount of Energy Cards in hand to be played, Consumed Energy Card will be Delete"
+shi	"Incoming damage will be blocked by your shield before affecting your HP, Shield will be removed on round starts"
+cor	Corrupted Enemy will receive X additional damage from all source
+enr	Be Consume
+de	Skipped the effected unit upcoming turn
