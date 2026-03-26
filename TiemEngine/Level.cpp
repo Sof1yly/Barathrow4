@@ -58,11 +58,7 @@ void Level::LevelInit()
             ImageObject* tile = new ImageObject();
             tile->SetTexture("../Resource/Texture/BG/F1Grid.png");
             tile->SetSize(GridWide, GridHigh);
-            tile->SetPosition(glm::vec3(
-                i * 101.0f - 404.0f,
-                j * -105.0f + 352.0f,
-                0.0f
-            ));
+            tile->SetPosition(glm::vec3(i * 101.0f - 404.0f,j * -105.0f + 352.0f, 0.0f));
             objectsList.push_back(tile);
         }
     }
@@ -102,8 +98,7 @@ void Level::LevelInit()
 
     // 3) Player sprite (3x4, 192x256)
     {
-        SpriteObject* playerSprite =
-            new SpriteObject("../Resource/Texture/Player_sprite2.png", 6,16);
+        SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite2.png", 6,16);
 
         playerSprite->SetSize(200.0f, -200.0f);
 
@@ -375,8 +370,7 @@ void Level::LevelUpdate()
         float t = playerMoveTimer / PLAYER_MOVE_TIME;
         t = std::min(t, 1.0f);
 
-        glm::vec3 newPos =
-            playerMoveStart + (playerMoveTarget - playerMoveStart) * t;
+        glm::vec3 newPos = playerMoveStart + (playerMoveTarget - playerMoveStart) * t;
 
         playersprite->SetPosition(newPos);
 
@@ -484,8 +478,8 @@ void Level::LevelFree()
     highlightManager.Reset();
 
     // 5. Reset game state
-    nowRow = 0;
-    nowCol = 0;
+    nowRow = startRow;
+    nowCol = startCol;
     playerHealth = 5;
     playerMoving = false;
     playerAttacking = false;

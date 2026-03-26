@@ -91,9 +91,11 @@ private:
     int distanceBetweenGridX = 11;
     int distanceBetweenGridY = 21;
 
-	//Set player start position
-    int nowRow = 3;
-    int nowCol = 3;
+ //Set player start position
+    const int startRow = 3;
+    const int startCol = 2;
+    int nowRow = startRow;
+    int nowCol = startCol;
 
     int pendingMoveSteps = 0;
     int pendingMoveZone = -1;
