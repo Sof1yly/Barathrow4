@@ -101,6 +101,12 @@ private:
     bool pendingFastCard = false;
     int lagTurns = 0;
 
+    bool playerPlayingOneShot = false;
+    bool playerDead = false;
+    float playerAnimTimer = 0.0f;
+    float playerAnimDuration = 0.0f;
+	int direction = 0;//0down 1left 2up 3right
+
 
     // Movement
     glm::vec3 testMoveTarget = glm::vec3(0.0f);
@@ -161,6 +167,8 @@ public:
 
     void SetPlayerIdle(PlayerDir dir);
     void SetPlayerWalk(PlayerDir dir);
+	void SetPlayerGetDamage(PlayerDir dir);
+    void SetPlayerDie(PlayerDir dir);
 
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
@@ -172,6 +180,10 @@ public:
     std::string BuildCardInspectText(Card* cardData) const;
     std::string GetKeywordTitle(const std::string& code) const;
     void PreviewAllEnemyAttacks();
+
+    void PlayerTakeDamage(int damage);
+    void HandlePlayerDeath();
+
 
     void UpdateHPBar();
 
