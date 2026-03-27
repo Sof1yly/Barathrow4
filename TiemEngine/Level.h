@@ -35,6 +35,8 @@ private:
     ImageObject* hpBar = nullptr;
     int maxPlayerHealth = 10;
     ImageObject* hpMask = nullptr;
+    TextObject* skipTurnHintText = nullptr;
+    TextObject* viewDeckHintText = nullptr;
 
     Player playerData;
 

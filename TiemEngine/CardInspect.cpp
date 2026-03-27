@@ -40,7 +40,16 @@ CardInspect::~CardInspect()
 std::string CardInspect::GetKeywordTitle(const Action* action, const std::string& fallbackCode) const
 {
     if (!action)
+    {
+        if (fallbackCode == "oc") return "Overclock";
+        if (fallbackCode == "fas") return "Fast";
+        if (fallbackCode == "del") return "Delete";
+        if (fallbackCode == "per") return "Persist";
+        if (fallbackCode == "pre") return "PreLoad";
+        if (fallbackCode == "temp") return "Temp";
+        if (fallbackCode == "lag") return "Lag";
         return fallbackCode;
+    }
 
     if (const auto* move = dynamic_cast<const MoveAction*>(action))
     {
@@ -171,14 +180,9 @@ std::string CardInspect::BuildInspectText(Card* cardData, const CardSystem& card
         {
             title = GetKeywordTitle(action, code);
         }
-        else if (code == "oc")
-        {
-            BuffAction overclockAction(BuffSubType::Overclock);
-            title = GetKeywordTitle(&overclockAction, code);
-        }
         else
         {
-            title = code;
+            title = GetKeywordTitle(nullptr, code);
         }
 
         if (!first) out += "\n\n";
@@ -278,7 +282,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<Drawa
     GameObject* panel = new GameObject();
     panel->SetSize(1920.0f, 1080.0f);
     panel->SetPosition(glm::vec3(0.0f, 0.0f, 900.0f));
-    panel->SetColor(0.0f, 0.0f, 0.0f, 0.7f);
+    panel->SetColor(0.0f, 0.0f, 0.0f, 0.86f);
     inspectObjects.push_back(panel);
     objectsList.push_back(panel);
 

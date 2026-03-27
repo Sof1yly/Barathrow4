@@ -7,7 +7,7 @@ DeckViewer::DeckViewer()
     background = new GameObject();
     background->SetSize(1920, 1080);
     background->SetPosition(glm::vec3(0, 0, 0));
-    background->SetColor(0.0f, 0.0f, 0.0f, 0.7f);
+    background->SetColor(0.0f, 0.0f, 0.0f, 0.86f);
 }
 
 DeckViewer::~DeckViewer()

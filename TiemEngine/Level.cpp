@@ -166,12 +166,7 @@ void Level::LevelInit()
     }
 
     {
-        viewDeckButton.Init(
-            "../Resource/Texture/UI/ViewDeck.PNG",
-            glm::vec3(710.0f, 500.0f, 0.0f),
-            glm::vec2(80.0f, -80.0f),
-            objectsList
-        );
+        viewDeckButton.InitPreset(Button::Preset::ViewDeck, objectsList);
     }
 
     {
@@ -200,12 +195,23 @@ void Level::LevelInit()
     cardSystem.InitUI(objectsList);
 
     {
-        skipTurnButton.Init(
-            "../Resource/Texture/UI/SkipBut.png",
-            glm::vec3(800.0f, -90.0f, 12.0f),
-            glm::vec2(100.0f, -100.0f),
-            objectsList
-        );
+        skipTurnButton.InitPreset(Button::Preset::SkipTurn, objectsList);
+    }
+
+    {
+        skipTurnHintText = new TextObject();
+        SDL_Color hintColor = { 245, 245, 245, 255 };
+        skipTurnHintText->LoadText("End turn without draw card", hintColor, 22);
+        skipTurnHintText->SetPosition(Button::HiddenHintPosition());
+        objectsList.push_back(skipTurnHintText);
+    }
+
+    {
+        viewDeckHintText = new TextObject();
+        SDL_Color hintColor = { 245, 245, 245, 255 };
+        viewDeckHintText->LoadText("View all the cards in your deck", hintColor, 22);
+        viewDeckHintText->SetPosition(Button::HiddenHintPosition());
+        objectsList.push_back(viewDeckHintText);
     }
 
     {
@@ -213,7 +219,7 @@ void Level::LevelInit()
         SDL_Color color = { 255, 255, 255 };
 
         gameOverText->LoadText("GAME OVER", color, 80);
-        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        //gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
         gameOverText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
 
         objectsList.push_back(gameOverText);
@@ -543,6 +549,8 @@ void Level::LevelFree()
     mainMenu = nullptr;
     hpBar = nullptr;
     hpMask = nullptr;
+    skipTurnHintText = nullptr;
+    viewDeckHintText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
 
@@ -677,6 +685,22 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    if (skipTurnHintText)
+    {
+        if (skipTurnButton.IsClicked(realX, realY) && turnState == TurnState::PLAYER_TURN)
+            skipTurnHintText->SetPosition(skipTurnButton.GetHintPosition());
+        else
+            skipTurnHintText->SetPosition(Button::HiddenHintPosition());
+    }
+
+    if (viewDeckHintText)
+    {
+        if (viewDeckButton.IsClicked(realX, realY))
+            viewDeckHintText->SetPosition(viewDeckButton.GetHintPosition());
+        else
+            viewDeckHintText->SetPosition(Button::HiddenHintPosition());
+    }
 
     // ViewDeck button 
     if (type == 0 && viewDeckButton.IsClicked(realX, realY))
