@@ -92,7 +92,7 @@ private:
     glm::vec3 moveStart;
     glm::vec3 moveTarget;
     float moveTimer = 0.0f;
-    float moveDuration = 0.25f;
+    float moveDuration = 1.25f;//move duration
 
     bool preparingAttack = false;
     bool isDead = false;
@@ -103,7 +103,7 @@ private:
 
     bool isAttacking = false;
     float attackTimer = 0.0f;
-    float attackDuration = 0.6f;
+	float attackDuration = 1.0f;//attack animation duration
 
     SpriteObject* objSprite = nullptr;
     std::vector<AttackPattern> patterns;
