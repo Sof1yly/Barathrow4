@@ -96,7 +96,7 @@ void Level::LevelInit()
 
     // 3) Player sprite (3x4, 192x256)
     {
-        SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite2.png", 6,16);
+        SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite2.png", 9,16);
 
         playerSprite->SetSize(200.0f, -200.0f);
 
@@ -235,19 +235,39 @@ void Level::LevelUpdate()
 {
     
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
+    if (playerPlayingOneShot)
+    {
+        playerAnimTimer += deltaTime;
 
+        if (playerAnimTimer >= playerAnimDuration)
+        {
+            playerPlayingOneShot = false;
+
+            if (playerDead)
+            {
+                if (direction == 0) {
+                    playersprite->SetAnimationLoop(7, 4, 0, 1000);
+                }
+                if (direction == 1) {
+                    playersprite->SetAnimationLoop(7, 9, 0, 1000);
+				}
+                if (direction == 2) {
+                    playersprite->SetAnimationLoop(8, 4, 0, 1000);
+                }
+                if (direction == 3) {
+                    playersprite->SetAnimationLoop(8, 9, 0, 1000);
+                }
+            }
+            else
+            {
+                playerState = PlayerState::IDLE;
+                UpdatePlayerAnimation();
+            }
+        }
+    }
     if (!isGameOver && playerHealth <= 0)
     {
-        isGameOver = true;
-
-        std::cout << "GAME OVER\n";
-
-        if (gameOverText)
-        {
-            gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
-        }
-
-        return;
+        HandlePlayerDeath();
     }
 
     UpdateTurn();
@@ -1310,14 +1330,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         if (nowRow == x && nowCol == y)
         {
-            int damage = 1;
-            damage = playerData.AbsorbDamage(damage);
-
-            if (damage > 0)
-            {
-                playerHealth -= damage;
-                UpdateHPBar();
-            }
+            PlayerTakeDamage(1);
         }
     }
 }
@@ -1467,16 +1480,16 @@ void Level::LevelRestart()
 
 void Level::UpdatePlayerAnimation()
 {
-    if (!playersprite) return;
+    if (!playersprite || playerPlayingOneShot) return;
 
     if (playerState == PlayerState::IDLE)
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 2, 800); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(0, 2, 2, 800); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(0, 4, 2, 800); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(0, 6, 2, 800); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 2, 800); direction=0; break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(0, 2, 2, 800); direction = 1; break;
+        case PlayerDir::UP:    playersprite->SetAnimationLoop(0, 4, 2, 800); direction = 2; break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(0, 6, 2, 800); direction = 3; break;
         }
     }
     else if (playerState == PlayerState::WALK)
@@ -1521,6 +1534,38 @@ void Level::SetPlayerWalk(PlayerDir dir)
     case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
     }
 }
+
+void Level::SetPlayerDie(PlayerDir dir)
+{
+    playerPlayingOneShot = true;
+    playerDead = true;
+    playerAnimTimer = 0.0f;
+    playerAnimDuration = 1000.0f;
+
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(7, 0, 5, 200); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(7, 5, 5, 200); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(8, 0, 5, 200); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(8, 5, 5, 200); break;
+	}
+}
+void Level::SetPlayerGetDamage(PlayerDir dir)
+{
+    playerPlayingOneShot = true;
+    playerAnimTimer = 0.0f;
+    playerAnimDuration = 400.0f;
+
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(7, 0, 2, 200); break;
+    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(7, 5, 2, 200); break;
+    case PlayerDir::UP:    playersprite->SetAnimationLoop(8, 0, 2, 200); break;
+    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(8, 5, 2, 200); break;
+    }
+}
+
+
 
 void Level::PreviewAttackPattern(Card* cardData, int dz)
 {
@@ -1672,4 +1717,42 @@ void Level::EndTurn()
     {
         turnState = TurnState::PLAYER_TURN;
     }
+}
+void Level::PlayerTakeDamage(int damage)
+{
+    damage = playerData.AbsorbDamage(damage);
+
+    if (damage <= 0) return;
+
+    SetPlayerGetDamage(playerDir);
+
+    playerHealth -= damage;
+    UpdateHPBar();
+
+    std::cout << "[Player] Took " << damage
+        << " damage. HP: " << playerHealth << std::endl;
+
+    if (playerHealth <= 0)
+    {
+        HandlePlayerDeath();
+    }
+}
+
+void Level::HandlePlayerDeath()
+{
+    if (isGameOver) return;
+
+    isGameOver = true;
+
+    SetPlayerDie(playerDir);
+
+    playerMoving = false;
+    playerAttacking = false;
+
+    if (gameOverText)
+    {
+        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+    }
+
+    turnState = TurnState::GAME_OVER;
 }
