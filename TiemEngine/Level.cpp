@@ -423,7 +423,6 @@ void Level::LevelUpdate()
 
         if (e && e->getIsDead())
         {
-
             highlightManager.HideEnemyAttack(enemyHighlightIndex);
 
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
@@ -432,11 +431,30 @@ void Level::LevelUpdate()
 
             delete e;
             it = enemies.erase(it);
+
+            anyEnemyDied = true;
         }
         else
         {
             ++it;
         }
+    }
+    if (anyEnemyDied)
+    {
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+
+            if (EnemyCanAttackPlayer(e))
+            {
+                e->setPreparingAttack(true);
+            }
+            else
+            {
+                e->setPreparingAttack(false);
+            }
+        }
+        PreviewAllEnemyAttacks();
     }
     if(enemies.empty() && !isGameOver)
     {
@@ -1410,6 +1428,25 @@ void Level::UpdateTurn()
 
     case TurnState::END_TURN:
     {
+        highlightManager.HideEnemyAttack(enemyHighlightIndex);
+
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+            e->setPreparingAttack(false);
+        }
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+
+            if (EnemyCanAttackPlayer(e))
+            {
+                e->setPreparingAttack(true);
+            }
+        }
+
+        PreviewAllEnemyAttacks();
+
         EndTurn();
         break;
     }
