@@ -18,7 +18,7 @@ using namespace std;
 // Global variables
 // ---------------------------------------------
 bool quit;
-const GLint WIDTH = 1280, HEIGHT = 720;  // 1920 x 1080 , 1280 x 720
+const GLint WIDTH = 1600, HEIGHT = 900;  // 1920 x 1080 , 1600x900, 1280 x 720
 int currentFrame = 0, lastFrame = 0;
 
 Uint32 mouseDownTime = 0;
