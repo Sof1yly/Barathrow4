@@ -1397,6 +1397,25 @@ void Level::UpdateTurn()
 
     case TurnState::END_TURN:
     {
+        highlightManager.HideEnemyAttack(enemyHighlightIndex);
+
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+            e->setPreparingAttack(false);
+        }
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+
+            if (EnemyCanAttackPlayer(e))
+            {
+                e->setPreparingAttack(true);
+            }
+        }
+
+        PreviewAllEnemyAttacks();
+
         EndTurn();
         break;
     }
