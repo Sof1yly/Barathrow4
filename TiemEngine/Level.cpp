@@ -772,7 +772,6 @@ void Level::HandleMouse(int type, int x, int y)
             else
             {
                 cardInspect.Hide(objectsList);
-                deckViewer.NextPage(objectsList);
             }
             return;
         }
@@ -807,10 +806,10 @@ void Level::HandleMouse(int type, int x, int y)
     // If deck viewer is active, handle navigation
     if (deckViewer.IsActive())
     {
-        // Left click goes to previous page
         if (type == 0)
         {
-            deckViewer.PrevPage(objectsList);
+            if (deckViewer.HandleClick(mousePos, objectsList))
+                return;
         }
         return;
     }

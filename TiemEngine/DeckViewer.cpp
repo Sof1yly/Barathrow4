@@ -40,6 +40,7 @@ void DeckViewer::Show(vector<DrawableObject*>& objectsList)
 
     isActive = true;
     objectsList.push_back(background);
+    createControls(objectsList);
     createCardVisuals(objectsList);
 }
 
@@ -53,7 +54,56 @@ void DeckViewer::Hide(vector<DrawableObject*>& objectsList)
     if (it != objectsList.end())
         objectsList.erase(it);
 
+    clearControls(objectsList);
     clearCardVisuals(objectsList);
+}
+
+void DeckViewer::createControls(vector<DrawableObject*>& objectsList)
+{
+    leftNavButton.Init(
+        "../Resource/Texture/UI/Left.png",
+        glm::vec3(-900.0f, 0.0f, 30.0f),
+        glm::vec2(80.0f, -80.0f),
+        objectsList
+    );
+
+    rightNavButton.Init(
+        "../Resource/Texture/UI/Right.png",
+        glm::vec3(900.0f, 0.0f, 30.0f),
+        glm::vec2(80.0f, -80.0f),
+        objectsList
+    );
+
+    closeButton.Init(
+        "../Resource/Texture/UI/cross.png",
+        glm::vec3(900.0f, 500.0f, 30.0f),
+        glm::vec2(70.0f, -70.0f),
+        objectsList
+    );
+}
+
+void DeckViewer::clearControls(vector<DrawableObject*>& objectsList)
+{
+    auto removeButtonImage = [&](Button& button)
+    {
+        ImageObject* img = button.GetImage();
+        if (!img) {
+            button.Reset();
+            return;
+        }
+
+        auto it = find(objectsList.begin(), objectsList.end(), img);
+        if (it != objectsList.end()) {
+            objectsList.erase(it);
+        }
+
+        delete img;
+        button.Reset();
+    };
+
+    removeButtonImage(leftNavButton);
+    removeButtonImage(rightNavButton);
+    removeButtonImage(closeButton);
 }
 
 // Helper: clone an ImageObject by sharing its texture
@@ -234,6 +284,31 @@ void DeckViewer::NextPage(vector<DrawableObject*>& objectsList)
        
 
     createCardVisuals(objectsList);
+}
+
+bool DeckViewer::HandleClick(const glm::vec3& mousePos, vector<DrawableObject*>& objectsList)
+{
+    if (!isActive) return false;
+
+    if (closeButton.IsClicked(mousePos.x, mousePos.y))
+    {
+        Hide(objectsList);
+        return true;
+    }
+
+    if (leftNavButton.IsClicked(mousePos.x, mousePos.y))
+    {
+        PrevPage(objectsList);
+        return true;
+    }
+
+    if (rightNavButton.IsClicked(mousePos.x, mousePos.y))
+    {
+        NextPage(objectsList);
+        return true;
+    }
+
+    return false;
 }
 
 void DeckViewer::PrevPage(vector<DrawableObject*>& objectsList)

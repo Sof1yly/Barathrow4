@@ -6,6 +6,7 @@
 #include "ImageObject.h"
 #include "GameObject.h"
 #include "TextObject.h"
+#include "Button.h"
 
 // One independent visual copy of a card for the deck viewer
 struct DeckCardView
@@ -30,8 +31,14 @@ private:
 
     bool isActive = false;
 
+    Button leftNavButton;
+    Button rightNavButton;
+    Button closeButton;
+
     void createCardVisuals(vector<DrawableObject*>& objectsList);
     void clearCardVisuals(vector<DrawableObject*>& objectsList);
+    void createControls(vector<DrawableObject*>& objectsList);
+    void clearControls(vector<DrawableObject*>& objectsList);
     ImageObject* cloneImage(ImageObject* src, const glm::vec3& pos, float w, float h);
     bool isPointInsideCard(const glm::vec3& p, const DeckCardView& view) const;
 
@@ -47,6 +54,7 @@ public:
     void NextPage(vector<DrawableObject*>& objectsList);
     void PrevPage(vector<DrawableObject*>& objectsList);
     Card* PeekAt(const glm::vec3& mousePos) const;
+    bool HandleClick(const glm::vec3& mousePos, vector<DrawableObject*>& objectsList);
 
     int GetCurrentPage() const { return currentPage; }
     int GetTotalPages() const { return totalPages; }
