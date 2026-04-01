@@ -16,6 +16,35 @@ void Player::AddShield(int amount)
 	std::cout << "  Shield: +" << amount << " (total: " << shield << ")" << std::endl;
 }
 
+void Player::AddBarrier()
+{
+	barrierActive = true;
+	std::cout << "  Barrier: active" << std::endl;
+}
+
+bool Player::ConsumeBarrier()
+{
+	if (!barrierActive) return false;
+
+	barrierActive = false;
+	std::cout << "  Barrier negated incoming damage!" << std::endl;
+	return true;
+}
+
+void Player::ExpireBarrier()
+{
+	if (barrierActive)
+	{
+		barrierActive = false;
+		std::cout << "  Barrier expired at turn end." << std::endl;
+	}
+}
+
+bool Player::HasBarrier() const
+{
+	return barrierActive;
+}
+
 void Player::ResetShield()
 {
 	if (shield > 0)

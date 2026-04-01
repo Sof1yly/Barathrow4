@@ -1,23 +1,50 @@
 Card												
 Name	Effects	Pattern	Level	Rarity	Type	Desc						
 Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage						
-Sweep Attack	atk:3	A3	1	sta	atk	Deal {atk} Damage						
-Sprint	mov:3	A1	1	sta	mov	Move {mov}						
-Panic Roll	mov:1;fas;temp	A1	1	sta	mov	Move {mov},Fast,Temp						
+Sweep Attack	atk:3	A4	1	sta	atk	Deal {atk} Damage						
+Sprint	mov:3	A1	1	sta	mov	Move {mov} 						
+Panic Roll	mov:1;fas;te	A1	1	sta	mov	Move {mov} Fast  Temp						
 Walk	mov:1	A1	1	sta	mov	Move {mov}						
-Perfected Roll	mov:1;fas;del	A1	1	rar	mov	Move {mov},Fast,Delete						
-Onslaught	atk:10;del	A2	1	rar	atk	Deal {atk} Damage,Delete						
-Feint Attack	atk:3;re:1	A5	1	rar	atk	Deal {atk} Damage,Retreat 1						
+Perfected Roll	mov:1;fas;del	A1	1	rar	mov	Move {mov} Fast  Delete						
+Onslaught	atk:10;del	A2	1	rar	atk	Deal {atk} Damage  Delete						
+Feint Attack	atk:3;re:1	A5	1	rar	atk	Deal {atk} Damage  Retreat 1						
 Strength	oc:3	A1	1	com	buf	Overclock 3						
 Stomp	atk:5	A7	1	com	atk	Deal {atk} Damage						
-Battery	gen:2;per	A1	1	com	gen	Generate 2,Persist						
-Starter Battery	gen:3;lag;pre;temp	A1	1	rar	gen	Generate 3,Lag,Pre-Load and Temp						
-Energized Stomp	atk:12;con:2	A8	1	com	atk	Deal {atk} Damage,Consume 2						
-Delaying Stomp	atk:5;de:2;con:2	A7	1	rar	atk	Deal {atk} Damage,Delay 2,Consume 2						
+Battery	gen:2;per	A1	1	com	gen	Generate 2  Persist						
+Starter Battery	gen:3;lag;pre;temp	A1	1	rar	gen	Generate 3 Lag Pre-Load Temp						
+Energized Stomp	atk:12;con:2	A8	1	com	atk	Deal {atk} Damage Consume 2						
+Delaying Stomp	atk:5;de:2;con:2	A7	1	rar	atk	Deal {atk} Damage Delay 2 Consume 2						
 Shield	shi:5	A1	1	com	buf	Shield 5						
-Corrupting Strike	atk:3;cor:2	A7	1	rar	dbuf	Deal {atk} Damage,Corrupt 2						
-Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage,Delay 3,Delete						
-Delaying Strike	atk:5;de:1	A4	1	com	dbuf	Deal {atk} Damage,Delay 1						
-Desperate Strength	oc:5;del	A1	1	rar	buf	Overclock 5,Delete						
+Corrupting Strike	atk:3;cor:2	A7	1	rar	dbuf	Deal {atk} Damage Corrupt 2						
+Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage Delay 3  Delete						
+Delaying Strike	atk:5;de:1	A4	1	com	dbuf	Deal {atk} Damage  Delay 1						
+Desperate Strength	oc:5;del	A1	1	rar	buf	Overclock 5  Delete						
 Energy	enr	A1	1	misc	en	Energy						
-Charge	oc:5;con:1	A1	1	com	buf	Overclock 5,Consume 1					
+Charge	oc:5;con:1	A1	1	com	buf	Overclock 5  Consume 1						
+Static Electricity	mov:1;gen:2	A1	1	com	gen	Move {mov}  Generate 2						
+Weakening Strike	atk:4;wek:1	A15	1	rar	dbuf	Deal {atk} Damage  Weaken						
+Molotov	atk:8	A15	1	com	atk	Deal {atk} Damage						
+Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier  Lag  Delete						
+Energy Shield	shi:12;con:1	A1	1	com	buf	Shield 12  Consume 1						
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												

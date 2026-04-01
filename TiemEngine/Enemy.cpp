@@ -1,5 +1,6 @@
 #include "Enemy.h"
 #include <iostream>
+#include <cmath>
 
 Enemy::Enemy(EnemyType type)
 {
@@ -40,6 +41,9 @@ Enemy::Enemy(EnemyType type)
 
     corruptText = new TextObject();
     corruptText->SetSize(0, 0);
+
+    debuffText = new TextObject();
+    debuffText->SetSize(0, 0);
 
 	//Sprite Create
     switch (type)
@@ -146,6 +150,36 @@ bool Enemy::TryMoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, in
 	
 }
 
+void Enemy::addWeaken(int turns)
+{
+    if (turns <= 0) return;
+
+    weakenTurns += turns;
+    std::cout << "[Weaken] Enemy weakened for +" << turns
+              << " turn(s). Total weaken turns: " << weakenTurns << std::endl;
+    RefreshDebuffText();
+}
+
+void Enemy::decrementWeaken()
+{
+    if (weakenTurns > 0)
+    {
+        weakenTurns--;
+        std::cout << "[Weaken] Enemy weaken decremented. Remaining: "
+                  << weakenTurns << std::endl;
+        RefreshDebuffText();
+    }
+}
+
+int Enemy::getAttackDamage() const
+{
+    if (weakenTurns <= 0)
+        return damage;
+
+    const float weakenedDamage = damage * 0.75f;
+    return std::max(0, static_cast<int>(std::ceil(weakenedDamage)));
+}
+
 
 
 void Enemy::addCorruption(int stacks)
@@ -167,6 +201,9 @@ void Enemy::UpdateTextPosition()
 
     if (hpText)
         hpText->SetPosition(glm::vec3(pos.x, pos.y + 80.0f, 100));
+
+    if (debuffText)
+        debuffText->SetPosition(glm::vec3(pos.x, pos.y + 30.0f, 200));
 }
 
 void Enemy::rotatePattern() {
@@ -184,6 +221,9 @@ void Enemy::Update(float dt)
     // Corruption text below HP
     if (corruptText)
         corruptText->SetPosition(glm::vec3(pos.x, pos.y + 55, 200));
+
+    if (debuffText)
+        debuffText->SetPosition(glm::vec3(pos.x, pos.y + 30, 200));
 
 	//Reset to idle after damage/attack animation
     if (isTakingDamage)
@@ -234,6 +274,7 @@ void Enemy::addDelay(int turns)
 {
     delayTurns += turns;
     std::cout << "[Delay] Enemy delayed by " << turns << " turn(s). Total delay: " << delayTurns << std::endl;
+    RefreshDebuffText();
 }
 
 bool Enemy::isDelayed() const
@@ -246,7 +287,29 @@ void Enemy::decrementDelay()
     if (delayTurns > 0) {
         delayTurns--;
         std::cout << "[Delay] Enemy delay decremented. Remaining: " << delayTurns << std::endl;
+        RefreshDebuffText();
     }
+}
+
+void Enemy::RefreshDebuffText()
+{
+    if (!debuffText) return;
+
+    if (delayTurns <= 0 && weakenTurns <= 0)
+    {
+        debuffText->SetSize(0, 0);
+        return;
+    }
+
+    SDL_Color yellow = { 255, 255, 0 };
+    std::string txt = "DEBUFF";
+
+    if (delayTurns > 0)
+        txt += " DLY:" + std::to_string(delayTurns);
+    if (weakenTurns > 0)
+        txt += " WEK:" + std::to_string(weakenTurns);
+
+    debuffText->LoadText(txt, yellow, 18);
 }
 
 void Enemy::PlayAttackAnimation(glm::vec3 playerPos)
@@ -297,6 +360,10 @@ Enemy::~Enemy()
     if (corruptText) {
         delete corruptText;
         corruptText = nullptr;
+    }
+    if (debuffText) {
+        delete debuffText;
+        debuffText = nullptr;
     }
     if (hpText) {
         delete hpText;

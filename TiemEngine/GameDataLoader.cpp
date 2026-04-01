@@ -222,6 +222,8 @@ std::string GameDataLoader::getActionDescription(const std::string& actionCode) 
         if (code == "dl") code = "de";
         else if (code == "sh") code = "shi";
         else if (code == "te") code = "temp";
+        else if (code == "wek") code = "wk";
+        else if (code == "bar") code = "ba";
         it = actionDescriptions.find(code);
     }
     if (it == actionDescriptions.end()) return "";
@@ -263,7 +265,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "shi" || code == "ba" || code == "ge" ||
+    else if (code == "shi" || code == "ba" || code == "bar" || code == "ge" ||
              code == "he" || code == "fas") {
         auto* a = new BuffAction(BuffAction::codeToSubType(code));
         a->setValue(value);
@@ -272,7 +274,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "wk" || code == "dl" || code == "de" || code == "cor") {
+    else if (code == "wk" || code == "wek" || code == "dl" || code == "de" || code == "cor") {
         auto* a = new DebuffAction(DebuffAction::codeToSubType(code));
         a->setValue(value);
         a->setBaseValue(value);

@@ -91,6 +91,7 @@ void Level::LevelInit()
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
     }
 
 
@@ -454,6 +455,7 @@ void Level::LevelUpdate()
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
 
             delete e;
             it = enemies.erase(it);
@@ -514,6 +516,27 @@ void Level::LevelFree()
         if (obj)
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        TextObject* hp = e->getHPText();
+        if (hp)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), hp);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        TextObject* cor = e->getCorruptText();
+        if (cor)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), cor);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        TextObject* deb = e->getDebuffText();
+        if (deb)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), deb);
             if (it != objectsList.end()) objectsList.erase(it);
         }
 
@@ -984,6 +1007,7 @@ void Level::HandleMouse(int type, int x, int y)
                 std::vector<PendingAttackInfo> pendingAttacks;
                 int pendingDelayTurns = 0;
                 int pendingCorruptionStacks = 0;
+                int pendingWeakenTurns = 0;
 
                 if (cardData)
                 {
@@ -1060,6 +1084,10 @@ void Level::HandleMouse(int type, int x, int y)
                             {
                                 playerData.AddShield(buff->getValue());
                             }
+                            else if (buff->getSubType() == BuffSubType::Barrier)
+                            {
+                                playerData.AddBarrier();
+                            }
                         }
                         else if (auto* debuff = dynamic_cast<DebuffAction*>(a))
                         {
@@ -1067,6 +1095,11 @@ void Level::HandleMouse(int type, int x, int y)
                             {
                                 pendingDelayTurns += debuff->getValue();
                                 std::cout << "  DelayAction: " << debuff->getValue() << std::endl;
+                            }
+                            else if (debuff->getSubType() == DebuffSubType::Weaken)
+                            {
+                                pendingWeakenTurns += debuff->getValue();
+                                std::cout << "  WeakenAction: " << debuff->getValue() << std::endl;
                             }
                             else if (debuff->getSubType() == DebuffSubType::Corrupt)
                             {
@@ -1220,6 +1253,11 @@ void Level::HandleMouse(int type, int x, int y)
                                         e->addDelay(pendingDelayTurns);
                                     }
 
+                                    if (pendingWeakenTurns > 0)
+                                    {
+                                        e->addWeaken(pendingWeakenTurns);
+                                    }
+
                                     if (!corruptionApplied && pendingCorruptionStacks > 0)
                                     {
                                         e->addCorruption(pendingCorruptionStacks);
@@ -1353,7 +1391,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         if (nowRow == x && nowCol == y)
         {
-            PlayerTakeDamage(1);
+            PlayerTakeDamage(e->getAttackDamage());
         }
     }
 }
@@ -1470,6 +1508,7 @@ void Level::UpdateTurn()
         {
             if (!e || e->getIsDead()) continue;
             e->setPreparingAttack(false);
+        e->decrementWeaken();
         }
         for (auto* e : enemies)
         {
@@ -1726,6 +1765,7 @@ void Level::EndTurn()
 {
     turnCount++;
     playerData.ResetShield();
+    playerData.ExpireBarrier();
 	cout << "\n\n\n\n\n";
 	cout << "=== END OF TURN , Now Turn  =  " << turnCount << " ===\n\n";
 
@@ -1743,6 +1783,12 @@ void Level::EndTurn()
 }
 void Level::PlayerTakeDamage(int damage)
 {
+    if (playerData.ConsumeBarrier())
+    {
+        std::cout << "[Barrier] Damage instance negated." << std::endl;
+        return;
+    }
+
     damage = playerData.AbsorbDamage(damage);
 
     if (damage <= 0) return;

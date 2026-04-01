@@ -9,6 +9,7 @@ private:
 	int maxHp = 10;
 	int shield = 0;
 	int maxShield = 0;
+	bool barrierActive = false;
 
 	// Shield UI
 	ImageObject* shieldBg = nullptr;
@@ -25,6 +26,10 @@ public:
 	int getMaxShield() const;
 
 	void AddShield(int amount);
+ void AddBarrier();
+	bool ConsumeBarrier();
+	void ExpireBarrier();
+	bool HasBarrier() const;
 	void ResetShield();
 	int AbsorbDamage(int damage);
 

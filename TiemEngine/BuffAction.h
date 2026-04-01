@@ -33,7 +33,7 @@ public:
         if (code == "oc")  return BuffSubType::Overclock;
         if (code == "sh" || code == "shi")  return BuffSubType::Shield;
 		if (code == "per") return BuffSubType::Persist;
-        if (code == "ba")  return BuffSubType::Barrier;
+        if (code == "ba" || code == "bar")  return BuffSubType::Barrier;
         if (code == "he")  return BuffSubType::Heal;
         if (code == "fas") return BuffSubType::Fast;
 		if (code == "pre") return BuffSubType::PreLoad;

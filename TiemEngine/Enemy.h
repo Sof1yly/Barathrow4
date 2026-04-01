@@ -49,6 +49,7 @@ public:
 
     TextObject* getHPText() { return hpText; }
     TextObject* getCorruptText() { return corruptText; }
+    TextObject* getDebuffText() { return debuffText; }
 
     void showAttackText() {
         attackTextTimer = 1.0f;
@@ -67,6 +68,11 @@ public:
     void addCorruption(int stacks);
     int getCorruption() const { return corruptionStacks; }
 
+    void addWeaken(int turns);
+    int getWeakenTurns() const { return weakenTurns; }
+    void decrementWeaken();
+    int getAttackDamage() const;
+
     bool isPreparingAttack()const;
     void setPreparingAttack(bool value);
 
@@ -78,6 +84,7 @@ public:
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
 private:
+    void RefreshDebuffText();
 
     EnemyType type;
 
@@ -111,9 +118,11 @@ private:
 
     TextObject* hpText = nullptr;
     TextObject* corruptText = nullptr;
+    TextObject* debuffText = nullptr;
 
     float attackTextTimer = 0.0f;
 
     int delayTurns = 0;
     int corruptionStacks = 0;
+    int weakenTurns = 0;
 };
