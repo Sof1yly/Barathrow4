@@ -26,6 +26,30 @@ namespace
         }
         return out;
     }
+
+    std::string FormatKeywordLineBreaks(const std::string& text)
+    {
+        std::string result = text;
+
+        const std::vector<std::string> keywords = {
+            "Consume", "Generate", "Overclock", "Shield", "Weaken",
+            "Corrupt", "Delay", "Retreat", "Move", "Delete", "Persist",
+            "Pre-Load", "Temp", "Fast", "Lag", "Heal", "Energy"
+        };
+
+        for (const std::string& keyword : keywords)
+        {
+            const std::string needle = " " + keyword;
+            std::size_t pos = 0;
+            while ((pos = result.find(needle, pos)) != std::string::npos)
+            {
+                result.replace(pos, 1, "\n");
+                pos += keyword.size();
+            }
+        }
+
+        return result;
+    }
 }
 
 CardInspect::CardInspect()
@@ -339,6 +363,8 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<Drawa
         {
             cardDesc = ReplaceToken(cardDesc, "{oc}", std::to_string(cardData->getOverclockValue()));
         }
+
+        cardDesc = FormatKeywordLineBreaks(cardDesc);
 
         TextObject* descOnCard = new TextObject();
         SDL_Color cardDescColor = { 220, 220, 220, 255 };

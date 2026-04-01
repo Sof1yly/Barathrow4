@@ -1,6 +1,7 @@
 #include "Card.h"
 #include "EnergyAction.h"
 #include <sstream>
+#include <vector>
 
 
 using namespace std;
@@ -14,6 +15,30 @@ static string getCardFrameName(const string& rarityCode)
     if (rarityCode == "leg") return "BG_Frame/card_fr_or.png";
     if (rarityCode == "misc") return "BG_Frame/card_fr_pk.png";
     return "BG_Frame/card_fr_gy.png";
+}
+
+static string formatKeywordLineBreaks(const string& text)
+{
+    string result = text;
+
+        const std::vector<std::string> keywords = {
+            "Consume", "Generate", "Overclock", "Shield", "Weaken",
+        "Corrupt", "Delay", "Retreat", "Move", "Delete", "Persist",
+        "Pre-Load", "Temp", "Fast", "Lag", "Heal", "Energy"
+    };
+
+    for (const std::string& keyword : keywords)
+    {
+        const std::string needle = " " + keyword;
+        size_t pos = 0;
+        while ((pos = result.find(needle, pos)) != std::string::npos)
+        {
+            result.replace(pos, 1, "\n");
+            pos += keyword.size();
+        }
+    }
+
+    return result;
 }
 
 static string getTypeIconName(const string& typeCode)
@@ -150,6 +175,8 @@ void Card::CreateVisuals()
         if (overclockValue > 0)
             resolved = replacePlaceholder(resolved, "oc", overclockValue);
 
+        resolved = formatKeywordLineBreaks(resolved);
+
         descriptionText = new TextObject();
         SDL_Color descColor = { 220, 220, 220, 255 };
         descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
@@ -188,6 +215,8 @@ void Card::RefreshDescriptionText()
     }
     if (overclockValue > 0)
         resolved = replacePlaceholder(resolved, "oc", overclockValue);
+
+    resolved = formatKeywordLineBreaks(resolved);
 
     if (descriptionText) {
         SDL_Color descColor = { 220, 220, 220, 255 };
