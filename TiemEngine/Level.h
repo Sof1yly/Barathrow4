@@ -183,6 +183,7 @@ public:
     void PlayerTakeDamage(int damage);
     void HandlePlayerDeath();
 
+	int ConvertDir(PlayerDir dir);
 
     void UpdateHPBar();
 
