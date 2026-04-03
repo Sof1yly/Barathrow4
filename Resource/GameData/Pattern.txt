@@ -51,17 +51,17 @@ A13	X.
 	
 A14	OXXXXXXXX
 	
-A15	….X
+A15	....X
 	O..XXX
-	….X
+	....X
 	
-A16	…X
-	….X
-	O…X
-	….X
-	…X
+A16	...X
+	....X
+	O...X
+	....X
+	...X
 	
-A17	O….X
+A17	O....X
 	
 A18	..X
 	OXX

@@ -1,5 +1,6 @@
 #pragma once
 #include "ImageObject.h"
+#include "TextObject.h"
 #include <algorithm>
 #include <iostream>
 
@@ -9,12 +10,15 @@ private:
 	int maxHp = 10;
 	int shield = 0;
 	int maxShield = 0;
-	bool barrierActive = false;
+  int barrierCount = 0;
 
 	// Shield UI
 	ImageObject* shieldBg = nullptr;
 	ImageObject* shieldBar = nullptr;
 	ImageObject* shieldMask = nullptr;
+	TextObject* barrierText = nullptr;
+
+	void UpdateBarrierTextUI();
 
 public:
 	int getHp() const;
@@ -26,10 +30,11 @@ public:
 	int getMaxShield() const;
 
 	void AddShield(int amount);
- void AddBarrier();
+   void AddBarrier(int amount = 1);
 	bool ConsumeBarrier();
 	void ExpireBarrier();
 	bool HasBarrier() const;
+   int GetBarrierCount() const;
 	void ResetShield();
 	int AbsorbDamage(int damage);
 

@@ -55,6 +55,12 @@ void TextObject::Update(float deltaTime)
 
 void TextObject::LoadText(string text, SDL_Color textColor, int fontSize)
 {
+ if (text.empty())
+	{
+		SetSize(0.0f, 0.0f);
+		return;
+	}
+
 	glBindTexture( GL_TEXTURE_2D, texture);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -62,6 +68,12 @@ void TextObject::LoadText(string text, SDL_Color textColor, int fontSize)
 	if (font)
 	{
 		SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, text.c_str(), textColor);
+     if (!surfaceMessage)
+		{
+			SetSize(0.0f, 0.0f);
+			TTF_CloseFont(font);
+			return;
+		}
 		GLenum fmt = (surfaceMessage->format->Rmask == 0x000000FF) ? GL_RGBA : GL_BGRA;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surfaceMessage->w, surfaceMessage->h, 0, fmt, GL_UNSIGNED_BYTE, surfaceMessage->pixels);
 		SetSize(surfaceMessage->w, -surfaceMessage->h);
@@ -78,6 +90,12 @@ void TextObject::LoadText(string text, SDL_Color textColor, int fontSize)
 
 void TextObject::LoadTextWrapped(string text, SDL_Color textColor, int fontSize, int maxWidth)
 {
+  if (text.empty())
+	{
+		SetSize(0.0f, 0.0f);
+		return;
+	}
+
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

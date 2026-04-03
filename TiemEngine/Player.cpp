@@ -16,33 +16,43 @@ void Player::AddShield(int amount)
 	std::cout << "  Shield: +" << amount << " (total: " << shield << ")" << std::endl;
 }
 
-void Player::AddBarrier()
+void Player::AddBarrier(int amount)
 {
-	barrierActive = true;
-	std::cout << "  Barrier: active" << std::endl;
+ if (amount <= 0) return;
+
+	barrierCount += amount;
+   UpdateBarrierTextUI();
+	std::cout << "  Barrier: +" << amount << " (total: " << barrierCount << ")" << std::endl;
 }
 
 bool Player::ConsumeBarrier()
 {
-	if (!barrierActive) return false;
+     if (barrierCount <= 0) return false;
 
-	barrierActive = false;
-	std::cout << "  Barrier negated incoming damage!" << std::endl;
+   barrierCount--;
+	UpdateBarrierTextUI();
+	std::cout << "  Barrier negated incoming damage! Remaining: " << barrierCount << std::endl;
 	return true;
 }
 
 void Player::ExpireBarrier()
 {
-	if (barrierActive)
+  if (barrierCount > 0)
 	{
-		barrierActive = false;
-		std::cout << "  Barrier expired at turn end." << std::endl;
+		barrierCount--;
+		UpdateBarrierTextUI();
+		std::cout << "  Barrier reduced by 1 at turn end. Remaining: " << barrierCount << std::endl;
 	}
 }
 
 bool Player::HasBarrier() const
 {
-	return barrierActive;
+ return barrierCount > 0;
+}
+
+int Player::GetBarrierCount() const
+{
+	return barrierCount;
 }
 
 void Player::ResetShield()
@@ -87,6 +97,29 @@ void Player::InitShieldUI(std::vector<DrawableObject*>& objectsList)
 	shieldMask->SetPosition(glm::vec3(-450.0f, 10000.0f, 5.0f));
 	shieldMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
 	objectsList.push_back(shieldMask);
+
+	barrierText = new TextObject();
+	SDL_Color barrierColor = { 120, 220, 255, 255 };
+	barrierText->LoadText("", barrierColor, 22);
+	barrierText->SetPosition(glm::vec3(-800.0f, 430.0f, 10.0f));
+	objectsList.push_back(barrierText);
+	UpdateBarrierTextUI();
+}
+
+void Player::UpdateBarrierTextUI()
+{
+	if (!barrierText) return;
+
+	SDL_Color barrierColor = { 120, 220, 255, 255 };
+	if (barrierCount > 0)
+	{
+		barrierText->LoadText("Barrier: " + std::to_string(barrierCount), barrierColor, 22);
+		barrierText->SetPosition(glm::vec3(-800.0f, 430.0f, 10.0f));
+	}
+	else
+	{
+		barrierText->LoadText("", barrierColor, 22);
+	}
 }
 
 void Player::UpdateShieldBar()

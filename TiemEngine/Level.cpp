@@ -1086,7 +1086,8 @@ void Level::HandleMouse(int type, int x, int y)
                             }
                             else if (buff->getSubType() == BuffSubType::Barrier)
                             {
-                                playerData.AddBarrier();
+                                int addBarrier = std::max(1, buff->getValue());
+                                playerData.AddBarrier(addBarrier);
                             }
                         }
                         else if (auto* debuff = dynamic_cast<DebuffAction*>(a))
@@ -1783,9 +1784,9 @@ void Level::EndTurn()
 }
 void Level::PlayerTakeDamage(int damage)
 {
-    if (playerData.ConsumeBarrier())
+    if (playerData.HasBarrier())
     {
-        std::cout << "[Barrier] Damage instance negated." << std::endl;
+        std::cout << "[Barrier] Enemy damage negated while barrier is active." << std::endl;
         return;
     }
 
