@@ -97,23 +97,9 @@ void Level::LevelInit()
 
     // 3) Player sprite (3x4, 192x256)
     {
-        SpriteObject* playerSprite = new SpriteObject("../Resource/Texture/Player_sprite2.png", 9,16);
-
-        playerSprite->SetSize(200.0f, -200.0f);
-
         glm::vec3 startPos = GridToWorld(nowRow, nowCol);
-        playerSprite->SetPosition(startPos);
-
-        playerSprite->SetAnimationLoop(
-            0,      // start frame
-            0,      // row
-            2,      // end frame
-            800     // ms per frame
-        );
-        playerSprite->NextAnimation();
-
-        objectsList.push_back(playerSprite);
-        playersprite = playerSprite;
+        playerData.InitSprite(objectsList, startPos);
+        playersprite = playerData.GetSprite();
     }
 
     {
@@ -407,7 +393,7 @@ void Level::LevelUpdate()
 
         glm::vec3 newPos = playerMoveStart + (playerMoveTarget - playerMoveStart) * t;
 
-        playersprite->SetPosition(newPos);
+        playerData.SetPosition(newPos);
 
         if (t >= 1.0f)
         {
@@ -688,10 +674,10 @@ void Level::HandleKey(char key)
     playerMoving = true;
     playerMoveTimer = 0.0f;
 
-    playerMoveStart = playersprite->GetPosition();
+    playerMoveStart = playerData.GetPosition();
     playerMoveTarget = GridToWorld(targetRow, targetCol);
 
-    SetPlayerWalk(playerDir);
+    playerData.SetPlayerWalk(ConvertDir(playerDir));
 
     nowRow = targetRow;
     nowCol = targetCol;
@@ -1576,59 +1562,6 @@ void Level::UpdatePlayerAnimation()
         }
     }
 }
-void Level::SetPlayerIdle(PlayerDir dir)
-{
-    switch (dir)
-    {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(0, 0, 2, 800); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(0, 2, 2, 800); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(0, 4, 2, 800); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(0, 6, 2, 800); break;
-    }
-}
-
-void Level::SetPlayerWalk(PlayerDir dir)
-{
-    switch (dir)
-    {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(1, 0, 2, 150); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(1, 4, 2, 150); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(1, 6, 2, 150); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(1, 2, 2, 150); break;
-    }
-}
-
-void Level::SetPlayerDie(PlayerDir dir)
-{
-    playerPlayingOneShot = true;
-    playerDead = true;
-    playerAnimTimer = 0.0f;
-    playerAnimDuration = 1000.0f;
-
-    switch (dir)
-    {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(7, 0, 5, 200); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(7, 5, 5, 200); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(8, 0, 5, 200); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(8, 5, 5, 200); break;
-	}
-}
-void Level::SetPlayerGetDamage(PlayerDir dir)
-{
-    playerPlayingOneShot = true;
-    playerAnimTimer = 0.0f;
-    playerAnimDuration = 400.0f;
-
-    switch (dir)
-    {
-    case PlayerDir::DOWN:  playersprite->SetAnimationLoop(7, 0, 2, 200); break;
-    case PlayerDir::LEFT:  playersprite->SetAnimationLoop(7, 5, 2, 200); break;
-    case PlayerDir::UP:    playersprite->SetAnimationLoop(8, 0, 2, 200); break;
-    case PlayerDir::RIGHT: playersprite->SetAnimationLoop(8, 5, 2, 200); break;
-    }
-}
-
-
 
 void Level::PreviewAttackPattern(Card* cardData, int dz)
 {
@@ -1794,7 +1727,7 @@ void Level::PlayerTakeDamage(int damage)
 
     if (damage <= 0) return;
 
-    SetPlayerGetDamage(playerDir);
+    playerData.SetPlayerGetDamage((int)playerDir);
 
     playerHealth -= damage;
     UpdateHPBar();
@@ -1814,7 +1747,7 @@ void Level::HandlePlayerDeath()
 
     isGameOver = true;
 
-    SetPlayerDie(playerDir);
+    playerData.SetPlayerDie((int)playerDir);
 
     playerMoving = false;
     playerAttacking = false;
@@ -1825,4 +1758,16 @@ void Level::HandlePlayerDeath()
     }
 
     turnState = TurnState::GAME_OVER;
+}
+
+int Level::ConvertDir(PlayerDir dir)
+{
+    switch (dir)
+    {
+    case PlayerDir::DOWN:  return 0;
+    case PlayerDir::LEFT:  return 1;
+    case PlayerDir::UP:    return 2;
+    case PlayerDir::RIGHT: return 3;
+    }
+    return 0;
 }
