@@ -5,8 +5,8 @@ static std::string trim_(const std::string& s)
     size_t a = 0;
     size_t b = s.size();
 
-    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
-    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
+    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) a++;
+    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) b--;
 
     return s.substr(a, b - a);
 }
@@ -25,12 +25,12 @@ static std::vector<std::string> splitCsvRowRespectQuotes_(const std::string& lin
     std::string cur;
     bool inQuotes = false;
 
-    for (size_t i = 0; i < line.size(); ++i) {
+    for (size_t i = 0; i < line.size(); i++) {
         char ch = line[i];
         if (ch == '"') {
             if (inQuotes && i + 1 < line.size() && line[i + 1] == '"') {
                 cur.push_back('"');
-                ++i;
+                i++;
             }
             else {
                 inQuotes = !inQuotes;
@@ -57,7 +57,9 @@ static std::string parseDescription_(const std::string& rawDescription)
 
     while (std::getline(ss, part, ',')) {
         part = trim_(part);
-        if (!first) result += "\n";
+        if (!first) {
+            result += "\n";
+        }
         result += part;
         first = false;
     }
@@ -72,13 +74,17 @@ GameDataLoader::GameDataLoader()
 GameDataLoader::~GameDataLoader()
 {
     for (Card* c : cards) {
-        if (c) delete c;
+        if (c) {
+            delete c;
+        }
     }
     cards.clear();
     
 
     for (Action* a : actions_list) {
-        if (a) delete a;
+        if (a) {
+            delete a;
+        }
     }
     actions_list.clear();
 }
@@ -91,7 +97,9 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
 
     std::ifstream file(filename);
     if (!file.is_open()) {
-        if (outError) *outError = "Failed to open pattern file: " + filename;
+        if (outError) {
+            *outError = "Failed to open pattern file: " + filename;
+        }
         return false;
     }
 
@@ -103,15 +111,17 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
         if (!currentId.empty() && !grid.empty()) {
             int oCol = -1;
             int oRow = -1;
-            for (int r = 0; r < (int)grid.size(); ++r) {
-                for (int c = 0; c < (int)grid[r].size(); ++c) {
+            for (int r = 0; r < (int)grid.size(); r++) {
+                for (int c = 0; c < (int)grid[r].size(); c++) {
                     if (grid[r][c] == 'O') {
                         oRow = r;
                         oCol = c;
                         break;
                     }
                 }
-                if (oRow >= 0) break;
+                if (oRow >= 0) {
+                    break;
+                }
             }
             AttackPattern p = AttackPattern::fromGrid(grid, 'X', oCol, oRow);
             patternMap[currentId] = p;
@@ -154,7 +164,9 @@ bool GameDataLoader::loadPatternsFromFile(const std::string& filename,
     flushCurrent();
 
     if (patternMap.empty()) {
-        if (outError) *outError = "No patterns loaded from file: " + filename;
+        if (outError) {
+            *outError = "No patterns loaded from file: " + filename;
+        }
         return false;
     }
 
@@ -168,7 +180,9 @@ bool GameDataLoader::loadActionDescriptionsFromFile(const std::string& filename,
 
     std::ifstream file(filename);
     if (!file.is_open()) {
-        if (outError) *outError = "Failed to open action description file: " + filename;
+        if (outError) {
+            *outError = "Failed to open action description file: " + filename;
+        }
         return false;
     }
 
@@ -177,7 +191,9 @@ bool GameDataLoader::loadActionDescriptionsFromFile(const std::string& filename,
 
     while (std::getline(file, line)) {
         std::string trimmed = trim_(line);
-        if (trimmed.empty()) continue;
+        if (trimmed.empty()) {
+            continue;
+        }
 
         if (!headerSkipped) {
             headerSkipped = true;
@@ -187,12 +203,18 @@ bool GameDataLoader::loadActionDescriptionsFromFile(const std::string& filename,
         }
 
         std::vector<std::string> cells = splitCsvRowRespectQuotes_(line);
-        for (auto& c : cells) c = trim_(c);
-        if (cells.size() < 2) continue;
+        for (auto& c : cells) {
+            c = trim_(c);
+        }
+        if (cells.size() < 2) {
+            continue;
+        }
 
         std::string code = toLower_(cells[0]);
         std::string desc = cells[1];
-        if (code.empty() || desc.empty()) continue;
+        if (code.empty() || desc.empty()) {
+            continue;
+        }
 
         actionDescriptions[code] = desc;
     }
@@ -203,14 +225,18 @@ bool GameDataLoader::loadActionDescriptionsFromFile(const std::string& filename,
 const AttackPattern* GameDataLoader::findPatternByName(const std::string& id) const
 {
     auto it = patternMap.find(id);
-    if (it == patternMap.end()) return nullptr;
+    if (it == patternMap.end()) {
+        return nullptr;
+    }
     return &it->second;
 }
 
 const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
 {
     auto it = actionPattern.find(a);
-    if (it == actionPattern.end()) return nullptr;
+    if (it == actionPattern.end()) {
+        return nullptr;
+    }
     return it->second;
 }
 
@@ -219,14 +245,26 @@ std::string GameDataLoader::getActionDescription(const std::string& actionCode) 
     std::string code = toLower_(trim_(actionCode));
     auto it = actionDescriptions.find(code);
     if (it == actionDescriptions.end()) {
-        if (code == "dl") code = "de";
-        else if (code == "sh") code = "shi";
-        else if (code == "te") code = "temp";
-        else if (code == "wek") code = "wk";
-        else if (code == "bar") code = "ba";
+        if (code == "dl") {
+            code = "de";
+        }
+        else if (code == "sh") {
+            code = "shi";
+        }
+        else if (code == "te") {
+            code = "temp";
+        }
+        else if (code == "wek") {
+            code = "wk";
+        }
+        else if (code == "bar") {
+            code = "ba";
+        }
         it = actionDescriptions.find(code);
     }
-    if (it == actionDescriptions.end()) return "";
+    if (it == actionDescriptions.end()) {
+        return "";
+    }
     return it->second;
 }
 
@@ -265,8 +303,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "shi" || code == "ba" || code == "bar" || code == "ge" ||
-             code == "he" || code == "fas") {
+    else if (code == "shi" || code == "ba" || code == "bar" || code == "ge" ||code == "he" || code == "fas") {
         auto* a = new BuffAction(BuffAction::codeToSubType(code));
         a->setValue(value);
         a->setBaseValue(value);
@@ -292,8 +329,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
     }
     else {
         // Unknown code — log a warning and skip rather than crash
-        std::cout << "[GameDataLoader] Warning: unknown action code '" << code
-                  << "' on card '" << card->getName() << "', skipping." << std::endl;
+        std::cout << "[GameDataLoader] Warning: unknown action code '" << code<< "' on card '" << card->getName() << "', skipping." << std::endl;
         return nullptr;
     }
 
@@ -302,16 +338,22 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
 
 bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outError)
 {
-    for (Card* c : cards)          delete c;
+    for (Card* c : cards) {
+        delete c;
+    }
     cards.clear();
-    for (Action* a : actions_list) delete a;
+    for (Action* a : actions_list) {
+        delete a;
+    }
     actions_list.clear();
     actions.clear();
     actionPattern.clear();
 
     std::ifstream file(filename);
     if (!file.is_open()) {
-        if (outError) *outError = "Failed to open file: " + filename;
+        if (outError) {
+            *outError = "Failed to open file: " + filename;
+        }
         return false;
     }
 
@@ -320,17 +362,28 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
 
     while (std::getline(file, line)) {
         std::string trimmed = trim_(line);
-        if (trimmed.empty()) continue;
+        if (trimmed.empty()) {
+            continue;
+        }
 
         if (!skippedCardHeader) {
-            if (trimmed == "Card") { skippedCardHeader = true; continue; }
+            if (trimmed == "Card") {
+                skippedCardHeader = true;
+                continue;
+            }
             skippedCardHeader = true;
         }
 
         std::vector<std::string> cells = splitCsvRowRespectQuotes_(line);
-        for (auto& c : cells) c = trim_(c);
-        if (cells.empty()) continue;
-        if (cells[0] == "Name") continue;
+        for (auto& c : cells) {
+            c = trim_(c);
+        }
+        if (cells.empty()) {
+            continue;
+        }
+        if (cells[0] == "Name") {
+            continue;
+        }
 
         // Columns: Name, Effects, Pattern, Level, Rarity, Type, Desc
         std::string name        = cells.size() > 0 ? cells[0] : "";
@@ -341,10 +394,16 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
         std::string typeCode    = cells.size() > 5 ? cells[5] : "atk";
         std::string description = cells.size() > 6 ? parseDescription_(cells[6]) : "";
 
-        if (name.empty()) continue;
+        if (name.empty()) {
+            continue;
+        }
 
         int level = 0;
-        try { if (!sLevel.empty()) level = std::stoi(sLevel); }
+        try {
+            if (!sLevel.empty()) {
+                level = std::stoi(sLevel);
+            }
+        }
         catch (...) {
             if (outError) *outError = "Invalid level: " + sLevel;
             return false;
@@ -357,12 +416,24 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             std::string token;
             while (std::getline(ss, token, ';')) {
                 token = trim_(token);
-                if (token.empty()) continue;
+                if (token.empty()) {
+                    continue;
+                }
                 size_t colonPos = token.find(':');
-                std::string code = colonPos != std::string::npos
-                    ? trim_(token.substr(0, colonPos)) : token;
-                std::string val  = colonPos != std::string::npos
-                    ? trim_(token.substr(colonPos + 1)) : "0";
+
+                std::string code;
+                std::string val;
+                if (colonPos != std::string::npos)
+                {
+                    code = trim_(token.substr(0, colonPos));
+                    val = trim_(token.substr(colonPos + 1));
+                }
+                else
+                {
+                    code = token;
+                    val = "0";
+                }
+
                 actionEntries.push_back({ code, val });
             }
         }
@@ -383,16 +454,43 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             const std::string& sVal = entry.second;
 
             // ---- Card-level flags (no action object created) ----
-            if (code == "fas") { card->setIsFast(true);         continue; }
-            if (code == "te")  { card->setIsTemp(true);         continue; }
-            if (code == "del") { card->setIsDeleteAfterUse(true); continue; }
-            if (code == "per") { card->setIsPersist(true);      continue; }
-            if (code == "lag") { card->setIsLag(true);          continue; }
-            if (code == "pre") { card->setIsPreLoad(true);      continue; }
-            if (code == "temp") { card->setIsTemp(true);        continue; }
+            if (code == "fas") {
+                card->setIsFast(true);
+                continue;
+            }
+            if (code == "te") {
+                card->setIsTemp(true);
+                continue;
+            }
+            if (code == "del") {
+                card->setIsDeleteAfterUse(true);
+                continue;
+            }
+            if (code == "per") {
+                card->setIsPersist(true);
+                continue;
+            }
+            if (code == "lag") {
+                card->setIsLag(true);
+                continue;
+            }
+            if (code == "pre") {
+                card->setIsPreLoad(true);
+                continue;
+            }
+            if (code == "temp") {
+                card->setIsTemp(true);
+                continue;
+            }
             if (code == "oc") {
                 int ocVal = 0;
-                try { if (!sVal.empty()) ocVal = std::stoi(sVal); } catch (...) {}
+                try {
+                    if (!sVal.empty()) {
+                        ocVal = std::stoi(sVal);
+                    }
+                }
+                catch (...) {
+                }
                 card->setOverclockValue(ocVal);
                 continue;
             }
@@ -405,25 +503,40 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                 if (xPos != std::string::npos) {
                     std::string sV = sVal.substr(0, xPos);
                     std::string sM = sVal.substr(xPos + 1);
-                    try { if (!sV.empty()) value      = std::stoi(sV);  }
+                    try {
+                        if (!sV.empty()) {
+                            value = std::stoi(sV);
+                        }
+                    }
                     catch (...) {
                         if (outError)
                             *outError = "Invalid value in action '" + code + "': " + sV;
-                        delete card; return false;
+                        delete card;
+                        return false;
                     }
-                    try { if (!sM.empty()) multiplier = std::stof(sM);  }
+                    try {
+                        if (!sM.empty()) {
+                            multiplier = std::stof(sM);
+                        }
+                    }
                     catch (...) {
                         if (outError)
                             *outError = "Invalid multiplier in action '" + code + "': " + sM;
-                        delete card; return false;
+                        delete card;
+                        return false;
                     }
                 }
                 else {
-                    try { if (!sVal.empty()) value = std::stoi(sVal); }
+                    try {
+                        if (!sVal.empty()) {
+                            value = std::stoi(sVal);
+                        }
+                    }
                     catch (...) {
                         if (outError)
                             *outError = "Invalid value in action '" + code + "': " + sVal;
-                        delete card; return false;
+                        delete card;
+                        return false;
                     }
                 }
             }
@@ -433,7 +546,8 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                                              patternId, card, outError);
             if (!newAction) {
                 if (outError && !outError->empty()) {
-                    delete card; return false;
+                    delete card;
+                    return false;
                 }
                 continue;
             }
