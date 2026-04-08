@@ -1,4 +1,4 @@
 # Copilot Instructions
 
 ## Project Guidelines
-- User prefers not to keep most gameplay/UI logic in `Level.cpp` and wants code moved into more focused classes where possible.
+- User prefers gameplay/UI logic to be moved out of `Level.cpp` into focused classes (OOP structure) where possible.

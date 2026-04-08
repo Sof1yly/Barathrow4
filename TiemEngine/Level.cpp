@@ -169,9 +169,16 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
+
+    if (!cardRewardSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+        std::cerr << "Error loading reward card pool: " << error << std::endl;
+    }
+
+    cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    rewardPickedAfterWin = false;
 
     cardSystem.ShuffleDeck();
 
@@ -478,6 +485,11 @@ void Level::LevelUpdate()
             winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
         }
         turnState = TurnState::GAME_OVER;
+
+        if (!rewardPickedAfterWin)
+        {
+            cardRewardSystem.Open(objectsList);
+        }
 	}
     
 }
@@ -495,6 +507,8 @@ void Level::LevelFree()
     {
         deckViewer.Hide(objectsList);
     }
+
+    cardRewardSystem.Close(objectsList);
 
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
@@ -586,6 +600,7 @@ void Level::LevelFree()
     hpMask = nullptr;
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
+    rewardPickedAfterWin = false;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
 
@@ -604,8 +619,28 @@ void Level::LevelUnload()
 void Level::HandleKey(char key)
 {
     // Restart and quit are always allowed, regardless of turn state
-    if (key == 'r') { GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART; return; }
-    if (key == 'q') { GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;    return; }
+    if (key == 'r')
+    {
+        GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART;
+        return;
+    }
+
+    if (key == 'q')
+    {
+        GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;
+        return;
+    }
+
+    if (cardRewardSystem.IsActive())
+    {
+        if (cardRewardSystem.HandleKeySelection(key, cardSystem, objectsList))
+        {
+            rewardPickedAfterWin = true;
+            return;
+        }
+
+        return;
+    }
 
     // Toggle deck viewer with 'v' key
     if (key == 'v')
@@ -720,6 +755,19 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    if (cardRewardSystem.IsActive())
+    {
+        if (type == 0)
+        {
+            if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
+            {
+                rewardPickedAfterWin = true;
+            }
+        }
+
+        return;
+    }
 
     if (skipTurnHintText)
     {

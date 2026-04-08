@@ -1,0 +1,12 @@
+Card												
+Name	Effects	Pattern	Level	Rarity	Type	Desc						
+Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage
+Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage	
+Basic Attack	atk:5	A2	1	sta	atk	Deal {atk} Damage							
+Sweep Attack	atk:3	A4	1	sta	atk	Deal {atk} Damage
+Sweep Attack	atk:3	A4	1	sta	atk	Deal {atk} Damage
+Sweep Attack	atk:3	A4	1	sta	atk	Deal {atk} Damage						
+Sprint	mov:3	A1	1	sta	mov	Move {mov}						
+Panic Roll	mov:1;fas;temp	A1	1	sta	mov	Move {mov},Fast,Temp						
+Walk	mov:1	A1	1	sta	mov	Move {mov}	
+Walk	mov:1	A1	1	sta	mov	Move {mov}																	

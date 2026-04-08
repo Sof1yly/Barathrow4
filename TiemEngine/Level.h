@@ -18,6 +18,7 @@
 #include "Player.h"
 #include "DeckViewer.h"
 #include "CardInspect.h"
+#include "CardRewardSystem.h"
 
 class Level
 {
@@ -126,6 +127,9 @@ private:
     DeckViewer deckViewer;
 
     CardInspect cardInspect;
+
+    CardRewardSystem cardRewardSystem;
+    bool rewardPickedAfterWin = false;
 
     // Patterns
     std::vector<AttackPattern> patterns;

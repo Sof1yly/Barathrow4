@@ -16,6 +16,18 @@ static inline glm::vec3 QuadraticBezier(const glm::vec3& P0,const glm::vec3& C,c
     return (u * u) * P0 + 2.0f * u * t * C + (t * t) * P1;
 }
 
+void CardSystem::AddCardToDeck(Card* card)
+{
+    if (!card)
+    {
+        return;
+    }
+
+    deck.push_back(card);
+    fullCollection.push_back(card);
+    UpdatePileVisuals();
+}
+
 
 CardSystem::CardSystem() {}
 

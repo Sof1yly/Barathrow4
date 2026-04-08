@@ -1,0 +1,523 @@
+// CardRewardSystem.h
+
+#pragma once
+
+#include <algorithm>
+#include <random>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
+#include "Action.h"
+#include "AttackAction.h"
+#include "BuffAction.h"
+#include "CardSystem.h"
+#include "DebuffAction.h"
+#include "DrawableObject.h"
+#include "EnergyAction.h"
+#include "GameDataLoader.h"
+#include "GameObject.h"
+#include "MoveAction.h"
+#include "TextObject.h"
+
+class CardRewardSystem
+{
+private:
+    struct OptionArea
+    {
+        Card* card = nullptr;
+        float minX = 0.0f;
+        float maxX = 0.0f;
+        float minY = 0.0f;
+        float maxY = 0.0f;
+    };
+
+    GameDataLoader rewardLoader;
+    std::vector<Card*> rewardPool;
+    std::vector<Card*> offeredCards;
+    std::vector<Card*> ownedRewardCards;
+
+    std::vector<DrawableObject*> uiObjects;
+    std::vector<OptionArea> optionAreas;
+
+    bool poolLoaded = false;
+    bool active = false;
+
+    std::mt19937 rng;
+
+    void BuildOffer()
+    {
+        offeredCards.clear();
+
+        if (!poolLoaded)
+        {
+            return;
+        }
+
+        std::vector<Card*> candidates;
+        candidates.reserve(rewardPool.size());
+
+        for (Card* c : rewardPool)
+        {
+            if (!c)
+            {
+                continue;
+            }
+
+            if (c->isEnergyCard())
+            {
+                continue;
+            }
+
+            candidates.push_back(c);
+        }
+
+        std::shuffle(candidates.begin(), candidates.end(), rng);
+
+        std::unordered_set<std::string> usedNames;
+        for (Card* c : candidates)
+        {
+            if (!c)
+            {
+                continue;
+            }
+
+            if (usedNames.find(c->getName()) != usedNames.end())
+            {
+                continue;
+            }
+
+            offeredCards.push_back(c);
+            usedNames.insert(c->getName());
+
+            if (offeredCards.size() >= 3)
+            {
+                break;
+            }
+        }
+    }
+
+    void BuildUI(std::vector<DrawableObject*>& objectsList)
+    {
+        ClearUI(objectsList);
+
+        optionAreas.clear();
+
+        GameObject* panel = new GameObject();
+        panel->SetSize(1920.0f, 1080.0f);
+        panel->SetPosition(glm::vec3(0.0f, 0.0f, 800.0f));
+        panel->SetColor(0.0f, 0.0f, 0.0f, 0.82f);
+        uiObjects.push_back(panel);
+        objectsList.push_back(panel);
+
+        TextObject* title = new TextObject();
+        SDL_Color titleColor = { 245, 245, 245, 255 };
+        title->LoadText("Choose 1 Card Reward", titleColor, 54);
+        title->SetPosition(glm::vec3(0.0f, 420.0f, 810.0f));
+        uiObjects.push_back(title);
+        objectsList.push_back(title);
+
+        TextObject* hint = new TextObject();
+        SDL_Color hintColor = { 220, 220, 220, 255 };
+        hint->LoadText("Click a card to claim reward", hintColor, 30);
+        hint->SetPosition(glm::vec3(0.0f, 350.0f, 810.0f));
+        uiObjects.push_back(hint);
+        objectsList.push_back(hint);
+
+        const float cardWidth = 280.0f;
+        const float cardHeight = 410.0f;
+        const float spacingX = 360.0f;
+        const float startX = -0.5f * static_cast<float>(offeredCards.size() - 1) * spacingX;
+        const float centerY = 40.0f;
+
+        auto cloneImage = [](ImageObject* src, const glm::vec3& pos, float w, float h) -> ImageObject*
+            {
+                if (!src)
+                {
+                    return nullptr;
+                }
+
+                ImageObject* copy = new ImageObject();
+                copy->SetTextureId(src->GetTextureId());
+                copy->SetPosition(pos);
+                copy->SetSize(w, h);
+                return copy;
+            };
+
+        for (int i = 0; i < static_cast<int>(offeredCards.size()); ++i)
+        {
+            Card* card = offeredCards[i];
+            if (!card)
+            {
+                continue;
+            }
+
+            if (!card->HasVisuals())
+            {
+                card->CreateVisuals();
+            }
+
+            glm::vec3 cardPos(startX + (spacingX * i), centerY, 805.0f);
+
+            ImageObject* bg = cloneImage(card->GetBackground(), cardPos, cardWidth, -cardHeight);
+            if (bg)
+            {
+                uiObjects.push_back(bg);
+                objectsList.push_back(bg);
+            }
+
+            ImageObject* stars = cloneImage(card->GetStarOverlay(), cardPos, cardWidth, -cardHeight);
+            if (stars)
+            {
+                uiObjects.push_back(stars);
+                objectsList.push_back(stars);
+            }
+
+            ImageObject* type = cloneImage(card->GetTypeIcon(), cardPos, cardWidth, -cardHeight);
+            if (type)
+            {
+                uiObjects.push_back(type);
+                objectsList.push_back(type);
+            }
+
+            ImageObject* visual = cloneImage(card->GetVisual(), cardPos, cardWidth, -cardHeight);
+            if (visual)
+            {
+                uiObjects.push_back(visual);
+                objectsList.push_back(visual);
+            }
+
+            ImageObject* frame = cloneImage(card->GetCardFrame(), cardPos, cardWidth, -cardHeight);
+            if (frame)
+            {
+                uiObjects.push_back(frame);
+                objectsList.push_back(frame);
+            }
+
+            if (card->GetNameText())
+            {
+                TextObject* src = card->GetNameText();
+                TextObject* copy = new TextObject();
+                copy->SetTextureId(src->GetTextureId());
+
+                float nameW = src->GetSize().x - 2.5f;
+                float nameH = src->GetSize().y - 1.5f;
+                if (nameH < 0.0f)
+                {
+                    nameH += 2.0f;
+                }
+                else
+                {
+                    nameH -= 2.0f;
+                }
+
+                copy->SetSize(nameW, nameH);
+                glm::vec3 local = src->GetLocalPosition();
+                float leftAnchorX = (cardPos.x - (cardWidth * 0.5f)) + (local.x * cardWidth);
+                float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) + 12.0f;
+                copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * cardHeight), 810.0f));
+
+                uiObjects.push_back(copy);
+                objectsList.push_back(copy);
+            }
+
+            if (card->GetDescriptionText())
+            {
+                TextObject* src = card->GetDescriptionText();
+                TextObject* copy = new TextObject();
+                copy->SetTextureId(src->GetTextureId());
+                copy->SetSize(src->GetSize().x, src->GetSize().y);
+
+                glm::vec3 local = src->GetLocalPosition();
+                float leftAnchorX = (cardPos.x - (cardWidth * 0.5f)) + (local.x * cardWidth);
+                float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f);
+                copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * cardHeight), 810.0f));
+
+                uiObjects.push_back(copy);
+                objectsList.push_back(copy);
+            }
+
+            OptionArea area;
+            area.card = card;
+            area.minX = cardPos.x - cardWidth * 0.5f;
+            area.maxX = cardPos.x + cardWidth * 0.5f;
+            area.minY = cardPos.y - cardHeight * 0.5f;
+            area.maxY = cardPos.y + cardHeight * 0.5f;
+            optionAreas.push_back(area);
+        }
+    }
+
+    void ClearUI(std::vector<DrawableObject*>& objectsList)
+    {
+        for (DrawableObject* obj : uiObjects)
+        {
+            if (!obj)
+            {
+                continue;
+            }
+
+            auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+            if (it != objectsList.end())
+            {
+                objectsList.erase(it);
+            }
+
+            delete obj;
+        }
+
+        uiObjects.clear();
+        optionAreas.clear();
+    }
+
+    bool IsInside(const OptionArea& area, const glm::vec3& mousePos) const
+    {
+        return mousePos.x >= area.minX && mousePos.x <= area.maxX && mousePos.y >= area.minY && mousePos.y <= area.maxY;
+    }
+
+    Action* CloneAction(const Action* src) const
+    {
+        if (!src)
+        {
+            return nullptr;
+        }
+
+        Action* copy = nullptr;
+
+        if (dynamic_cast<const AttackAction*>(src))
+        {
+            copy = new AttackAction();
+        }
+        else if (const auto* move = dynamic_cast<const MoveAction*>(src))
+        {
+            copy = new MoveAction(move->getSubType());
+        }
+        else if (const auto* buff = dynamic_cast<const BuffAction*>(src))
+        {
+            copy = new BuffAction(buff->getSubType());
+        }
+        else if (const auto* debuff = dynamic_cast<const DebuffAction*>(src))
+        {
+            copy = new DebuffAction(debuff->getSubType());
+        }
+        else if (const auto* energy = dynamic_cast<const EnergyAction*>(src))
+        {
+            copy = new EnergyAction(energy->getSubType());
+        }
+
+        if (!copy)
+        {
+            return nullptr;
+        }
+
+        copy->setActionCode(src->getActionCode());
+        copy->setValue(src->getValue());
+        copy->setBaseValue(src->getBaseValue());
+        copy->setMultiplier(src->getMultiplier());
+        copy->setRotation(src->getRotation());
+        return copy;
+    }
+
+    Card* CloneCard(const Card* src) const
+    {
+        if (!src)
+        {
+            return nullptr;
+        }
+
+        Card* copy = new Card(src->getName());
+        copy->setDescription(src->getDescription());
+        copy->setLevel(src->getLevel());
+        copy->setRarityCode(src->getRarityCode());
+        copy->setTypeCode(src->getTypeCode());
+
+        copy->setIsFast(src->getIsFast());
+        copy->setIsTemp(src->getIsTemp());
+        copy->setIsDeleteAfterUse(src->getIsDeleteAfterUse());
+        copy->setIsPersist(src->getIsPersist());
+        copy->setIsLag(src->getIsLag());
+        copy->setIsPreLoad(src->getIsPreLoad());
+        copy->setOverclockValue(src->getOverclockValue());
+
+        for (Action* action : src->getActions())
+        {
+            Action* actionCopy = CloneAction(action);
+            if (actionCopy)
+            {
+                copy->addAction(actionCopy);
+            }
+        }
+
+        return copy;
+    }
+
+    void GrantReward(Card* card, CardSystem& cardSystem)
+    {
+        Card* copy = CloneCard(card);
+        if (!copy)
+        {
+            return;
+        }
+
+        ownedRewardCards.push_back(copy);
+        cardSystem.AddCardToDeck(copy);
+    }
+
+public:
+    CardRewardSystem()
+        : rng(std::random_device{}())
+    {
+    }
+
+    ~CardRewardSystem()
+    {
+        for (Card* c : ownedRewardCards)
+        {
+            if (c)
+            {
+                delete c;
+            }
+        }
+        ownedRewardCards.clear();
+
+        for (DrawableObject* obj : uiObjects)
+        {
+            if (obj)
+            {
+                delete obj;
+            }
+        }
+        uiObjects.clear();
+    }
+
+    bool LoadPoolData(const std::string& patternFile, const std::string& cardFile, const std::string& cardDescFile, std::string* outError = nullptr)
+    {
+        if (!rewardLoader.loadPatternsFromFile(patternFile, outError))
+        {
+            return false;
+        }
+
+        if (!rewardLoader.loadFromFile(cardFile, outError))
+        {
+            return false;
+        }
+
+        if (!cardDescFile.empty())
+        {
+            if (!rewardLoader.loadActionDescriptionsFromFile(cardDescFile, outError))
+            {
+                return false;
+            }
+        }
+
+        rewardPool = rewardLoader.getCards();
+        poolLoaded = true;
+        return true;
+    }
+
+    void ApplyOwnedRewards(CardSystem& cardSystem)
+    {
+        for (Card* c : ownedRewardCards)
+        {
+            if (c)
+            {
+                cardSystem.AddCardToDeck(c);
+            }
+        }
+    }
+
+    void Open(std::vector<DrawableObject*>& objectsList)
+    {
+        if (active)
+        {
+            return;
+        }
+
+        BuildOffer();
+        if (offeredCards.empty())
+        {
+            return;
+        }
+
+        BuildUI(objectsList);
+        active = true;
+    }
+
+    void Close(std::vector<DrawableObject*>& objectsList)
+    {
+        if (!active && uiObjects.empty())
+        {
+            return;
+        }
+
+        ClearUI(objectsList);
+        offeredCards.clear();
+        active = false;
+    }
+
+    bool HandleKeySelection(char key, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
+    {
+        if (!active)
+        {
+            return false;
+        }
+
+        int index = -1;
+        if (key == '1')
+        {
+            index = 0;
+        }
+        else if (key == '2')
+        {
+            index = 1;
+        }
+        else if (key == '3')
+        {
+            index = 2;
+        }
+
+        if (index < 0 || index >= static_cast<int>(offeredCards.size()))
+        {
+            return false;
+        }
+
+        Card* selected = offeredCards[index];
+        if (!selected)
+        {
+            return false;
+        }
+
+        GrantReward(selected, cardSystem);
+        Close(objectsList);
+        return true;
+    }
+
+    bool HandleMouseClick(const glm::vec3& mousePos, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
+    {
+        if (!active)
+        {
+            return false;
+        }
+
+        for (const OptionArea& area : optionAreas)
+        {
+            if (!area.card)
+            {
+                continue;
+            }
+
+            if (IsInside(area, mousePos))
+            {
+                GrantReward(area.card, cardSystem);
+                Close(objectsList);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool IsActive() const
+    {
+        return active;
+    }
+};
