@@ -226,7 +226,8 @@ void Level::LevelInit()
 
 void Level::LevelUpdate()
 {
-    
+    anyEnemyDied = false;
+
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (playerPlayingOneShot)
     {
@@ -490,6 +491,11 @@ void Level::LevelFree()
 {
     cardInspect.Hide(objectsList);
 
+    if (deckViewer.IsActive())
+    {
+        deckViewer.Hide(objectsList);
+    }
+
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
 
@@ -497,7 +503,11 @@ void Level::LevelFree()
     //    to avoid double-free when the objectsList loop runs.
     for (auto* e : enemies)
     {
-        if (!e || e->getIsDead()) continue;
+        if (!e)
+        {
+            continue;
+        }
+
         SpriteObject* obj = e->getObject();
         if (obj)
         {
@@ -526,6 +536,8 @@ void Level::LevelFree()
             if (it != objectsList.end()) objectsList.erase(it);
         }
 
+        delete e;
+
     }
     enemies.clear();
 
@@ -541,9 +553,23 @@ void Level::LevelFree()
     // 5. Reset game state
     nowRow = startRow;
     nowCol = startCol;
+    turnCount = 0;
     playerHealth = 5;
+    maxPlayerHealth = 10;
+    playerData = Player();
+    isGameOver = false;
+    playerDead = false;
+    anyEnemyDied = false;
+    enemyActing = false;
+    currentEnemyIndex = 0;
+    currentPatternIndex = 0;
+    currentRotation = 0;
+    playerPlayingOneShot = false;
+    playerAnimTimer = 0.0f;
+    playerAnimDuration = 0.0f;
     playerMoving = false;
     playerAttacking = false;
+    playerMoveTimer = 0.0f;
     attackTimer = 0.0f;
     pendingAttack = false;
     pendingMoveSteps = 0;
@@ -1363,7 +1389,15 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
 void Level::ApplyEnemyAttack(Enemy* e)
 {
-    if (!e || e->getIsDead()) return;
+    if (!e || e->getIsDead())
+    {
+        return;
+    }
+
+    if (!playersprite)
+    {
+        return;
+    }
 
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
@@ -1475,6 +1509,14 @@ void Level::UpdateTurn()
                     e->StartMove(world);
                 }
             }
+        }
+
+        if (currentEnemyIndex < 0 || currentEnemyIndex >= static_cast<int>(enemies.size()))
+        {
+            enemyActing = false;
+            currentEnemyIndex = 0;
+            turnState = TurnState::END_TURN;
+            return;
         }
 
         Enemy* e = enemies[currentEnemyIndex];

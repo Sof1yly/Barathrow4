@@ -99,7 +99,7 @@ private:
     glm::vec3 moveStart;
     glm::vec3 moveTarget;
     float moveTimer = 0.0f;
-    float moveDuration = 1.25f;//move duration
+    float moveDuration = 0.95f;//move duration
 
     bool preparingAttack = false;
     bool isDead = false;
