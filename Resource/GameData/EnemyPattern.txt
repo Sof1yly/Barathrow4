@@ -1,0 +1,13 @@
+A1
+O
+
+A2
+XXX
+
+A3
+OXX
+
+A4
+XXX
+XXX
+XXX

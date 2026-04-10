@@ -117,6 +117,12 @@
     <ClCompile Include="CardInspect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EnemyData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyLoadPattern.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CombineObject.h">
@@ -231,6 +237,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CardInspect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyLoadPattern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
