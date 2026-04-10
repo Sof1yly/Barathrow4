@@ -14,6 +14,8 @@ private:
 	int maxShield = 0;
     int barrierCount = 0; 
 
+	bool isDead = false;
+
 	// Shield UI
 	ImageObject* shieldBg = nullptr;
 	ImageObject* shieldBar = nullptr;

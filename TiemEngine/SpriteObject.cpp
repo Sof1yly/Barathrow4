@@ -59,6 +59,8 @@ void SpriteObject::Render(glm::mat4 globalModelTransform)
 
 void SpriteObject::Update(float deltaTime)
 {
+	if (isFinished) return;
+
 	timeCount += deltaTime;
 	if (timeCount > animationTime)
 	{
@@ -98,12 +100,24 @@ void SpriteObject::SetAnimationLoop(int startRow, int startColumn, int howManyFr
 	currentColumn = startColumn;
 	currentRow = startRow;
 
+	isLooping = true;
+	isFinished = false;
+
 	GenUV();
+}
+
+void SpriteObject::SetAnimationOnce(int startRow, int startColumn, int howManyFrame, int delayBetaweenFrame)
+{
+	SetAnimationLoop(startRow, startColumn, howManyFrame, delayBetaweenFrame);
+	isLooping = false;
 }
 
 void SpriteObject::NextAnimation()
 {
+	if (isFinished) return;
+
 	loopCount++;
+
 	if (loopCount < loopMax)
 	{
 		currentColumn++;
@@ -119,9 +133,27 @@ void SpriteObject::NextAnimation()
 	}
 	else
 	{
-		currentRow = startRow;
-		currentColumn = startColumn;
-		loopCount = 0;
+		if (isLooping)
+		{
+			currentRow = startRow;
+			currentColumn = startColumn;
+			loopCount = 0;
+		}
+		else
+		{
+			isFinished = true;
+
+			int lastFrameIndex = loopMax - 1;
+
+			int finalColumn = (startColumn + lastFrameIndex) % columnMax;
+			int rowOffset = (startColumn + lastFrameIndex) / columnMax;
+			int finalRow = startRow + rowOffset;
+
+			if (finalRow >= rowMax)
+				finalRow = finalRow % rowMax;
+
+			currentColumn = finalColumn;
+			currentRow = finalRow;
+		}
 	}
-	
 }
