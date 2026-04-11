@@ -192,7 +192,7 @@ glm::vec3 Player::GetPosition() const
 
 void Player::SetPlayerIdle(int dir)
 {
-    if (!sprite) return;
+    if (!sprite || isDead) return;
 
     switch (dir)
     {
@@ -205,7 +205,7 @@ void Player::SetPlayerIdle(int dir)
 
 void Player::SetPlayerWalk(int dir)
 {
-    if (!sprite) return;
+    if (!sprite || isDead) return;
 
     switch (dir)
     {
@@ -218,7 +218,7 @@ void Player::SetPlayerWalk(int dir)
 
 void Player::SetPlayerAttack(int dir)
 {
-    if (!sprite) return;
+    if (!sprite || isDead) return;
 
     switch (dir)
     {
@@ -231,26 +231,27 @@ void Player::SetPlayerAttack(int dir)
 
 void Player::SetPlayerGetDamage(int dir)
 {
-    if (!sprite) return;
+    if (!sprite || isDead) return;
 
     switch (dir)
     {
-    case 0: sprite->SetAnimationLoop(7, 0, 2, 200); break;
-    case 1: sprite->SetAnimationLoop(7, 5, 2, 200); break;
-    case 2: sprite->SetAnimationLoop(8, 0, 2, 200); break;
-    case 3: sprite->SetAnimationLoop(8, 5, 2, 200); break;
+    case 0: sprite->SetAnimationOnce(7, 0, 2, 200); break;
+    case 1: sprite->SetAnimationOnce(7, 5, 2, 200); break;
+    case 2: sprite->SetAnimationOnce(8, 0, 2, 200); break;
+    case 3: sprite->SetAnimationOnce(8, 5, 2, 200); break;
     }
 }
 
 void Player::SetPlayerDie(int dir)
 {
     if (!sprite) return;
-
+    isDead = true;
     switch (dir)
     {
-    case 0: sprite->SetAnimationLoop(7, 0, 5, 200); break;
-    case 1: sprite->SetAnimationLoop(7, 5, 5, 200); break;
-    case 2: sprite->SetAnimationLoop(8, 0, 5, 200); break;
-    case 3: sprite->SetAnimationLoop(8, 5, 5, 200); break;
+    case 0: sprite->SetAnimationOnce(7, 0, 5, 200); break;
+    case 1: sprite->SetAnimationOnce(7, 5, 5, 200); break;
+    case 2: sprite->SetAnimationOnce(8, 0, 5, 200); break;
+    case 3: sprite->SetAnimationOnce(8, 5, 5, 200); break;
     }
+
 }

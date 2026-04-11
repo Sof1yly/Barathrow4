@@ -2,37 +2,58 @@
 #include <iostream>
 #include <cmath>
 
+std::string EnemyTypeToString(Enemy::EnemyType type)
+{
+    switch (type)
+    {
+    case Enemy::EnemyType::A: return "A";
+    case Enemy::EnemyType::B: return "B";
+    case Enemy::EnemyType::C: return "C";
+    case Enemy::EnemyType::D: return "D";
+    case Enemy::EnemyType::E: return "E";
+    case Enemy::EnemyType::F: return "F";
+    case Enemy::EnemyType::G: return "G";
+    case Enemy::EnemyType::H: return "H";
+    case Enemy::EnemyType::I: return "I";
+    default: return "A";
+    }
+}
+
 Enemy::Enemy(EnemyType type)
 {
     this->type = type;
 
-    switch (type)
-    {
-    case EnemyType::A1: // Basic (cross)
-    default:
-        maxHealth = 10;
-        damage = 2;
-        patterns = {
-            AttackPattern::fromGrid({
-                "XXX",
-                "XXX",
-                "XXX"
-            }, 'X')
-        };
-        break;
+    std::string typeStr = EnemyTypeToString(type);
+    EnemyData d = EnemyDatabase::GetData(typeStr);
 
-    case EnemyType::A2: // Range (horizontal)
-        maxHealth = 8;
-        damage = 3;
+    maxHealth = d.hp;
+    damage = d.atk;
+
+    // store unused values for later
+    int mov = d.mov;
+    int countdown = d.countdown;
+    int attackInc = d.attackIncrement;
+    std::string patternName = d.pattern;
+    std::vector<std::string> grid = EnemyLoadPattern::GetPattern(patternName);
+
+    if (!grid.empty())
+    {
+        patterns.clear();
+        patterns.push_back(AttackPattern::fromGrid(grid, 'X'));
+    }
+    else
+    {
+        std::cout << "[ERROR] Pattern not found: " << patternName << std::endl;
+
+        // fallback (prevent crash)
         patterns = {
             AttackPattern::fromGrid({
-                "..X.X..",
-                "...X...",
-                "..X.X.."
+                "X"
             }, 'X')
         };
-        break;
     }
+
+
     health = maxHealth;
     // TEXT 
     hpText = new TextObject();
@@ -48,7 +69,7 @@ Enemy::Enemy(EnemyType type)
 	//Sprite Create
     switch (type)
     {
-    case EnemyType::A1:
+    case EnemyType::A:
     default:
         objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy1.png", 4, 12);
         objSprite->SetAnimationLoop(
@@ -60,7 +81,7 @@ Enemy::Enemy(EnemyType type)
         objSprite->SetSize(200.0f, -200.0f);
         break;
 
-    case EnemyType::A2:
+    case EnemyType::B:
         objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy2.png", 5, 8);
         objSprite->SetAnimationLoop(
             0,   // start frame

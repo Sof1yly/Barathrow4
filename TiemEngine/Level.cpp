@@ -63,18 +63,22 @@ void Level::LevelInit()
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
+    //Load Enemy
+    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");//data
+    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");//pattern
+
     //Enemy
-    Enemy* e1 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    Enemy* e1 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
     int ran1 = rand() % 8 + 1;
     e1->setNowPosition(ran1, 0);
     e1->SetWorldPosition(GridToWorld(ran1, 0));
 
-    Enemy* e2 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    Enemy* e2 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
     int ran2 = rand() % 8 + 1;
     e2->setNowPosition(ran2, 2);
     e2->SetWorldPosition(GridToWorld(ran2, 2));
 
-    Enemy* e3 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A1 : Enemy::EnemyType::A2);
+    Enemy* e3 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
     int ran3 = rand() % 8 + 1;
     e3->setNowPosition(ran3, 4);
     e3->SetWorldPosition(GridToWorld(ran3, 4));
@@ -244,20 +248,12 @@ void Level::LevelUpdate()
         {
             playerPlayingOneShot = false;
 
-            if (playerDead)
+            if (isGameOver==true)
             {
-                if (direction == 0) {
-                    playersprite->SetAnimationLoop(7, 4, 0, 1000);
-                }
-                if (direction == 1) {
-                    playersprite->SetAnimationLoop(7, 9, 0, 1000);
-				}
-                if (direction == 2) {
-                    playersprite->SetAnimationLoop(8, 4, 0, 1000);
-                }
-                if (direction == 3) {
-                    playersprite->SetAnimationLoop(8, 9, 0, 1000);
-                }
+                if (direction == 0) playersprite->SetAnimationLoop(7, 4, 0, 1000);
+                if (direction == 1) playersprite->SetAnimationLoop(7, 9, 0, 1000);
+                if (direction == 2) playersprite->SetAnimationLoop(8, 4, 0, 1000);
+                if (direction == 3) playersprite->SetAnimationLoop(8, 9, 0, 1000);
             }
             else
             {
@@ -1645,10 +1641,10 @@ void Level::UpdatePlayerAnimation()
     {
         switch (playerDir)
         {
-        case PlayerDir::DOWN:  playersprite->SetAnimationLoop(2, 0, 8, 100); break;
-        case PlayerDir::LEFT:  playersprite->SetAnimationLoop(2, 8, 8, 100); break;
-        case PlayerDir::UP:    playersprite->SetAnimationLoop(3, 0, 8, 100); break;
-        case PlayerDir::RIGHT: playersprite->SetAnimationLoop(3, 8, 8, 100); break;
+        case PlayerDir::DOWN:  playersprite->SetAnimationOnce(2, 0, 8, 100); break;
+        case PlayerDir::LEFT:  playersprite->SetAnimationOnce(2, 8, 8, 100); break;
+        case PlayerDir::UP:    playersprite->SetAnimationOnce(3, 0, 8, 100); break;
+        case PlayerDir::RIGHT: playersprite->SetAnimationOnce(3, 8, 8, 100); break;
         }
     }
 }
@@ -1814,8 +1810,11 @@ void Level::PlayerTakeDamage(int damage)
     }
 
     damage = playerData.AbsorbDamage(damage);
-
     if (damage <= 0) return;
+
+    playerPlayingOneShot = true;
+    playerAnimTimer = 0;
+    playerAnimDuration = 400;
 
     playerData.SetPlayerGetDamage((int)playerDir);
 

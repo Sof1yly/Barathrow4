@@ -2,12 +2,13 @@
 #include "SpriteObject.h"
 #include "AttackPattern.h"
 #include "TextObject.h"
+#include "EnemyData.h"
+#include "EnemyLoadPattern.h"
 
 class Enemy {
 public:
     enum class EnemyType {
-        A1,//Basic
-        A2,//Range
+        A, B, C, D, E, F, G, H, I
 
     };
 

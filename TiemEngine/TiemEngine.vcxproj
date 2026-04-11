@@ -31,6 +31,8 @@
     <ClCompile Include="DeckViewer.cpp" />
     <ClCompile Include="DrawableObject.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyData.cpp" />
+    <ClCompile Include="EnemyLoadPattern.cpp" />
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="GameDataLoader.cpp" />
     <ClCompile Include="GameEngine.cpp" />
@@ -70,6 +72,8 @@
     <ClInclude Include="DeckViewer.h" />
     <ClInclude Include="DrawableObject.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyData.h" />
+    <ClInclude Include="EnemyLoadPattern.h" />
     <ClInclude Include="EnergyAction.h" />
     <ClInclude Include="GameData.h" />
     <ClInclude Include="GameDataLoader.h" />
