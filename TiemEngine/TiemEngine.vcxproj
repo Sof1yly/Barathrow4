@@ -197,13 +197,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\Resource\glm;..\Resource\SDL2-2.0.5\include;..\Resource\glew\include;..\Resource\SDL2_ttf\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Resource\glm;..\Resource\SDL2-2.0.5\include;..\Resource\glew\include;..\Resource\SDL2_ttf\include;..\Resource\sdl_mixer\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Resource\SDL2-2.0.5\lib\x64;..\Resource\glew\lib\Release\x64;..\Resource\SDL2_ttf\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;opengl32.lib;SDL2_ttf.lib;SDL2_ttf.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Resource\SDL2-2.0.5\lib\x64;..\Resource\glew\lib\Release\x64;..\Resource\SDL2_ttf\lib\x64;..\Resource\sdl_mixer\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;opengl32.lib;SDL2_ttf.lib;SDL2_mixer.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
