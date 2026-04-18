@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="Action.cpp" />
     <ClCompile Include="AttackPattern.cpp" />
+    <ClCompile Include="Audio.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="Card.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="Action.h" />
     <ClInclude Include="AttackAction.h" />
     <ClInclude Include="AttackPattern.h" />
+    <ClInclude Include="Audio.h" />
     <ClInclude Include="BuffAction.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="Card.h" />
@@ -179,13 +181,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../Resource/glew/include;../Resource/glm;../Resource/SDL2-2.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Resource/glew/include;../Resource/glm;../Resource/SDL2-2.0.5/include;../Resource/sdl_mixer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../Resource/glew/lib/Release/Win32;../Resource/SDL2-2.0.5/lib/x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../Resource/glew/lib/Release/Win32;../Resource/SDL2-2.0.5/lib/x86;../Resource/sdl_mixer/lib/x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glew32s.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -202,7 +204,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Resource\SDL2-2.0.5\lib\x64;..\Resource\glew\lib\Release\x64;..\Resource\SDL2_ttf\lib\x64;..\Resource\sdl_mixer\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Resource\SDL2-2.0.5\lib\x64;..\Resource\glew\lib\Release\x64;..\Resource\SDL2_ttf\lib\x64;..\Resource\sdl_mixer\lib\x64</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;opengl32.lib;SDL2_ttf.lib;SDL2_mixer.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
