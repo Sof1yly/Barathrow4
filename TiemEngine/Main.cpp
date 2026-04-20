@@ -12,6 +12,8 @@
 #include "GameStateController.h"
 #include "LevelManager.h"
 
+#include "Audio.h"
+
 using namespace std;
 
 // ---------------------------------------------
@@ -45,7 +47,7 @@ int main(int argc, char* argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Initialize SDL video
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
 		cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
 		return false;
@@ -100,6 +102,25 @@ int main(int argc, char* argv[])
 	gameStateController = new GameStateController();
 	gameStateController->Init(GameState::GS_LEVEL1);
 
+	//Sound
+	AudioEngine audio;
+	audio.init();
+
+	Music music = audio.loadMusic("./Sound/beat.wav");
+	SoundEffect sound_1 = audio.loadSoundEffect("./Sound/high.wav");
+	SoundEffect sound_2 = audio.loadSoundEffect("./Sound/low.wav");
+	SoundEffect sound_3 = audio.loadSoundEffect("./Sound/medium.wav");
+	SoundEffect sound_4 = audio.loadSoundEffect("./Sound/scratch.wav");
+
+	cout << "Sound Example" << endl;
+	cout << "Press 1 to play SoundEffect 1" << endl;
+	cout << "Press 2 to play SoundEffect 2" << endl;
+	cout << "Press 3 to play SoundEffect 3" << endl;
+	cout << "Press 4 to play SoundEffect 4" << endl;
+	cout << "Press 5 to play Music" << endl;
+	cout << "Press 6 to pause Music" << endl;
+	cout << "Press 7 to resume Music" << endl;
+	cout << "Press 8 to stop Music" << endl;
 
 	LevelManager levelMap;//dubug map
 	// Game Loop
@@ -145,9 +166,14 @@ int main(int argc, char* argv[])
 					case SDLK_o: gameStateController->currentLevel->HandleKey('o'); break;
 					case SDLK_l: gameStateController->currentLevel->HandleKey('l'); break;
 					case SDLK_v: gameStateController->currentLevel->HandleKey('v'); break;
-                   case SDLK_1: gameStateController->currentLevel->HandleKey('1'); break;
-					case SDLK_2: gameStateController->currentLevel->HandleKey('2'); break;
-					case SDLK_3: gameStateController->currentLevel->HandleKey('3'); break;
+                    case SDLK_1: gameStateController->currentLevel->HandleKey('1');sound_1.play(); break;
+					case SDLK_2: gameStateController->currentLevel->HandleKey('2');sound_2.play(); break;
+					case SDLK_3: gameStateController->currentLevel->HandleKey('3');sound_3.play(); break;
+					case SDLK_4:	  sound_4.play(); break;
+					case SDLK_5:	  music.play(); break;
+					case SDLK_6:	  music.pause(); break;
+					case SDLK_7:	  music.resume(); break;
+					case SDLK_8:	  music.stop(); break;
 					}
 				}
 
