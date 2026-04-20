@@ -19,6 +19,7 @@
 #include "GameObject.h"
 #include "MoveAction.h"
 #include "TextObject.h"
+#include "Button.h"
 
 class CardRewardSystem
 {
@@ -39,6 +40,7 @@ private:
 
     std::vector<DrawableObject*> uiObjects;
     std::vector<OptionArea> optionAreas;
+    Button skipButton;
 
     bool poolLoaded = false;
     bool active = false;
@@ -245,6 +247,13 @@ private:
             area.maxY = cardPos.y + cardHeight * 0.5f;
             optionAreas.push_back(area);
         }
+
+        skipButton.Init(
+            "../Resource/Texture/UI/SkipBut.png",
+            glm::vec3(0.0f, -320.0f, 812.0f),
+            glm::vec2(190.0f, -90.0f),
+            objectsList
+        );
     }
 
     void ClearUI(std::vector<DrawableObject*>& objectsList)
@@ -267,6 +276,27 @@ private:
 
         uiObjects.clear();
         optionAreas.clear();
+
+        auto removeButtonImage = [&](Button& button)
+            {
+                ImageObject* img = button.GetImage();
+                if (!img)
+                {
+                    button.Reset();
+                    return;
+                }
+
+                auto it = std::find(objectsList.begin(), objectsList.end(), img);
+                if (it != objectsList.end())
+                {
+                    objectsList.erase(it);
+                }
+
+                delete img;
+                button.Reset();
+            };
+
+        removeButtonImage(skipButton);
     }
 
     bool IsInside(const OptionArea& area, const glm::vec3& mousePos) const
@@ -496,6 +526,12 @@ public:
         if (!active)
         {
             return false;
+        }
+
+        if (skipButton.IsClicked(mousePos.x, mousePos.y))
+        {
+            Close(objectsList);
+            return true;
         }
 
         for (const OptionArea& area : optionAreas)
