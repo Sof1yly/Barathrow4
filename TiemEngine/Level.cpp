@@ -694,6 +694,42 @@ void Level::HandleKey(char key)
 
 	}
     if (key == 'p') {
+        cardInspect.Hide(objectsList);
+
+        if (deckViewer.IsActive()) {
+            deckViewer.Hide(objectsList);
+        }
+
+        for (Enemy* e : enemies) {
+            if (!e) {
+                continue;
+            }
+
+            highlightManager.HideEnemyAttack(e->highlightIndex);
+
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
+
+            delete e;
+        }
+
+        enemies.clear();
+        enemyActing = false;
+        currentEnemyIndex = 0;
+
+        if (winText) {
+            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+
+        turnState = TurnState::GAME_OVER;
+
+        if (!rewardPickedAfterWin) {
+            cardRewardSystem.Open(objectsList);
+        }
+
+        return;
     }
     if(key == 'l'){
 	}
