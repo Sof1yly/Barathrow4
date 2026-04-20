@@ -106,11 +106,11 @@ int main(int argc, char* argv[])
 	AudioEngine audio;
 	audio.init();
 
-	Music music = audio.loadMusic("./Sound/beat.wav");
-	SoundEffect sound_1 = audio.loadSoundEffect("./Sound/high.wav");
-	SoundEffect sound_2 = audio.loadSoundEffect("./Sound/low.wav");
-	SoundEffect sound_3 = audio.loadSoundEffect("./Sound/medium.wav");
-	SoundEffect sound_4 = audio.loadSoundEffect("./Sound/scratch.wav");
+	Music music = audio.loadMusic("../Resource/Sound/beat.wav");
+	SoundEffect sound_1 = audio.loadSoundEffect("../Resource/Sound/high.wav");
+	SoundEffect sound_2 = audio.loadSoundEffect("../Resource/Sound/low.wav");
+	SoundEffect sound_3 = audio.loadSoundEffect("../Resource/Sound/medium.wav");
+	SoundEffect sound_4 = audio.loadSoundEffect("../Resource/Sound/scratch.wav");
 
 	cout << "Sound Example" << endl;
 	cout << "Press 1 to play SoundEffect 1" << endl;
