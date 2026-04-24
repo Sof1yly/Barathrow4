@@ -314,6 +314,13 @@ const AttackPattern* GameDataLoader::getPatternForAction(const Action* a) const
     return it->second;
 }
 
+void GameDataLoader::linkPatternToAction(Action* a, const AttackPattern* pat)
+{
+    if (a && pat) {
+        actionPattern[a] = pat;
+    }
+}
+
 std::string GameDataLoader::getActionDescription(const std::string& actionCode) const
 {
     std::string code = toLower_(trim_(actionCode));
@@ -417,8 +424,18 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
+    else if (code == "combo") {
+        // combo:CardName - the rawValueToken IS the card name (string, not numeric)
+        auto* a = new ComboAction(rawValueToken);
+        a->setValue(0);
+        a->setBaseValue(0);
+        a->setMultiplier(1.0f);
+        a->setRepeatCount(1);
+        a->setActionCode(code);
+        newAction = a;
+    }
     else {
-        // Unknown code — log a warning and skip rather than crash
+        // Unknown code ï¿½ log a warning and skip rather than crash
         std::cout << "[GameDataLoader] Warning: unknown action code '" << code<< "' on card '" << card->getName() << "', skipping." << std::endl;
         return nullptr;
     }
@@ -587,7 +604,15 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             int   value      = 0;
             float multiplier = 1.0f;
             int   repeatCount = 1;
-            {
+
+            // combo uses a card name (string), skip numeric parsing
+            if (code == "combo") {
+                // sVal is the target card name, passed as-is to createAction via rawValueToken
+                value = 0;
+                multiplier = 1.0f;
+                repeatCount = 1;
+            }
+            else {
                 const std::string sValNormalized = toLower_(trim_(sVal));
                 if (code == "atk" && sValNormalized == "shi") {
                     value = 0;
@@ -633,6 +658,16 @@ Card* GameDataLoader::findEnergyCard() const
 {
     for (Card* c : cards) {
         if (c && c->isEnergyCard()) {
+            return c;
+        }
+    }
+    return nullptr;
+}
+
+Card* GameDataLoader::findCardByName(const std::string& name) const
+{
+    for (Card* c : cards) {
+        if (c && c->getName() == name) {
             return c;
         }
     }

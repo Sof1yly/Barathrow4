@@ -29,6 +29,7 @@
     <ClCompile Include="Card.cpp" />
     <ClCompile Include="CardActionExecutor.cpp" />
     <ClCompile Include="CardInspect.cpp" />
+    <ClCompile Include="ComboAction.cpp" />
     <ClCompile Include="CardSystem.cpp" />
     <ClCompile Include="CombineObject.cpp" />
     <ClCompile Include="DebuffAction.cpp" />
@@ -74,6 +75,7 @@
     <ClInclude Include="CardActionExecutor.h" />
     <ClInclude Include="CardInspect.h" />
     <ClInclude Include="CardPlayContext.h" />
+    <ClInclude Include="ComboAction.h" />
     <ClInclude Include="CardPlayResult.h" />
     <ClInclude Include="CardRewardSystem.h" />
     <ClInclude Include="CardSystem.h" />

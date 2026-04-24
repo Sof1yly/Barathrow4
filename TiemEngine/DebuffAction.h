@@ -37,6 +37,17 @@ public:
     // Executes this debuff: queues delay, weaken, or corruption for enemies
     void execute(CardPlayContext& ctx, CardPlayResult& result) override;
 
+    Action* clone() const override {
+        auto* c = new DebuffAction(subType);
+        c->setValue(getValue());
+        c->setBaseValue(getBaseValue());
+        c->setMultiplier(getMultiplier());
+        c->setRepeatCount(getRepeatCount());
+        c->setRotation(getRotation());
+        c->setActionCode(getActionCode());
+        return c;
+    }
+
     void do_action() override {
         cout << "debuff [" << getActionCode() << "] " << getValue();
         if (getMultiplier() != 1.0f)

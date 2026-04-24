@@ -1,6 +1,7 @@
 #include "CardSystem.h"
 #include "TextObject.h"
 #include "EnergyAction.h"
+#include "ComboAction.h"
 
 #include <iostream>
 #include <algorithm>
@@ -411,7 +412,7 @@ void CardSystem::BeginDrag(ImageObject* card, const glm::vec3& mouseWorld,std::v
 
     Hand& h = hand;
 
-    // Clear the hover first — this restores the card to fan layout via layoutViews()
+    // Clear the hover first ï¿½ this restores the card to fan layout via layoutViews()
     h.UpdateHover(mouseWorld, true, objectsList);
 
     // Now tell Hand which card is being dragged so future layoutViews skips it
@@ -1058,4 +1059,48 @@ void CardSystem::ConsumeEnergyCards(int count, std::vector<DrawableObject*>& obj
 
     std::cout << "[Energy] Consumed " << consumed << " energy card(s)." << std::endl;
     UpdatePileVisuals();
+}
+
+void CardSystem::GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList)
+{
+    Card* templateCard = dataLoader.findCardByName(cardName);
+    if (!templateCard) {
+        std::cout << "[Combo] Card \"" << cardName << "\" not found in card data!" << std::endl;
+        return;
+    }
+
+    // Clone the template card
+    Card* comboCard = new Card(templateCard->getName());
+    comboCard->setLevel(templateCard->getLevel());
+    comboCard->setRarityCode(templateCard->getRarityCode());
+    comboCard->setTypeCode(templateCard->getTypeCode());
+    comboCard->setDescription(templateCard->getDescription());
+    comboCard->setIsFast(templateCard->getIsFast());
+    comboCard->setIsTemp(templateCard->getIsTemp());
+    comboCard->setIsDeleteAfterUse(templateCard->getIsDeleteAfterUse());
+    comboCard->setIsPersist(templateCard->getIsPersist());
+    comboCard->setIsLag(templateCard->getIsLag());
+    comboCard->setIsPreLoad(templateCard->getIsPreLoad());
+    comboCard->setOverclockValue(templateCard->getOverclockValue());
+
+    // Clone all actions from the template
+    for (Action* a : templateCard->getActions()) {
+        Action* cloned = a->clone();
+        comboCard->addAction(cloned);
+
+        // If the original action had a linked attack pattern, link it to the clone too
+        const AttackPattern* pat = dataLoader.getPatternForAction(a);
+        if (pat) {
+            dataLoader.linkPatternToAction(cloned, pat);
+        }
+    }
+
+    // Track ownership for cleanup
+    energyCardPool.push_back(comboCard);
+
+    // Add to hand
+    std::vector<Card*> newCards = { comboCard };
+    hand.AddCards(newCards, objectsList);
+
+    std::cout << "[Combo] Added \"" << cardName << "\" to hand." << std::endl;
 }

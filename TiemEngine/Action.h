@@ -9,7 +9,7 @@ struct CardPlayContext;
 struct CardPlayResult;
 
 enum class ActionType {
-	Attack, Move, Debuff, Buff, Energy
+	Attack, Move, Debuff, Buff, Energy, Combo
 };
 
 class Action {
@@ -43,6 +43,9 @@ public:
 
 	// Each action subclass implements its own execution logic
 	virtual void execute(CardPlayContext& ctx, CardPlayResult& result) = 0;
+
+	// Create a deep copy of this action
+	virtual Action* clone() const = 0;
 
 	virtual void do_action() = 0;
 };

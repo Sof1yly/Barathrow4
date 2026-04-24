@@ -43,6 +43,17 @@ public:
     // Executes this buff: applies shield, barrier, etc. to the player
     void execute(CardPlayContext& ctx, CardPlayResult& result) override;
 
+    Action* clone() const override {
+        auto* c = new BuffAction(subType);
+        c->setValue(getValue());
+        c->setBaseValue(getBaseValue());
+        c->setMultiplier(getMultiplier());
+        c->setRepeatCount(getRepeatCount());
+        c->setRotation(getRotation());
+        c->setActionCode(getActionCode());
+        return c;
+    }
+
     void do_action() override {
         cout << "buff [" << getActionCode() << "] " << getValue() << endl;
     }

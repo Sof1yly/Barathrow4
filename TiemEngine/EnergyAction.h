@@ -35,6 +35,17 @@ public:
     // Executes this energy action: generates energy cards
     void execute(CardPlayContext& ctx, CardPlayResult& result) override;
 
+    Action* clone() const override {
+        auto* c = new EnergyAction(subType);
+        c->setValue(getValue());
+        c->setBaseValue(getBaseValue());
+        c->setMultiplier(getMultiplier());
+        c->setRepeatCount(getRepeatCount());
+        c->setRotation(getRotation());
+        c->setActionCode(getActionCode());
+        return c;
+    }
+
     void do_action() override {
         cout << "energy [" << getActionCode() << "] " << getValue() << endl;
     }

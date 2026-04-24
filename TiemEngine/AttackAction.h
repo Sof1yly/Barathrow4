@@ -40,6 +40,18 @@ public:
 	// Executes this attack: resolves damage and queues pattern for grid application
 	void execute(CardPlayContext& ctx, CardPlayResult& result) override;
 
+	Action* clone() const override {
+		auto* c = new AttackAction();
+		c->setValue(getValue());
+		c->setBaseValue(getBaseValue());
+		c->setMultiplier(getMultiplier());
+		c->setRepeatCount(getRepeatCount());
+		c->setRotation(getRotation());
+		c->setActionCode(getActionCode());
+		c->setSubType(subType);
+		return c;
+	}
+
 	void do_action() override {
         if (subType == AttackSubType::ShieldScaled) {
 			cout << "attack [shield-scaled]" << endl;

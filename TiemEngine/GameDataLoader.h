@@ -15,6 +15,7 @@
 #include "BuffAction.h"
 #include "DebuffAction.h"
 #include "EnergyAction.h"
+#include "ComboAction.h"
 #include "AttackPattern.h"
 
 class GameDataLoader
@@ -57,7 +58,9 @@ public:
     const std::vector<Action*>& getActions() const { return actions_list; }
 
     const AttackPattern* getPatternForAction(const Action* a) const;
+    void linkPatternToAction(Action* a, const AttackPattern* pat);
     std::string getActionDescription(const std::string& actionCode) const;
 
     Card* findEnergyCard() const;
+    Card* findCardByName(const std::string& name) const;
 };

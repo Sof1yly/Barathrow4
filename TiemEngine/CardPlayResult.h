@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 class AttackAction;
 class AttackPattern;
@@ -21,6 +22,9 @@ struct CardPlayResult {
     int pendingWeakenTurns = 0;
 
     int energyGenerated = 0;
+
+    // Combo: card names to add to hand after this card is played
+    std::vector<std::string> comboCardNames;
 
     bool isFastCard = false;
     bool isLagCard = false;

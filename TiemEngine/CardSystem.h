@@ -168,4 +168,7 @@ public:
     void ConsumeEnergyCards(int count, std::vector<DrawableObject*>& objectsList);
 
     void AddCardToDeck(Card* card);
+
+    // Combo system: find a card template by name, clone it, and add to hand
+    void GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList);
 };

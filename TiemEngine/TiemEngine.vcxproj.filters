@@ -39,6 +39,9 @@
     <ClCompile Include="CardActionExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ComboAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CardInspect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -171,6 +174,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CardPlayContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComboAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CardPlayResult.h">

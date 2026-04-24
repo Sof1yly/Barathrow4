@@ -35,6 +35,17 @@ public:
     // Executes this move: accumulates move or retreat steps
     void execute(CardPlayContext& ctx, CardPlayResult& result) override;
 
+    Action* clone() const override {
+        auto* c = new MoveAction(subType);
+        c->setValue(getValue());
+        c->setBaseValue(getBaseValue());
+        c->setMultiplier(getMultiplier());
+        c->setRepeatCount(getRepeatCount());
+        c->setRotation(getRotation());
+        c->setActionCode(getActionCode());
+        return c;
+    }
+
     void do_action() override {
         if (isRetreat())
             cout << "retreat " << getValue() << endl;

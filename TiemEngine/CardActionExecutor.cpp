@@ -46,6 +46,12 @@ CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
         ctx.cardSystem.GenerateEnergyCards(result.energyGenerated, ctx.objectsList);
     }
 
+    // Generate combo cards (add target cards to hand)
+    for (const std::string& comboName : result.comboCardNames)
+    {
+        ctx.cardSystem.GenerateComboCard(comboName, ctx.objectsList);
+    }
+
     // Reset overclock after an attack card is played
     if (result.hasAttack())
     {
