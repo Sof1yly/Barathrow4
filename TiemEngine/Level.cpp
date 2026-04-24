@@ -173,7 +173,7 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
