@@ -20,19 +20,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Action.cpp" />
+    <ClCompile Include="AttackAction.cpp" />
     <ClCompile Include="AttackPattern.cpp" />
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="Board.cpp" />
+    <ClCompile Include="BuffAction.cpp" />
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="Card.cpp" />
+    <ClCompile Include="CardActionExecutor.cpp" />
     <ClCompile Include="CardInspect.cpp" />
     <ClCompile Include="CardSystem.cpp" />
     <ClCompile Include="CombineObject.cpp" />
+    <ClCompile Include="DebuffAction.cpp" />
     <ClCompile Include="Deck.cpp" />
     <ClCompile Include="DeckViewer.cpp" />
     <ClCompile Include="DrawableObject.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyData.cpp" />
+    <ClCompile Include="EnergyAction.cpp" />
     <ClCompile Include="EnemyLoadPattern.cpp" />
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="GameDataLoader.cpp" />
@@ -49,6 +54,7 @@
     <ClCompile Include="LevelTest.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshVbo.cpp" />
+    <ClCompile Include="MoveAction.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SpriteMeshVbo.cpp" />
@@ -65,7 +71,10 @@
     <ClInclude Include="BuffAction.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="Card.h" />
+    <ClInclude Include="CardActionExecutor.h" />
     <ClInclude Include="CardInspect.h" />
+    <ClInclude Include="CardPlayContext.h" />
+    <ClInclude Include="CardPlayResult.h" />
     <ClInclude Include="CardRewardSystem.h" />
     <ClInclude Include="CardSystem.h" />
     <ClInclude Include="CombineObject.h" />
@@ -125,26 +134,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>

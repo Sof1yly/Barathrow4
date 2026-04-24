@@ -32,6 +32,9 @@ public:
 
     bool isRetreat() const { return subType == MoveSubType::Retreat; }
 
+    // Executes this move: accumulates move or retreat steps
+    void execute(CardPlayContext& ctx, CardPlayResult& result) override;
+
     void do_action() override {
         if (isRetreat())
             cout << "retreat " << getValue() << endl;

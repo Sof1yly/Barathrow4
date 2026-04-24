@@ -32,6 +32,9 @@ public:
         return EnergySubType::Unknown;
     }
 
+    // Executes this energy action: generates energy cards
+    void execute(CardPlayContext& ctx, CardPlayResult& result) override;
+
     void do_action() override {
         cout << "energy [" << getActionCode() << "] " << getValue() << endl;
     }

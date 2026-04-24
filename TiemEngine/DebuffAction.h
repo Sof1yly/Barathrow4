@@ -34,6 +34,9 @@ public:
         return DebuffSubType::Unknown;
     }
 
+    // Executes this debuff: queues delay, weaken, or corruption for enemies
+    void execute(CardPlayContext& ctx, CardPlayResult& result) override;
+
     void do_action() override {
         cout << "debuff [" << getActionCode() << "] " << getValue();
         if (getMultiplier() != 1.0f)

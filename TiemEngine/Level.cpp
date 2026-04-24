@@ -173,7 +173,7 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
@@ -1089,18 +1089,6 @@ void Level::HandleMouse(int type, int x, int y)
 
                 const char* zoneNames[4] = { "LEFT", "TOP", "BOTTOM", "RIGHT" };
 
-                int moveSteps = 0;
-                int retreatSteps = 0;
-
-                struct PendingAttackInfo {
-                    AttackAction* atk;
-                    const AttackPattern* pattern;
-                };
-                std::vector<PendingAttackInfo> pendingAttacks;
-                int pendingDelayTurns = 0;
-                int pendingCorruptionStacks = 0;
-                int pendingWeakenTurns = 0;
-
                 if (cardData)
                 {
                     // Check energy (con) requirement before allowing play
@@ -1128,110 +1116,30 @@ void Level::HandleMouse(int type, int x, int y)
 
                     std::cout << "[Card] " << cardData->getName() << std::endl;
 
-                    // Consume energy cards if this card has con requirement
-                    int conReq = cardData->getConsumeRequirement();
-                    if (conReq > 0)
-                    {
-                        cardSystem.ConsumeEnergyCards(conReq, objectsList);
-                    }
+                    // Build context and execute all card actions via OOP dispatch
+                    CardPlayContext ctx {
+                        playerData, enemies, cardSystem, objectsList,
+                        dz, nowRow, nowCol,
+                        GridStartRow, GridEndRow, GridStartCol, GridEndCol
+                    };
 
-                    // Apply overclock if this card has overclock value
-                    if (cardData->getOverclockValue() > 0)
-                    {
-                        cardSystem.ApplyOverclock(cardData->getOverclockValue());
-                    }
+                    CardPlayResult result = CardActionExecutor::ExecuteCard(cardData, ctx);
 
-                    const auto& acts = cardData->getActions();
-                    for (Action* a : acts)
-                    {
-                        if (auto* atk = dynamic_cast<AttackAction*>(a))
-                        {
-                            int resolvedAttack = atk->resolveDamage(playerData.getShield());
-                            std::cout << "  AttackAction: " << resolvedAttack;
-                            if (atk->getSubType() == AttackSubType::ShieldScaled) {
-                                std::cout << " (shield-scaled)";
-                            }
-                            std::cout << std::endl;
+                    // Apply attack patterns to the grid (damage + debuffs)
+                    CardActionExecutor::ApplyAttackPatterns(result, ctx);
 
-                            const AttackPattern* basePat = cardSystem.GetDataLoader().getPatternForAction(a);
-                            if (!basePat) {
-                                std::cout << "    (no attack pattern linked to this action)\n";
-                                pendingAttacks.push_back({ atk, nullptr });
-                            }
-                            else {
-                                pendingAttacks.push_back({ atk, basePat });
-                            }
-                        }
-                        else if (auto* mv = dynamic_cast<MoveAction*>(a))
-                        {
-                            if (mv->isRetreat())
-                            {
-                                retreatSteps += mv->getValue();
-                                std::cout << "  RetreatAction: " << mv->getValue() << std::endl;
-                            }
-                            else
-                            {
-                                moveSteps += mv->getValue();
-                                std::cout << "  MoveAction: " << mv->getValue() << std::endl;
-                            }
-                        }
-                        else if (auto* buff = dynamic_cast<BuffAction*>(a))
-                        {
-                            if (buff->getSubType() == BuffSubType::Shield)
-                            {
-                                playerData.AddShield(buff->getValue());
-                            }
-                            else if (buff->getSubType() == BuffSubType::Barrier)
-                            {
-                                int addBarrier = std::max(1, buff->getValue());
-                                playerData.AddBarrier(addBarrier);
-                            }
-                        }
-                        else if (auto* debuff = dynamic_cast<DebuffAction*>(a))
-                        {
-                            if (debuff->getSubType() == DebuffSubType::Delay)
-                            {
-                                pendingDelayTurns += debuff->getValue();
-                                std::cout << "  DelayAction: " << debuff->getValue() << std::endl;
-                            }
-                            else if (debuff->getSubType() == DebuffSubType::Weaken)
-                            {
-                                pendingWeakenTurns += debuff->getValue();
-                                std::cout << "  WeakenAction: " << debuff->getValue() << std::endl;
-                            }
-                            else if (debuff->getSubType() == DebuffSubType::Corrupt)
-                            {
-                                pendingCorruptionStacks += debuff->getValue();
-                                std::cout << "  CorruptAction: " << debuff->getValue() << std::endl;
-                            }
-                        }
-                    }
-
-                    // Determine move direction
-                    // Retreat goes OPPOSITE of dz (attack forward, move backward)
-                    int retreatDir = dz;
-                    switch (dz)
-                    {
-                    case 0: retreatDir = 3; break; // LEFT -> RIGHT
-                    case 1: retreatDir = 2; break; // UP -> DOWN
-                    case 2: retreatDir = 1; break; // DOWN -> UP
-                    case 3: retreatDir = 0; break; // RIGHT -> LEFT
-                    }
-
-                    // Combine: forward move uses dz, retreat uses opposite
-                    // For cards with both (e.g. atk + re), retreat happens after attack
-                    int totalMoveSteps = moveSteps + retreatSteps;
+                    // --- Animation & turn state (stays in Level) ---
+                    int retreatDir = CardActionExecutor::GetRetreatDirection(dz);
+                    int totalMoveSteps = result.moveSteps + result.retreatSteps;
                     int moveDir = dz;
-                    if (retreatSteps > 0 && moveSteps == 0)
+                    if (result.retreatSteps > 0 && result.moveSteps == 0)
                     {
                         moveDir = retreatDir;
                     }
 
-                    bool hasAttack = !pendingAttacks.empty();
-                    bool isFastCard = cardData->getIsFast();
-                    pendingFastCard = isFastCard;
+                    pendingFastCard = result.isFastCard;
 
-                    if (hasAttack)
+                    if (result.hasAttack())
                     {
                         playerState = PlayerState::ATTACK;
                         UpdatePlayerAnimation();
@@ -1241,15 +1149,14 @@ void Level::HandleMouse(int type, int x, int y)
 
                         std::cout << "[Attack Animation Started]\n";
 
-                        // After attack: retreat in opposite direction
-                        if (retreatSteps > 0)
+                        if (result.retreatSteps > 0)
                         {
-                            pendingMoveSteps = retreatSteps;
+                            pendingMoveSteps = result.retreatSteps;
                             pendingMoveZone = retreatDir;
                         }
                         else
                         {
-                            pendingMoveSteps = moveSteps;
+                            pendingMoveSteps = result.moveSteps;
                             pendingMoveZone = dz;
                         }
 
@@ -1277,116 +1184,15 @@ void Level::HandleMouse(int type, int x, int y)
 
                         cardSystem.DecrementDrawPileTurn();
 
-                        if (!isFastCard)
+                        if (!result.isFastCard)
                         {
                             tempDiscardDone = false;
                             turnState = TurnState::ENEMY_TURN;
                         }
                     }
 
-                    bool corruptionApplied = false;
-                    for (const PendingAttackInfo& pa : pendingAttacks)
-                    {
-                        AttackAction* atk = pa.atk;
-                        const AttackPattern* basePat = pa.pattern;
-                        int attackDamage = atk->resolveDamage(playerData.getShield());
-
-                        if (!basePat) {
-                            continue;
-                        }
-
-                        AttackPattern oriented = *basePat;
-                        int rotateTimes = 0;
-
-                        PlayerDir faceDir;
-
-                        switch (dz)
-                        {
-                        case 0: faceDir = PlayerDir::LEFT;  break;
-                        case 1: faceDir = PlayerDir::UP;    break;
-                        case 2: faceDir = PlayerDir::DOWN;  break;
-                        case 3: faceDir = PlayerDir::RIGHT; break;
-                        }
-
-                        switch (faceDir)
-                        {
-                        case PlayerDir::UP:    rotateTimes = 2; break;
-                        case PlayerDir::RIGHT: rotateTimes = 1; break;
-                        case PlayerDir::DOWN:  rotateTimes = 0; break;
-                        case PlayerDir::LEFT:  rotateTimes = 3; break;
-                        }
-                        rotateTimes = (rotateTimes + 3) % 4;
-                        for (int i = 0; i < rotateTimes; i++) {
-                            oriented = oriented.rotated90CW();
-                        }
-
-                        auto cells = oriented.applyTo(nowRow, nowCol);
-                        std::cout << "    Applying attack pattern from ("
-                            << nowRow << ", " << nowCol << ")\n";
-
-                        for (auto& cell : cells)
-                        {
-                            int gx = cell.first.x;
-                            int gy = cell.first.y;
-
-                            if (gx < GridStartRow || gx >= GridEndRow ||
-                                gy < GridStartCol || gy >= GridEndCol)
-                            {
-                                std::cout << "      Skip out-of-bounds cell (" << gx << ", " << gy << ")\n";
-                                continue;
-                            }
-
-                            std::cout << "      Attack cell (" << gx << ", " << gy << ")\n";
-                            for (auto* e : enemies)
-                            {
-                                if (!e || e->getIsDead()) continue;
-                                if (e &&
-                                    e->getNowRow() == gx &&
-                                    e->getNowCol() == gy)
-                                {
-                                    e->getDamage(attackDamage);
-                                    std::cout << "        HIT enemy! HP: " << e->getHealth() << std::endl;
-
-                                    if (pendingDelayTurns > 0)
-                                    {
-                                        e->addDelay(pendingDelayTurns);
-                                    }
-
-                                    if (pendingWeakenTurns > 0)
-                                    {
-                                        e->addWeaken(pendingWeakenTurns);
-                                    }
-
-                                    if (!corruptionApplied && pendingCorruptionStacks > 0)
-                                    {
-                                        e->addCorruption(pendingCorruptionStacks);
-                                        corruptionApplied = true;
-                                    }
-
-                                    if (e->getHealth() <= 0) {
-                                        std::cout << "        Enemy died!\n";
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Reset overclock after an attack card is played
-                    if (hasAttack)
-                    {
-                        cardSystem.ResetOverclock();
-                    }
-
-                    // Generate energy cards if this card has gen action
-                    int genCount = cardData->getGenerateCount();
-                    if (genCount > 0)
-                    {
-                        std::cout << "[Energy] Card generates " << genCount << " energy card(s)." << std::endl;
-                        cardSystem.GenerateEnergyCards(genCount, objectsList);
-                    }
-
                     // Handle del (delete) vs normal discard
-                    if (cardData->getIsDeleteAfterUse())
+                    if (result.isDeleteAfterUse)
                     {
                         std::cout << "[Del] Card moved to delete pile.\n";
                         cardSystem.EndDragConfirmDelete(dragCard, objectsList);
@@ -1396,12 +1202,12 @@ void Level::HandleMouse(int type, int x, int y)
                         cardSystem.EndDragConfirm(dragCard, objectsList);
                     }
 
-                    if (isFastCard)
+                    if (result.isFastCard)
                     {
                         std::cout << "[Fast] Will not consume player turn.\n";
                     }
 
-                    if (cardData->getIsLag())
+                    if (result.isLagCard)
                     {
                         lagTurns++;
                         std::cout << "[Lag] Player will skip next turn. Lag turns: " << lagTurns << std::endl;

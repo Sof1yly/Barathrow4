@@ -11,6 +11,80 @@ static std::string trim_(const std::string& s)
     return s.substr(a, b - a);
 }
 
+static bool parseValueAndRepeat_(const std::string& code,
+    const std::string& token,
+    int defaultValueWhenOnlyRepeat,
+    int& outValue,
+    int& outRepeat,
+    std::string* outError)
+{
+    outValue = 0;
+    outRepeat = 1;
+
+    const std::string valueToken = trim_(token);
+    if (valueToken.empty()) {
+        return true;
+    }
+
+    const size_t xPos = valueToken.find('x');
+    if (xPos == std::string::npos) {
+        try {
+            outValue = std::stoi(valueToken);
+            return true;
+        }
+        catch (...) {
+            if (outError) {
+                *outError = "Invalid value in action '" + code + "': " + valueToken;
+            }
+            return false;
+        }
+    }
+
+    const std::string left = trim_(valueToken.substr(0, xPos));
+    const std::string right = trim_(valueToken.substr(xPos + 1));
+
+    if (right.empty()) {
+        if (outError) {
+            *outError = "Invalid repeat count in action '" + code + "': " + valueToken;
+        }
+        return false;
+    }
+
+    try {
+        outRepeat = std::stoi(right);
+    }
+    catch (...) {
+        if (outError) {
+            *outError = "Invalid repeat count in action '" + code + "': " + right;
+        }
+        return false;
+    }
+
+    if (outRepeat <= 0) {
+        if (outError) {
+            *outError = "Repeat count must be > 0 in action '" + code + "': " + right;
+        }
+        return false;
+    }
+
+    if (left.empty()) {
+        outValue = defaultValueWhenOnlyRepeat;
+        return true;
+    }
+
+    try {
+        outValue = std::stoi(left);
+    }
+    catch (...) {
+        if (outError) {
+            *outError = "Invalid value in action '" + code + "': " + left;
+        }
+        return false;
+    }
+
+    return true;
+}
+
 static std::string toLower_(std::string s)
 {
     for (char& ch : s) {
@@ -270,7 +344,7 @@ std::string GameDataLoader::getActionDescription(const std::string& actionCode) 
 
 
 // Card-level flags (fas, te, del, oc) 
-Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier, const std::string& patternId, const std::string& rawValueToken, Card* card,
+Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier, int repeatCount, const std::string& patternId, const std::string& rawValueToken, Card* card,
     std::string* outError)
 {
     Action* newAction = nullptr;
@@ -291,6 +365,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         }
 
         a->setMultiplier(multiplier);
+        a->setRepeatCount(repeatCount);
         a->setActionCode(code);
 
         if (!patternId.empty()) {
@@ -311,6 +386,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setValue(value);
         a->setBaseValue(value);
         a->setMultiplier(multiplier);
+        a->setRepeatCount(repeatCount);
         a->setActionCode(code);
         newAction = a;
     }
@@ -319,6 +395,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setValue(value);
         a->setBaseValue(value);
         a->setMultiplier(multiplier);
+        a->setRepeatCount(repeatCount);
         a->setActionCode(code);
         newAction = a;
     }
@@ -327,6 +404,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setValue(value);
         a->setBaseValue(value);
         a->setMultiplier(multiplier);
+        a->setRepeatCount(repeatCount);
         a->setActionCode(code);
         newAction = a;
     }
@@ -335,6 +413,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setValue(value);
         a->setBaseValue(value);
         a->setMultiplier(multiplier);
+        a->setRepeatCount(repeatCount);
         a->setActionCode(code);
         newAction = a;
     }
@@ -495,72 +574,42 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             }
             if (code == "oc") {
                 int ocVal = 0;
-                try {
-                    if (!sVal.empty()) {
-                        ocVal = std::stoi(sVal);
-                    }
+                int ocRepeat = 1;
+                if (!parseValueAndRepeat_(code, sVal, 1, ocVal, ocRepeat, outError)) {
+                    delete card;
+                    return false;
                 }
-                catch (...) {
-                }
-                card->setOverclockValue(ocVal);
+                card->setOverclockValue(ocVal * ocRepeat);
                 continue;
             }
 
-            // ---- Parse numeric value and optional multiplier (valueXmult) ----
+            // ---- Parse numeric value and optional repeat count (valueXrepeat) ----
             int   value      = 0;
             float multiplier = 1.0f;
+            int   repeatCount = 1;
             {
                 const std::string sValNormalized = toLower_(trim_(sVal));
                 if (code == "atk" && sValNormalized == "shi") {
                     value = 0;
                     multiplier = 1.0f;
+                    repeatCount = 1;
                 }
                 else {
-                size_t xPos = sVal.find('x');
-                if (xPos != std::string::npos) {
-                    std::string sV = sVal.substr(0, xPos);
-                    std::string sM = sVal.substr(xPos + 1);
-                    try {
-                        if (!sV.empty()) {
-                            value = std::stoi(sV);
-                        }
-                    }
-                    catch (...) {
-                        if (outError)
-                            *outError = "Invalid value in action '" + code + "': " + sV;
-                        delete card;
-                        return false;
-                    }
-                    try {
-                        if (!sM.empty()) {
-                            multiplier = std::stof(sM);
-                        }
-                    }
-                    catch (...) {
-                        if (outError)
-                            *outError = "Invalid multiplier in action '" + code + "': " + sM;
+                    if (!parseValueAndRepeat_(code, sVal, 0, value, repeatCount, outError)) {
                         delete card;
                         return false;
                     }
                 }
-                else {
-                    try {
-                        if (!sVal.empty()) {
-                            value = std::stoi(sVal);
-                        }
-                    }
-                    catch (...) {
-                        if (outError)
-                            *outError = "Invalid value in action '" + code + "': " + sVal;
-                        delete card;
-                        return false;
-                    }
-                }
+
+                // For non-attack actions, xN repeats are represented as accumulated value.
+                if (code != "atk") {
+                    value *= repeatCount;
+                    repeatCount = 1;
                 }
             }
 
             // ---- Create the typed action object via factory ----
-            Action* newAction = createAction(code, value, multiplier,
+            Action* newAction = createAction(code, value, multiplier, repeatCount,
                                              patternId, sVal, card, outError);
             if (!newAction) {
                 if (outError && !outError->empty()) {

@@ -36,7 +36,7 @@ private:
     const AttackPattern* findPatternByName(const string& id) const;
 
     // Factory: creates the correct Action subclass for a given code
-    Action* createAction(const std::string& code, int value, float multiplier, const std::string& patternId, const std::string& rawValueToken, Card* card, std::string* outError);
+    Action* createAction(const std::string& code, int value, float multiplier, int repeatCount, const std::string& patternId, const std::string& rawValueToken, Card* card, std::string* outError);
 
 public:
     GameDataLoader();

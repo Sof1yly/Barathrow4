@@ -33,6 +33,13 @@ public:
 		return getValue();
 	}
 
+	int resolveTotalDamage(int currentShield) const {
+		return resolveDamage(currentShield) * getRepeatCount();
+	}
+
+	// Executes this attack: resolves damage and queues pattern for grid application
+	void execute(CardPlayContext& ctx, CardPlayResult& result) override;
+
 	void do_action() override {
         if (subType == AttackSubType::ShieldScaled) {
 			cout << "attack [shield-scaled]" << endl;

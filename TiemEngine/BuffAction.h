@@ -40,6 +40,9 @@ public:
         return BuffSubType::Unknown;
     }
 
+    // Executes this buff: applies shield, barrier, etc. to the player
+    void execute(CardPlayContext& ctx, CardPlayResult& result) override;
+
     void do_action() override {
         cout << "buff [" << getActionCode() << "] " << getValue() << endl;
     }

@@ -346,6 +346,7 @@ private:
         copy->setValue(src->getValue());
         copy->setBaseValue(src->getBaseValue());
         copy->setMultiplier(src->getMultiplier());
+        copy->setRepeatCount(src->getRepeatCount());
         copy->setRotation(src->getRotation());
         return copy;
     }

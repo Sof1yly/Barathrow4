@@ -49,6 +49,21 @@ void Action::setMultiplier(float m) {
 	multiplier = m;
 }
 
+int Action::getRepeatCount() const
+{
+	return repeatCount;
+}
+
+void Action::setRepeatCount(int c)
+{
+	if (c <= 0) {
+		repeatCount = 1;
+	}
+	else {
+		repeatCount = c;
+	}
+}
+
 const string& Action::getActionCode() const
 {
 	return actionCode;

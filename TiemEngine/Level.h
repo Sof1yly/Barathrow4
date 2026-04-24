@@ -19,6 +19,7 @@
 #include "DeckViewer.h"
 #include "CardInspect.h"
 #include "CardRewardSystem.h"
+#include "CardActionExecutor.h"
 
 class Level
 {
