@@ -27,7 +27,7 @@ Corrupting Strike	atk:3;cor:2	A7	1	rar	dbuf	Deal {atk} Damage Corrupt 2
 Weakening Strike	atk:4;wek:1	A15	1	rar	dbuf	Deal {atk} Damage Weaken
 Barrier	bar:1	A1	1	rar	buf	Gain 1 Barrier
 Blade Throw	atk:2;fas;del	A17	1	com	atk	Deal {atk} Damage Fast Delete
-Fans of Blade	atk:1;fas;combo:Blade_Throw	A1	1	rar	atk	"Combo ""Blade Throw"" Blade Throws deal +1 this combat Fast"
+Fans of Blade	atk:1;fas;combo:Blade Throw	A1	1	rar	atk	"Combo ""Blade Throw"" Blade Throws deal +1 this combat Fast"
 Charged Strike	atk:3;oc:x2	A2	1	rar	atk	Deal {atk} Damage Overclock applies twice
 Lazer Beam	atk:1x3	A16	1	rar	atk	Deal {atk} Damage 3 times
 Double Attack	atk:4x2	A2	1	leg	atk	Deal {atk} Damage twice

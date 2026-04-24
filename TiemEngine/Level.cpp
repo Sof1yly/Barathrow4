@@ -173,7 +173,7 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading card data: " << error << std::endl;
     }
 
@@ -1146,7 +1146,12 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         if (auto* atk = dynamic_cast<AttackAction*>(a))
                         {
-                            std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+                            int resolvedAttack = atk->resolveDamage(playerData.getShield());
+                            std::cout << "  AttackAction: " << resolvedAttack;
+                            if (atk->getSubType() == AttackSubType::ShieldScaled) {
+                                std::cout << " (shield-scaled)";
+                            }
+                            std::cout << std::endl;
 
                             const AttackPattern* basePat = cardSystem.GetDataLoader().getPatternForAction(a);
                             if (!basePat) {
@@ -1284,6 +1289,7 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         AttackAction* atk = pa.atk;
                         const AttackPattern* basePat = pa.pattern;
+                        int attackDamage = atk->resolveDamage(playerData.getShield());
 
                         if (!basePat) {
                             continue;
@@ -1338,7 +1344,7 @@ void Level::HandleMouse(int type, int x, int y)
                                     e->getNowRow() == gx &&
                                     e->getNowCol() == gy)
                                 {
-                                    e->getDamage(atk->getValue());
+                                    e->getDamage(attackDamage);
                                     std::cout << "        HIT enemy! HP: " << e->getHealth() << std::endl;
 
                                     if (pendingDelayTurns > 0)
