@@ -1,263 +1,103 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup><Filter Include="Source Files"><UniqueIdentifier>{4DB0BA9D-9D11-4BF4-BB8F-07F1651D0A34}</UniqueIdentifier><Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions></Filter><Filter Include="Header Files"><UniqueIdentifier>{8EB5890F-2F6F-45B4-BD04-7D9225A67F2D}</UniqueIdentifier><Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions></Filter><Filter Include="Resource Files"><UniqueIdentifier>{F4D5AF58-E6B5-469E-AE4D-95F9000E5A0B}</UniqueIdentifier><Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;txt;shd</Extensions></Filter></ItemGroup>
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <ClCompile Include="Action.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="AttackPattern.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Board.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Button.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Card.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="CardInspect.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="CardSystem.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="CombineObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Deck.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="DeckViewer.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="DrawableObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Enemy.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="EnemyData.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="EnemyLoadPattern.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GameData.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GameDataLoader.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GameEngine.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GameObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GameStateController.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="GLRenderer.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Hand.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="HighlightManager.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="ImageObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Level.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Level3.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="LevelManager.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="LevelTest.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="MeshVbo.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Player.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Shader.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="SpriteMeshVbo.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="SpriteObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="SquareMeshVbo.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="TextObject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="TriangleMeshVbo.cpp"><Filter>Source Files</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CombineObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawableObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GLRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshVbo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SquareMeshVbo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriangleMeshVbo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Level.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameStateController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LevelTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SpriteObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SpriteMeshVbo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Level3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Button.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Action.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Board.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Card.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Deck.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameDataLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Hand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AttackPattern.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Enemy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CardSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HighlightManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DeckViewer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LevelManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CardInspect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EnemyData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EnemyLoadPattern.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="Action.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="AttackAction.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="AttackPattern.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="BuffAction.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Button.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Card.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="CardInspect.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="CardRewardSystem.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="CardSystem.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="CombineObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="DebuffAction.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Deck.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="DeckViewer.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="DrawableObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Enemy.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="EnemyData.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="EnemyLoadPattern.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="EnergyAction.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameData.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameDataLoader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameEngine.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameStateController.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GameStateList.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="GLRenderer.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Hand.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="HighlightManager.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Level3.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="LevelManager.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="MoveAction.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Player.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="SpriteMeshVbo.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="ImageObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Level.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="LevelTest.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="MeshVbo.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Shader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="SpriteObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="SquareMeshVbo.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="TextObject.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="TriangleMeshVbo.h"><Filter>Header Files</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CombineObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawableObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GLRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshVbo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SquareMeshVbo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TriangleMeshVbo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameStateList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Level.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameStateController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LevelTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SpriteObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SpriteMeshVbo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Level3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Button.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MoveAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AttackAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Action.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Card.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Deck.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameDataLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Hand.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AttackPattern.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Enemy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CardSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebuffAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BuffAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EnergyAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HighlightManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DeckViewer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LevelManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CardInspect.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CardRewardSystem.h">
-    <ClInclude Include="EnemyData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EnemyLoadPattern.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <None Include="..\Resource\Shader\fragment.shd"><Filter>Resource Files</Filter></None>
+    <None Include="..\Resource\Shader\vertext.shd"><Filter>Resource Files</Filter></None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Resource\Shader\fragment.shd">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Resource\Shader\vertext.shd">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\Resource\GameData\Pattern.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
+    <Text Include="..\Resource\GameData\Pattern.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\CardAction.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\CardActionStandard.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\CardDesc.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\CardDesc_filled.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\EnemyData.txt"><Filter>Resource Files</Filter></Text>
+    <Text Include="..\Resource\GameData\EnemyPattern.txt"><Filter>Resource Files</Filter></Text>
   </ItemGroup>
 </Project>
+
+
+
+
+

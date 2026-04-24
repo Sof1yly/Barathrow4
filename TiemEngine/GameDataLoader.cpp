@@ -270,15 +270,26 @@ std::string GameDataLoader::getActionDescription(const std::string& actionCode) 
 
 
 // Card-level flags (fas, te, del, oc) 
-Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier,const std::string& patternId, Card* card,
+Action* GameDataLoader::createAction(const std::string& code, int value, float multiplier, const std::string& patternId, const std::string& rawValueToken, Card* card,
     std::string* outError)
 {
     Action* newAction = nullptr;
 
     if (code == "atk") {
         auto* a = new AttackAction();
-        a->setValue(value);
-        a->setBaseValue(value);
+
+        const std::string atkToken = toLower_(trim_(rawValueToken));
+        if (atkToken == "shi") {
+            a->setSubType(AttackSubType::ShieldScaled);
+            a->setValue(0);
+            a->setBaseValue(0);
+        }
+        else {
+            a->setSubType(AttackSubType::Flat);
+            a->setValue(value);
+            a->setBaseValue(value);
+        }
+
         a->setMultiplier(multiplier);
         a->setActionCode(code);
 
@@ -499,6 +510,12 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             int   value      = 0;
             float multiplier = 1.0f;
             {
+                const std::string sValNormalized = toLower_(trim_(sVal));
+                if (code == "atk" && sValNormalized == "shi") {
+                    value = 0;
+                    multiplier = 1.0f;
+                }
+                else {
                 size_t xPos = sVal.find('x');
                 if (xPos != std::string::npos) {
                     std::string sV = sVal.substr(0, xPos);
@@ -539,11 +556,12 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                         return false;
                     }
                 }
+                }
             }
 
             // ---- Create the typed action object via factory ----
             Action* newAction = createAction(code, value, multiplier,
-                                             patternId, card, outError);
+                                             patternId, sVal, card, outError);
             if (!newAction) {
                 if (outError && !outError->empty()) {
                     delete card;

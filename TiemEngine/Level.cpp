@@ -694,6 +694,42 @@ void Level::HandleKey(char key)
 
 	}
     if (key == 'p') {
+        cardInspect.Hide(objectsList);
+
+        if (deckViewer.IsActive()) {
+            deckViewer.Hide(objectsList);
+        }
+
+        for (Enemy* e : enemies) {
+            if (!e) {
+                continue;
+            }
+
+            highlightManager.HideEnemyAttack(e->highlightIndex);
+
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
+
+            delete e;
+        }
+
+        enemies.clear();
+        enemyActing = false;
+        currentEnemyIndex = 0;
+
+        if (winText) {
+            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+        }
+
+        turnState = TurnState::GAME_OVER;
+
+        if (!rewardPickedAfterWin) {
+            cardRewardSystem.Open(objectsList);
+        }
+
+        return;
     }
     if(key == 'l'){
 	}
@@ -1110,7 +1146,12 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         if (auto* atk = dynamic_cast<AttackAction*>(a))
                         {
-                            std::cout << "  AttackAction: " << atk->getValue() << std::endl;
+                            int resolvedAttack = atk->resolveDamage(playerData.getShield());
+                            std::cout << "  AttackAction: " << resolvedAttack;
+                            if (atk->getSubType() == AttackSubType::ShieldScaled) {
+                                std::cout << " (shield-scaled)";
+                            }
+                            std::cout << std::endl;
 
                             const AttackPattern* basePat = cardSystem.GetDataLoader().getPatternForAction(a);
                             if (!basePat) {
@@ -1248,6 +1289,7 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         AttackAction* atk = pa.atk;
                         const AttackPattern* basePat = pa.pattern;
+                        int attackDamage = atk->resolveDamage(playerData.getShield());
 
                         if (!basePat) {
                             continue;
@@ -1302,7 +1344,7 @@ void Level::HandleMouse(int type, int x, int y)
                                     e->getNowRow() == gx &&
                                     e->getNowCol() == gy)
                                 {
-                                    e->getDamage(atk->getValue());
+                                    e->getDamage(attackDamage);
                                     std::cout << "        HIT enemy! HP: " << e->getHealth() << std::endl;
 
                                     if (pendingDelayTurns > 0)
