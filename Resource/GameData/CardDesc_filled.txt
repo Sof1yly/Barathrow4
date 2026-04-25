@@ -29,7 +29,7 @@ Weakening Strike	atk:4;wek:1	A15	1	rar	dbuf	Deal {atk} Damage Weaken
 Barrier	bar:1	A1	1	rar	buf	Gain 1 Barrier
 Blade Throw	atk:2;fas;del	A17	1	com	atk	Deal {atk} Damage Fast Delete
 Fans of Blade	atk:1;fas;combo:Blade Throw	A1	1	rar	atk	Deal {atk} Damage   Combo Blade Throw Fast
-Charged Strike	atk:3;oc:1x2	A2	1	rar	atk	Deal {atk} Damage Overclock applies twice
+Charged Strike	atk:3;oc:2	A2	1	rar	atk	Deal {atk} Damage Overclock twice
 Lazer Beam	atk:1x3	A16	1	rar	atk	Deal {atk} Damage 3 times
 Double Attack	atk:4x2	A2	1	leg	atk	Deal {atk} Damage twice
 Leap of Faith	jmp:3;atk:10	A2	1	rar	atk	Jump {jmp} Deal {atk} Damage
@@ -37,7 +37,7 @@ Offensive Stance	oc:10;cor:5;del	A1	1	leg	buf	Overclock 10 Corrupt Self 5 Delete
 Smoke Bomb	wek:3;de:1;re:1	A1	1	rar	dbuf	Weaken 3 Delay 1 Retreat 1
 Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage Delay 3 Delete
 Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
-Hack	cor:3;wek:1;all;del	A14	1	leg	dbuf	Corrupt 3 Weaken All Enemy Delete
+Hack	cor:3;wek:1:all;del	A14	1	leg	dbuf	Corrupt 3 Weaken All Enemy Delete
 Energy	enr	A1	1	misc	en	Energy
 Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
 

@@ -68,6 +68,36 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 {
     bool corruptionApplied = false;
 
+    // ---- Apply "all enemy" debuffs first (independent of attack pattern) ----
+    if (result.pendingWeakenAllTurns > 0 ||
+        result.pendingDelayAllTurns  > 0 ||
+        result.pendingCorruptAllStacks > 0)
+    {
+        for (auto* e : ctx.enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+
+            if (result.pendingWeakenAllTurns > 0)
+            {
+                e->addWeaken(result.pendingWeakenAllTurns);
+                std::cout << "  [All] Weaken " << result.pendingWeakenAllTurns
+                          << " applied to enemy\n";
+            }
+            if (result.pendingDelayAllTurns > 0)
+            {
+                e->addDelay(result.pendingDelayAllTurns);
+                std::cout << "  [All] Delay " << result.pendingDelayAllTurns
+                          << " applied to enemy\n";
+            }
+            if (result.pendingCorruptAllStacks > 0)
+            {
+                e->addCorruption(result.pendingCorruptAllStacks);
+                std::cout << "  [All] Corrupt " << result.pendingCorruptAllStacks
+                          << " applied to enemy\n";
+            }
+        }
+    }
+
     for (const PendingAttackInfo& pa : result.pendingAttacks)
     {
         AttackAction* atk = pa.atk;

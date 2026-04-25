@@ -12,6 +12,7 @@ enum class DebuffSubType {
 class DebuffAction : public Action {
 private:
     DebuffSubType subType = DebuffSubType::Unknown;
+    bool applyToAll = false; // true = apply to every living enemy, not just hit ones
 
 public:
     DebuffAction() {
@@ -25,6 +26,9 @@ public:
 
     DebuffSubType getSubType() const { return subType; }
     void setSubType(DebuffSubType s) { subType = s; }
+
+    bool getApplyToAll() const { return applyToAll; }
+    void setApplyToAll(bool v) { applyToAll = v; }
 
     static DebuffSubType codeToSubType(const std::string& code) {
         if (code == "wk" || code == "wek") return DebuffSubType::Weaken;
@@ -45,6 +49,7 @@ public:
         c->setRepeatCount(getRepeatCount());
         c->setRotation(getRotation());
         c->setActionCode(getActionCode());
+        c->setApplyToAll(applyToAll);
         return c;
     }
 

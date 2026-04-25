@@ -561,6 +561,11 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
             const std::string& sVal = entry.second;
 
             // ---- Card-level flags (no action object created) ----
+            if (code == "all") {
+                // standalone "all" token – the :all suffix on the debuff is preferred;
+                // this is kept for backward-compatibility and silently skipped
+                continue;
+            }
             if (code == "fas") {
                 card->setIsFast(true);
                 continue;
@@ -600,6 +605,20 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                 continue;
             }
 
+            // ---- Detect :all modifier (e.g. wek:1:all → apply to all enemies) ----
+            bool applyToAll = false;
+            std::string effectiveSVal = sVal;
+            {
+                std::string lower = toLower_(trim_(sVal));
+                const std::string allSuffix = ":all";
+                if (lower.size() >= allSuffix.size() &&
+                    lower.substr(lower.size() - allSuffix.size()) == allSuffix)
+                {
+                    applyToAll = true;
+                    effectiveSVal = sVal.substr(0, sVal.size() - allSuffix.size());
+                }
+            }
+
             // ---- Parse numeric value and optional repeat count (valueXrepeat) ----
             int   value      = 0;
             float multiplier = 1.0f;
@@ -613,14 +632,14 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                 repeatCount = 1;
             }
             else {
-                const std::string sValNormalized = toLower_(trim_(sVal));
+                const std::string sValNormalized = toLower_(trim_(effectiveSVal));
                 if (code == "atk" && sValNormalized == "shi") {
                     value = 0;
                     multiplier = 1.0f;
                     repeatCount = 1;
                 }
                 else {
-                    if (!parseValueAndRepeat_(code, sVal, 0, value, repeatCount, outError)) {
+                    if (!parseValueAndRepeat_(code, effectiveSVal, 0, value, repeatCount, outError)) {
                         delete card;
                         return false;
                     }
@@ -642,6 +661,17 @@ bool GameDataLoader::loadFromFile(const std::string& filename,std::string* outEr
                     return false;
                 }
                 continue;
+            }
+
+            // Apply :all modifier to DebuffActions
+            if (applyToAll)
+            {
+                if (auto* da = dynamic_cast<DebuffAction*>(newAction))
+                {
+                    da->setApplyToAll(true);
+                    std::cout << "[Loader] Action '" << code
+                              << "' flagged applyToAll\n";
+                }
             }
 
             actions_list.push_back(newAction);
