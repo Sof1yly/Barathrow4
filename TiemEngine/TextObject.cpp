@@ -41,7 +41,7 @@ void TextObject::Render(glm::mat4 globalModelTransform)
 
 		currentMatrix = globalModelTransform * currentMatrix;
 		glUniformMatrix4fv(modelMatixId, 1, GL_FALSE, glm::value_ptr(currentMatrix));
-		glUniform4f(colorId, 1.0f, 1.0f, 1.0f, 1.0f);
+		glUniform4f(colorId, 1.0f, 1.0f, 1.0f, alpha);
 		glUniform1i(modeId, 1);
 		//squareMesh->resetTexcoord();
 		squareMesh->Render();

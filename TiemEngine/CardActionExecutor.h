@@ -16,7 +16,7 @@ public:
 
     // Apply all queued attack patterns to the grid, dealing damage and
     // applying debuffs (delay, weaken, corruption) to hit enemies.
-    static void ApplyAttackPatterns(const CardPlayResult& result, CardPlayContext& ctx);
+    static void ApplyAttackPatterns(CardPlayResult& result, CardPlayContext& ctx);
 
     // Compute the retreat direction (opposite of the given drop zone).
     static int GetRetreatDirection(int dropZone);

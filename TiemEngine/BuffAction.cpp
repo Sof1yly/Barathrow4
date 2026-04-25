@@ -22,6 +22,14 @@ void BuffAction::execute(CardPlayContext& ctx, CardPlayResult& result)
         break;
     }
 
+    case BuffSubType::Jump:
+    {
+        int charges = std::max(1, getValue());
+        ctx.player.AddJumpCharges(charges);
+        std::cout << "  JumpBuff: +" << charges << " jump charge(s)" << std::endl;
+        break;
+    }
+
     default:
         std::cout << "  Buff [" << getActionCode() << "] " << getValue() << std::endl;
         break;

@@ -24,7 +24,7 @@ static string formatKeywordLineBreaks(const string& text)
         const std::vector<std::string> keywords = {
             "Consume", "Generate", "Overclock", "Shield", "Weaken",
         "Corrupt", "Delay", "Retreat", "Move", "Delete", "Persist",
-        "Pre-Load", "Temp", "Fast", "Lag", "Heal", "Energy"
+        "Pre-Load", "Temp", "Fast", "Lag", "Heal", "Energy", "Jump"
     };
 
     for (const std::string& keyword : keywords)
@@ -168,7 +168,7 @@ void Card::CreateVisuals()
         string resolved = description;
         for (Action* a : actions) {
             const string& code = a->getActionCode();
-            if (code == "atk" || code == "mov" || code == "re" || code == "oc") {
+            if (code == "atk" || code == "mov" || code == "re" || code == "oc" || code == "jmp") {
                 resolved = replacePlaceholder(resolved, code, a->getValue());
             }
         }

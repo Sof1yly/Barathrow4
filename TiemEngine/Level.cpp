@@ -240,6 +240,39 @@ void Level::LevelUpdate()
     anyEnemyDied = false;
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
+
+    // ---- Update floating damage popups ----
+    for (auto& popup : damagePopups)
+    {
+        if (popup.expired) continue;
+
+        popup.timer += deltaTime;
+        float progress = popup.timer / popup.duration; // 0..1
+
+        // Float upward
+        glm::vec3 p = popup.text->GetPosition();
+        p.y += popup.floatSpeed * deltaTime;
+        popup.text->SetPosition(p);
+
+        // Fade out (ease-in: stay solid then fade quickly at the end)
+        float fadeAlpha = 1.0f - (progress * progress);
+        popup.text->SetAlpha(std::max(0.0f, fadeAlpha));
+
+        if (popup.timer >= popup.duration)
+        {
+            popup.expired = true;
+            // Hide the text by zeroing its size so it doesn't render
+            popup.text->SetSize(0.0f, 0.0f);
+        }
+    }
+
+    // Remove expired popups from the vector (text stays in objectsList and gets
+    // deleted with everything else in LevelFree)
+    damagePopups.erase(
+        std::remove_if(damagePopups.begin(), damagePopups.end(),
+            [](const DamagePopup& p) { return p.expired; }),
+        damagePopups.end()
+    );
     if (playerPlayingOneShot)
     {
         playerAnimTimer += deltaTime;
@@ -325,33 +358,47 @@ void Level::LevelUpdate()
         case 1: if (nowCol > GridStartCol) targetCol--; break;
         case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
         }
+        bool moveBlocked = false;
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            if (e &&
-                e->getNowRow() == targetRow &&
-                e->getNowCol() == targetCol)
+            if (e->getNowRow() == targetRow && e->getNowCol() == targetCol)
             {
-                std::cout << "[Move Blocked] Enemy blocks the tile ("
-                    << targetRow << "," << targetCol << ")\n";
-
-                pendingMoveSteps = 0;
-                playerMoving = false;
-
-                playerState = PlayerState::IDLE;
-                UpdatePlayerAnimation();
-
-                if (pendingFastCard)
+                if (playerData.GetJumpCharges() > 0)
                 {
-                    turnState = TurnState::PLAYER_TURN;
-                    pendingFastCard = false;
+                    playerData.ConsumeJumpCharge();
+                    std::cout << "[Jump] Passing through enemy at ("
+                        << targetRow << "," << targetCol << ")! Charges left: "
+                        << playerData.GetJumpCharges() << "\n";
                 }
                 else
                 {
-                    turnState = TurnState::ENEMY_TURN;
+                    moveBlocked = true;
                 }
-                return;
+                break;
             }
+        }
+        if (moveBlocked)
+        {
+            std::cout << "[Move Blocked] Enemy blocks the tile ("
+                << targetRow << "," << targetCol << ")\n";
+
+            pendingMoveSteps = 0;
+            playerMoving = false;
+
+            playerState = PlayerState::IDLE;
+            UpdatePlayerAnimation();
+
+            if (pendingFastCard)
+            {
+                turnState = TurnState::PLAYER_TURN;
+                pendingFastCard = false;
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
+            }
+            return;
         }
         if (targetRow == nowRow && targetCol == nowCol)
         {
@@ -1128,6 +1175,16 @@ void Level::HandleMouse(int type, int x, int y)
                     // Apply attack patterns to the grid (damage + debuffs)
                     CardActionExecutor::ApplyAttackPatterns(result, ctx);
 
+                    // Spawn a floating damage number for every hit
+                    // Multi-hit cards (repeatCount > 1) push one HitInfo per repeat,
+                    // staggered upward so they fan out instead of stacking
+                    for (const HitInfo& hit : result.hits)
+                    {
+                        glm::vec3 hitWorld = GridToWorld(hit.row, hit.col);
+                        hitWorld.y += hit.repeatIndex * 22.0f; // stagger per repeat
+                        SpawnDamagePopup(hitWorld, hit.damage);
+                    }
+
                     // --- Animation & turn state (stays in Level) ---
                     int retreatDir = CardActionExecutor::GetRetreatDirection(dz);
                     int totalMoveSteps = result.moveSteps + result.retreatSteps;
@@ -1634,6 +1691,7 @@ void Level::EndTurn()
     turnCount++;
     playerData.ResetShield();
     playerData.ExpireBarrier();
+    playerData.ResetJumpCharges();
 	cout << "\n\n\n\n\n";
 	cout << "=== END OF TURN , Now Turn  =  " << turnCount << " ===\n\n";
 
@@ -1707,4 +1765,24 @@ int Level::ConvertDir(PlayerDir dir)
     case PlayerDir::RIGHT: return 3;
     }
     return 0;
+}
+
+void Level::SpawnDamagePopup(glm::vec3 worldPos, int damage)
+{
+    DamagePopup popup;
+
+    popup.text = new TextObject();
+    SDL_Color dmgColor = { 255, 220, 40, 255 }; // bright yellow-gold
+    popup.text->LoadText(std::to_string(damage), dmgColor, 32);
+
+    // Start slightly above the centre of the hit tile
+    popup.text->SetPosition(glm::vec3(worldPos.x, worldPos.y + 40.0f, 15.0f));
+
+    popup.timer     = 0.0f;
+    popup.duration  = 1200.0f; // 1.2 seconds
+    popup.floatSpeed = 0.07f;  // px per ms
+    popup.expired   = false;
+
+    objectsList.push_back(popup.text);
+    damagePopups.push_back(popup);
 }

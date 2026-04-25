@@ -15,3 +15,4 @@ shi	"Incoming damage will be blocked by your shield before affecting your HP, Sh
 cor	Corrupted Enemy will receive X additional damage from all source
 enr	Be Consume
 de	Skipped the effected unit upcoming turn
+jmp	Grant X Jump charge(s) - player can pass through enemies while charges remain

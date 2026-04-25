@@ -7,8 +7,9 @@ enum class BuffSubType {
     Barrier,    // ba  - grant barrier
     Heal,       // he  - restore HP
     Fast,       // fas - this action executes without consuming a turn
-    Persist, // per - this card remain on hand until player uses it
-	PreLoad, //pre - this card will be in hand in the first turn
+    Persist,    // per - this card remain on hand until player uses it
+    PreLoad,    // pre - this card will be in hand in the first turn
+    Jump,       // jmp - grant N jump charges (pass through enemies)
     Unknown
 };
 
@@ -37,6 +38,7 @@ public:
         if (code == "he")  return BuffSubType::Heal;
         if (code == "fas") return BuffSubType::Fast;
 		if (code == "pre") return BuffSubType::PreLoad;
+        if (code == "jmp") return BuffSubType::Jump;
         return BuffSubType::Unknown;
     }
 

@@ -11,6 +11,15 @@ struct PendingAttackInfo {
     const AttackPattern* pattern;
 };
 
+// A single enemy-hit event: grid position + damage dealt
+// repeatIndex: 0 for the first hit, 1 for the second, etc. (used to stagger popups)
+struct HitInfo {
+    int row;
+    int col;
+    int damage;
+    int repeatIndex = 0;
+};
+
 // Accumulated results from executing all actions on a card
 struct CardPlayResult {
     int moveSteps = 0;
@@ -29,6 +38,9 @@ struct CardPlayResult {
     bool isFastCard = false;
     bool isLagCard = false;
     bool isDeleteAfterUse = false;
+
+    // Populated by ApplyAttackPatterns – used to spawn damage popups
+    std::vector<HitInfo> hits;
 
     bool hasAttack() const { return !pendingAttacks.empty(); }
 };

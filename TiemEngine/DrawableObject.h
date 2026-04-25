@@ -10,6 +10,7 @@ protected:
 	glm::vec3 pos;
 	glm::vec3 size;
 	float angle;
+	float alpha = 1.0f;   // 0.0 = fully transparent, 1.0 = fully opaque
 
 	// Parent-child transform system
 	DrawableObject* parent = nullptr;
@@ -31,6 +32,8 @@ public:
 	glm::vec3 GetPosition() const { return pos; }
 	glm::vec2 GetSize() const { return size; }
 	float GetRotate() const { return angle; }
+	float GetAlpha() const { return alpha; }
+	void SetAlpha(float a) { alpha = a; }
 
 	// Parent-child relationship
 	void SetParent(DrawableObject* p);

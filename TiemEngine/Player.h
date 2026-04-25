@@ -12,7 +12,8 @@ private:
 	int maxHp = 10;
 	int shield = 0;
 	int maxShield = 0;
-    int barrierCount = 0; 
+    int barrierCount = 0;
+    int jumpCharges = 0;
 
 	bool isDead = false;
 
@@ -21,8 +22,10 @@ private:
 	ImageObject* shieldBar = nullptr;
 	ImageObject* shieldMask = nullptr;
 	TextObject* barrierText = nullptr;
+	TextObject* jumpText = nullptr;
     SpriteObject* sprite = nullptr;
 	void UpdateBarrierTextUI();
+	void UpdateJumpTextUI();
 
 public:
     // =====================
@@ -45,6 +48,14 @@ public:
 	void ExpireBarrier();
 	bool HasBarrier() const;
     int GetBarrierCount() const;
+    // =====================
+    // Jump Charges
+    // =====================
+    void AddJumpCharges(int amount);
+    bool ConsumeJumpCharge();
+    void ResetJumpCharges();
+    int GetJumpCharges() const;
+
 	void ResetShield();
 	int AbsorbDamage(int damage);
 

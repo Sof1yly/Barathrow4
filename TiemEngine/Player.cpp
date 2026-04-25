@@ -53,6 +53,41 @@ bool Player::HasBarrier() const
  return barrierCount > 0;
 }
 
+// =====================
+// Jump Charges
+// =====================
+void Player::AddJumpCharges(int amount)
+{
+    if (amount <= 0) return;
+    jumpCharges += amount;
+    UpdateJumpTextUI();
+    std::cout << "  Jump: +" << amount << " charge(s) (total: " << jumpCharges << ")" << std::endl;
+}
+
+bool Player::ConsumeJumpCharge()
+{
+    if (jumpCharges <= 0) return false;
+    jumpCharges--;
+    UpdateJumpTextUI();
+    std::cout << "  Jump charge consumed! Remaining: " << jumpCharges << std::endl;
+    return true;
+}
+
+void Player::ResetJumpCharges()
+{
+    if (jumpCharges > 0)
+    {
+        jumpCharges = 0;
+        UpdateJumpTextUI();
+        std::cout << "  Jump charges reset at turn end." << std::endl;
+    }
+}
+
+int Player::GetJumpCharges() const
+{
+    return jumpCharges;
+}
+
 int Player::GetBarrierCount() const
 {
 	return barrierCount;
@@ -112,6 +147,13 @@ void Player::InitShieldUI(std::vector<DrawableObject*>& objectsList)
 	barrierText->SetPosition(glm::vec3(-800.0f, 430.0f, 10.0f));
 	objectsList.push_back(barrierText);
 	UpdateBarrierTextUI();
+
+	jumpText = new TextObject();
+	SDL_Color jumpColor = { 180, 255, 130, 255 };
+	jumpText->LoadText("", jumpColor, 22);
+	jumpText->SetPosition(glm::vec3(-800.0f, 390.0f, 10.0f));
+	objectsList.push_back(jumpText);
+	UpdateJumpTextUI();
 }
 
 void Player::UpdateBarrierTextUI()
@@ -127,6 +169,22 @@ void Player::UpdateBarrierTextUI()
 	else
 	{
 		barrierText->LoadText("", barrierColor, 22);
+	}
+}
+
+void Player::UpdateJumpTextUI()
+{
+	if (!jumpText) return;
+
+	SDL_Color jumpColor = { 180, 255, 130, 255 };
+	if (jumpCharges > 0)
+	{
+		jumpText->LoadText("Jump: " + std::to_string(jumpCharges), jumpColor, 22);
+		jumpText->SetPosition(glm::vec3(-800.0f, 390.0f, 10.0f));
+	}
+	else
+	{
+		jumpText->LoadText("", jumpColor, 22);
 	}
 }
 

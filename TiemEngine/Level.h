@@ -10,6 +10,7 @@
 #include "GameData.h"
 #include "ImageObject.h"
 #include "SpriteObject.h"
+#include "TextObject.h"
 #include "Button.h"
 #include "AttackPattern.h"
 #include "CardSystem.h"
@@ -20,6 +21,15 @@
 #include "CardInspect.h"
 #include "CardRewardSystem.h"
 #include "CardActionExecutor.h"
+
+// Floating damage number that drifts upward and fades out
+struct DamagePopup {
+    TextObject* text = nullptr;
+    float timer    = 0.0f;   // elapsed ms
+    float duration = 1200.0f; // total lifetime ms
+    float floatSpeed = 0.07f; // pixels per ms (upward)
+    bool  expired  = false;
+};
 
 class Level
 {
@@ -132,6 +142,9 @@ private:
     CardRewardSystem cardRewardSystem;
     bool rewardPickedAfterWin = false;
 
+    // Floating damage popups
+    std::vector<DamagePopup> damagePopups;
+
     // Patterns
     std::vector<AttackPattern> patterns;
     AttackPattern rotatedPattern;
@@ -193,5 +206,8 @@ public:
     void UpdateHPBar();
 
     void EndTurn();
+
+    // Spawn a floating damage number at a world position
+    void SpawnDamagePopup(glm::vec3 worldPos, int damage);
 
 };

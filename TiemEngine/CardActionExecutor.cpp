@@ -64,7 +64,7 @@ CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
 // ---------------------------------------------------------------
 // ApplyAttackPatterns  -  resolve damage on the grid
 // ---------------------------------------------------------------
-void CardActionExecutor::ApplyAttackPatterns(const CardPlayResult& result, CardPlayContext& ctx)
+void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayContext& ctx)
 {
     bool corruptionApplied = false;
 
@@ -106,6 +106,16 @@ void CardActionExecutor::ApplyAttackPatterns(const CardPlayResult& result, CardP
                 if (e->getNowRow() == gx && e->getNowCol() == gy)
                 {
                     e->getDamage(attackDamage);
+
+                    // Spawn one popup per hit (repeatCount times), each showing the
+                    // per-hit damage so e.g. atk:4x2 shows two "4"s instead of one "8"
+                    int perHit = atk->resolveDamage(ctx.player.getShield());
+                    int repeats = atk->getRepeatCount();
+                    for (int r = 0; r < repeats; r++)
+                    {
+                        result.hits.push_back({ gx, gy, perHit, r });
+                    }
+
                     std::cout << "        HIT enemy! HP: " << e->getHealth() << std::endl;
 
                     if (result.pendingDelayTurns > 0)
