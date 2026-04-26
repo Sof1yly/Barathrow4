@@ -12,7 +12,6 @@ struct PendingAttackInfo {
 };
 
 // A single enemy-hit event: grid position + damage dealt
-// repeatIndex: 0 for the first hit, 1 for the second, etc. (used to stagger popups)
 struct HitInfo {
     int row;
     int col;

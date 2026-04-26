@@ -6,9 +6,8 @@
 #include <iostream>
 #include <algorithm>
 
-// ---------------------------------------------------------------
 // ExecuteCard  -  run every Action on the card, collect results
-// ---------------------------------------------------------------
+
 CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
 {
     CardPlayResult result;
@@ -24,7 +23,7 @@ CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
         ctx.cardSystem.ApplyOverclock(card->getOverclockValue());
     }
 
-    // Consume energy cards if required (already validated by caller)
+    // Consume energy cards if required 
     int conReq = card->getConsumeRequirement();
     if (conReq > 0)
     {
@@ -61,17 +60,14 @@ CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
     return result;
 }
 
-// ---------------------------------------------------------------
 // ApplyAttackPatterns  -  resolve damage on the grid
-// ---------------------------------------------------------------
+
 void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayContext& ctx)
 {
     bool corruptionApplied = false;
 
     // ---- Apply "all enemy" debuffs first (independent of attack pattern) ----
-    if (result.pendingWeakenAllTurns > 0 ||
-        result.pendingDelayAllTurns  > 0 ||
-        result.pendingCorruptAllStacks > 0)
+    if (result.pendingWeakenAllTurns > 0 ||result.pendingDelayAllTurns  > 0 ||result.pendingCorruptAllStacks > 0)
     {
         for (auto* e : ctx.enemies)
         {
@@ -175,9 +171,8 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
     }
 }
 
-// ---------------------------------------------------------------
 // GetRetreatDirection  -  opposite of the given drop zone
-// ---------------------------------------------------------------
+
 int CardActionExecutor::GetRetreatDirection(int dropZone)
 {
     switch (dropZone)
@@ -190,9 +185,9 @@ int CardActionExecutor::GetRetreatDirection(int dropZone)
     }
 }
 
-// ---------------------------------------------------------------
+
 // OrientPattern  -  rotate pattern to match facing direction
-// ---------------------------------------------------------------
+
 AttackPattern CardActionExecutor::OrientPattern(const AttackPattern& base, int dropZone)
 {
     // dropZone: 0=LEFT, 1=UP, 2=DOWN, 3=RIGHT
