@@ -24,6 +24,10 @@ void AttackAction::execute(CardPlayContext& ctx, CardPlayResult& result)
         std::cout << "    (no attack pattern linked to this action)\n";
     }
 
-    // Queue this attack for pattern application later
-    result.pendingAttacks.push_back({ this, basePat });
+    // Snapshot damage NOW — ResetOverclock() runs later inside ExecuteCard and would
+    // reset getValue() back to base before ApplyAttackPatterns ever reads it.
+    int perHit = resolveDamage(ctx.player.getShield());
+    int total  = resolveTotalDamage(ctx.player.getShield()); // perHit * repeatCount
+
+    result.pendingAttacks.push_back({ this, basePat, total, perHit });
 }

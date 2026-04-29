@@ -9,6 +9,8 @@ class AttackPattern;
 struct PendingAttackInfo {
     AttackAction* atk;
     const AttackPattern* pattern;
+    int resolvedTotalDamage = 0;  // snapshotted in execute() before ResetOverclock can run
+    int resolvedPerHitDamage = 0; // per-repeat damage, used for popup numbers
 };
 
 // A single enemy-hit event: grid position + damage dealt

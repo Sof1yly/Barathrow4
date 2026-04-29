@@ -39,6 +39,6 @@ Freeze	atk:1;de:3;del	A2	1	leg	dbuf	Deal {atk} Damage Delay 3 Delete
 Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
 Hack	cor:3;wek:1:all;del	A14	1	leg	dbuf	Corrupt 3 Weaken All Enemy Delete
 Energy	enr	A1	1	misc	en	Energy
-Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
+
 
 

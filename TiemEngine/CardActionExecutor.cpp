@@ -98,7 +98,9 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
     {
         AttackAction* atk = pa.atk;
         const AttackPattern* basePat = pa.pattern;
-        int attackDamage = atk->resolveTotalDamage(ctx.player.getShield());
+        // Use the pre-snapshotted damage — the action's getValue() may have already
+        // been reset to base by ResetOverclock() before ApplyAttackPatterns was called.
+        int attackDamage = pa.resolvedTotalDamage;
 
         if (!basePat) {
             continue;
@@ -135,7 +137,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
                     // Spawn one popup per hit (repeatCount times), each showing the
                     // per-hit damage so e.g. atk:4x2 shows two "4"s instead of one "8"
-                    int perHit = atk->resolveDamage(ctx.player.getShield());
+                    int perHit = pa.resolvedPerHitDamage;
                     int repeats = atk->getRepeatCount();
                     for (int r = 0; r < repeats; r++)
                     {
