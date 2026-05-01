@@ -86,6 +86,7 @@ public:
 
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
+    int stepsRemaining = 0;
 private:
     void RefreshDebuffText();
 

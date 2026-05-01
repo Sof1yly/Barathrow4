@@ -284,7 +284,7 @@ void Enemy::Update(float dt)
     if (isMoving)
     {
         moveTimer += dt;
-        float t = moveTimer / (moveDuration*moveRange);
+        float t = moveTimer / (moveDuration);
         t = std::min(t, 1.0f);
 
         glm::vec3 newPos = moveStart + (moveTarget - moveStart) * t;

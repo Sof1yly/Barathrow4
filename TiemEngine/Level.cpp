@@ -1396,24 +1396,25 @@ void Level::UpdateTurn()
             return;
         }
 
+        if (currentEnemyIndex >= enemies.size())
+        {
+            currentEnemyIndex = 0;
+            turnState = TurnState::END_TURN;
+            return;
+        }
+
+        Enemy* e = enemies[currentEnemyIndex];
+
+        if (!e || e->getIsDead())
+        {
+            currentEnemyIndex++;
+            return;
+        }
+
         if (!enemyActing)
         {
-            if (currentEnemyIndex >= enemies.size())
-            {
-                currentEnemyIndex = 0;
-                turnState = TurnState::END_TURN;
-                return;
-            }
-
-            Enemy* e = enemies[currentEnemyIndex];
-
-            if (!e || e->getIsDead())
-            {
-                currentEnemyIndex++;
-                return;
-            }
-
             enemyActing = true;
+            e->stepsRemaining = e->getMoveRange();
 
             if (e->isDelayed())
             {
@@ -1422,62 +1423,60 @@ void Level::UpdateTurn()
                 currentEnemyIndex++;
                 return;
             }
-
-            if (e->isPreparingAttack())
-            {
-                ApplyEnemyAttack(e);
-                highlightManager.HideEnemyAttack(e->highlightIndex);
-                e->setPreparingAttack(false);
-
-                enemyActing = false;
-                currentEnemyIndex++;
-                return;
-            }
-            else if (EnemyCanAttackPlayer(e))
-            {
-                e->setPreparingAttack(true);
-                PreviewAllEnemyAttacks();
-
-                enemyActing = false;
-                currentEnemyIndex++;
-                return;
-            }
-			else if (e->isPreparingAttack() == false)
-            {
-                for (int i = 0; i < e->getMoveRange(); i++) {
-                    {
-                        int newR, newC;
-                        if (e->TryMoveTowardPlayer(
-                            nowRow, nowCol,
-                            GridStartRow, GridEndRow,
-                            GridStartCol, GridEndCol,
-                            enemies,
-                            newR, newC))
-                        {
-                            e->setNowPosition(newR, newC);
-
-                            glm::vec3 world = GridToWorld(newR, newC);
-                            e->StartMove(world);
-                        }
-                    }
-                }
-            }
         }
 
-        if (currentEnemyIndex < 0 || currentEnemyIndex >= static_cast<int>(enemies.size()))
+        if (e->getIsMoving())
         {
-            enemyActing = false;
-            currentEnemyIndex = 0;
-            turnState = TurnState::END_TURN;
             return;
         }
 
-        Enemy* e = enemies[currentEnemyIndex];
-        if (e && !e->getIsMoving())
+        if (e->isPreparingAttack())
         {
+            ApplyEnemyAttack(e);
+            highlightManager.HideEnemyAttack(e->highlightIndex);
+            e->setPreparingAttack(false);
+
             enemyActing = false;
             currentEnemyIndex++;
+            return;
         }
+
+        if (EnemyCanAttackPlayer(e))
+        {
+            e->setPreparingAttack(true);
+            PreviewAllEnemyAttacks();
+
+            enemyActing = false;
+            currentEnemyIndex++;
+            return;
+        }
+
+        if (e->stepsRemaining > 0)
+        {
+            int newR, newC;
+            if (e->TryMoveTowardPlayer(
+                nowRow, nowCol,
+                GridStartRow, GridEndRow,
+                GridStartCol, GridEndCol,
+                enemies,
+                newR, newC))
+            {
+                e->setNowPosition(newR, newC);
+
+                glm::vec3 world = GridToWorld(newR, newC);
+                e->StartMove(world);
+
+                e->stepsRemaining--;
+                return;
+            }
+            else
+            {
+                e->stepsRemaining = 0;
+            }
+        }
+
+        enemyActing = false;
+        currentEnemyIndex++;
 
         break;
     }
