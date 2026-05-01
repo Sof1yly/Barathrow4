@@ -43,10 +43,10 @@ private:
 	TextObject* winText = nullptr;
     bool isGameOver = false;
 
-	int playerHealth = 5;//delete later
+	int playerHealth = 25;//delete later
     // UI HP bar
     ImageObject* hpBar = nullptr;
-    int maxPlayerHealth = 10;
+    int maxPlayerHealth = 30;
     ImageObject* hpMask = nullptr;
     TextObject* skipTurnHintText = nullptr;
     TextObject* viewDeckHintText = nullptr;
