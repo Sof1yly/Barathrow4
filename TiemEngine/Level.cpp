@@ -68,17 +68,17 @@ void Level::LevelInit()
     EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");//pattern
 
     //Enemy
-    Enemy* e1 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e1 = new Enemy(Enemy::EnemyType::A);
     int ran1 = rand() % 8 + 1;
     e1->setNowPosition(ran1, 0);
     e1->SetWorldPosition(GridToWorld(ran1, 0));
 
-    Enemy* e2 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e2 = new Enemy(Enemy::EnemyType::B);
     int ran2 = rand() % 8 + 1;
     e2->setNowPosition(ran2, 2);
     e2->SetWorldPosition(GridToWorld(ran2, 2));
 
-    Enemy* e3 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e3 = new Enemy(Enemy::EnemyType::C);
     int ran3 = rand() % 8 + 1;
     e3->setNowPosition(ran3, 4);
     e3->SetWorldPosition(GridToWorld(ran3, 4));
