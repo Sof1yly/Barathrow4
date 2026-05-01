@@ -47,6 +47,11 @@ private:
 
     std::mt19937 rng;
 
+    // Rarity weights used for the 3 reward slots: com=60%, rar=30%, leg=10%
+    static constexpr int RARITY_BUCKET_COM = 0;
+    static constexpr int RARITY_BUCKET_RAR = 1;
+    static constexpr int RARITY_BUCKET_LEG = 2;
+
     void BuildOffer()
     {
         offeredCards.clear();
@@ -56,46 +61,46 @@ private:
             return;
         }
 
-        std::vector<Card*> candidates;
-        candidates.reserve(rewardPool.size());
-
+        // Sort pool into the 3 offered rarity buckets (sta / misc are not rewarded)
+        std::vector<Card*> buckets[3];
         for (Card* c : rewardPool)
         {
-            if (!c)
-            {
-                continue;
-            }
-
-            if (c->isEnergyCard())
-            {
-                continue;
-            }
-
-            candidates.push_back(c);
+            if (!c || c->isEnergyCard()) continue;
+            const std::string& r = c->getRarityCode();
+            if      (r == "com") buckets[RARITY_BUCKET_COM].push_back(c);
+            else if (r == "rar") buckets[RARITY_BUCKET_RAR].push_back(c);
+            else if (r == "leg") buckets[RARITY_BUCKET_LEG].push_back(c);
         }
 
-        std::shuffle(candidates.begin(), candidates.end(), rng);
+        // Shuffle each bucket independently
+        for (auto& b : buckets)
+            std::shuffle(b.begin(), b.end(), rng);
+
+        // Weighted roll: com = 60, rar = 30, leg = 10
+        std::discrete_distribution<int> dist({ 60.0, 30.0, 10.0 });
 
         std::unordered_set<std::string> usedNames;
-        for (Card* c : candidates)
+
+        for (int slot = 0; slot < 3; slot++)
         {
-            if (!c)
+            int roll = dist(rng);
+            bool placed = false;
+
+            // Try the rolled rarity first; fall back to the other two in order
+            for (int attempt = 0; attempt < 3 && !placed; attempt++)
             {
-                continue;
+                int b = (roll + attempt) % 3;
+                for (Card* c : buckets[b])
+                {
+                    if (!c || usedNames.count(c->getName())) continue;
+                    offeredCards.push_back(c);
+                    usedNames.insert(c->getName());
+                    placed = true;
+                    break;
+                }
             }
 
-            if (usedNames.find(c->getName()) != usedNames.end())
-            {
-                continue;
-            }
-
-            offeredCards.push_back(c);
-            usedNames.insert(c->getName());
-
-            if (offeredCards.size() >= 3)
-            {
-                break;
-            }
+            if (!placed) break; // pool exhausted
         }
     }
 

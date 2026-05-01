@@ -181,8 +181,13 @@ void Level::LevelInit()
         std::cerr << "Error loading reward card pool: " << error << std::endl;
     }
 
+    if (!shopSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+        std::cerr << "Error loading shop card pool: " << error << std::endl;
+    }
+
     cardRewardSystem.ApplyOwnedRewards(cardSystem);
     rewardPickedAfterWin = false;
+    shopOpenedAfterWin = false;
 
     cardSystem.ShuffleDeck();
 
@@ -529,7 +534,8 @@ void Level::LevelUpdate()
         }
         turnState = TurnState::GAME_OVER;
 
-        if (!rewardPickedAfterWin)
+        // Only open the card reward if the shop is NOT open (shop is opened via 'o')
+        if (!rewardPickedAfterWin && !shopSystem.IsActive() && !shopOpenedAfterWin)
         {
             cardRewardSystem.Open(objectsList);
         }
@@ -552,6 +558,7 @@ void Level::LevelFree()
     }
 
     cardRewardSystem.Close(objectsList);
+    shopSystem.Close(objectsList);
 
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
@@ -644,6 +651,7 @@ void Level::LevelFree()
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
     rewardPickedAfterWin = false;
+    shopOpenedAfterWin = false;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
 
@@ -782,7 +790,35 @@ void Level::HandleKey(char key)
 	}
 
     if (key == 'o') {
-        
+        // Debug: instant win → open shop
+        cardInspect.Hide(objectsList);
+        if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+
+        for (Enemy* e : enemies)
+        {
+            if (!e) continue;
+            highlightManager.HideEnemyAttack(e->highlightIndex);
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()),     objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()),     objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
+            delete e;
+        }
+        enemies.clear();
+        enemyActing = false;
+        currentEnemyIndex = 0;
+
+        if (winText)
+            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
+
+        turnState = TurnState::GAME_OVER;
+
+        if (!shopOpenedAfterWin)
+        {
+            shopSystem.Open(objectsList, playerData);
+            shopOpenedAfterWin = true;
+        }
+        return;
     }
 
 	//test player movement
@@ -834,6 +870,15 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    if (shopSystem.IsActive())
+    {
+        if (type == 0)
+        {
+            shopSystem.HandleMouseClick(mousePos, cardSystem, playerData, objectsList);
+        }
+        return;
+    }
 
     if (cardRewardSystem.IsActive())
     {

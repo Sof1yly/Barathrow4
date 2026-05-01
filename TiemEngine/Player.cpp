@@ -93,6 +93,32 @@ int Player::GetBarrierCount() const
 	return barrierCount;
 }
 
+// =====================
+// Coins
+// =====================
+int Player::GetCoins() const
+{
+    return coins;
+}
+
+void Player::AddCoins(int amount)
+{
+    if (amount <= 0) return;
+    coins += amount;
+    UpdateCoinTextUI();
+    std::cout << "  Coins: +" << amount << " (total: " << coins << ")" << std::endl;
+}
+
+bool Player::SpendCoins(int amount)
+{
+    if (amount <= 0) return true;
+    if (coins < amount) return false;
+    coins -= amount;
+    UpdateCoinTextUI();
+    std::cout << "  Coins: -" << amount << " (remaining: " << coins << ")" << std::endl;
+    return true;
+}
+
 void Player::ResetShield()
 {
     if (shield > 0)
@@ -154,6 +180,13 @@ void Player::InitShieldUI(std::vector<DrawableObject*>& objectsList)
 	jumpText->SetPosition(glm::vec3(-800.0f, 390.0f, 10.0f));
 	objectsList.push_back(jumpText);
 	UpdateJumpTextUI();
+
+	coinText = new TextObject();
+	SDL_Color coinColor = { 255, 210, 40, 255 };
+	coinText->LoadText("Coins: 100", coinColor, 22);
+	coinText->SetPosition(glm::vec3(-800.0f, 350.0f, 10.0f));
+	objectsList.push_back(coinText);
+	UpdateCoinTextUI();
 }
 
 void Player::UpdateBarrierTextUI()
@@ -186,6 +219,15 @@ void Player::UpdateJumpTextUI()
 	{
 		jumpText->LoadText("", jumpColor, 22);
 	}
+}
+
+void Player::UpdateCoinTextUI()
+{
+	if (!coinText) return;
+
+	SDL_Color coinColor = { 255, 210, 40, 255 };
+	coinText->LoadText("Coins: " + std::to_string(coins), coinColor, 22);
+	coinText->SetPosition(glm::vec3(-800.0f, 350.0f, 10.0f));
 }
 
 void Player::UpdateShieldBar()

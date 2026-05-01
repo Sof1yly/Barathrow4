@@ -14,18 +14,21 @@ private:
 	int maxShield = 0;
     int barrierCount = 0;
     int jumpCharges = 0;
+    int coins = 100;
 
 	bool isDead = false;
 
-	// Shield UI
+	// Status UI
 	ImageObject* shieldBg = nullptr;
 	ImageObject* shieldBar = nullptr;
 	ImageObject* shieldMask = nullptr;
 	TextObject* barrierText = nullptr;
 	TextObject* jumpText = nullptr;
+	TextObject* coinText = nullptr;
     SpriteObject* sprite = nullptr;
 	void UpdateBarrierTextUI();
 	void UpdateJumpTextUI();
+	void UpdateCoinTextUI();
 
 public:
     // =====================
@@ -48,6 +51,7 @@ public:
 	void ExpireBarrier();
 	bool HasBarrier() const;
     int GetBarrierCount() const;
+
     // =====================
     // Jump Charges
     // =====================
@@ -55,6 +59,13 @@ public:
     bool ConsumeJumpCharge();
     void ResetJumpCharges();
     int GetJumpCharges() const;
+
+    // =====================
+    // Coins
+    // =====================
+    int GetCoins() const;
+    void AddCoins(int amount);
+    bool SpendCoins(int amount);  // returns false if not enough
 
 	void ResetShield();
 	int AbsorbDamage(int damage);

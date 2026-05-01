@@ -20,6 +20,7 @@
 #include "DeckViewer.h"
 #include "CardInspect.h"
 #include "CardRewardSystem.h"
+#include "ShopSystem.h"
 #include "CardActionExecutor.h"
 
 // Floating damage number that drifts upward and fades out
@@ -141,6 +142,9 @@ private:
 
     CardRewardSystem cardRewardSystem;
     bool rewardPickedAfterWin = false;
+
+    ShopSystem shopSystem;
+    bool shopOpenedAfterWin = false;
 
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
