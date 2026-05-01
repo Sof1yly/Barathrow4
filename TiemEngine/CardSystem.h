@@ -139,6 +139,7 @@ public:
     glm::vec3 GetDragStartPos() const { return dragStartPos; }
 
     const GameDataLoader& GetDataLoader() const { return dataLoader; }
+          GameDataLoader& GetDataLoader()       { return dataLoader; }
     Hand& GetHand() { return hand; }
 
     const std::vector<Card*>& GetDeck() const { return deck; }

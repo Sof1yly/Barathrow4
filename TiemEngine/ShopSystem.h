@@ -54,7 +54,7 @@ private:
     void   BuildUI(std::vector<DrawableObject*>& objectsList);
     void   ClearUI(std::vector<DrawableObject*>& objectsList);
     Action* CloneAction(const Action* src) const;
-    Card*   CloneCard(const Card* src) const;
+    Card*   CloneCard(const Card* src,const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const;
 
 public:
     ShopSystem();

@@ -10,6 +10,7 @@
 
 #include "Action.h"
 #include "AttackAction.h"
+#include "AttackPattern.h"
 #include "BuffAction.h"
 #include "CardSystem.h"
 #include "DebuffAction.h"
@@ -356,7 +357,9 @@ private:
         return copy;
     }
 
-    Card* CloneCard(const Card* src) const
+    // srcLoader  – the loader that owns the original card's pattern links
+    // dstLoader  – the CardSystem's loader where the clone's patterns must be registered
+    Card* CloneCard(const Card* src,const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const
     {
         if (!src)
         {
@@ -382,6 +385,13 @@ private:
             Action* actionCopy = CloneAction(action);
             if (actionCopy)
             {
+                // Re-register the pattern in the card system's loader so
+                // AttackAction::execute() can find it when the card is played.
+                const AttackPattern* pat = srcLoader.getPatternForAction(action);
+                if (pat)
+                {
+                    dstLoader.linkPatternToAction(actionCopy, pat);
+                }
                 copy->addAction(actionCopy);
             }
         }
@@ -391,7 +401,7 @@ private:
 
     void GrantReward(Card* card, CardSystem& cardSystem)
     {
-        Card* copy = CloneCard(card);
+        Card* copy = CloneCard(card,rewardLoader,cardSystem.GetDataLoader());
         if (!copy)
         {
             return;

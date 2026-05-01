@@ -6,6 +6,7 @@
 
 #include "Action.h"
 #include "AttackAction.h"
+#include "AttackPattern.h"
 #include "BuffAction.h"
 #include "Card.h"
 #include "DebuffAction.h"
@@ -306,7 +307,7 @@ Action* ShopSystem::CloneAction(const Action* src) const
     return copy;
 }
 
-Card* ShopSystem::CloneCard(const Card* src) const
+Card* ShopSystem::CloneCard(const Card* src, const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const
 {
     if (!src) return nullptr;
 
@@ -326,7 +327,17 @@ Card* ShopSystem::CloneCard(const Card* src) const
     for (Action* action : src->getActions())
     {
         Action* ac = CloneAction(action);
-        if (ac) copy->addAction(ac);
+        if (ac)
+        {
+            // Re-register the attack pattern in the card system's loader so
+            // AttackAction::execute() can find it when the cloned card is played.
+            const AttackPattern* pat = srcLoader.getPatternForAction(action);
+            if (pat)
+            {
+                dstLoader.linkPatternToAction(ac, pat);
+            }
+            copy->addAction(ac);
+        }
     }
     return copy;
 }
@@ -392,7 +403,9 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             player.SpendCoins(slot.price);
             std::cout << "[Shop] Bought '" << slot.card->getName()<< "' for " << slot.price<< " coins. Remaining: " << player.GetCoins() << "\n";
 
-            Card* copy = CloneCard(slot.card);
+            Card* copy = CloneCard(slot.card,
+                                   shopLoader,
+                                   cardSystem.GetDataLoader());
             if (copy)
             {
                 ownedShopCards.push_back(copy);
