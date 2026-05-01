@@ -173,15 +173,15 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
-        std::cerr << "Error loading card data: " << error << std::endl;
+    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+        std::cerr << "Error loading card data: " << error << std::endl; //CardActionStandard.txt is for starter card , CardDesc_filled for all the card in the game.
     }
 
-    if (!cardRewardSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardRewardSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading reward card pool: " << error << std::endl;
     }
 
-    if (!shopSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardAction.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!shopSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
         std::cerr << "Error loading shop card pool: " << error << std::endl;
     }
 
