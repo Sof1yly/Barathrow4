@@ -1444,18 +1444,22 @@ void Level::UpdateTurn()
             }
 			else if (e->isPreparingAttack() == false)
             {
-                int newR, newC;
-                if (e->TryMoveTowardPlayer(
-                    nowRow, nowCol,
-                    GridStartRow, GridEndRow,
-                    GridStartCol, GridEndCol,
-                    enemies,
-                    newR, newC))
-                {
-                    e->setNowPosition(newR, newC);
+                for (int i = 0; i < e->getMoveRange(); i++) {
+                    {
+                        int newR, newC;
+                        if (e->TryMoveTowardPlayer(
+                            nowRow, nowCol,
+                            GridStartRow, GridEndRow,
+                            GridStartCol, GridEndCol,
+                            enemies,
+                            newR, newC))
+                        {
+                            e->setNowPosition(newR, newC);
 
-                    glm::vec3 world = GridToWorld(newR, newC);
-                    e->StartMove(world);
+                            glm::vec3 world = GridToWorld(newR, newC);
+                            e->StartMove(world);
+                        }
+                    }
                 }
             }
         }

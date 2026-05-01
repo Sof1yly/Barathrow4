@@ -82,6 +82,8 @@ public:
 
 	bool getIsMoving() const { return isMoving; }
 
+	int getMoveRange() const { return moveRange; }
+
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
 private:
@@ -92,6 +94,7 @@ private:
     int maxHealth = 10;
     int health = maxHealth;
     int damage = 1;
+	int moveRange = 1;
 
     int nowRow = 0;
     int nowCol = 0;

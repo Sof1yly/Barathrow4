@@ -28,9 +28,9 @@ Enemy::Enemy(EnemyType type)
 
     maxHealth = d.hp;
     damage = d.atk;
+	moveRange = d.mov;
 
     // store unused values for later
-    int mov = d.mov;
     int countdown = d.countdown;
     int attackInc = d.attackIncrement;
     std::string patternName = d.pattern;
@@ -284,7 +284,7 @@ void Enemy::Update(float dt)
     if (isMoving)
     {
         moveTimer += dt;
-        float t = moveTimer / moveDuration;
+        float t = moveTimer / (moveDuration*moveRange);
         t = std::min(t, 1.0f);
 
         glm::vec3 newPos = moveStart + (moveTarget - moveStart) * t;
