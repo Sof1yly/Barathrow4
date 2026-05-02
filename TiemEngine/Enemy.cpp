@@ -28,9 +28,9 @@ Enemy::Enemy(EnemyType type)
 
     maxHealth = d.hp;
     damage = d.atk;
+	moveRange = d.mov;
 
     // store unused values for later
-    int mov = d.mov;
     int countdown = d.countdown;
     int attackInc = d.attackIncrement;
     std::string patternName = d.pattern;
@@ -82,15 +82,25 @@ Enemy::Enemy(EnemyType type)
         break;
 
     case EnemyType::B:
-        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy2.png", 5, 8);
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy2.png", 4, 12);
         objSprite->SetAnimationLoop(
             0,   // start frame
             0,   // row
-            4,   // end frame
+            2,   // end frame
             200  // ms per frame
         );
-        objSprite->SetSize(150.0f, -150.0f);
+        objSprite->SetSize(200.0f, -200.0f);
         break;
+    case EnemyType::C:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy3.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+		break;
     }
     setNowPosition(8, 0);
     
@@ -274,7 +284,7 @@ void Enemy::Update(float dt)
     if (isMoving)
     {
         moveTimer += dt;
-        float t = moveTimer / moveDuration;
+        float t = moveTimer / (moveDuration);
         t = std::min(t, 1.0f);
 
         glm::vec3 newPos = moveStart + (moveTarget - moveStart) * t;
@@ -418,5 +428,5 @@ void Enemy::StartMove(glm::vec3 targetWorld)
     moveTimer = 0.0f;
     isMoving = true;
 
-    objSprite->SetAnimationLoop(1, 0, 2, 150);
+    objSprite->SetAnimationLoop(0, 0, 2, 150);
 }

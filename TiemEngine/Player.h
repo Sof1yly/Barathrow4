@@ -8,8 +8,8 @@
 
 class Player {
 private:
-	int hp = 5;
-	int maxHp = 10;
+	int hp = 50;
+	int maxHp = 50;
 	int shield = 0;
 	int maxShield = 0;
     int barrierCount = 0;

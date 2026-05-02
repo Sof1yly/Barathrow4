@@ -68,17 +68,17 @@ void Level::LevelInit()
     EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");//pattern
 
     //Enemy
-    Enemy* e1 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e1 = new Enemy(Enemy::EnemyType::A);
     int ran1 = rand() % 8 + 1;
     e1->setNowPosition(ran1, 0);
     e1->SetWorldPosition(GridToWorld(ran1, 0));
 
-    Enemy* e2 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e2 = new Enemy(Enemy::EnemyType::B);
     int ran2 = rand() % 8 + 1;
     e2->setNowPosition(ran2, 2);
     e2->SetWorldPosition(GridToWorld(ran2, 2));
 
-    Enemy* e3 = new Enemy((rand() % 2 == 0) ? Enemy::EnemyType::A : Enemy::EnemyType::B);
+    Enemy* e3 = new Enemy(Enemy::EnemyType::C);
     int ran3 = rand() % 8 + 1;
     e3->setNowPosition(ran3, 4);
     e3->SetWorldPosition(GridToWorld(ran3, 4));
@@ -1441,24 +1441,25 @@ void Level::UpdateTurn()
             return;
         }
 
+        if (currentEnemyIndex >= enemies.size())
+        {
+            currentEnemyIndex = 0;
+            turnState = TurnState::END_TURN;
+            return;
+        }
+
+        Enemy* e = enemies[currentEnemyIndex];
+
+        if (!e || e->getIsDead())
+        {
+            currentEnemyIndex++;
+            return;
+        }
+
         if (!enemyActing)
         {
-            if (currentEnemyIndex >= enemies.size())
-            {
-                currentEnemyIndex = 0;
-                turnState = TurnState::END_TURN;
-                return;
-            }
-
-            Enemy* e = enemies[currentEnemyIndex];
-
-            if (!e || e->getIsDead())
-            {
-                currentEnemyIndex++;
-                return;
-            }
-
             enemyActing = true;
+            e->stepsRemaining = e->getMoveRange();
 
             if (e->isDelayed())
             {
@@ -1467,58 +1468,60 @@ void Level::UpdateTurn()
                 currentEnemyIndex++;
                 return;
             }
-
-            if (e->isPreparingAttack())
-            {
-                ApplyEnemyAttack(e);
-                highlightManager.HideEnemyAttack(e->highlightIndex);
-                e->setPreparingAttack(false);
-
-                enemyActing = false;
-                currentEnemyIndex++;
-                return;
-            }
-            else if (EnemyCanAttackPlayer(e))
-            {
-                e->setPreparingAttack(true);
-                PreviewAllEnemyAttacks();
-
-                enemyActing = false;
-                currentEnemyIndex++;
-                return;
-            }
-			else if (e->isPreparingAttack() == false)
-            {
-                int newR, newC;
-                if (e->TryMoveTowardPlayer(
-                    nowRow, nowCol,
-                    GridStartRow, GridEndRow,
-                    GridStartCol, GridEndCol,
-                    enemies,
-                    newR, newC))
-                {
-                    e->setNowPosition(newR, newC);
-
-                    glm::vec3 world = GridToWorld(newR, newC);
-                    e->StartMove(world);
-                }
-            }
         }
 
-        if (currentEnemyIndex < 0 || currentEnemyIndex >= static_cast<int>(enemies.size()))
+        if (e->getIsMoving())
         {
-            enemyActing = false;
-            currentEnemyIndex = 0;
-            turnState = TurnState::END_TURN;
             return;
         }
 
-        Enemy* e = enemies[currentEnemyIndex];
-        if (e && !e->getIsMoving())
+        if (e->isPreparingAttack())
         {
+            ApplyEnemyAttack(e);
+            highlightManager.HideEnemyAttack(e->highlightIndex);
+            e->setPreparingAttack(false);
+
             enemyActing = false;
             currentEnemyIndex++;
+            return;
         }
+
+        if (EnemyCanAttackPlayer(e))
+        {
+            e->setPreparingAttack(true);
+            PreviewAllEnemyAttacks();
+
+            enemyActing = false;
+            currentEnemyIndex++;
+            return;
+        }
+
+        if (e->stepsRemaining > 0)
+        {
+            int newR, newC;
+            if (e->TryMoveTowardPlayer(
+                nowRow, nowCol,
+                GridStartRow, GridEndRow,
+                GridStartCol, GridEndCol,
+                enemies,
+                newR, newC))
+            {
+                e->setNowPosition(newR, newC);
+
+                glm::vec3 world = GridToWorld(newR, newC);
+                e->StartMove(world);
+
+                e->stepsRemaining--;
+                return;
+            }
+            else
+            {
+                e->stepsRemaining = 0;
+            }
+        }
+
+        enemyActing = false;
+        currentEnemyIndex++;
 
         break;
     }
