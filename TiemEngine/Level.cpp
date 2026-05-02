@@ -618,8 +618,8 @@ void Level::LevelFree()
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;
-    playerHealth = 5;
-    maxPlayerHealth = 10;
+    playerHealth = 45;
+    maxPlayerHealth = 50;
     playerData = Player();
     isGameOver = false;
     playerDead = false;
