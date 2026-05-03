@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 					case SDLK_o: gameStateController->currentLevel->HandleKey('o'); break;
 					case SDLK_l: gameStateController->currentLevel->HandleKey('l'); break;
 					case SDLK_v: gameStateController->currentLevel->HandleKey('v'); break;
+					case SDLK_f: gameStateController->currentLevel->HandleKey('f'); break;
                     case SDLK_1: gameStateController->currentLevel->HandleKey('1');sound_1.play(); break;
 					case SDLK_2: gameStateController->currentLevel->HandleKey('2');sound_2.play(); break;
 					case SDLK_3: gameStateController->currentLevel->HandleKey('3');sound_3.play(); break;

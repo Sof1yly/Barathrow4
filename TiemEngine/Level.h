@@ -152,6 +152,9 @@ private:
     bool waitingForRewardToAdvance = false;
     TextObject* levelText = nullptr;
 
+    bool fastMode = false;
+    TextObject* fastModeText = nullptr;
+
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
 

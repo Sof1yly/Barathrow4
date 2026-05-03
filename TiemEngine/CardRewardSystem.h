@@ -38,6 +38,7 @@ private:
     std::vector<Card*> rewardPool;
     std::vector<Card*> offeredCards;
     std::vector<Card*> ownedRewardCards;
+    std::unordered_map<const Action*, const AttackPattern*> clonedActionPatterns;
 
     std::vector<DrawableObject*> uiObjects;
     std::vector<OptionArea> optionAreas;
@@ -359,7 +360,7 @@ private:
 
     // srcLoader  – the loader that owns the original card's pattern links
     // dstLoader  – the CardSystem's loader where the clone's patterns must be registered
-    Card* CloneCard(const Card* src,const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const
+    Card* CloneCard(const Card* src, const GameDataLoader& srcLoader, GameDataLoader& dstLoader)
     {
         if (!src)
         {
@@ -391,6 +392,7 @@ private:
                 if (pat)
                 {
                     dstLoader.linkPatternToAction(actionCopy, pat);
+                    clonedActionPatterns[actionCopy] = pat;
                 }
                 copy->addAction(actionCopy);
             }
@@ -465,12 +467,17 @@ public:
 
     void ApplyOwnedRewards(CardSystem& cardSystem)
     {
+        GameDataLoader& dstLoader = cardSystem.GetDataLoader();
         for (Card* c : ownedRewardCards)
         {
-            if (c)
+            if (!c) continue;
+            for (Action* action : c->getActions())
             {
-                cardSystem.AddCardToDeck(c);
+                auto it = clonedActionPatterns.find(action);
+                if (it != clonedActionPatterns.end() && it->second)
+                    dstLoader.linkPatternToAction(action, it->second);
             }
+            cardSystem.AddCardToDeck(c);
         }
     }
 

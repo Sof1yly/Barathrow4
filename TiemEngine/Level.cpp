@@ -215,6 +215,14 @@ void Level::LevelInit()
         objectsList.push_back(levelText);
     }
 
+    {
+        fastModeText = new TextObject();
+        SDL_Color color = { 100, 220, 255, 255 };
+        fastModeText->LoadText("3x mode", color, 24);
+        fastModeText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f)); // hidden until toggled
+        objectsList.push_back(fastModeText);
+    }
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -223,6 +231,7 @@ void Level::LevelUpdate()
     anyEnemyDied = false;
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
+    if (fastMode) deltaTime *= 3;
 
     // ---- Update floating damage popups ----
     for (auto& popup : damagePopups)
@@ -648,6 +657,8 @@ void Level::LevelFree()
     gridTiles.clear();
     Background = nullptr;
     levelText = nullptr;
+    fastMode = false;
+    fastModeText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
 
@@ -675,6 +686,16 @@ void Level::HandleKey(char key)
     if (key == 'q')
     {
         GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;
+        return;
+    }
+
+    if (key == 'f')
+    {
+        fastMode = !fastMode;
+        if (fastModeText)
+            fastModeText->SetPosition(fastMode
+                ? glm::vec3(-880.0f, 430.0f, 10.0f)
+                : glm::vec3(0.0f, 10000.0f, 10.0f));
         return;
     }
 
