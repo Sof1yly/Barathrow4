@@ -16,6 +16,18 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+
+// Data file paths 
+
+namespace {
+    constexpr const char* PATH_PATTERN        = "../Resource/GameData/Pattern.txt";
+    constexpr const char* PATH_CARDS_STARTER  = "../Resource/GameData/CardActionStandard.txt";
+    constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardDesc_filled.txt";
+    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc.txt";
+    constexpr const char* PATH_ENEMY_DATA     = "../Resource/GameData/EnemyData.txt";
+    constexpr const char* PATH_ENEMY_PATTERN  = "../Resource/GameData/EnemyPattern.txt";
+}
+
 //
 // Lifecycle
 void Level::LevelLoad()
@@ -142,15 +154,15 @@ void Level::LevelInit()
 
     // 1) Load pattern shapes
     // 2) Load actions + cards (with Pattern column)
-    if (!cardSystem.LoadData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardActionStandard.txt", "../Resource/GameData/CardDesc.txt", &error)) {
-        std::cerr << "Error loading card data: " << error << std::endl; //CardActionStandard.txt is for starter card , CardDesc_filled for all the card in the game.
+    if (!cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &error)) {
+        std::cerr << "Error loading card data: " << error << std::endl;
     }
 
-    if (!cardRewardSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!cardRewardSystem.LoadPoolData(PATH_PATTERN, PATH_CARDS_ALL, PATH_CARD_DESC, &error)) {
         std::cerr << "Error loading reward card pool: " << error << std::endl;
     }
 
-    if (!shopSystem.LoadPoolData("../Resource/GameData/Pattern.txt", "../Resource/GameData/CardDesc_filled.txt", "../Resource/GameData/CardDesc.txt", &error)) {
+    if (!shopSystem.LoadPoolData(PATH_PATTERN, PATH_CARDS_ALL, PATH_CARD_DESC, &error)) {
         std::cerr << "Error loading shop card pool: " << error << std::endl;
     }
 
@@ -1861,8 +1873,8 @@ void Level::SpawnDamagePopup(glm::vec3 worldPos, int damage)
 
 void Level::LoadEnemyData()
 {
-    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");
-    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");
+    EnemyDatabase::LoadFromFile(PATH_ENEMY_DATA);
+    EnemyLoadPattern::LoadFromFile(PATH_ENEMY_PATTERN);
 }
 
 void Level::SpawnEnemiesForLevel()
@@ -1977,9 +1989,7 @@ void Level::AdvanceToNextRound()
     // Reset card system: reload starter deck + reapply earned reward cards
     std::string err;
     cardSystem.Clear(objectsList);
-    cardSystem.LoadData("../Resource/GameData/Pattern.txt",
-                        "../Resource/GameData/CardActionStandard.txt",
-                        "../Resource/GameData/CardDesc.txt", &err);
+    cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &err);
     cardRewardSystem.ApplyOwnedRewards(cardSystem);
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
