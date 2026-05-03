@@ -64,8 +64,7 @@ void Level::LevelInit()
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
-    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");
-    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");
+    LoadEnemyData();
     SpawnEnemiesForLevel();
 
 
@@ -1860,6 +1859,12 @@ void Level::SpawnDamagePopup(glm::vec3 worldPos, int damage)
     damagePopups.push_back(popup);
 }
 
+void Level::LoadEnemyData()
+{
+    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");
+    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");
+}
+
 void Level::SpawnEnemiesForLevel()
 {
     Enemy::EnemyType ta, tb, tc;
@@ -1966,6 +1971,7 @@ void Level::AdvanceToNextRound()
     damagePopups.clear();
 
     // Spawn enemies for the new level
+    LoadEnemyData();
     SpawnEnemiesForLevel();
 
     // Reset card system: reload starter deck + reapply earned reward cards

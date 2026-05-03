@@ -227,5 +227,6 @@ public:
 
 private:
     void SpawnEnemiesForLevel();
+    void LoadEnemyData();
 
 };
