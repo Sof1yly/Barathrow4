@@ -732,6 +732,7 @@ void CardSystem::Clear(std::vector<DrawableObject*>& objectsList)
     deck.clear();
     discard.clear();
     deletePile.clear();
+    fullCollection.clear();
 }
 
 

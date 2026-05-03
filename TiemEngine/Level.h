@@ -22,6 +22,7 @@
 #include "CardRewardSystem.h"
 #include "ShopSystem.h"
 #include "CardActionExecutor.h"
+#include "LevelManager.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -64,7 +65,8 @@ private:
     Button viewDeckButton;
     Button skipTurnButton;
     ImageObject* testEnemy;
-	ImageObject* Background;
+	ImageObject* Background = nullptr;
+	std::vector<ImageObject*> gridTiles;
     vector<Enemy*> enemies;
 
 
@@ -146,6 +148,10 @@ private:
     ShopSystem shopSystem;
     bool shopOpenedAfterWin = false;
 
+    LevelManager levelManager;
+    bool waitingForRewardToAdvance = false;
+    TextObject* levelText = nullptr;
+
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
 
@@ -211,7 +217,12 @@ public:
 
     void EndTurn();
 
+    void AdvanceToNextRound();
+
     // Spawn a floating damage number at a world position
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
+
+private:
+    void SpawnEnemiesForLevel();
 
 };

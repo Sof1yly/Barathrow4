@@ -38,7 +38,7 @@ void Level::LevelLoad()
 void Level::LevelInit()
 {
 	srand(time(NULL));
-	ImageObject* Background = new ImageObject();
+	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
 	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	Background->SetTexture("../Resource/Texture/BG/Floor1_FHD.PNG");
@@ -58,45 +58,15 @@ void Level::LevelInit()
             tile->SetSize(GridWide, GridHigh);
             tile->SetPosition(glm::vec3(i * 101.0f - 404.0f,j * -105.0f + 352.0f, 0.0f));
             objectsList.push_back(tile);
+            gridTiles.push_back(tile);
         }
     }
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
-    //Load Enemy
-    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");//data
-    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");//pattern
-
-    //Enemy
-    Enemy* e1 = new Enemy(Enemy::EnemyType::A);
-    int ran1 = rand() % 8 + 1;
-    e1->setNowPosition(ran1, 0);
-    e1->SetWorldPosition(GridToWorld(ran1, 0));
-
-    Enemy* e2 = new Enemy(Enemy::EnemyType::B);
-    int ran2 = rand() % 8 + 1;
-    e2->setNowPosition(ran2, 2);
-    e2->SetWorldPosition(GridToWorld(ran2, 2));
-
-    Enemy* e3 = new Enemy(Enemy::EnemyType::C);
-    int ran3 = rand() % 8 + 1;
-    e3->setNowPosition(ran3, 4);
-    e3->SetWorldPosition(GridToWorld(ran3, 4));
-
-
-
-    enemies.push_back(e1);
-    enemies.push_back(e2);
-	enemies.push_back(e3);
-
-    for (auto* e : enemies)
-    {
-        if (!e || e->getIsDead()) continue;
-        objectsList.push_back(e->getObject());
-        objectsList.push_back(e->getHPText());
-        objectsList.push_back(e->getCorruptText());
-        objectsList.push_back(e->getDebuffText());
-    }
+    EnemyDatabase::LoadFromFile("../Resource/GameData/EnemyData.txt");
+    EnemyLoadPattern::LoadFromFile("../Resource/GameData/EnemyPattern.txt");
+    SpawnEnemiesForLevel();
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -235,6 +205,14 @@ void Level::LevelInit()
         winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
         winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
 		objectsList.push_back(winText);
+    }
+
+    {
+        levelText = new TextObject();
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelText->LoadText(levelManager.GetLevelText(), color, 30);
+        levelText->SetPosition(glm::vec3(750.0f, 460.0f, 10.0f));
+        objectsList.push_back(levelText);
     }
 
     std::cout << "Init Level" << std::endl;
@@ -534,10 +512,23 @@ void Level::LevelUpdate()
         }
         turnState = TurnState::GAME_OVER;
 
-        // Only open the card reward if the shop is NOT open (shop is opened via 'o')
-        if (!rewardPickedAfterWin && !shopSystem.IsActive() && !shopOpenedAfterWin)
+        // Trigger once: give coins and open reward/shop
+        if (!rewardPickedAfterWin && !shopOpenedAfterWin && !waitingForRewardToAdvance)
         {
-            cardRewardSystem.Open(objectsList);
+            int coinsEarned = levelManager.RollCoins();
+            playerData.AddCoins(coinsEarned);
+            std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
+
+            if (levelManager.CanAdvance())
+            {
+                cardRewardSystem.Open(objectsList);
+                waitingForRewardToAdvance = true;
+            }
+            else
+            {
+                shopSystem.Open(objectsList, playerData);
+                shopOpenedAfterWin = true;
+            }
         }
 	}
     
@@ -652,6 +643,11 @@ void Level::LevelFree()
     viewDeckHintText = nullptr;
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
+    waitingForRewardToAdvance = false;
+    levelManager.Reset();
+    gridTiles.clear();
+    Background = nullptr;
+    levelText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
 
@@ -687,6 +683,10 @@ void Level::HandleKey(char key)
         if (cardRewardSystem.HandleKeySelection(key, cardSystem, objectsList))
         {
             rewardPickedAfterWin = true;
+            if (waitingForRewardToAdvance)
+            {
+                AdvanceToNextRound();
+            }
             return;
         }
 
@@ -887,6 +887,10 @@ void Level::HandleMouse(int type, int x, int y)
             if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
             {
                 rewardPickedAfterWin = true;
+                if (waitingForRewardToAdvance)
+                {
+                    AdvanceToNextRound();
+                }
             }
         }
 
@@ -1833,4 +1837,126 @@ void Level::SpawnDamagePopup(glm::vec3 worldPos, int damage)
 
     objectsList.push_back(popup.text);
     damagePopups.push_back(popup);
+}
+
+void Level::SpawnEnemiesForLevel()
+{
+    Enemy::EnemyType ta, tb, tc;
+    levelManager.GetEnemyTypes(ta, tb, tc);
+
+    auto spawnAt = [&](Enemy::EnemyType type, int col)
+    {
+        Enemy* e = new Enemy(type);
+        int row = rand() % 8 + 1;
+        e->setNowPosition(row, col);
+        e->SetWorldPosition(GridToWorld(row, col));
+        enemies.push_back(e);
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
+    };
+
+    spawnAt(ta, 0);
+    spawnAt(tb, 2);
+    spawnAt(tc, 4);
+}
+
+void Level::AdvanceToNextRound()
+{
+    levelManager.Advance();
+
+    // Hide win text, update level indicator
+    if (winText)   winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
+    if (levelText)
+    {
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelText->LoadText(levelManager.GetLevelText(), color, 30);
+    }
+
+    // Reset combat flags
+    isGameOver             = false;
+    rewardPickedAfterWin   = false;
+    shopOpenedAfterWin     = false;
+    waitingForRewardToAdvance = false;
+    playerDead             = false;
+    anyEnemyDied           = false;
+    enemyActing            = false;
+    currentEnemyIndex      = 0;
+    enemyPreparingAttack   = false;
+    enemyHighlightIndex    = 0;
+
+    // Reset turn state
+    turnState      = TurnState::PLAYER_TURN;
+    turnCount      = 0;
+    lagTurns       = 0;
+    tempDiscardDone = false;
+
+    // Reset player movement / animation
+    playerMoving        = false;
+    playerAttacking     = false;
+    playerMoveTimer     = 0.0f;
+    attackTimer         = 0.0f;
+    pendingAttack       = false;
+    pendingMoveSteps    = 0;
+    pendingMoveZone     = -1;
+    pendingFastCard     = false;
+    playerPlayingOneShot = false;
+    playerAnimTimer     = 0.0f;
+    playerAnimDuration  = 0.0f;
+    currentPatternIndex = 0;
+    currentRotation     = 0;
+
+    // Move player back to start; HP and coins carry over
+    nowRow = startRow;
+    nowCol = startCol;
+    playerDir   = PlayerDir::DOWN;
+    playerState = PlayerState::IDLE;
+    playerData.SetPosition(GridToWorld(nowRow, nowCol));
+    UpdatePlayerAnimation();
+    playerData.ResetShield();
+    playerData.ResetJumpCharges();
+    UpdateHPBar();
+
+    // Close any open overlays
+    cardInspect.Hide(objectsList);
+    if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+    highlightManager.HideAllPlayer();
+    highlightManager.HideAllEnemy();
+
+    // Remove old enemies
+    for (auto* e : enemies)
+    {
+        if (!e) continue;
+        auto removeObj = [&](DrawableObject* obj) {
+            if (obj) objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), obj), objectsList.end());
+        };
+        removeObj(e->getObject());
+        removeObj(e->getHPText());
+        removeObj(e->getCorruptText());
+        removeObj(e->getDebuffText());
+        delete e;
+    }
+    enemies.clear();
+
+    // Expire lingering damage popups
+    for (auto& p : damagePopups)
+        if (!p.expired && p.text) p.text->SetSize(0.0f, 0.0f);
+    damagePopups.clear();
+
+    // Spawn enemies for the new level
+    SpawnEnemiesForLevel();
+
+    // Reset card system: reload starter deck + reapply earned reward cards
+    std::string err;
+    cardSystem.Clear(objectsList);
+    cardSystem.LoadData("../Resource/GameData/Pattern.txt",
+                        "../Resource/GameData/CardActionStandard.txt",
+                        "../Resource/GameData/CardDesc.txt", &err);
+    cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    cardSystem.InitUI(objectsList);
+    cardSystem.ShuffleDeck();
+    cardSystem.DealNewHand(5, objectsList);
+
+    std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 }

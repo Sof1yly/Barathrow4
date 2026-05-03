@@ -1,41 +1,23 @@
 #pragma once
-
-#include <vector>
-#include <map>
-#include <utility>
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
 #include <string>
-#include <random>
-
-using namespace std;
-
-struct Node
-{
-    int floor;
-    int id;
-
-    bool visited = false;
-
-    vector<Node*> next;
-};
+#include "Enemy.h"
 
 class LevelManager
 {
 private:
-
-    vector<vector<Node*>> floors;
-    Node* current;
+    int currentLevel = 1;
+    static constexpr int MAX_LEVELS = 3;
 
 public:
+    int  GetLevel()   const { return currentLevel; }
+    bool CanAdvance() const { return currentLevel < MAX_LEVELS; }
+    void Advance()          { if (CanAdvance()) currentLevel++; }
+    void Reset()            { currentLevel = 1; }
 
-    LevelManager();
-    ~LevelManager();
+    std::string GetLevelText() const;
 
-    void Generate();
+    void GetEnemyTypes(Enemy::EnemyType& a, Enemy::EnemyType& b, Enemy::EnemyType& c) const;
 
-    void PrintMap();
-
-    void ChoosePath(int choice);
+    // Level 1: 30-33 coins, Level 2: 33-36, Level 3: 36-39
+    int RollCoins() const;
 };
