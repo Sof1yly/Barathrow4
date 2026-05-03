@@ -470,3 +470,7 @@ FodyWeavers.xsd
 
 #Not Ignore Resource Folder
 #!Resource/glew/lib/Release/*
+
+.agents/
+.claude/
+skills-lock.json
