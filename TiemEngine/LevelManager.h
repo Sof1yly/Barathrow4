@@ -6,7 +6,7 @@ class LevelManager
 {
 private:
     int currentLevel = 1;
-    static constexpr int MAX_LEVELS = 3;
+    static constexpr int MAX_LEVELS = 9;
 
 public:
     int  GetLevel()   const { return currentLevel; }

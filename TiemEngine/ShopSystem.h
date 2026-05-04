@@ -38,7 +38,7 @@ private:
     Button closeButton;
 
     TextObject* coinDisplay = nullptr;
-    Player*playerRef   = nullptr;
+    Player* playerRef = nullptr;
 
     bool poolLoaded = false;
     bool active = false;
@@ -48,6 +48,36 @@ private:
     static constexpr int RARITY_BUCKET_COM = 0;
     static constexpr int RARITY_BUCKET_RAR = 1;
     static constexpr int RARITY_BUCKET_LEG = 2;
+    static constexpr int HEAL_AMOUNT = 20;
+
+    // Heal service
+    bool healEverUsed = false;
+    int  healUsesThisShop = 0;
+    Button healButton;
+    TextObject* healPriceLabel = nullptr;
+
+    // Remove card service
+    int  shopVisitCount = 0;
+    bool removeUsedThisShop = false;
+    Button removeButton;
+    TextObject* removePriceLabel = nullptr;
+    std::vector<std::string> permanentlyRemovedNames;
+
+    // Remove card overlay (card selection)
+    bool selectingCardToRemove = false;
+    struct RemoveCardSlot
+    {
+        Card* card = nullptr;
+        float minX = 0, maxX = 0, minY = 0, maxY = 0;
+    };
+    std::vector<RemoveCardSlot> removeCandidates;
+    std::vector<DrawableObject*> removeOverlayObjects;
+    Button removeCancelButton;
+
+    int GetHealCost() const;
+    int GetRemoveCost() const;
+    void OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList);
+    void CloseRemoveOverlay(std::vector<DrawableObject*>& objectsList);
 
     int    GeneratePrice(const std::string& rCode);
     void   BuildOffer();
@@ -66,6 +96,8 @@ public:
     void Close(std::vector<DrawableObject*>& objectsList);
 
     bool HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSystem,Player& player,std::vector<DrawableObject*>& objectsList);
+
+    void ApplyRemovals(CardSystem& cardSystem);
 
     bool IsActive() const;
 };

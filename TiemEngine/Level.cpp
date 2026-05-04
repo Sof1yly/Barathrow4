@@ -539,15 +539,18 @@ void Level::LevelUpdate()
             playerData.AddCoins(coinsEarned);
             std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
 
-            if (levelManager.CanAdvance())
-            {
-                cardRewardSystem.Open(objectsList);
-                waitingForRewardToAdvance = true;
-            }
-            else
+            bool isShopLevel = (levelManager.GetLevel() % 3 == 0);
+            if (isShopLevel)
             {
                 shopSystem.Open(objectsList, playerData);
                 shopOpenedAfterWin = true;
+                if (levelManager.CanAdvance())
+                    waitingForShopBeforeReward = true;
+            }
+            else if (levelManager.CanAdvance())
+            {
+                cardRewardSystem.Open(objectsList);
+                waitingForRewardToAdvance = true;
             }
         }
 	}
@@ -908,6 +911,13 @@ void Level::HandleMouse(int type, int x, int y)
         if (type == 0)
         {
             shopSystem.HandleMouseClick(mousePos, cardSystem, playerData, objectsList);
+            UpdateHPBar();
+            if (!shopSystem.IsActive() && waitingForShopBeforeReward)
+            {
+                waitingForShopBeforeReward = false;
+                cardRewardSystem.Open(objectsList);
+                waitingForRewardToAdvance = true;
+            }
         }
         return;
     }
@@ -1917,6 +1927,7 @@ void Level::AdvanceToNextRound()
     rewardPickedAfterWin   = false;
     shopOpenedAfterWin     = false;
     waitingForRewardToAdvance = false;
+    waitingForShopBeforeReward = false;
     playerDead             = false;
     anyEnemyDied           = false;
     enemyActing            = false;
@@ -1991,6 +2002,7 @@ void Level::AdvanceToNextRound()
     cardSystem.Clear(objectsList);
     cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &err);
     cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    shopSystem.ApplyRemovals(cardSystem);
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
     cardSystem.DealNewHand(5, objectsList);

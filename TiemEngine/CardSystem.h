@@ -52,6 +52,7 @@ private:
     bool dropZonesCreated = false;
     bool dropZonesVisible = false;
     glm::vec3   dropZoneSavedPos[4];
+    int lastHoveredZone = -1;
 
     // Dragging
     bool isDragging = false;
@@ -74,6 +75,7 @@ private:
 
     // Internal helpers
     void CreateDropZones(std::vector<DrawableObject*>& list);
+    void SetDropZoneHighlight(int index);
     void EnsureBezierSegments(std::vector<DrawableObject*>& list);
     void UpdateBezier(const glm::vec3& P0, const glm::vec3& P1);
     void HideBezier();
@@ -169,6 +171,7 @@ public:
     void ConsumeEnergyCards(int count, std::vector<DrawableObject*>& objectsList);
 
     void AddCardToDeck(Card* card);
+    void RemoveCardEverywhere(const std::string& name);
 
     // Combo system: find a card template by name, clone it, and add to hand
     void GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList);

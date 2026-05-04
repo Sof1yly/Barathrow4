@@ -43,8 +43,8 @@ void Button::InitPreset(Preset preset, std::vector<DrawableObject*>& objectsList
         break;
 
     case Preset::SkipTurn:
-        Init("../Resource/Texture/UI/SkipBut.png",glm::vec3(800.0f, -90.0f, 12.0f),glm::vec2(100.0f, -100.0f),objectsList);
-        hintPosition = glm::vec3(740.0f, -15.0f, 20.0f);
+        Init("../Resource/Texture/UI/SkipBut.png",glm::vec3(630.0f, -195.0f, 12.0f),glm::vec2(100.0f, -100.0f),objectsList);
+        hintPosition = glm::vec3(640.0f, -120.0f, 20.0f);
         break;
 
     default:

@@ -150,6 +150,7 @@ private:
 
     LevelManager levelManager;
     bool waitingForRewardToAdvance = false;
+    bool waitingForShopBeforeReward = false;
     TextObject* levelText = nullptr;
 
     bool fastMode = false;

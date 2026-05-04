@@ -119,6 +119,13 @@ bool Player::SpendCoins(int amount)
     return true;
 }
 
+void Player::HealHp(int amount)
+{
+    if (amount <= 0) return;
+    hp = std::min(hp + amount, maxHp);
+    std::cout << "  HP: +" << amount << " (total: " << hp << "/" << maxHp << ")" << std::endl;
+}
+
 void Player::ResetShield()
 {
     if (shield > 0)

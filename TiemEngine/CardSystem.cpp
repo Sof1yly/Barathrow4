@@ -29,6 +29,17 @@ void CardSystem::AddCardToDeck(Card* card)
     UpdatePileVisuals();
 }
 
+void CardSystem::RemoveCardEverywhere(const std::string& name)
+{
+    auto removeByName = [&](std::vector<Card*>& vec) {
+        vec.erase(std::remove_if(vec.begin(), vec.end(),
+            [&](Card* c) { return c && c->getName() == name; }), vec.end());
+    };
+    removeByName(deck);
+    removeByName(discard);
+    removeByName(fullCollection);
+    UpdatePileVisuals();
+}
 
 CardSystem::CardSystem() {}
 
@@ -335,25 +346,25 @@ void CardSystem::CreateDropZones(std::vector<DrawableObject*>& list)
     dropZones[0] = new GameObject();
     dropZones[0]->SetSize(SIDE_W, SIDE_H);
     dropZones[0]->SetPosition(glm::vec3(-SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
+    dropZones[0]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
 
     // TOP
     dropZones[1] = new GameObject();
     dropZones[1]->SetSize(MID_W, MID_H);
     dropZones[1]->SetPosition(glm::vec3(0.0f, UPPER_Y, Z));
-    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
+    dropZones[1]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
 
     // BOTTOM
     dropZones[2] = new GameObject();
     dropZones[2]->SetSize(MID_W, MID_H);
     dropZones[2]->SetPosition(glm::vec3(0.0f, BOTTOM_Y, Z));
-    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
+    dropZones[2]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
 
     // RIGHT
     dropZones[3] = new GameObject();
     dropZones[3]->SetSize(SIDE_W, SIDE_H);
     dropZones[3]->SetPosition(glm::vec3(SIDE_X_OFFSET, SIDE_Y, Z));
-    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.18f);
+    dropZones[3]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
 
     for (int i = 0; i < 4; ++i) {
         list.push_back(dropZones[i]);
@@ -367,19 +378,23 @@ void CardSystem::CreateDropZones(std::vector<DrawableObject*>& list)
 void CardSystem::ShowDropZones()
 {
     if (!dropZonesCreated || dropZonesVisible) return;
+    lastHoveredZone = -1;
     for (int i = 0; i < 4; i++) {
         dropZones[i]->SetPosition(dropZoneSavedPos[i]);
+        dropZones[i]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
     }
-        
+
     dropZonesVisible = true;
 }
 
 void CardSystem::HideDropZones()
 {
     if (!dropZonesCreated || !dropZonesVisible) return;
+    lastHoveredZone = -1;
     for (int i = 0; i < 4; i++) {
         auto p = dropZoneSavedPos[i];
         dropZones[i]->SetPosition(glm::vec3(p.x, -10000.0f, p.z));
+        dropZones[i]->SetColor(1.0f, 0.6f, 0.8f, 0.07f);
     }
     dropZonesVisible = false;
 }
@@ -392,8 +407,21 @@ int CardSystem::HitDropZone(const glm::vec3& p) const
         }
     }
 
-            
+
     return -1;
+}
+
+void CardSystem::SetDropZoneHighlight(int index)
+{
+    if (index == lastHoveredZone) return;
+    lastHoveredZone = index;
+
+    for (int i = 0; i < 4; i++) {
+        if (i == index)
+            dropZones[i]->SetColor(1.0f, 0.4f, 0.7f, 0.35f);
+        else
+            dropZones[i]->SetColor(1.0f, 0.6f, 0.8f, 0.12f);
+    }
 }
 
 // ============================================================
@@ -520,6 +548,8 @@ void CardSystem::UpdateDrag(const glm::vec3& mouseWorld)
 
     glm::vec3 anchor = draggingCard->GetPosition();
     UpdateBezier(anchor, mouseWorld);
+
+    SetDropZoneHighlight(HitDropZone(mouseWorld));
 }
 
 void CardSystem::EndDragCancel(const glm::vec3& mouseWorld,std::vector<DrawableObject*>& objectsList)
