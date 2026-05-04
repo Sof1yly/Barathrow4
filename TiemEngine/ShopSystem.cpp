@@ -394,7 +394,7 @@ void ShopSystem::OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableO
 {
     std::vector<Card*> allCards = cardSystem.GetAllCards();
     std::unordered_set<std::string> seenNames;
-    std::vector<Card*> showCards;
+    removeShowCards.clear();
 
     for (Card* c : allCards)
     {
@@ -405,17 +405,94 @@ void ShopSystem::OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableO
             if (n == c->getName()) { wasRemoved = true; break; }
         if (wasRemoved) continue;
         seenNames.insert(c->getName());
-        showCards.push_back(c);
+        removeShowCards.push_back(c);
     }
 
-    if (showCards.empty()) { std::cout << "[Shop] No cards to remove.\n"; return; }
+    if (removeShowCards.empty()) { std::cout << "[Shop] No cards to remove.\n"; return; }
 
     selectingCardToRemove = true;
+    removeCurrentPage = 0;
+    removeTotalPages = ((int)removeShowCards.size() + REMOVE_CARDS_PER_PAGE - 1) / REMOVE_CARDS_PER_PAGE;
     removeCandidates.clear();
 
-    auto pushObj = [&](DrawableObject* obj)
+    auto pushStatic = [&](DrawableObject* obj)
     {
         if (obj) { removeOverlayObjects.push_back(obj); objectsList.push_back(obj); }
+    };
+
+    // Dim overlay
+    GameObject* bg = new GameObject();
+    bg->SetSize(1920.0f, 1080.0f);
+    bg->SetPosition(glm::vec3(0.0f, 0.0f, 815.0f));
+    bg->SetColor(0.0f, 0.0f, 0.0f, 0.96f);
+    pushStatic(bg);
+
+    // Title
+    TextObject* title = new TextObject();
+    SDL_Color titleColor = { 255, 215, 90, 255 };
+    title->LoadText("Select a card to remove", titleColor, 40);
+    title->SetPosition(glm::vec3(0.0f, 420.0f, 820.0f));
+    pushStatic(title);
+
+    // Cost label
+    TextObject* costLabel = new TextObject();
+    SDL_Color goldColor = { 255, 210, 40, 255 };
+    costLabel->LoadText("Cost: " + std::to_string(GetRemoveCost()) + " coins", goldColor, 26);
+    costLabel->SetPosition(glm::vec3(0.0f, 365.0f, 820.0f));
+    pushStatic(costLabel);
+
+    // Page indicator (placeholder, rebuilt each page)
+    removePageLabel = new TextObject();
+    SDL_Color grayColor = { 200, 200, 200, 255 };
+    removePageLabel->LoadText("Page 1 / 1", grayColor, 22);
+    removePageLabel->SetPosition(glm::vec3(0.0f, 315.0f, 820.0f));
+    pushStatic(removePageLabel);
+
+    // Nav buttons
+    removeLeftButton.Init("../Resource/Texture/UI/Left.png",
+                          glm::vec3(-870.0f, 20.0f, 820.0f),
+                          glm::vec2(80.0f, -80.0f), objectsList);
+    removeRightButton.Init("../Resource/Texture/UI/Right.png",
+                           glm::vec3(870.0f, 20.0f, 820.0f),
+                           glm::vec2(80.0f, -80.0f), objectsList);
+
+    // Cancel button
+    removeCancelButton.Init("../Resource/Texture/UI/SkipBut.png",
+                            glm::vec3(0.0f, -400.0f, 820.0f),
+                            glm::vec2(190.0f, -90.0f), objectsList);
+
+    TextObject* cancelLabel = new TextObject();
+    cancelLabel->LoadText("Cancel", grayColor, 26);
+    cancelLabel->SetPosition(glm::vec3(0.0f, -335.0f, 820.0f));
+    pushStatic(cancelLabel);
+
+    RebuildRemoveOverlayPage(objectsList);
+}
+
+void ShopSystem::RebuildRemoveOverlayPage(std::vector<DrawableObject*>& objectsList)
+{
+    // Clear previous page's card visuals
+    for (DrawableObject* obj : removeCardObjects)
+    {
+        auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+        if (it != objectsList.end()) objectsList.erase(it);
+        delete obj;
+    }
+    removeCardObjects.clear();
+    removeCandidates.clear();
+
+    // Update page label
+    if (removePageLabel)
+    {
+        SDL_Color grayColor = { 200, 200, 200, 255 };
+        removePageLabel->LoadText(
+            "Page " + std::to_string(removeCurrentPage + 1) + " / " + std::to_string(removeTotalPages),
+            grayColor, 22);
+    }
+
+    auto pushCard = [&](DrawableObject* obj)
+    {
+        if (obj) { removeCardObjects.push_back(obj); objectsList.push_back(obj); }
     };
 
     auto cloneImage = [](ImageObject* src, const glm::vec3& pos, float w, float h) -> ImageObject*
@@ -428,54 +505,31 @@ void ShopSystem::OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableO
         return copy;
     };
 
-    // Dim overlay
-    GameObject* bg = new GameObject();
-    bg->SetSize(1920.0f, 1080.0f);
-    bg->SetPosition(glm::vec3(0.0f, 0.0f, 815.0f));
-    bg->SetColor(0.0f, 0.0f, 0.0f, 0.80f);
-    pushObj(bg);
+    const float cardW   = 280.0f;
+    const float cardH   = 410.0f;
+    const float spacing = 320.0f;
+    const float centerY = 20.0f;
 
-    // Title
-    TextObject* title = new TextObject();
-    SDL_Color titleColor = { 255, 215, 90, 255 };
-    title->LoadText("Select a card to remove", titleColor, 40);
-    title->SetPosition(glm::vec3(0.0f, 390.0f, 820.0f));
-    pushObj(title);
+    int startIdx = removeCurrentPage * REMOVE_CARDS_PER_PAGE;
+    int endIdx   = std::min(startIdx + REMOVE_CARDS_PER_PAGE, (int)removeShowCards.size());
+    int count    = endIdx - startIdx;
 
-    // Cost label
-    TextObject* costLabel = new TextObject();
-    SDL_Color goldColor = { 255, 210, 40, 255 };
-    costLabel->LoadText("Cost: " + std::to_string(GetRemoveCost()) + " coins", goldColor, 26);
-    costLabel->SetPosition(glm::vec3(0.0f, 335.0f, 820.0f));
-    pushObj(costLabel);
+    float startX = -0.5f * static_cast<float>(count - 1) * spacing;
 
-    const float cardW   = 200.0f;
-    const float cardH   = 300.0f;
-    const float spacing = 240.0f;
-    const int   perRow  = 5;
-    const int   total   = static_cast<int>(showCards.size());
-    const int   rows    = (total + perRow - 1) / perRow;
-    const float topY    = 80.0f + (rows - 1) * 170.0f;
-
-    for (int i = 0; i < total; ++i)
+    for (int i = 0; i < count; ++i)
     {
-        Card* card = showCards[i];
+        Card* card = removeShowCards[startIdx + i];
         if (!card) continue;
         if (!card->HasVisuals()) card->CreateVisuals();
 
-        int row = i / perRow;
-        int col = i % perRow;
-        int rowCount = std::min(perRow, total - row * perRow);
-        float rowStartX = -0.5f * static_cast<float>(rowCount - 1) * spacing;
-        float cardX = rowStartX + col * spacing;
-        float cardY = topY - row * 340.0f;
-        glm::vec3 cardPos(cardX, cardY, 818.0f);
+        float cardX = startX + i * spacing;
+        glm::vec3 cardPos(cardX, centerY, 818.0f);
 
-        pushObj(cloneImage(card->GetBackground(),   cardPos, cardW, -cardH));
-        pushObj(cloneImage(card->GetStarOverlay(),   cardPos, cardW, -cardH));
-        pushObj(cloneImage(card->GetTypeIcon(),      cardPos, cardW, -cardH));
-        pushObj(cloneImage(card->GetVisual(),         cardPos, cardW, -cardH));
-        pushObj(cloneImage(card->GetCardFrame(),      cardPos, cardW, -cardH));
+        pushCard(cloneImage(card->GetBackground(),  cardPos, cardW, -cardH));
+        pushCard(cloneImage(card->GetStarOverlay(), cardPos, cardW, -cardH));
+        pushCard(cloneImage(card->GetTypeIcon(),    cardPos, cardW, -cardH));
+        pushCard(cloneImage(card->GetVisual(),      cardPos, cardW, -cardH));
+        pushCard(cloneImage(card->GetCardFrame(),   cardPos, cardW, -cardH));
 
         if (card->GetNameText())
         {
@@ -489,33 +543,48 @@ void ShopSystem::OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableO
             glm::vec3 local = src->GetLocalPosition();
             float leftX = (cardX - cardW * 0.5f) + (local.x * cardW);
             float centX = leftX + copy->GetSize().x * 0.5f + 12.0f;
-            copy->SetPosition(glm::vec3(centX, cardY + local.y * cardH, 822.0f));
-            pushObj(copy);
+            copy->SetPosition(glm::vec3(centX, centerY + local.y * cardH, 822.0f));
+            pushCard(copy);
+        }
+
+        if (card->GetDescriptionText())
+        {
+            TextObject* src  = card->GetDescriptionText();
+            TextObject* copy = new TextObject();
+            copy->SetTextureId(src->GetTextureId());
+            copy->SetSize(src->GetSize().x, src->GetSize().y);
+            glm::vec3 local = src->GetLocalPosition();
+            float leftX = (cardX - cardW * 0.5f) + (local.x * cardW);
+            float centX = leftX + copy->GetSize().x * 0.5f;
+            copy->SetPosition(glm::vec3(centX, centerY + local.y * cardH, 822.0f));
+            pushCard(copy);
         }
 
         RemoveCardSlot slot;
         slot.card = card;
         slot.minX = cardX - cardW * 0.5f;
         slot.maxX = cardX + cardW * 0.5f;
-        slot.minY = cardY - cardH * 0.5f;
-        slot.maxY = cardY + cardH * 0.5f;
+        slot.minY = centerY - cardH * 0.5f;
+        slot.maxY = centerY + cardH * 0.5f;
         removeCandidates.push_back(slot);
     }
-
-    // Cancel button
-    removeCancelButton.Init("../Resource/Texture/UI/SkipBut.png",
-                            glm::vec3(0.0f, -380.0f, 820.0f),
-                            glm::vec2(190.0f, -90.0f), objectsList);
-
-    TextObject* cancelLabel = new TextObject();
-    SDL_Color grayColor = { 200, 200, 200, 255 };
-    cancelLabel->LoadText("Cancel", grayColor, 26);
-    cancelLabel->SetPosition(glm::vec3(0.0f, -315.0f, 820.0f));
-    pushObj(cancelLabel);
 }
 
 void ShopSystem::CloseRemoveOverlay(std::vector<DrawableObject*>& objectsList)
 {
+    // Remove page card visuals
+    for (DrawableObject* obj : removeCardObjects)
+    {
+        auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+        if (it != objectsList.end()) objectsList.erase(it);
+        delete obj;
+    }
+    removeCardObjects.clear();
+    removeCandidates.clear();
+    removeShowCards.clear();
+    removePageLabel = nullptr;
+
+    // Remove static overlay objects
     for (DrawableObject* obj : removeOverlayObjects)
     {
         if (!obj) continue;
@@ -524,16 +593,19 @@ void ShopSystem::CloseRemoveOverlay(std::vector<DrawableObject*>& objectsList)
         delete obj;
     }
     removeOverlayObjects.clear();
-    removeCandidates.clear();
 
-    ImageObject* img = removeCancelButton.GetImage();
-    if (img)
+    auto removeBtn = [&](Button& button)
     {
+        ImageObject* img = button.GetImage();
+        if (!img) { button.Reset(); return; }
         auto it = std::find(objectsList.begin(), objectsList.end(), img);
         if (it != objectsList.end()) objectsList.erase(it);
         delete img;
-        removeCancelButton.Reset();
-    }
+        button.Reset();
+    };
+    removeBtn(removeCancelButton);
+    removeBtn(removeLeftButton);
+    removeBtn(removeRightButton);
 
     selectingCardToRemove = false;
 }
@@ -594,6 +666,27 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             CloseRemoveOverlay(objectsList);
             return true;
         }
+
+        if (removeLeftButton.IsClicked(mousePos.x, mousePos.y))
+        {
+            if (removeCurrentPage > 0)
+            {
+                removeCurrentPage--;
+                RebuildRemoveOverlayPage(objectsList);
+            }
+            return true;
+        }
+
+        if (removeRightButton.IsClicked(mousePos.x, mousePos.y))
+        {
+            if (removeCurrentPage < removeTotalPages - 1)
+            {
+                removeCurrentPage++;
+                RebuildRemoveOverlayPage(objectsList);
+            }
+            return true;
+        }
+
         for (auto& slot : removeCandidates)
         {
             if (mousePos.x >= slot.minX && mousePos.x <= slot.maxX &&
@@ -644,8 +737,9 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             std::cout << "[Shop] Not enough coins to heal! Need " << cost << "\n";
             return true;
         }
+        int healAmount = std::max(1, player.getMaxHp() * HEAL_PERCENT / 100);
         if (cost > 0) player.SpendCoins(cost);
-        player.HealHp(HEAL_AMOUNT);
+        player.HealHp(healAmount);
         healEverUsed = true;
         healUsesThisShop++;
         if (healPriceLabel)
@@ -659,7 +753,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             SDL_Color coinColor = { 255, 210, 40, 255 };
             coinDisplay->LoadText("Coins: " + std::to_string(player.GetCoins()), coinColor, 30);
         }
-        std::cout << "[Shop] Healed " << HEAL_AMOUNT << " HP. Cost: " << cost << " coins.\n";
+        std::cout << "[Shop] Healed " << healAmount << " HP. Cost: " << cost << " coins.\n";
         return true;
     }
 

@@ -48,7 +48,7 @@ private:
     static constexpr int RARITY_BUCKET_COM = 0;
     static constexpr int RARITY_BUCKET_RAR = 1;
     static constexpr int RARITY_BUCKET_LEG = 2;
-    static constexpr int HEAL_AMOUNT = 20;
+    static constexpr int HEAL_PERCENT = 15;
 
     // Heal service
     bool healEverUsed = false;
@@ -72,11 +72,20 @@ private:
     };
     std::vector<RemoveCardSlot> removeCandidates;
     std::vector<DrawableObject*> removeOverlayObjects;
+    std::vector<DrawableObject*> removeCardObjects;
+    std::vector<Card*> removeShowCards;
     Button removeCancelButton;
+    Button removeLeftButton;
+    Button removeRightButton;
+    TextObject* removePageLabel = nullptr;
+    int removeCurrentPage = 0;
+    int removeTotalPages = 0;
+    static constexpr int REMOVE_CARDS_PER_PAGE = 5;
 
     int GetHealCost() const;
     int GetRemoveCost() const;
     void OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList);
+    void RebuildRemoveOverlayPage(std::vector<DrawableObject*>& objectsList);
     void CloseRemoveOverlay(std::vector<DrawableObject*>& objectsList);
 
     int    GeneratePrice(const std::string& rCode);

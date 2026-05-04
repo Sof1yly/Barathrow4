@@ -60,7 +60,6 @@ void Level::LevelInit()
     playerDir = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     UpdatePlayerAnimation();
-    maxPlayerHealth = playerHealth;
 
     // 1) Tile grid (your original)
     for (int i = GridStartRow; i < GridEndRow; ++i) {
@@ -298,7 +297,7 @@ void Level::LevelUpdate()
             }
         }
     }
-    if (!isGameOver && playerHealth <= 0)
+    if (!isGameOver && playerData.getHp() <= 0)
     {
         HandlePlayerDeath();
     }
@@ -621,8 +620,6 @@ void Level::LevelFree()
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;
-    playerHealth = 45;
-    maxPlayerHealth = 50;
     playerData = Player();
     isGameOver = false;
     playerDead = false;
@@ -817,37 +814,7 @@ void Level::HandleKey(char key)
     if(key == 'l'){
 	}
 
-    if (key == 'o') {
-        // Debug: instant win → open shop
-        cardInspect.Hide(objectsList);
-        if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
-
-        for (Enemy* e : enemies)
-        {
-            if (!e) continue;
-            highlightManager.HideEnemyAttack(e->highlightIndex);
-            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()),     objectsList.end());
-            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()),     objectsList.end());
-            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
-            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
-            delete e;
-        }
-        enemies.clear();
-        enemyActing = false;
-        currentEnemyIndex = 0;
-
-        if (winText)
-            winText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
-
-        turnState = TurnState::GAME_OVER;
-
-        if (!shopOpenedAfterWin)
-        {
-            shopSystem.Open(objectsList, playerData);
-            shopOpenedAfterWin = true;
-        }
-        return;
-    }
+    // if (key == 'o') { /* debug: instant win → open shop — disabled */ }
 
 	//test player movement
     if (playerMoving) return;
@@ -1770,9 +1737,10 @@ void Level::UpdateHPBar()
 
     float fullWidth = 300.0f;
 
-    playerHealth = std::max(0, std::min(playerHealth, maxPlayerHealth));
+    int hp    = std::max(0, std::min(playerData.getHp(),    playerData.getMaxHp()));
+    int maxHp = playerData.getMaxHp();
 
-    float percent = (float)playerHealth / (float)maxPlayerHealth;
+    float percent = (maxHp > 0) ? (float)hp / (float)maxHp : 0.0f;
 
     hpBar->SetSize(fullWidth, -80.0f);
 
@@ -1824,13 +1792,13 @@ void Level::PlayerTakeDamage(int damage)
 
     playerData.SetPlayerGetDamage((int)playerDir);
 
-    playerHealth -= damage;
+    playerData.setHp(playerData.getHp() - damage);
     UpdateHPBar();
 
     std::cout << "[Player] Took " << damage
-        << " damage. HP: " << playerHealth << std::endl;
+        << " damage. HP: " << playerData.getHp() << "/" << playerData.getMaxHp() << std::endl;
 
-    if (playerHealth <= 0)
+    if (playerData.getHp() <= 0)
     {
         HandlePlayerDeath();
     }
