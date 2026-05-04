@@ -21,6 +21,7 @@
 #include "CardInspect.h"
 #include "CardRewardSystem.h"
 #include "ShopSystem.h"
+#include "RewardBoxScene.h"
 #include "CardActionExecutor.h"
 #include "LevelManager.h"
 
@@ -148,9 +149,10 @@ private:
     ShopSystem shopSystem;
     bool shopOpenedAfterWin = false;
 
+    RewardBoxScene rewardBoxScene;
+    bool inShopOnlyLevel = false;
+
     LevelManager levelManager;
-    bool waitingForRewardToAdvance = false;
-    bool waitingForShopBeforeReward = false;
     TextObject* levelText = nullptr;
 
     bool fastMode = false;

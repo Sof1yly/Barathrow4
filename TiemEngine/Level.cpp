@@ -524,7 +524,7 @@ void Level::LevelUpdate()
         }
         PreviewAllEnemyAttacks();
     }
-    if(enemies.empty() && !isGameOver)
+    if(enemies.empty() && !isGameOver && !inShopOnlyLevel)
     {
         if (winText)
         {
@@ -532,26 +532,14 @@ void Level::LevelUpdate()
         }
         turnState = TurnState::GAME_OVER;
 
-        // Trigger once: give coins and open reward/shop
-        if (!rewardPickedAfterWin && !shopOpenedAfterWin && !waitingForRewardToAdvance)
+        // Trigger once: open the reward box scene
+        if (!rewardPickedAfterWin)
         {
             int coinsEarned = levelManager.RollCoins();
             playerData.AddCoins(coinsEarned);
             std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
-
-            bool isShopLevel = (levelManager.GetLevel() % 3 == 0);
-            if (isShopLevel)
-            {
-                shopSystem.Open(objectsList, playerData);
-                shopOpenedAfterWin = true;
-                if (levelManager.CanAdvance())
-                    waitingForShopBeforeReward = true;
-            }
-            else if (levelManager.CanAdvance())
-            {
-                cardRewardSystem.Open(objectsList);
-                waitingForRewardToAdvance = true;
-            }
+            rewardBoxScene.Open(coinsEarned, objectsList);
+            rewardPickedAfterWin = true;
         }
 	}
     
@@ -573,6 +561,7 @@ void Level::LevelFree()
 
     cardRewardSystem.Close(objectsList);
     shopSystem.Close(objectsList);
+    rewardBoxScene.Close(objectsList);
 
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
@@ -666,7 +655,7 @@ void Level::LevelFree()
     viewDeckHintText = nullptr;
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
-    waitingForRewardToAdvance = false;
+    inShopOnlyLevel = false;
     levelManager.Reset();
     gridTiles.clear();
     Background = nullptr;
@@ -713,18 +702,18 @@ void Level::HandleKey(char key)
         return;
     }
 
+    if (shopSystem.IsActive()) return;
+
+    if (rewardBoxScene.IsActive() && !cardRewardSystem.IsActive()) return;
+
     if (cardRewardSystem.IsActive())
     {
         if (cardRewardSystem.HandleKeySelection(key, cardSystem, objectsList))
         {
-            rewardPickedAfterWin = true;
-            if (waitingForRewardToAdvance)
-            {
+            rewardBoxScene.ClaimCard();
+            if (rewardBoxScene.IsDone())
                 AdvanceToNextRound();
-            }
-            return;
         }
-
         return;
     }
 
@@ -815,8 +804,12 @@ void Level::HandleKey(char key)
 
         turnState = TurnState::GAME_OVER;
 
-        if (!rewardPickedAfterWin) {
-            cardRewardSystem.Open(objectsList);
+        if (!rewardPickedAfterWin)
+        {
+            int coinsEarned = levelManager.RollCoins();
+            playerData.AddCoins(coinsEarned);
+            rewardBoxScene.Open(coinsEarned, objectsList);
+            rewardPickedAfterWin = true;
         }
 
         return;
@@ -912,12 +905,8 @@ void Level::HandleMouse(int type, int x, int y)
         {
             shopSystem.HandleMouseClick(mousePos, cardSystem, playerData, objectsList);
             UpdateHPBar();
-            if (!shopSystem.IsActive() && waitingForShopBeforeReward)
-            {
-                waitingForShopBeforeReward = false;
-                cardRewardSystem.Open(objectsList);
-                waitingForRewardToAdvance = true;
-            }
+            if (!shopSystem.IsActive() && inShopOnlyLevel)
+                AdvanceToNextRound();
         }
         return;
     }
@@ -928,14 +917,31 @@ void Level::HandleMouse(int type, int x, int y)
         {
             if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
             {
-                rewardPickedAfterWin = true;
-                if (waitingForRewardToAdvance)
-                {
+                rewardBoxScene.ClaimCard();
+                if (rewardBoxScene.IsDone())
                     AdvanceToNextRound();
-                }
             }
         }
+        return;
+    }
 
+    if (rewardBoxScene.IsActive())
+    {
+        if (type == 0)
+        {
+            int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y);
+            if (clicked == 2)
+            {
+                cardRewardSystem.Open(objectsList);
+                if (!cardRewardSystem.IsActive())
+                {
+                    // Card pool empty, auto-claim
+                    rewardBoxScene.ClaimCard();
+                }
+            }
+            if (rewardBoxScene.IsDone())
+                AdvanceToNextRound();
+        }
         return;
     }
 
@@ -1926,8 +1932,7 @@ void Level::AdvanceToNextRound()
     isGameOver             = false;
     rewardPickedAfterWin   = false;
     shopOpenedAfterWin     = false;
-    waitingForRewardToAdvance = false;
-    waitingForShopBeforeReward = false;
+    inShopOnlyLevel        = false;
     playerDead             = false;
     anyEnemyDied           = false;
     enemyActing            = false;
@@ -1968,6 +1973,7 @@ void Level::AdvanceToNextRound()
     UpdateHPBar();
 
     // Close any open overlays
+    rewardBoxScene.Close(objectsList);
     cardInspect.Hide(objectsList);
     if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
     highlightManager.HideAllPlayer();
@@ -1993,11 +1999,22 @@ void Level::AdvanceToNextRound()
         if (!p.expired && p.text) p.text->SetSize(0.0f, 0.0f);
     damagePopups.clear();
 
-    // Spawn enemies for the new level
+    std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
+
+    // Shop-only levels (4 and 9): open shop, skip combat setup
+    if (levelManager.IsShopOnlyLevel())
+    {
+        inShopOnlyLevel = true;
+        turnState = TurnState::GAME_OVER;
+        shopSystem.Open(objectsList, playerData);
+        shopOpenedAfterWin = true;
+        return;
+    }
+
+    // Regular combat level: spawn enemies and reset card system
     LoadEnemyData();
     SpawnEnemiesForLevel();
 
-    // Reset card system: reload starter deck + reapply earned reward cards
     std::string err;
     cardSystem.Clear(objectsList);
     cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &err);
@@ -2006,6 +2023,4 @@ void Level::AdvanceToNextRound()
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
     cardSystem.DealNewHand(5, objectsList);
-
-    std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 }
