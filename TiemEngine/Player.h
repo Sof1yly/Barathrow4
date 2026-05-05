@@ -94,6 +94,8 @@ public:
     void SetPlayerIdle(int dir);
     void SetPlayerWalk(int dir);
     void SetPlayerAttack(int dir);
+	void SetPlayerAttackAoe(int dir);
+	void SetPlayerAttackRange(int dir);
     void SetPlayerGetDamage(int dir);
     void SetPlayerDie(int dir);
 };
