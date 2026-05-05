@@ -87,6 +87,7 @@ public:
     void setCountDownR() { countdownRemaning = countdown; }
 	void decreaseCountDownR() { if (countdownRemaning > 0) countdownRemaning--; }
 	int getCountDownR() const { return countdownRemaning; }
+    void addDamage() { damage = damage + attackInc; }
 
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
@@ -102,6 +103,7 @@ private:
 	int moveRange = 1;
 	int countdown = 0;
     int countdownRemaning = 0;
+    int attackInc = 0;
 
     int nowRow = 0;
     int nowCol = 0;

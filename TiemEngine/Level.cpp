@@ -1505,6 +1505,7 @@ void Level::UpdateTurn()
 
                 enemyActing = false;
                 currentEnemyIndex++;
+                e->addDamage();
                 return;
             }
             enemyActing = false;
