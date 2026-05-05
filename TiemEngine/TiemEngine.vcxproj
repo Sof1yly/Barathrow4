@@ -51,6 +51,7 @@
     <ClCompile Include="ImageObject.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="Level3.cpp" />
+    <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="LevelManager.cpp" />
     <ClCompile Include="LevelTest.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="Hand.h" />
     <ClInclude Include="HighlightManager.h" />
     <ClInclude Include="Level3.h" />
+    <ClInclude Include="MainMenu.h" />
     <ClInclude Include="LevelManager.h" />
     <ClInclude Include="MoveAction.h" />
     <ClInclude Include="Player.h" />

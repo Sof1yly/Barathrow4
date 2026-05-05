@@ -64,6 +64,11 @@ void GameStateController::Update()
 		// Initialize new level
 		switch (GameData::GetInstance()->gGameStateCurr)
 		{
+		case GameState::GS_MAIN_MENU:
+			currentLevel = new MainMenu();
+			currentLevel->LevelLoad();
+			currentLevel->LevelInit();
+			break;
 		case GameState::GS_LEVEL1:
 			currentLevel = new Level();
 			currentLevel->LevelLoad();
@@ -91,6 +96,11 @@ void GameStateController::Update()
 		{
 			switch (GameData::GetInstance()->gGameStateCurr)
 			{
+			case GameState::GS_MAIN_MENU:
+				currentLevel = new MainMenu();
+				currentLevel->LevelLoad();
+				currentLevel->LevelInit();
+				break;
 			case GameState::GS_LEVEL1:
 				currentLevel = new Level();
 				currentLevel->LevelLoad();

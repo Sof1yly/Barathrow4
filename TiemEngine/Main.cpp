@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 	engine->Init(WIDTH, HEIGHT);
 
 	gameStateController = new GameStateController();
-	gameStateController->Init(GameState::GS_LEVEL1);
+	gameStateController->Init(GameState::GS_MAIN_MENU);
 
 	//Sound
 	AudioEngine audio;

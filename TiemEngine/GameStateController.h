@@ -6,6 +6,7 @@
 #include "Level.h"
 #include "LevelTest.h"
 #include "Level3.h"
+#include "MainMenu.h"
 
 using namespace std;
 class GameStateController
