@@ -385,6 +385,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
                 return nullptr;
             }
             actionPattern[a] = pat;
+            a->setPatternId(patternId);
         }
         newAction = a;
     }

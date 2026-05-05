@@ -29,5 +29,5 @@ void AttackAction::execute(CardPlayContext& ctx, CardPlayResult& result)
     int perHit = resolveDamage(ctx.player.getShield());
     int total  = resolveTotalDamage(ctx.player.getShield()); // perHit * repeatCount
 
-    result.pendingAttacks.push_back({ this, basePat, total, perHit });
+    result.pendingAttacks.push_back({ this, basePat, total, perHit, patternId });
 }

@@ -10,8 +10,12 @@ enum class AttackSubType {
 class AttackAction : public Action {
 private:
 	AttackSubType subType = AttackSubType::Flat;
+	std::string patternId;
 
 public:
+	const std::string& getPatternId() const { return patternId; }
+	void setPatternId(const std::string& id) { patternId = id; }
+
 	AttackAction() {
 		setType(ActionType::Attack);
 		setMultiplier(1.0f);
@@ -49,6 +53,7 @@ public:
 		c->setRotation(getRotation());
 		c->setActionCode(getActionCode());
 		c->setSubType(subType);
+		c->setPatternId(patternId);
 		return c;
 	}
 
