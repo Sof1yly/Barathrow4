@@ -83,6 +83,10 @@ public:
 	bool getIsMoving() const { return isMoving; }
 
 	int getMoveRange() const { return moveRange; }
+	int getCountDown() const { return countdown; }
+    void setCountDownR() { countdownRemaning = countdown; }
+	void decreaseCountDownR() { if (countdownRemaning > 0) countdownRemaning--; }
+	int getCountDownR() const { return countdownRemaning; }
 
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
@@ -96,6 +100,8 @@ private:
     int health = maxHealth;
     int damage = 1;
 	int moveRange = 1;
+	int countdown = 0;
+    int countdownRemaning = 0;
 
     int nowRow = 0;
     int nowCol = 0;

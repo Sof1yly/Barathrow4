@@ -1496,18 +1496,27 @@ void Level::UpdateTurn()
 
         if (e->isPreparingAttack())
         {
-            ApplyEnemyAttack(e);
-            highlightManager.HideEnemyAttack(e->highlightIndex);
-            e->setPreparingAttack(false);
+            if (e->getCountDownR() <= 0)
+            {
+                ApplyEnemyAttack(e);
+                highlightManager.HideEnemyAttack(e->highlightIndex);
 
+                e->setPreparingAttack(false);
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                return;
+            }
             enemyActing = false;
             currentEnemyIndex++;
             return;
         }
 
-        if (EnemyCanAttackPlayer(e))
+        if (EnemyCanAttackPlayer(e) && !e->isPreparingAttack())
         {
             e->setPreparingAttack(true);
+            e->setCountDownR();
+
             PreviewAllEnemyAttacks();
 
             enemyActing = false;
@@ -1552,16 +1561,12 @@ void Level::UpdateTurn()
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            e->setPreparingAttack(false);
-        e->decrementWeaken();
-        }
-        for (auto* e : enemies)
-        {
-            if (!e || e->getIsDead()) continue;
 
-            if (EnemyCanAttackPlayer(e))
+            e->decrementWeaken();
+
+            if (e->isPreparingAttack())
             {
-                e->setPreparingAttack(true);
+                e->decreaseCountDownR();
             }
         }
 
