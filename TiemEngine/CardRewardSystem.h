@@ -510,6 +510,16 @@ public:
         active = false;
     }
 
+    void Reset()
+    {
+        for (Card* c : ownedRewardCards)
+            if (c) delete c;
+        ownedRewardCards.clear();
+        clonedActionPatterns.clear();
+        offeredCards.clear();
+        active = false;
+    }
+
     bool HandleKeySelection(char key, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
     {
         if (!active)

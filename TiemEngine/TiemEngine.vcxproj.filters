@@ -150,6 +150,9 @@
     <ClCompile Include="ShopSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MainMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Action.h">
@@ -293,6 +296,9 @@
     <ClInclude Include="ShopSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MainMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Resource\Shader\fragment.shd">
@@ -304,9 +310,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Resource\GameData\Pattern.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\Resource\GameData\CardAction.txt">
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="..\Resource\GameData\CardActionStandard.txt">

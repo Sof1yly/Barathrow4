@@ -122,7 +122,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Resource\GameData\Pattern.txt" />
-    <Text Include="..\Resource\GameData\CardAction.txt" />
     <Text Include="..\Resource\GameData\CardActionStandard.txt" />
     <Text Include="..\Resource\GameData\CardDesc.txt" />
     <Text Include="..\Resource\GameData\CardDesc_filled.txt" />

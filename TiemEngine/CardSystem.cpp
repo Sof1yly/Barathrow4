@@ -41,6 +41,23 @@ void CardSystem::RemoveCardEverywhere(const std::string& name)
     UpdatePileVisuals();
 }
 
+void CardSystem::RemoveOneCard(const std::string& name)
+{
+    auto removeOne = [&](std::vector<Card*>& vec) -> bool {
+        for (auto it = vec.begin(); it != vec.end(); ++it) {
+            if (*it && (*it)->getName() == name) {
+                vec.erase(it);
+                return true;
+            }
+        }
+        return false;
+    };
+    if (!removeOne(deck))
+        removeOne(discard);
+    removeOne(fullCollection);
+    UpdatePileVisuals();
+}
+
 CardSystem::CardSystem() {}
 
 CardSystem::~CardSystem() {}
@@ -1036,19 +1053,13 @@ void CardSystem::GenerateEnergyCards(int count, std::vector<DrawableObject*>& ob
 {
     if (count <= 0) return;
 
-    Card* templateCard = dataLoader.findEnergyCard();
-    if (!templateCard) {
-        std::cout << "[Energy] No energy card (enr) found in card data!" << std::endl;
-        return;
-    }
-
     std::vector<Card*> newCards;
     for (int i = 0; i < count; ++i) {
-        Card* enrCard = new Card(templateCard->getName());
-        enrCard->setLevel(templateCard->getLevel());
-        enrCard->setRarityCode(templateCard->getRarityCode());
-        enrCard->setTypeCode(templateCard->getTypeCode());
-        enrCard->setDescription(templateCard->getDescription());
+        Card* enrCard = new Card("Energy");
+        enrCard->setLevel(1);
+        enrCard->setRarityCode("misc");
+        enrCard->setTypeCode("en");
+        enrCard->setDescription("Energy");
 
         EnergyAction* ea = new EnergyAction(EnergySubType::EnergyCard);
         ea->setValue(0);

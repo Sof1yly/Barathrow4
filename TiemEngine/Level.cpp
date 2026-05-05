@@ -23,7 +23,7 @@ namespace {
     constexpr const char* PATH_PATTERN        = "../Resource/GameData/Pattern.txt";
     constexpr const char* PATH_CARDS_STARTER  = "../Resource/GameData/CardActionStandard.txt";
     constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardDesc_filled.txt";
-    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc.txt";
+    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc_filled.txt";
     constexpr const char* PATH_ENEMY_DATA     = "../Resource/GameData/EnemyData.txt";
     constexpr const char* PATH_ENEMY_PATTERN  = "../Resource/GameData/EnemyPattern.txt";
 }
@@ -565,6 +565,10 @@ void Level::LevelFree()
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
 
+    // Reset subsystems that hold persistent run state so a restart starts clean
+    cardRewardSystem.Reset();
+    shopSystem.Reset();
+
     // 2. Remove enemy-owned objects from objectsList before deleting enemy,
     //    to avoid double-free when the objectsList loop runs.
     for (auto* e : enemies)
@@ -617,6 +621,7 @@ void Level::LevelFree()
     highlightManager.Reset();
 
     // 5. Reset game state
+    damagePopups.clear();
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;

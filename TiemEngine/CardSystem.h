@@ -172,6 +172,7 @@ public:
 
     void AddCardToDeck(Card* card);
     void RemoveCardEverywhere(const std::string& name);
+    void RemoveOneCard(const std::string& name);
 
     // Combo system: find a card template by name, clone it, and add to hand
     void GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList);

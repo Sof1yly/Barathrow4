@@ -107,6 +107,7 @@ public:
     bool HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSystem,Player& player,std::vector<DrawableObject*>& objectsList);
 
     void ApplyRemovals(CardSystem& cardSystem);
+    void Reset();
 
     bool IsActive() const;
 };

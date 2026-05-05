@@ -392,19 +392,12 @@ int ShopSystem::GetRemoveCost() const
 
 void ShopSystem::OpenRemoveOverlay(CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
 {
-    std::vector<Card*> allCards = cardSystem.GetAllCards();
-    std::unordered_set<std::string> seenNames;
+    const std::vector<Card*>& allCards = cardSystem.GetFullCollection();
     removeShowCards.clear();
 
     for (Card* c : allCards)
     {
         if (!c || c->isEnergyCard()) continue;
-        if (seenNames.count(c->getName())) continue;
-        bool wasRemoved = false;
-        for (const auto& n : permanentlyRemovedNames)
-            if (n == c->getName()) { wasRemoved = true; break; }
-        if (wasRemoved) continue;
-        seenNames.insert(c->getName());
         removeShowCards.push_back(c);
     }
 
@@ -613,7 +606,19 @@ void ShopSystem::CloseRemoveOverlay(std::vector<DrawableObject*>& objectsList)
 void ShopSystem::ApplyRemovals(CardSystem& cardSystem)
 {
     for (const std::string& name : permanentlyRemovedNames)
-        cardSystem.RemoveCardEverywhere(name);
+        cardSystem.RemoveOneCard(name);
+}
+
+void ShopSystem::Reset()
+{
+    for (Card* c : ownedShopCards)
+        if (c) delete c;
+    ownedShopCards.clear();
+    permanentlyRemovedNames.clear();
+    shopVisitCount = 0;
+    healEverUsed = false;
+    healUsesThisShop = 0;
+    removeUsedThisShop = false;
 }
 
 bool ShopSystem::LoadPoolData(const std::string& patternFile,const std::string& cardFile,const std::string& cardDescFile,std::string* outError)
@@ -702,7 +707,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
                 }
                 player.SpendCoins(cost);
                 permanentlyRemovedNames.push_back(slot.card->getName());
-                cardSystem.RemoveCardEverywhere(slot.card->getName());
+                cardSystem.RemoveOneCard(slot.card->getName());
                 removeUsedThisShop = true;
                 std::cout << "[Shop] Removed '" << slot.card->getName() << "' for " << cost << " coins.\n";
                 CloseRemoveOverlay(objectsList);
