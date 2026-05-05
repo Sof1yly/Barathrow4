@@ -1262,11 +1262,23 @@ void Level::HandleMouse(int type, int x, int y)
 
                     if (result.hasAttack())
                     {
-                        playerState = PlayerState::ATTACK;
-                        UpdatePlayerAnimation();
-
                         playerAttacking = true;
                         attackTimer = 0;
+						int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
+
+                        // Choose attack type
+                        if (attackType == 0)
+                        {
+                            playerData.SetPlayerAttack((int)playerDir);
+                        }
+                        else if (attackType == 1)
+                        {
+                            playerData.SetPlayerAttackAoe((int)playerDir);
+                        }
+                        else if (attackType ==2)
+                        {
+                            playerData.SetPlayerAttackRange((int)playerDir);
+                        }
 
                         std::cout << "[Attack Animation Started]\n";
 
@@ -1496,18 +1508,28 @@ void Level::UpdateTurn()
 
         if (e->isPreparingAttack())
         {
-            ApplyEnemyAttack(e);
-            highlightManager.HideEnemyAttack(e->highlightIndex);
-            e->setPreparingAttack(false);
+            if (e->getCountDownR() <= 0)
+            {
+                ApplyEnemyAttack(e);
+                highlightManager.HideEnemyAttack(e->highlightIndex);
 
+                e->setPreparingAttack(false);
+
+                enemyActing = false;
+                currentEnemyIndex++;
+                e->addDamage();
+                return;
+            }
             enemyActing = false;
             currentEnemyIndex++;
             return;
         }
 
-        if (EnemyCanAttackPlayer(e))
+        if (EnemyCanAttackPlayer(e) && !e->isPreparingAttack())
         {
             e->setPreparingAttack(true);
+            e->setCountDownR();
+
             PreviewAllEnemyAttacks();
 
             enemyActing = false;
@@ -1552,16 +1574,12 @@ void Level::UpdateTurn()
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            e->setPreparingAttack(false);
-        e->decrementWeaken();
-        }
-        for (auto* e : enemies)
-        {
-            if (!e || e->getIsDead()) continue;
 
-            if (EnemyCanAttackPlayer(e))
+            e->decrementWeaken();
+
+            if (e->isPreparingAttack())
             {
-                e->setPreparingAttack(true);
+                e->decreaseCountDownR();
             }
         }
 

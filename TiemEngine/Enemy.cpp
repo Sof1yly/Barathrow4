@@ -29,10 +29,9 @@ Enemy::Enemy(EnemyType type)
     maxHealth = d.hp;
     damage = d.atk;
 	moveRange = d.mov;
+    countdown = d.countdown;
+	attackInc = d.attackIncrement;
 
-    // store unused values for later
-    int countdown = d.countdown;
-    int attackInc = d.attackIncrement;
     std::string patternName = d.pattern;
     std::vector<std::string> grid = EnemyLoadPattern::GetPattern(patternName);
 

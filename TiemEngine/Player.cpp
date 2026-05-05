@@ -323,16 +323,39 @@ void Player::SetPlayerWalk(int dir)
     }
 }
 
-void Player::SetPlayerAttack(int dir)
+void Player::SetPlayerAttack(int dir) //punch attack
 {
     if (!sprite || isDead) return;
 
     switch (dir)
     {
     case 0: sprite->SetAnimationLoop(2, 0, 8, 100); break;
-    case 1: sprite->SetAnimationLoop(2, 8, 8, 100); break;
+    case 3: sprite->SetAnimationLoop(2, 8, 8, 100); break;
     case 2: sprite->SetAnimationLoop(3, 0, 8, 100); break;
-    case 3: sprite->SetAnimationLoop(3, 8, 8, 100); break;
+    case 1: sprite->SetAnimationLoop(3, 8, 8, 100); break;
+    }
+}
+
+void Player::SetPlayerAttackAoe(int dir) //sword attack
+{
+    if (!sprite || isDead) return;
+    switch (dir)
+    {
+    case 0: sprite->SetAnimationLoop(5, 0, 8, 100); break;
+    case 3: sprite->SetAnimationLoop(5, 8, 8, 100); break;
+    case 2: sprite->SetAnimationLoop(6, 0, 8, 100); break;
+    case 1: sprite->SetAnimationLoop(6, 8, 8, 100); break;
+	}
+}
+void Player::SetPlayerAttackRange(int dir) //gun attack
+{
+    if (!sprite || isDead) return;
+    switch (dir)
+    {
+    case 0: sprite->SetAnimationLoop(4, 0, 4, 100); break;
+    case 3: sprite->SetAnimationLoop(4, 4, 4, 100); break;
+    case 2: sprite->SetAnimationLoop(4, 8, 4, 100); break;
+    case 1: sprite->SetAnimationLoop(4, 12, 4, 100); break;
     }
 }
 
