@@ -1262,11 +1262,23 @@ void Level::HandleMouse(int type, int x, int y)
 
                     if (result.hasAttack())
                     {
-                        playerState = PlayerState::ATTACK;
-                        UpdatePlayerAnimation();
-
                         playerAttacking = true;
                         attackTimer = 0;
+						int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
+
+                        // Choose attack type
+                        if (attackType == 0)
+                        {
+                            playerData.SetPlayerAttack((int)playerDir);
+                        }
+                        else if (attackType == 1)
+                        {
+                            playerData.SetPlayerAttackAoe((int)playerDir);
+                        }
+                        else if (attackType ==2)
+                        {
+                            playerData.SetPlayerAttackRange((int)playerDir);
+                        }
 
                         std::cout << "[Attack Animation Started]\n";
 
