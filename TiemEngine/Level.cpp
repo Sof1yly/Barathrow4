@@ -1269,7 +1269,14 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         playerAttacking = true;
                         attackTimer = 0;
-						int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
+
+                        const std::string& pid = result.pendingAttacks[0].patternId;
+                        int patNum = pid.size() > 1 ? std::stoi(pid.substr(1)) : 0;
+                        int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
+                        if ((patNum >= 4 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+                            attackType = 1;
+                        else if (patNum >= 14 && patNum <= 17)
+                            attackType = 2;
 
                         // Choose attack type
                         if (attackType == 0)
