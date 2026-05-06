@@ -84,8 +84,8 @@ void LevelTest::HandleMouse(int type, int x, int y)
 	float realX, realY;
 
 	// Calculate Real X Y 
-	realX = x;
-	realY = y;
+	realX = (float)x;
+	realY = (float)y;
 
 	player->SetPosition(glm::vec3(realX, realY, 0));
 }

@@ -60,7 +60,7 @@ void Level3::LevelUpdate()
 	//cout << "Update Level" << endl;
 	int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
 	for (DrawableObject* obj : objectsList) {
-		obj->Update(deltaTime);
+		obj->Update((float)deltaTime);
 	}
 	
 }
@@ -106,8 +106,8 @@ void Level3::HandleMouse(int type, int x, int y)
 	float realX, realY;
 
 	// Calculate Real X Y 
-	realX = (x/100.0)-3.0;
-	realY = ((y/100.0)-3.0)*(-1.0);
+	realX = (x/100.0f)-3.0f;
+	realY = ((y/100.0f)-3.0f)*(-1.0f);
 
 	GameEngine::GetInstance()->GetWindowHeight();
 	GameEngine::GetInstance()->GetWindowWidth();

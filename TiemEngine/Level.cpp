@@ -49,7 +49,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
 	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -1273,7 +1273,7 @@ void Level::HandleMouse(int type, int x, int y)
                         const std::string& pid = result.pendingAttacks[0].patternId;
                         int patNum = pid.size() > 1 ? std::stoi(pid.substr(1)) : 0;
                         int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
-                        if ((patNum >= 4 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+                        if ((patNum >= 5 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
                             attackType = 1;
                         else if (patNum >= 14 && patNum <= 17)
                             attackType = 2;
@@ -1281,7 +1281,7 @@ void Level::HandleMouse(int type, int x, int y)
                         // Choose attack type
                         if (attackType == 0)
                         {
-                            playerData.SetPlayerAttack((int)playerDir);
+                            playerData.SetPlayerAttack(ConvertDir(playerDir));
                         }
                         else if (attackType == 1)
                         {

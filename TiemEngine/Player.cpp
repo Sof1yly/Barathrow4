@@ -330,9 +330,9 @@ void Player::SetPlayerAttack(int dir) //punch attack
     switch (dir)
     {
     case 0: sprite->SetAnimationLoop(2, 0, 8, 100); break;
-    case 3: sprite->SetAnimationLoop(2, 8, 8, 100); break;
+    case 1: sprite->SetAnimationLoop(2, 8, 8, 100); break;
     case 2: sprite->SetAnimationLoop(3, 0, 8, 100); break;
-    case 1: sprite->SetAnimationLoop(3, 8, 8, 100); break;
+    case 3: sprite->SetAnimationLoop(3, 8, 8, 100); break;
     }
 }
 

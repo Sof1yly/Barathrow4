@@ -61,7 +61,7 @@ void SpriteObject::Update(float deltaTime)
 {
 	if (isFinished) return;
 
-	timeCount += deltaTime;
+	timeCount += (int)deltaTime;
 	if (timeCount > animationTime)
 	{
 		this->NextAnimation();

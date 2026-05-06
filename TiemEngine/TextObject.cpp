@@ -107,7 +107,7 @@ void TextObject::LoadTextWrapped(string text, SDL_Color textColor, int fontSize,
 		{
 			GLenum fmt = (surfaceMessage->format->Rmask == 0x000000FF) ? GL_RGBA : GL_BGRA;
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surfaceMessage->w, surfaceMessage->h, 0, fmt, GL_UNSIGNED_BYTE, surfaceMessage->pixels);
-			SetSize(surfaceMessage->w, -surfaceMessage->h);
+			SetSize((float)surfaceMessage->w, -(float)surfaceMessage->h);
 			SDL_FreeSurface(surfaceMessage);
 		}
 		TTF_CloseFont(font);
