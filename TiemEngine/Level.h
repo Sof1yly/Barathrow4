@@ -25,6 +25,7 @@
 #include "CardActionExecutor.h"
 #include "LevelManager.h"
 #include "EventScene.h"
+#include "EventRemoveScene.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -159,6 +160,7 @@ private:
 
     // Event scene (shown once at the start of a run)
     EventScene eventScene;
+    EventRemoveScene eventRemoveScene;
     bool eventSceneDone = false;
 
     // Persistent run effects granted by the event scene

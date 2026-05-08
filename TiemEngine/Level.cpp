@@ -250,7 +250,7 @@ void Level::LevelUpdate()
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
 
-    if (eventScene.IsActive())
+    if (eventScene.IsActive() || eventRemoveScene.IsActive())
     {
         for (auto* obj : objectsList)
             obj->Update((float)deltaTime);
@@ -567,6 +567,7 @@ void Level::LevelDraw()
 void Level::LevelFree()
 {
     eventScene.Close(objectsList);
+    eventRemoveScene.Close(objectsList);
     cardInspect.Hide(objectsList);
 
     if (deckViewer.IsActive())
@@ -725,7 +726,7 @@ void Level::HandleKey(char key)
         return;
     }
 
-    if (eventScene.IsActive()) return;
+    if (eventScene.IsActive() || eventRemoveScene.IsActive()) return;
 
     if (shopSystem.IsActive()) return;
 
@@ -905,7 +906,22 @@ void Level::HandleMouse(int type, int x, int y)
                 ApplyEventEffect(effect);
                 eventScene.Close(objectsList);
                 eventSceneDone = true;
-                cardSystem.DealNewHand(baseHandSize, objectsList);
+                // Purge opens the remove scene; deal hand only after that finishes
+                if (!eventRemoveScene.IsActive())
+                    cardSystem.DealNewHand(baseHandSize, objectsList);
+            }
+        }
+        return;
+    }
+
+    if (eventRemoveScene.IsActive())
+    {
+        if (type == 0)
+        {
+            if (eventRemoveScene.HandleMouseClick(realX, realY, cardSystem, objectsList))
+            {
+                if (!eventRemoveScene.IsActive())
+                    cardSystem.DealNewHand(baseHandSize, objectsList);
             }
         }
         return;
@@ -1676,20 +1692,8 @@ void Level::ApplyEventEffect(EventScene::EffectType effect)
         break;
 
     case EventScene::EffectType::REMOVE_CARDS:
-    {
-        auto allCards = cardSystem.GetAllCards();
-        std::vector<Card*> removable;
-        for (Card* c : allCards)
-            if (c && !c->isEnergyCard()) removable.push_back(c);
-
-        std::mt19937 localRng(std::random_device{}());
-        std::shuffle(removable.begin(), removable.end(), localRng);
-
-        int toRemove = std::min(2, static_cast<int>(removable.size()));
-        for (int i = 0; i < toRemove; i++)
-            cardSystem.RemoveOneCard(removable[i]->getName());
+        eventRemoveScene.Open(cardSystem, objectsList, 2);
         break;
-    }
     }
 }
 
