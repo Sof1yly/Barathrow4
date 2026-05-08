@@ -1,6 +1,8 @@
 #include "Enemy.h"
 #include <iostream>
 #include <cmath>
+#include <queue>
+#include "GridConfig.h"
 
 std::string EnemyTypeToString(Enemy::EnemyType type)
 {
@@ -157,39 +159,141 @@ bool Enemy::TryMoveTowardPlayer(
     const std::function<bool(int, int)>& isWalkable,
     int& outR, int& outC)
 {
-    int er = getNowRow();
-    int ec = getNowCol();
+    struct Node
+    {
+        int r;
+        int c;
+    };
 
-    int newR = er;
-    int newC = ec;
+    auto IsBlockedByEnemy = [&](int r, int c) -> bool
+        {
+            for (auto* other : allEnemies)
+            {
+                if (other != this &&
+                    other->getNowRow() == r &&
+                    other->getNowCol() == c)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
 
-    if (er < playerRow) newR++;
-    else if (er > playerRow) newR--;
-    else if (ec < playerCol) newC++;
-    else if (ec > playerCol) newC--;
+    auto CanWalk = [&](int r, int c) -> bool
+        {
+            if (r < gridStartRow || r >= gridEndRow ||
+                c < gridStartCol || c >= gridEndCol)
+            {
+                return false;
+            }
 
-    newR = std::max(gridStartRow, std::min(newR, gridEndRow - 1));
-    newC = std::max(gridStartCol, std::min(newC, gridEndCol - 1));
+            if (!isWalkable(r, c))
+            {
+                return false;
+            }
 
-    if (!isWalkable(newR, newC))
+            if (IsBlockedByEnemy(r, c))
+            {
+                return false;
+            }
+
+            return true;
+        };
+
+    int startR = getNowRow();
+    int startC = getNowCol();
+
+    static const int dr[4] = { 1, -1, 0, 0 };
+    static const int dc[4] = { 0, 0, 1, -1 };
+
+    bool visited[GRID_ROWS][GRID_COLS] = {};
+    Node parent[GRID_ROWS][GRID_COLS];
+
+    std::queue<Node> q;
+
+    q.push({ startR, startC });
+    visited[startR][startC] = true;
+
+    bool foundPlayer = false;
+
+    int bestR = startR;
+    int bestC = startC;
+
+    int bestDist =
+        abs(startR - playerRow) +
+        abs(startC - playerCol);
+
+    while (!q.empty())
+    {
+        Node cur = q.front();
+        q.pop();
+
+        int dist =
+            abs(cur.r - playerRow) +
+            abs(cur.c - playerCol);
+
+        // nearest reachable tile to player
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            bestR = cur.r;
+            bestC = cur.c;
+        }
+
+        if (cur.r == playerRow &&
+            cur.c == playerCol)
+        {
+            foundPlayer = true;
+            bestR = cur.r;
+            bestC = cur.c;
+            break;
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            int nr = cur.r + dr[i];
+            int nc = cur.c + dc[i];
+
+            if (!CanWalk(nr, nc))
+                continue;
+
+            if (visited[nr][nc])
+                continue;
+
+            visited[nr][nc] = true;
+
+            parent[nr][nc] = cur;
+
+            q.push({ nr, nc });
+        }
+    }
+
+    // no movement possible
+    if (bestR == startR && bestC == startC)
     {
         return false;
     }
 
-    for (auto* other : allEnemies)
+    int curR = bestR;
+    int curC = bestC;
+
+    while (true)
     {
-        if (other != this &&
-            other->getNowRow() == newR &&
-            other->getNowCol() == newC)
+        Node p = parent[curR][curC];
+
+        if (p.r == startR &&
+            p.c == startC)
         {
-            return false;
+            outR = curR;
+            outC = curC;
+            return true;
         }
+
+        curR = p.r;
+        curC = p.c;
     }
 
-    outR = newR;
-    outC = newC;
-
-    return true;
+    return false;
 }
 
 void Enemy::addWeaken(int turns)
