@@ -171,12 +171,7 @@ void Level::LevelInit()
 
     cardSystem.ShuffleDeck();
 
-    // Show event scene on first level; hand is dealt after the player picks
-    if (!eventSceneDone)
-    {
-        eventScene.Open(objectsList);
-    }
-    else
+    if (eventSceneDone)
     {
         cardSystem.DealNewHand(baseHandSize, objectsList);
     }
@@ -238,6 +233,12 @@ void Level::LevelInit()
         fastModeText->LoadText("3x mode", color, 24);
         fastModeText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f)); // hidden until toggled
         objectsList.push_back(fastModeText);
+    }
+
+    // Open event scene last so it renders on top of all game UI
+    if (!eventSceneDone)
+    {
+        eventScene.Open(objectsList);
     }
 
     std::cout << "Init Level" << std::endl;
