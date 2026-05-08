@@ -171,8 +171,15 @@ void Level::LevelInit()
 
     cardSystem.ShuffleDeck();
 
-    // Start the game with 5 cards in hand
-    cardSystem.DealNewHand(5, objectsList);
+    // Show event scene on first level; hand is dealt after the player picks
+    if (!eventSceneDone)
+    {
+        eventScene.Open(objectsList);
+    }
+    else
+    {
+        cardSystem.DealNewHand(baseHandSize, objectsList);
+    }
 
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
@@ -242,6 +249,13 @@ void Level::LevelUpdate()
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
+
+    if (eventScene.IsActive())
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        return;
+    }
 
     // ---- Update floating damage popups ----
     for (auto& popup : damagePopups)
@@ -535,6 +549,7 @@ void Level::LevelUpdate()
         if (!rewardPickedAfterWin)
         {
             int coinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
             playerData.AddCoins(coinsEarned);
             std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
             rewardBoxScene.Open(coinsEarned, objectsList);
@@ -551,6 +566,7 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    eventScene.Close(objectsList);
     cardInspect.Hide(objectsList);
 
     if (deckViewer.IsActive())
@@ -666,6 +682,11 @@ void Level::LevelFree()
     fastModeText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
+    eventSceneDone        = false;
+    baseHandSize          = 5;
+    goldBonusActive       = false;
+    startCombatBarrier    = 0;
+    startCombatOverclock  = 0;
 
     cout << "Free Level" << endl;
 }
@@ -703,6 +724,8 @@ void Level::HandleKey(char key)
                 : glm::vec3(0.0f, 10000.0f, 10.0f));
         return;
     }
+
+    if (eventScene.IsActive()) return;
 
     if (shopSystem.IsActive()) return;
 
@@ -809,6 +832,7 @@ void Level::HandleKey(char key)
         if (!rewardPickedAfterWin)
         {
             int coinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
             playerData.AddCoins(coinsEarned);
             rewardBoxScene.Open(coinsEarned, objectsList);
             rewardPickedAfterWin = true;
@@ -870,6 +894,22 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    if (eventScene.IsActive())
+    {
+        if (type == 0)
+        {
+            EventScene::EffectType effect;
+            if (eventScene.HandleMouseClick(realX, realY, effect))
+            {
+                ApplyEventEffect(effect);
+                eventScene.Close(objectsList);
+                eventSceneDone = true;
+                cardSystem.DealNewHand(baseHandSize, objectsList);
+            }
+        }
+        return;
+    }
 
     if (shopSystem.IsActive())
     {
@@ -1089,7 +1129,7 @@ void Level::HandleMouse(int type, int x, int y)
         if (cardSystem.IsDrawPileClicked(mousePos))
         {
             bool shouldEndTurn = cardSystem.UseDrawPileTurn();
-            cardSystem.DiscardHandAndDraw(5, objectsList);
+            cardSystem.DiscardHandAndDraw(baseHandSize, objectsList);
             if (shouldEndTurn)
             {
                 tempDiscardDone = true;
@@ -1603,7 +1643,57 @@ void Level::UpdateTurn()
     }
 }
 
-void Level::LevelRestart() 
+void Level::ApplyEventEffect(EventScene::EffectType effect)
+{
+    switch (effect)
+    {
+    case EventScene::EffectType::EXTRA_DRAW:
+        baseHandSize++;
+        break;
+
+    case EventScene::EffectType::GOLD_BONUS:
+        goldBonusActive = true;
+        break;
+
+    case EventScene::EffectType::START_BARRIER:
+        startCombatBarrier = 1;
+        playerData.AddBarrier(1);
+        break;
+
+    case EventScene::EffectType::START_OVERCLOCK:
+        startCombatOverclock = 3;
+        cardSystem.ApplyOverclock(3);
+        break;
+
+    case EventScene::EffectType::MAX_HP:
+        playerData.setMaxHp(playerData.getMaxHp() + 10);
+        playerData.HealHp(10);
+        UpdateHPBar();
+        break;
+
+    case EventScene::EffectType::CURRENCY:
+        playerData.AddCoins(300);
+        break;
+
+    case EventScene::EffectType::REMOVE_CARDS:
+    {
+        auto allCards = cardSystem.GetAllCards();
+        std::vector<Card*> removable;
+        for (Card* c : allCards)
+            if (c && !c->isEnergyCard()) removable.push_back(c);
+
+        std::mt19937 localRng(std::random_device{}());
+        std::shuffle(removable.begin(), removable.end(), localRng);
+
+        int toRemove = std::min(2, static_cast<int>(removable.size()));
+        for (int i = 0; i < toRemove; i++)
+            cardSystem.RemoveOneCard(removable[i]->getName());
+        break;
+    }
+    }
+}
+
+void Level::LevelRestart()
 {
     cout << "=== RESTART START ===" << endl;
 
@@ -2020,5 +2110,8 @@ void Level::AdvanceToNextRound()
     shopSystem.ApplyRemovals(cardSystem);
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
-    cardSystem.DealNewHand(5, objectsList);
+    cardSystem.DealNewHand(baseHandSize, objectsList);
+
+    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
 }
