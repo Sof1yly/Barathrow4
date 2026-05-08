@@ -1,8 +1,8 @@
 A1
-O
+XX...
 
 A2
-XXX
+X..
 
 A3
 OXX

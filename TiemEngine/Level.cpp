@@ -1491,7 +1491,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
 
-    auto attacks = e->getCurrentPattern().applyTo(
+    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
         e->getNowRow(), e->getNowCol());
 
     for (auto& cell : attacks)
@@ -1809,7 +1809,7 @@ void Level::PreviewAllEnemyAttacks()
         if (!e || e->getIsDead()) continue;
         if (!e->isPreparingAttack()) continue;
 
-        auto cells = e->getCurrentPattern().applyTo(
+        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
             e->getNowRow(),
             e->getNowCol()
         );
@@ -1976,8 +1976,8 @@ void Level::SpawnEnemiesForLevel()
     };
 
     spawnAt(ta, 0);
-    spawnAt(tb, 2);
-    spawnAt(tc, 4);
+    spawnAt(ta, 2);
+    spawnAt(ta, 4);
 }
 
 void Level::AdvanceToNextRound()

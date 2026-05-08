@@ -91,6 +91,10 @@ public:
 	int getCountDownR() const { return countdownRemaning; }
     void addDamage() { damage = damage + attackInc; }
 
+    AttackPattern GetRotatedPatternTowardPlayer(
+        int playerRow,
+        int playerCol) const;
+
     void StartMove(glm::vec3 targetWorld);
     int highlightIndex;
     int stepsRemaining = 0;

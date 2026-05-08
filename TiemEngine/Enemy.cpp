@@ -534,6 +534,59 @@ void Enemy::setPreparingAttack(bool value)
     preparingAttack = value;
 }
 
+AttackPattern Enemy::GetRotatedPatternTowardPlayer(
+    int playerRow,
+    int playerCol) const
+{
+    AttackPattern rotated = getCurrentPattern();
+
+    int er = getNowRow();
+    int ec = getNowCol();
+
+    int rotateTimes = 0;
+
+    int dx = playerRow - er;
+    int dy = playerCol - ec;
+
+    if (abs(dx) >= abs(dy))
+    {
+        // horizontal
+
+        if (dx > 0)
+        {
+            // RIGHT
+            rotateTimes = 2;
+        }
+        else
+        {
+            // LEFT
+            rotateTimes = 0;
+        }
+    }
+    else
+    {
+        // vertical
+
+        if (dy < 0)
+        {
+            // UP
+            rotateTimes = 3;
+        }
+        else
+        {
+            // DOWN
+            rotateTimes = 1;
+        }
+    }
+
+    for (int i = 0; i < rotateTimes; i++)
+    {
+        rotated = rotated.rotated90CW();
+    }
+
+    return rotated;
+}
+
 void Enemy::StartMove(glm::vec3 targetWorld)
 {
     if (!objSprite) return;
