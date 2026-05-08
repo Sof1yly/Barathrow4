@@ -61,36 +61,49 @@ void HighlightManager::ShowAttackPattern(
     const std::vector<std::pair<IVec2, int>>& cells,
     int gridStartRow, int gridEndRow,
     int gridStartCol, int gridEndCol,
+    const bool walkable[][GRID_COLS],
     std::function<glm::vec3(int, int)> gridToWorld)
 {
     Hide(attackHighlights);
 
     int index = 0;
-    for (auto& cell : cells)
+
+    for (const auto& item : cells)
     {
-        int gx = cell.first.x;
-        int gy = cell.first.y;
-
-        if (gx < gridStartRow || gx >= gridEndRow ||
-            gy < gridStartCol || gy >= gridEndCol)
-            continue;
-
         if (index >= attackHighlights.size())
             break;
 
-        glm::vec3 world = gridToWorld(gx, gy);
-        attackHighlights[index]->SetPosition(
-            glm::vec3(world.x, world.y, 30)
-        );
+        int r = item.first.x;
+        int c = item.first.y;
+
+        if (r < gridStartRow || r >= gridEndRow ||
+            c < gridStartCol || c >= gridEndCol)
+            continue;
+
+        if (!walkable[r][c])
+            continue;
+
+        GameObject* obj = attackHighlights[index];
+
+        obj->SetColor(1.0f, 1.0f, 1.0f,0.5f);
+        obj->SetAlpha(0.45f);
+
+        obj->SetSize(gridWide - 10.0f, gridHigh - 10.0f);
+
+        glm::vec3 pos = gridToWorld(r, c);
+        pos.z = 5.0f;
+
+        obj->SetPosition(pos);
+
         index++;
     }
 }
-
 void HighlightManager::ShowMovePreview(
     int row, int col,
     int steps, int dir,
     int gridStartRow, int gridEndRow,
     int gridStartCol, int gridEndCol,
+    const bool walkable[][GRID_COLS],
     std::function<glm::vec3(int, int)> gridToWorld,
     const std::vector<std::pair<int, int>>& enemyPositions)
 {
@@ -99,80 +112,96 @@ void HighlightManager::ShowMovePreview(
     int r = row;
     int c = col;
 
-    std::vector<std::pair<int, int>> validTiles;
+    int index = 0;
 
     for (int i = 0; i < steps; i++)
     {
-        int nextR = r;
-        int nextC = c;
+        if (index >= moveHighlights.size())
+            break;
 
         switch (dir)
         {
-        case 0: nextR--; break; // up
-        case 1: nextC--; break; // left
-        case 2: nextC++; break; // right
-        case 3: nextR++; break; // down
+        case 0: r--; break;
+        case 1: c--; break;
+        case 2: c++; break;
+        case 3: r++; break;
         }
 
-        if (nextR < gridStartRow || nextR >= gridEndRow ||
-            nextC < gridStartCol || nextC >= gridEndCol)
+        if (r < gridStartRow || r >= gridEndRow ||
+            c < gridStartCol || c >= gridEndCol)
+            break;
+
+        if (!walkable[r][c])
             break;
 
         bool blocked = false;
-        for (auto& pos : enemyPositions)
+
+        for (const auto& e : enemyPositions)
         {
-            if (nextR == pos.first && nextC == pos.second)
+            if (e.first == r && e.second == c)
             {
                 blocked = true;
                 break;
             }
         }
-        if (blocked) break;
 
-        r = nextR;
-        c = nextC;
+        if (blocked)
+            break;
 
-        validTiles.emplace_back(r, c);
-    }
+        GameObject* obj = moveHighlights[index];
 
-    for (int i = 0; i < validTiles.size() && i < moveHighlights.size(); i++)
-    {
-        int tileR = validTiles[i].first;
-        int tileC = validTiles[i].second;
+        obj->SetColor(0.0f, 1.0f, 0.0f,0.3f);
+        obj->SetAlpha(0.45f);
 
-        glm::vec3 world = gridToWorld(tileR, tileC);
-        moveHighlights[i]->SetPosition(glm::vec3(world.x, world.y, 60));
+        obj->SetSize(gridWide - 15.0f -30.0f, gridHigh - 15.0f-30.0f);
 
-        if (i == validTiles.size() - 1)
-            moveHighlights[i]->SetColor(0.2f, 1.0f, 0.2f, 0.6f);
-        else
-            moveHighlights[i]->SetColor(0.2f, 0.5f, 1.0f, 0.4f);
-    }
-}
+        glm::vec3 pos = gridToWorld(r, c);
+        pos.z = 4.0f;
 
-void HighlightManager::ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>& cells, int gridStartRow, int gridEndRow, int gridStartCol, int gridEndCol, std::function<glm::vec3(int, int)> gridToWorld, int& index)
-{
-    for (auto& cell : cells)
-    {
-        int gx = cell.first.x;
-        int gy = cell.first.y;
-
-        if (gx < gridStartRow || gx >= gridEndRow ||
-            gy < gridStartCol || gy >= gridEndCol)
-            continue;
-
-        if (index >= enemyHighlights.size())
-            return;
-
-        glm::vec3 world = gridToWorld(gx, gy);
-        enemyHighlights[index]->SetPosition(
-            glm::vec3(world.x, world.y, 40)
-        );
+        obj->SetPosition(pos);
 
         index++;
     }
 }
 
+void HighlightManager::ShowEnemyAttack(
+    const std::vector<std::pair<IVec2, int>>& cells,
+    int gridStartRow, int gridEndRow,
+    int gridStartCol, int gridEndCol,
+    const bool walkable[][GRID_COLS],
+    std::function<glm::vec3(int, int)> gridToWorld,
+    int& index)
+{
+    for (const auto& item : cells)
+    {
+        if (index >= enemyHighlights.size())
+            break;
+
+        int r = item.first.x;
+        int c = item.first.y;
+
+        if (r < gridStartRow || r >= gridEndRow ||
+            c < gridStartCol || c >= gridEndCol)
+            continue;
+
+        if (!walkable[r][c])
+            continue;
+
+        GameObject* obj = enemyHighlights[index];
+
+        obj->SetColor(1.0f, 0.0f, 0.0f,0.5f);
+        obj->SetAlpha(0.5f);
+
+        obj->SetSize(gridWide - 12.0f, gridHigh - 12.0f);
+
+        glm::vec3 pos = gridToWorld(r, c);
+        pos.z = 3.0f;
+
+        obj->SetPosition(pos);
+
+        index++;
+    }
+}
 void HighlightManager::HideEnemyAttack(int& index)
 {
     if (index <= 0) return;

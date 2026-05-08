@@ -1746,7 +1746,11 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
         cells,
         GridStartRow, GridEndRow,
         GridStartCol, GridEndCol,
-        [this](int r, int c) { return GridToWorld(r, c); }
+        walkable,
+        [this](int r, int c)
+        {
+            return GridToWorld(r, c);
+        }
     );
 }
 
@@ -1757,13 +1761,11 @@ void Level::PreviewMovePath(int steps, int dir)
     for (auto* e : enemies)
     {
         if (!e || e->getIsDead()) continue;
-        if (e)
-        {
-            enemyPositions.emplace_back(
-                e->getNowRow(),
-                e->getNowCol()
-            );
-        }
+
+        enemyPositions.emplace_back(
+            e->getNowRow(),
+            e->getNowCol()
+        );
     }
 
     highlightManager.ShowMovePreview(
@@ -1773,7 +1775,11 @@ void Level::PreviewMovePath(int steps, int dir)
         dir,
         GridStartRow, GridEndRow,
         GridStartCol, GridEndCol,
-        [this](int r, int c) { return GridToWorld(r, c); },
+        walkable,
+        [this](int r, int c)
+        {
+            return GridToWorld(r, c);
+        },
         enemyPositions
     );
 }
@@ -1812,7 +1818,11 @@ void Level::PreviewAllEnemyAttacks()
             cells,
             GridStartRow, GridEndRow,
             GridStartCol, GridEndCol,
-            [this](int r, int c) { return GridToWorld(r, c); },
+            walkable,
+            [this](int r, int c)
+            {
+                return GridToWorld(r, c);
+            },
             enemyHighlightIndex
         );
     }

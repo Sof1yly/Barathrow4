@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include "AttackPattern.h"
 #include <functional>
+#include "GridConfig.h"
 
 class HighlightManager
 {
@@ -13,9 +14,11 @@ public:
 
     void Clear();
 
-    void ShowAttackPattern(const std::vector<std::pair<IVec2, int>>& cells,
+    void ShowAttackPattern(
+        const std::vector<std::pair<IVec2, int>>& cells,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
+        const bool walkable[][GRID_COLS],
         std::function<glm::vec3(int, int)> gridToWorld);
 
     void ShowMovePreview(
@@ -23,13 +26,15 @@ public:
         int steps, int dir,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
+        const bool walkable[][GRID_COLS],
         std::function<glm::vec3(int, int)> gridToWorld,
-        const std::vector<std::pair<int, int>>& enemyPositions
-    );
+        const std::vector<std::pair<int, int>>& enemyPositions);
 
-    void ShowEnemyAttack(const std::vector<std::pair<IVec2, int>>& cells,
+    void ShowEnemyAttack(
+        const std::vector<std::pair<IVec2, int>>& cells,
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
+        const bool walkable[][GRID_COLS],
         std::function<glm::vec3(int, int)> gridToWorld,
         int& index);
     void HideEnemyAttack(int& index);
