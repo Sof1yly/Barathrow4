@@ -1976,8 +1976,8 @@ void Level::SpawnEnemiesForLevel()
     };
 
     spawnAt(ta, 0);
-    spawnAt(ta, 2);
-    spawnAt(ta, 4);
+    spawnAt(tb, 2);
+    spawnAt(tc, 4);
 }
 
 void Level::AdvanceToNextRound()
