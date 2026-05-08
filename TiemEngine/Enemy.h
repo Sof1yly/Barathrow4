@@ -4,6 +4,7 @@
 #include "TextObject.h"
 #include "EnemyData.h"
 #include "EnemyLoadPattern.h"
+#include <functional>
 
 class Enemy {
 public:
@@ -42,7 +43,8 @@ public:
         int gridStartRow, int gridEndRow,
         int gridStartCol, int gridEndCol,
         const std::vector<Enemy*>& allEnemies,
-		int& outR, int& outC
+        const std::function<bool(int, int)>& isWalkable,
+        int& outR, int& outC
     );
 
     void setObject(SpriteObject* obj) { objSprite = obj; }

@@ -1609,6 +1609,10 @@ void Level::UpdateTurn()
                 GridStartRow, GridEndRow,
                 GridStartCol, GridEndCol,
                 enemies,
+                [this](int r, int c)
+                {
+                    return IsWalkable(r, c);
+                },
                 newR, newC))
             {
                 e->setNowPosition(newR, newC);

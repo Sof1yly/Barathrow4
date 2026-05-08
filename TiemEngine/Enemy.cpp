@@ -148,7 +148,14 @@ void Enemy::getDamage(int damage)
 	hpText->LoadText("HP: " + std::to_string(health), white, 24);
 }
 
-bool Enemy::TryMoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, int gridEndRow,int gridStartCol, int gridEndCol,const std::vector<Enemy*>& allEnemies, int& outR, int& outC)
+bool Enemy::TryMoveTowardPlayer(
+    int playerRow,
+    int playerCol,
+    int gridStartRow, int gridEndRow,
+    int gridStartCol, int gridEndCol,
+    const std::vector<Enemy*>& allEnemies,
+    const std::function<bool(int, int)>& isWalkable,
+    int& outR, int& outC)
 {
     int er = getNowRow();
     int ec = getNowCol();
@@ -164,6 +171,11 @@ bool Enemy::TryMoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, in
     newR = std::max(gridStartRow, std::min(newR, gridEndRow - 1));
     newC = std::max(gridStartCol, std::min(newC, gridEndCol - 1));
 
+    if (!isWalkable(newR, newC))
+    {
+        return false;
+    }
+
     for (auto* other : allEnemies)
     {
         if (other != this &&
@@ -176,8 +188,8 @@ bool Enemy::TryMoveTowardPlayer(int playerRow,int playerCol,int gridStartRow, in
 
     outR = newR;
     outC = newC;
+
     return true;
-	
 }
 
 void Enemy::addWeaken(int turns)
