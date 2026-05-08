@@ -61,13 +61,37 @@ void Level::LevelInit()
     playerState = PlayerState::IDLE;
     UpdatePlayerAnimation();
 
-    // 1) Tile grid (your original)
-    for (int i = GridStartRow; i < GridEndRow; ++i) {
-        for (int j = GridStartCol; j < GridEndCol; ++j) {
+    // 1) Tile grid
+    bool boss = true;
+	for (int r = 0; r < GRID_ROWS; r++) // Initialize all tiles as walkable
+    {
+        for (int c = 0; c < GRID_COLS; c++)
+        {
+            walkable[r][c] = true;
+        }
+    }
+	if (boss) { //make a non-walkable area for boss level
+        for (int i = 0; i < 2; i++) {
+            for (int j = 2; j < 7; j++) {
+                walkable[j][i] = false;
+            }
+        }
+    }
+    for (int i = GridStartRow; i < GridEndRow; ++i) //Render
+    {
+        for (int j = GridStartCol; j < GridEndCol; ++j)
+        {
+            if (!walkable[i][j])
+                continue;
+
             ImageObject* tile = new ImageObject();
             tile->SetTexture("../Resource/Texture/BG/F1Grid.png");
             tile->SetSize(GridWide, GridHigh);
-            tile->SetPosition(glm::vec3(i * 101.0f - 404.0f,j * -105.0f + 352.0f, 0.0f));
+            tile->SetPosition(glm::vec3(
+                i * 101.0f - 404.0f,
+                j * -105.0f + 352.0f,
+                0.0f));
+
             objectsList.push_back(tile);
             gridTiles.push_back(tile);
         }
@@ -359,6 +383,28 @@ void Level::LevelUpdate()
         case 3: if (nowRow < GridEndRow - 1) targetRow++; break;
         case 1: if (nowCol > GridStartCol) targetCol--; break;
         case 2: if (nowCol < GridEndCol - 1) targetCol++; break;
+        }
+        if (!IsWalkable(targetRow, targetCol))
+        {
+            std::cout << "[Move Blocked] Void tile.\n";
+
+            pendingMoveSteps = 0;
+            playerMoving = false;
+
+            playerState = PlayerState::IDLE;
+            UpdatePlayerAnimation();
+
+            if (pendingFastCard)
+            {
+                turnState = TurnState::PLAYER_TURN;
+                pendingFastCard = false;
+            }
+            else
+            {
+                turnState = TurnState::ENEMY_TURN;
+            }
+
+            return;
         }
         bool moveBlocked = false;
         for (auto* e : enemies)
@@ -844,6 +890,12 @@ void Level::HandleKey(char key)
         playerDir = PlayerDir::RIGHT;
     }
     else {
+        return;
+    }
+
+    if (!IsWalkable(targetRow, targetCol))
+    {
+        std::cout << "[Blocked] Void tile.\n";
         return;
     }
 
@@ -2021,4 +2073,15 @@ void Level::AdvanceToNextRound()
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
     cardSystem.DealNewHand(5, objectsList);
+}
+
+bool Level::IsWalkable(int row, int col) const
+{
+    if (row < 0 || row >= GRID_ROWS ||
+        col < 0 || col >= GRID_COLS)
+    {
+        return false;
+    }
+
+    return walkable[row][col];
 }

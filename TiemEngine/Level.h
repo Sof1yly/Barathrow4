@@ -107,6 +107,11 @@ private:
     float GridWide = 90.0f;
     float GridHigh = 84.0f;
 
+    static constexpr int GRID_ROWS = 9;
+    static constexpr int GRID_COLS = 5;
+
+    bool walkable[GRID_ROWS][GRID_COLS];
+
 
     int distanceBetweenGridX = 11;
     int distanceBetweenGridY = 21;
@@ -225,6 +230,7 @@ public:
 
     // Spawn a floating damage number at a world position
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
+    bool IsWalkable(int row, int col) const;
 
 private:
     void SpawnEnemiesForLevel();
