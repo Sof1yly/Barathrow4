@@ -958,7 +958,7 @@ void Level::HandleMouse(int type, int x, int y)
     {
         if (type == 0)
         {
-            int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y);
+            int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y, objectsList);
             if (clicked == 2)
             {
                 cardRewardSystem.Open(objectsList);

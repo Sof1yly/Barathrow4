@@ -81,21 +81,21 @@ private:
             objectsList.push_back(sub);
         }
 
-        const float boxW    = 300.0f;
-        const float boxH    = 270.0f;
-        const float spacing = 360.0f;
-        const float startX  = -spacing * (OFFER_COUNT - 1) * 0.5f;
-        const float centerY = 0.0f;
+        const float tabW  = 850.0f;
+        const float tabH  = 80.0f;
+        const float gap   = 20.0f;
+        const float step  = tabH + gap;
+        const float startY = step * (OFFER_COUNT - 1) * 0.5f;
 
         for (int i = 0; i < static_cast<int>(offered.size()); i++)
         {
             const Option& opt = offered[i];
-            float cx = startX + spacing * i;
+            float cy = startY - step * i;
 
             {
                 GameObject* bg = new GameObject();
-                bg->SetSize(boxW, boxH);
-                bg->SetPosition(glm::vec3(cx, centerY, 710.0f));
+                bg->SetSize(tabW, tabH);
+                bg->SetPosition(glm::vec3(0.0f, cy, 710.0f));
                 bg->SetColor(opt.r, opt.g, opt.b, 0.90f);
                 uiObjects.push_back(bg);
                 objectsList.push_back(bg);
@@ -104,8 +104,8 @@ private:
             {
                 TextObject* ttl = new TextObject();
                 SDL_Color titleColor = { 255, 255, 200, 255 };
-                ttl->LoadText(opt.title, titleColor, 36);
-                ttl->SetPosition(glm::vec3(cx, centerY + boxH * 0.30f, 715.0f));
+                ttl->LoadText(opt.title, titleColor, 30);
+                ttl->SetPosition(glm::vec3(-tabW * 0.28f, cy, 715.0f));
                 uiObjects.push_back(ttl);
                 objectsList.push_back(ttl);
             }
@@ -114,26 +114,17 @@ private:
                 TextObject* desc = new TextObject();
                 SDL_Color descColor = { 230, 230, 230, 255 };
                 desc->LoadText(opt.description, descColor, 26);
-                desc->SetPosition(glm::vec3(cx, centerY, 715.0f));
+                desc->SetPosition(glm::vec3(tabW * 0.12f, cy, 715.0f));
                 uiObjects.push_back(desc);
                 objectsList.push_back(desc);
             }
 
-            {
-                TextObject* hint = new TextObject();
-                SDL_Color hintColor = { 170, 170, 170, 255 };
-                hint->LoadText("Click to choose", hintColor, 20);
-                hint->SetPosition(glm::vec3(cx, centerY - boxH * 0.36f, 715.0f));
-                uiObjects.push_back(hint);
-                objectsList.push_back(hint);
-            }
-
             ClickArea area;
             area.effect = opt.effect;
-            area.minX   = cx - boxW * 0.5f;
-            area.maxX   = cx + boxW * 0.5f;
-            area.minY   = centerY - boxH * 0.5f;
-            area.maxY   = centerY + boxH * 0.5f;
+            area.minX   = -tabW * 0.5f;
+            area.maxX   =  tabW * 0.5f;
+            area.minY   = cy - tabH * 0.5f;
+            area.maxY   = cy + tabH * 0.5f;
             clickAreas.push_back(area);
         }
     }

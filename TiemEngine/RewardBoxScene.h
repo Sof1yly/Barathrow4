@@ -16,7 +16,7 @@ private:
     {
         float minX = 0.0f, maxX = 0.0f, minY = 0.0f, maxY = 0.0f;
         bool claimed = false;
-        GameObject* bg = nullptr;
+        std::vector<DrawableObject*> objects;
     };
 
     std::vector<DrawableObject*> uiObjects;
@@ -33,41 +33,49 @@ private:
                  float r, float g, float b,
                  const std::string& titleStr, SDL_Color titleColor,
                  const std::string& bodyStr, SDL_Color bodyColor,
-                 const std::string& hintStr,
                  std::vector<DrawableObject*>& objectsList,
                  float z = 710.0f)
     {
+        auto AddObj = [&](DrawableObject* obj) {
+            uiObjects.push_back(obj);
+            objectsList.push_back(obj);
+            box.objects.push_back(obj);
+        };
+
         GameObject* bg = new GameObject();
         bg->SetSize(w, h);
         bg->SetPosition(glm::vec3(cx, cy, z));
         bg->SetColor(r, g, b, 0.9f);
-        uiObjects.push_back(bg);
-        objectsList.push_back(bg);
-        box.bg = bg;
+        AddObj(bg);
 
         TextObject* label = new TextObject();
-        label->LoadText(titleStr, titleColor, 36);
-        label->SetPosition(glm::vec3(cx, cy + h * 0.27f, z + 5.0f));
-        uiObjects.push_back(label);
-        objectsList.push_back(label);
+        label->LoadText(titleStr, titleColor, 30);
+        label->SetPosition(glm::vec3(cx - w * 0.28f, cy, z + 5.0f));
+        AddObj(label);
 
         TextObject* body = new TextObject();
-        body->LoadText(bodyStr, bodyColor, 42);
-        body->SetPosition(glm::vec3(cx, cy, z + 5.0f));
-        uiObjects.push_back(body);
-        objectsList.push_back(body);
-
-        TextObject* hint = new TextObject();
-        SDL_Color hintColor = { 200, 200, 200, 255 };
-        hint->LoadText(hintStr, hintColor, 24);
-        hint->SetPosition(glm::vec3(cx, cy - h * 0.3f, z + 5.0f));
-        uiObjects.push_back(hint);
-        objectsList.push_back(hint);
+        body->LoadText(bodyStr, bodyColor, 32);
+        body->SetPosition(glm::vec3(cx + w * 0.12f, cy, z + 5.0f));
+        AddObj(body);
 
         box.minX = cx - w * 0.5f;
         box.maxX = cx + w * 0.5f;
         box.minY = cy - h * 0.5f;
         box.maxY = cy + h * 0.5f;
+    }
+
+    void RemoveBox(Box& box, std::vector<DrawableObject*>& objectsList)
+    {
+        for (DrawableObject* obj : box.objects)
+        {
+            auto it = std::find(uiObjects.begin(), uiObjects.end(), obj);
+            if (it != uiObjects.end()) uiObjects.erase(it);
+            auto it2 = std::find(objectsList.begin(), objectsList.end(), obj);
+            if (it2 != objectsList.end()) objectsList.erase(it2);
+            delete obj;
+        }
+        box.objects.clear();
+        box.minX = box.maxX = box.minY = box.maxY = 0.0f;
     }
 
 public:
@@ -94,28 +102,25 @@ public:
         uiObjects.push_back(title);
         objectsList.push_back(title);
 
-        const float boxW = 340.0f;
-        const float boxH = 300.0f;
-        const float gap = 80.0f;
-        const float coinX = (boxW * 0.5f) + (gap * 0.5f);
-        const float cardX = -coinX;
+        const float tabW = 850.0f;
+        const float tabH = 85.0f;
+        const float gap  = 25.0f;
+        const float step = tabH + gap;
 
-        // Coin box (right side)
-        {
-            SDL_Color gold = { 255, 220, 50, 255 };
-            SDL_Color coinBody = { 255, 255, 200, 255 };
-            MakeBox(coinBox, coinX, 0.0f, boxW, boxH, 0.55f, 0.45f, 0.05f,
-                    "Coins", gold, std::to_string(coins) + " coins", coinBody,
-                    "Click to collect", objectsList);
-        }
-
-        // Card reward box (left side)
+        // Card reward tab (top)
         {
             SDL_Color blue = { 150, 200, 255, 255 };
             SDL_Color cardBody = { 200, 230, 255, 255 };
-            MakeBox(cardBox, cardX, 0.0f, boxW, boxH, 0.1f, 0.25f, 0.65f,
-                    "Card Reward", blue, "Choose a card", cardBody,
-                    "Click to choose", objectsList);
+            MakeBox(cardBox, 0.0f, step * 0.5f, tabW, tabH, 0.1f, 0.25f, 0.65f,
+                    "Card Reward", blue, "Choose a card", cardBody, objectsList);
+        }
+
+        // Coin tab (bottom)
+        {
+            SDL_Color gold = { 255, 220, 50, 255 };
+            SDL_Color coinBody = { 255, 255, 200, 255 };
+            MakeBox(coinBox, 0.0f, -step * 0.5f, tabW, tabH, 0.55f, 0.45f, 0.05f,
+                    "Coins", gold, std::to_string(coins) + " coins", coinBody, objectsList);
         }
     }
 
@@ -133,25 +138,27 @@ public:
         active = false;
     }
 
-    // Returns 0=nothing, 1=coin box clicked, 2=card box clicked
-    int HandleClick(float x, float y)
+    // Returns 0=nothing, 1=coin tab clicked, 2=card tab clicked
+    int HandleClick(float x, float y, std::vector<DrawableObject*>& objectsList)
     {
         if (!active) return 0;
         if (!coinBox.claimed && IsInBox(coinBox, x, y))
         {
             coinBox.claimed = true;
-            if (coinBox.bg) coinBox.bg->SetColor(0.28f, 0.22f, 0.02f, 0.5f);
+            RemoveBox(coinBox, objectsList);
             return 1;
         }
         if (!cardBox.claimed && IsInBox(cardBox, x, y))
+        {
+            RemoveBox(cardBox, objectsList);
             return 2;
+        }
         return 0;
     }
 
     void ClaimCard()
     {
         cardBox.claimed = true;
-        if (cardBox.bg) cardBox.bg->SetColor(0.05f, 0.12f, 0.32f, 0.5f);
     }
 
     bool IsDone() const
