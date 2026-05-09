@@ -909,7 +909,11 @@ void Level::HandleMouse(int type, int x, int y)
                 eventSceneDone = true;
                 // Purge opens the remove scene; deal hand only after that finishes
                 if (!eventRemoveScene.IsActive())
+                {
                     cardSystem.DealNewHand(baseHandSize, objectsList);
+                    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
+                    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+                }
             }
         }
         return;
@@ -1674,12 +1678,10 @@ void Level::ApplyEventEffect(EventScene::EffectType effect)
 
     case EventScene::EffectType::START_BARRIER:
         startCombatBarrier = 1;
-        playerData.AddBarrier(1);
         break;
 
     case EventScene::EffectType::START_OVERCLOCK:
         startCombatOverclock = 3;
-        cardSystem.ApplyOverclock(3);
         break;
 
     case EventScene::EffectType::MAX_HP:
