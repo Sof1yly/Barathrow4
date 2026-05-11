@@ -195,8 +195,10 @@ void Level::LevelInit()
 
     cardSystem.ShuffleDeck();
 
-    // Start the game with 5 cards in hand
-    cardSystem.DealNewHand(5, objectsList);
+    if (eventSceneDone)
+    {
+        cardSystem.DealNewHand(baseHandSize, objectsList);
+    }
 
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
@@ -257,6 +259,12 @@ void Level::LevelInit()
         objectsList.push_back(fastModeText);
     }
 
+    // Open event scene last so it renders on top of all game UI
+    if (!eventSceneDone)
+    {
+        eventScene.Open(objectsList);
+    }
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -266,6 +274,13 @@ void Level::LevelUpdate()
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
+
+    if (eventScene.IsActive() || eventRemoveScene.IsActive())
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        return;
+    }
 
     // ---- Update floating damage popups ----
     for (auto& popup : damagePopups)
@@ -581,6 +596,7 @@ void Level::LevelUpdate()
         if (!rewardPickedAfterWin)
         {
             int coinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
             playerData.AddCoins(coinsEarned);
             std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
             rewardBoxScene.Open(coinsEarned, objectsList);
@@ -597,6 +613,8 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    eventScene.Close(objectsList);
+    eventRemoveScene.Close(objectsList);
     cardInspect.Hide(objectsList);
 
     if (deckViewer.IsActive())
@@ -712,6 +730,11 @@ void Level::LevelFree()
     fastModeText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
+    eventSceneDone        = false;
+    baseHandSize          = 5;
+    goldBonusActive       = false;
+    startCombatBarrier    = 0;
+    startCombatOverclock  = 0;
 
     cout << "Free Level" << endl;
 }
@@ -749,6 +772,8 @@ void Level::HandleKey(char key)
                 : glm::vec3(0.0f, 10000.0f, 10.0f));
         return;
     }
+
+    if (eventScene.IsActive() || eventRemoveScene.IsActive()) return;
 
     if (shopSystem.IsActive()) return;
 
@@ -855,6 +880,7 @@ void Level::HandleKey(char key)
         if (!rewardPickedAfterWin)
         {
             int coinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
             playerData.AddCoins(coinsEarned);
             rewardBoxScene.Open(coinsEarned, objectsList);
             rewardPickedAfterWin = true;
@@ -923,6 +949,41 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    if (eventScene.IsActive())
+    {
+        if (type == 0)
+        {
+            EventScene::EffectType effect;
+            if (eventScene.HandleMouseClick(realX, realY, effect))
+            {
+                ApplyEventEffect(effect);
+                eventScene.Close(objectsList);
+                eventSceneDone = true;
+                // Purge opens the remove scene; deal hand only after that finishes
+                if (!eventRemoveScene.IsActive())
+                {
+                    cardSystem.DealNewHand(baseHandSize, objectsList);
+                    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
+                    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+                }
+            }
+        }
+        return;
+    }
+
+    if (eventRemoveScene.IsActive())
+    {
+        if (type == 0)
+        {
+            if (eventRemoveScene.HandleMouseClick(realX, realY, cardSystem, objectsList))
+            {
+                if (!eventRemoveScene.IsActive())
+                    cardSystem.DealNewHand(baseHandSize, objectsList);
+            }
+        }
+        return;
+    }
+
     if (shopSystem.IsActive())
     {
         if (type == 0)
@@ -953,7 +1014,7 @@ void Level::HandleMouse(int type, int x, int y)
     {
         if (type == 0)
         {
-            int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y);
+            int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y, objectsList);
             if (clicked == 2)
             {
                 cardRewardSystem.Open(objectsList);
@@ -1141,7 +1202,7 @@ void Level::HandleMouse(int type, int x, int y)
         if (cardSystem.IsDrawPileClicked(mousePos))
         {
             bool shouldEndTurn = cardSystem.UseDrawPileTurn();
-            cardSystem.DiscardHandAndDraw(5, objectsList);
+            cardSystem.DiscardHandAndDraw(baseHandSize, objectsList);
             if (shouldEndTurn)
             {
                 tempDiscardDone = true;
@@ -1659,7 +1720,43 @@ void Level::UpdateTurn()
     }
 }
 
-void Level::LevelRestart() 
+void Level::ApplyEventEffect(EventScene::EffectType effect)
+{
+    switch (effect)
+    {
+    case EventScene::EffectType::EXTRA_DRAW:
+        baseHandSize++;
+        break;
+
+    case EventScene::EffectType::GOLD_BONUS:
+        goldBonusActive = true;
+        break;
+
+    case EventScene::EffectType::START_BARRIER:
+        startCombatBarrier = 1;
+        break;
+
+    case EventScene::EffectType::START_OVERCLOCK:
+        startCombatOverclock = 3;
+        break;
+
+    case EventScene::EffectType::MAX_HP:
+        playerData.setMaxHp(playerData.getMaxHp() + 10);
+        playerData.HealHp(10);
+        UpdateHPBar();
+        break;
+
+    case EventScene::EffectType::CURRENCY:
+        playerData.AddCoins(300);
+        break;
+
+    case EventScene::EffectType::REMOVE_CARDS:
+        eventRemoveScene.Open(cardSystem, objectsList, 2);
+        break;
+    }
+}
+
+void Level::LevelRestart()
 {
     cout << "=== RESTART START ===" << endl;
 
@@ -2086,7 +2183,10 @@ void Level::AdvanceToNextRound()
     shopSystem.ApplyRemovals(cardSystem);
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
-    cardSystem.DealNewHand(5, objectsList);
+    cardSystem.DealNewHand(baseHandSize, objectsList);
+
+    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
 }
 
 bool Level::IsWalkable(int row, int col) const

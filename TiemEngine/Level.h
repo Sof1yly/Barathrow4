@@ -24,6 +24,8 @@
 #include "RewardBoxScene.h"
 #include "CardActionExecutor.h"
 #include "LevelManager.h"
+#include "EventScene.h"
+#include "EventRemoveScene.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -161,6 +163,17 @@ private:
     bool fastMode = false;
     TextObject* fastModeText = nullptr;
 
+    // Event scene (shown once at the start of a run)
+    EventScene eventScene;
+    EventRemoveScene eventRemoveScene;
+    bool eventSceneDone = false;
+
+    // Persistent run effects granted by the event scene
+    int  baseHandSize        = 5;
+    bool goldBonusActive     = false;
+    int  startCombatBarrier  = 0;
+    int  startCombatOverclock = 0;
+
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
 
@@ -203,6 +216,8 @@ public:
     void UpdateTurn();
 
     void LevelRestart();
+
+    void ApplyEventEffect(EventScene::EffectType effect);
 
     void UpdatePlayerAnimation();
 
