@@ -25,6 +25,8 @@ public:
 
     void setHealth(int h);
 
+    EnemyType getType() const { return type; }
+
     void setNowPosition(int row, int col) {
         nowRow = row;
         nowCol = col;

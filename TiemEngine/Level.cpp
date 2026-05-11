@@ -49,6 +49,25 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+    // Check for a pending save to restore
+    bool loadFromSave = SaveSystem::pendingLoad && SaveSystem::HasSaveFile();
+    SaveData saveData;
+    if (loadFromSave) {
+        if (!SaveSystem::Load(saveData)) loadFromSave = false;
+        else {
+            // Apply level and run-effects early so the rest of init uses them
+            levelManager.SetLevel(saveData.currentLevel);
+            eventSceneDone       = saveData.eventSceneDone;
+            baseHandSize         = saveData.baseHandSize;
+            goldBonusActive      = saveData.goldBonusActive;
+            startCombatBarrier   = saveData.startCombatBarrier;
+            startCombatOverclock = saveData.startCombatOverclock;
+            nowRow = saveData.playerRow;
+            nowCol = saveData.playerCol;
+        }
+        SaveSystem::pendingLoad = false;
+    }
+
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -100,7 +119,10 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
     LoadEnemyData();
-    SpawnEnemiesForLevel();
+    if (loadFromSave)
+        SpawnEnemiesFromSave(saveData.enemies);
+    else
+        SpawnEnemiesForLevel();
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -144,6 +166,15 @@ void Level::LevelInit()
 
     playerData.InitShieldUI(objectsList);
 
+    if (loadFromSave) {
+        playerData.setHp(saveData.playerHp);
+        playerData.setMaxHp(saveData.playerMaxHp);
+        playerData.SetCoins(saveData.playerCoins);
+        playerData.SetBarrierCount(saveData.playerBarrierCount);
+        playerData.SetJumpCharges(saveData.playerJumpCharges);
+        UpdateHPBar();
+    }
+
     {
         ImageObject* Setting = new ImageObject();
         Setting->SetSize(80.0f, -80.0f);
@@ -164,15 +195,6 @@ void Level::LevelInit()
         viewDeckButton.InitPreset(Button::Preset::ViewDeck, objectsList);
     }
 
-    {
-        ImageObject* menu = new ImageObject();
-        menu->SetSize(1000.0f, -400.0f);
-        menu->SetPosition(glm::vec3(0.0f, 10000.0f, 0.0f)); // hidden
-        menu->SetTexture("../Resource/Texture/MainMenu.png");
-        objectsList.push_back(menu);
-        mainMenu = menu;
-    }
-
     std::string error;
 
     // 1) Load pattern shapes
@@ -189,7 +211,13 @@ void Level::LevelInit()
         std::cerr << "Error loading shop card pool: " << error << std::endl;
     }
 
-    cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    if (loadFromSave) {
+        cardSystem.RebuildDeckFromSave(saveData.cardNames,
+                                       cardRewardSystem.GetRewardLoader(),
+                                       saveRestoredCards);
+    } else {
+        cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    }
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
 
@@ -198,6 +226,11 @@ void Level::LevelInit()
     if (eventSceneDone)
     {
         cardSystem.DealNewHand(baseHandSize, objectsList);
+        if (!loadFromSave) {
+            // When loading from save these are already reflected in the restored state
+            if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
+            if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+        }
     }
 
     // Card system UI (discard/draw pile buttons + drop zones)
@@ -265,11 +298,17 @@ void Level::LevelInit()
         eventScene.Open(objectsList);
     }
 
+    // Pause menu (initialised hidden; topmost in draw order)
+    isPaused = false;
+    pauseMenu.Init(objectsList);
+
     std::cout << "Init Level" << std::endl;
 }
 
 void Level::LevelUpdate()
 {
+    if (isPaused) return;
+
     anyEnemyDied = false;
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
@@ -613,6 +652,9 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    pauseMenu.Reset();  // null out internal pointers (objects live in objectsList)
+    isPaused = false;
+
     eventScene.Close(objectsList);
     eventRemoveScene.Close(objectsList);
     cardInspect.Hide(objectsList);
@@ -628,6 +670,10 @@ void Level::LevelFree()
 
     // 1. Clear card system (removes card layers from objectsList, nulls its own pointers)
     cardSystem.Clear(objectsList);
+
+    // Delete any cards that were cloned when loading from a save file
+    for (Card* c : saveRestoredCards) if (c) delete c;
+    saveRestoredCards.clear();
 
     // Reset subsystems that hold persistent run state so a restart starts clean
     cardRewardSystem.Reset();
@@ -714,7 +760,6 @@ void Level::LevelFree()
     turnState = TurnState::PLAYER_TURN;
     player = nullptr;
     playersprite = nullptr;
-    mainMenu = nullptr;
     hpBar = nullptr;
     hpMask = nullptr;
     skipTurnHintText = nullptr;
@@ -750,16 +795,23 @@ void Level::LevelUnload()
 
 void Level::HandleKey(char key)
 {
-    // Restart and quit are always allowed, regardless of turn state
+    // Restart is always allowed
     if (key == 'r')
     {
         GameData::GetInstance()->gGameStateNext = GameState::GS_RESTART;
         return;
     }
 
+    // Escape (sent as 'q') toggles the pause menu
     if (key == 'q')
     {
-        GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;
+        if (isPaused) {
+            isPaused = false;
+            pauseMenu.Hide();
+        } else {
+            isPaused = true;
+            pauseMenu.Show();
+        }
         return;
     }
 
@@ -948,6 +1000,35 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    // Route all input to the pause menu while paused
+    if (isPaused) {
+        if (type == 3) {
+            pauseMenu.HandleHover(realX, realY);
+        } else if (type == 0) {
+            PauseMenu::Action action = pauseMenu.HandleClick(realX, realY);
+            if (action == PauseMenu::Action::RESUME) {
+                isPaused = false;
+                pauseMenu.Hide();
+            } else if (action == PauseMenu::Action::SAVE_QUIT_MAIN) {
+                SaveCurrentGame();
+                isPaused = false;
+                pauseMenu.Hide();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+            } else if (action == PauseMenu::Action::SAVE_QUIT_DESKTOP) {
+                SaveCurrentGame();
+                isPaused = false;
+                pauseMenu.Hide();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;
+            } else if (action == PauseMenu::Action::ABANDON) {
+                SaveSystem::DeleteSave();
+                isPaused = false;
+                pauseMenu.Hide();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+            }
+        }
+        return;
+    }
 
     if (eventScene.IsActive())
     {
@@ -1172,20 +1253,15 @@ void Level::HandleMouse(int type, int x, int y)
     // Left Click
     if (type == 0)
     {
-        // menu toggle
+        // settings icon toggles pause menu
         if (realX >= 875 && realX <= 925 && realY <= 530 && realY >= 470)
         {
-            if (!Button::getMenu()) {
-                Button::setMenu(true);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 0, 0));
-                }
-            }
-            else {
-                Button::setMenu(false);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 20000, 0));
-                }
+            if (!isPaused) {
+                isPaused = true;
+                pauseMenu.Show();
+            } else {
+                isPaused = false;
+                pauseMenu.Hide();
             }
         }
 
@@ -2075,6 +2151,65 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(ta, 0);
     spawnAt(tb, 2);
     spawnAt(tc, 4);
+}
+
+void Level::SpawnEnemiesFromSave(const std::vector<EnemySaveData>& savedEnemies)
+{
+    for (const auto& es : savedEnemies) {
+        Enemy::EnemyType type = static_cast<Enemy::EnemyType>(es.typeIndex);
+        Enemy* e = new Enemy(type);
+        e->setNowPosition(es.row, es.col);
+        e->SetWorldPosition(GridToWorld(es.row, es.col));
+        e->setHealth(es.health);
+        if (es.delayTurns       > 0) e->addDelay(es.delayTurns);
+        if (es.corruptionStacks > 0) e->addCorruption(es.corruptionStacks);
+        if (es.weakenTurns      > 0) e->addWeaken(es.weakenTurns);
+        enemies.push_back(e);
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
+    }
+}
+
+void Level::SaveCurrentGame()
+{
+    SaveData data;
+
+    data.playerRow          = nowRow;
+    data.playerCol          = nowCol;
+    data.playerHp           = playerData.getHp();
+    data.playerMaxHp        = playerData.getMaxHp();
+    data.playerCoins        = playerData.GetCoins();
+    data.playerBarrierCount = playerData.GetBarrierCount();
+    data.playerJumpCharges  = playerData.GetJumpCharges();
+
+    for (auto* e : enemies) {
+        if (!e || e->getIsDead()) continue;
+        EnemySaveData es;
+        es.typeIndex        = static_cast<int>(e->getType());
+        es.row              = e->getNowRow();
+        es.col              = e->getNowCol();
+        es.health           = e->getHealth();
+        es.delayTurns       = e->getDelayTurns();
+        es.corruptionStacks = e->getCorruption();
+        es.weakenTurns      = e->getWeakenTurns();
+        data.enemies.push_back(es);
+    }
+
+    for (Card* c : cardSystem.GetAllCards()) {
+        if (!c || c->getIsTemp() || c->isEnergyCard()) continue;
+        data.cardNames.push_back(c->getName());
+    }
+
+    data.currentLevel         = levelManager.GetLevel();
+    data.baseHandSize         = baseHandSize;
+    data.goldBonusActive      = goldBonusActive;
+    data.startCombatBarrier   = startCombatBarrier;
+    data.startCombatOverclock = startCombatOverclock;
+    data.eventSceneDone       = eventSceneDone;
+
+    SaveSystem::Save(data);
 }
 
 void Level::AdvanceToNextRound()

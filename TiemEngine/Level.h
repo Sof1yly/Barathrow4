@@ -26,6 +26,8 @@
 #include "LevelManager.h"
 #include "EventScene.h"
 #include "EventRemoveScene.h"
+#include "PauseMenu.h"
+#include "SaveSystem.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -62,7 +64,6 @@ private:
     GameObject* player = nullptr;
     GameObject* testMove = nullptr;
     SpriteObject* playersprite = nullptr; //Real Player
-    ImageObject* mainMenu = nullptr;
     Button viewDeckButton;
     Button skipTurnButton;
     ImageObject* testEnemy;
@@ -174,6 +175,13 @@ private:
     int  startCombatBarrier  = 0;
     int  startCombatOverclock = 0;
 
+    // Pause menu overlay
+    PauseMenu pauseMenu;
+    bool isPaused = false;
+
+    // Cards owned by Level that were cloned when loading from a save file
+    std::vector<Card*> saveRestoredCards;
+
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
 
@@ -247,8 +255,11 @@ public:
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
     bool IsWalkable(int row, int col) const;
 
+    void SaveCurrentGame();
+
 private:
     void SpawnEnemiesForLevel();
+    void SpawnEnemiesFromSave(const std::vector<EnemySaveData>& savedEnemies);
     void LoadEnemyData();
 
 };

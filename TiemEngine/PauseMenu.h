@@ -1,0 +1,52 @@
+#pragma once
+
+#include "ImageObject.h"
+#include "TextObject.h"
+#include <vector>
+
+class PauseMenu {
+public:
+    enum class Action { NONE, RESUME, SAVE_QUIT_MAIN, SAVE_QUIT_DESKTOP, ABANDON };
+
+    void Init(std::vector<DrawableObject*>& objectsList);
+    void Reset();   // null out pointers without deleting (objectsList owns them)
+
+    void Show();
+    void Hide();
+    bool IsVisible() const { return visible; }
+
+    Action HandleClick(float wx, float wy);
+    void   HandleHover(float wx, float wy);
+
+private:
+    bool visible = false;
+
+    struct PauseButton {
+        ImageObject* bg      = nullptr;
+        TextObject*  label   = nullptr;
+        glm::vec3    pos     = {};
+        glm::vec2    size    = {};
+        bool         enabled = true;
+        bool IsClicked(float wx, float wy) const;
+    };
+
+    ImageObject* panel      = nullptr;
+    TextObject*  titleText  = nullptr;
+    PauseButton  btnResume;
+    PauseButton  btnSetting;
+    PauseButton  btnAbandon;
+    PauseButton  btnSaveQuit;
+    PauseButton  btnQuitDesktop;
+
+    // Cached real positions so we can restore them on Show.
+    std::vector<std::pair<DrawableObject*, glm::vec3>> pauseObjects;
+
+    static const glm::vec3 HIDDEN;
+
+    void AddPauseObject(DrawableObject* obj, glm::vec3 visiblePos,
+                        std::vector<DrawableObject*>& objectsList);
+    void InitButton(PauseButton& btn, const std::string& labelStr,
+                    const std::string& texPath, SDL_Color color,
+                    glm::vec3 pos, glm::vec2 size, bool enabled,
+                    std::vector<DrawableObject*>& objectsList);
+};
