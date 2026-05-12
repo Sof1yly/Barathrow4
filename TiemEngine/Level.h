@@ -15,6 +15,7 @@
 #include "AttackPattern.h"
 #include "CardSystem.h"
 #include "Enemy.h"
+#include "Boss.h"
 #include "HighlightManager.h"
 #include "Player.h"
 #include "DeckViewer.h"

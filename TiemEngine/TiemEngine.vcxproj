@@ -24,6 +24,7 @@
     <ClCompile Include="AttackPattern.cpp" />
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="Board.cpp" />
+    <ClCompile Include="Boss.cpp" />
     <ClCompile Include="BuffAction.cpp" />
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="Card.cpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="AttackAction.h" />
     <ClInclude Include="AttackPattern.h" />
     <ClInclude Include="Audio.h" />
+    <ClInclude Include="Boss.h" />
     <ClInclude Include="BuffAction.h" />
     <ClInclude Include="Button.h" />
     <ClInclude Include="Card.h" />
