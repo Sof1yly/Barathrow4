@@ -21,6 +21,8 @@ public:
 
     bool OccupiesTile(int row, int col) const override;
 
+	bool IsHitBy(const std::vector<std::pair<IVec2, int>>& cells);
+
 private:
 
     int hitboxTopOffset = -2;

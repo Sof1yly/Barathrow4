@@ -65,10 +65,34 @@ std::vector<std::pair<int, int>> Boss::GetOccupiedTiles() const
 
 bool Boss::OccupiesTile(int row, int col) const
 {
-    for (const auto& tile : GetOccupiedTiles())
+    const int top = nowRow + hitboxTopOffset;
+    const int bottom = nowRow + hitboxBottomOffset;
+    const int left = nowCol + hitboxLeftOffset;
+    const int right = nowCol + hitboxRightOffset;
+
+    if (row >= top && row <= bottom &&
+        col >= left && col <= right)
     {
-        if (tile.first == row &&
-            tile.second == col)
+        cout << "Boss occupies tile (" << row << ", " << col << ")\n";
+        return true;
+    }
+
+    return false;
+}
+bool Boss::IsHitBy(const std::vector<std::pair<IVec2, int>>& cells)
+{
+    int topRow = nowRow + hitboxTopOffset;
+    int bottomRow = nowRow + hitboxBottomOffset;
+    int leftCol = nowCol + hitboxLeftOffset;
+    int rightCol = nowCol + hitboxRightOffset;
+
+    for (const auto& item : cells)
+    {
+        int row = item.first.x;
+        int col = item.first.y;
+
+        if (row >= topRow && row <= bottomRow &&
+            col >= leftCol && col <= rightCol)
         {
             return true;
         }

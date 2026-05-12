@@ -1533,35 +1533,33 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 {
     cout << "Using pattern #" << currentPatternIndex + 1 << endl;
 
-    for (const auto& item : cells)
+    for (auto* e : enemies)
     {
-        const IVec2& cell = item.first;
-        int x = cell.x;
-        int y = cell.y;
+        if (!e || e->getIsDead()) continue;
 
-        // Out-of-bound check
-        if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
-            cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
-            continue;
+        bool hit = false;
+
+        for (const auto& item : cells)
+        {
+            int row = item.first.x;
+            int col = item.first.y;
+
+            if (e->OccupiesTile(row, col))
+            {
+                hit = true;
+                break;
+            }
         }
 
-        cout << "attack at (" << x << ", " << y << ")\n";
-
-        // Check if enemy is hit
-        for (auto* e : enemies)
+        if (hit)
         {
-            if (!e || e->getIsDead()) continue;
-            if (e->OccupiesTile(x, y))
-            {
-                e->getDamage(1);
-                cout << "  HIT!!! Enemy HP: " << e->getHealth() << endl;
-            }
+            e->getDamage(1);
+            cout << "HIT!!! Enemy HP: " << e->getHealth() << endl;
         }
     }
 
     cout << endl;
 }
-
 void Level::ApplyEnemyAttack(Enemy* e)
 {
     if (!e || e->getIsDead())
