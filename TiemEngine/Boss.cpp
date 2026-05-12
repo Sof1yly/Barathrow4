@@ -19,26 +19,62 @@ Boss::Boss()
     objSprite = new SpriteObject(
         "../Resource/Texture/Boss/Boss1.png",
         4,
-        12
+        11
     );
 
     objSprite->SetAnimationLoop(
         0,
         0,
-        2,
-        200
+        5,
+        250
     );
 
-    objSprite->SetSize(500.0f, -500.0f);
+    objSprite->SetSize(224.0f*3, -160.0f*3 );
 }
 void Boss::Update(float dt)
 {
     Enemy::Update(dt);
-
-    // boss logic
 }
 
 void Boss::TakeTurn()
 {
-    std::cout << "Boss takes turn!" << std::endl;
+    std::cout << "Boss Turn!" << std::endl;
+}
+
+bool Boss::OccupiesTile(int row, int col) const
+{
+    int startRow = nowRow + hitboxTopOffset;
+    int endRow = nowRow + hitboxBottomOffset;
+
+    int startCol = nowCol + hitboxLeftOffset;
+    int endCol = nowCol + hitboxRightOffset;
+
+    return (
+        row >= startRow &&
+        row <= endRow &&
+        col >= startCol &&
+        col <= endCol
+        );
+}
+
+std::vector<std::pair<int, int>>
+Boss::GetOccupiedTiles() const
+{
+    std::vector<std::pair<int, int>> tiles;
+
+    int startRow = nowRow + hitboxTopOffset;
+    int endRow = nowRow + hitboxBottomOffset;
+
+    int startCol = nowCol + hitboxLeftOffset;
+    int endCol = nowCol + hitboxRightOffset;
+
+    for (int r = startRow; r <= endRow; r++)
+    {
+        for (int c = startCol; c <= endCol; c++)
+        {
+            tiles.push_back({ r, c });
+        }
+    }
+
+    return tiles;
 }

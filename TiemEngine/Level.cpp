@@ -49,6 +49,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	boss = true; //Set boss level, for testing ** change later ** 
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -62,7 +63,7 @@ void Level::LevelInit()
     UpdatePlayerAnimation();
 
     // 1) Tile grid
-    bool boss = true;
+    
 	for (int r = 0; r < GRID_ROWS; r++) // Initialize all tiles as walkable
     {
         for (int c = 0; c < GRID_COLS; c++)
@@ -98,6 +99,30 @@ void Level::LevelInit()
     }
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
+
+    if (boss)//test boss spawn
+    {
+        Boss* bossEnemy = new Boss();
+
+        bossEnemy->setNowPosition(4, 0);
+
+        glm::vec3 pos = GridToWorld(
+            bossEnemy->getNowRow(),
+            bossEnemy->getNowCol()
+        );
+
+        bossEnemy->SetWorldPosition(pos);
+
+        enemies.push_back(bossEnemy);
+
+        objectsList.push_back(bossEnemy->getObject());
+
+        objectsList.push_back(bossEnemy->getHPText());
+
+        objectsList.push_back(bossEnemy->getCorruptText());
+
+        objectsList.push_back(bossEnemy->getDebuffText());
+    }
 
     LoadEnemyData();
     SpawnEnemiesForLevel();
@@ -425,7 +450,7 @@ void Level::LevelUpdate()
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            if (e->getNowRow() == targetRow && e->getNowCol() == targetCol)
+            if (e->OccupiesTile(targetRow, targetCol))
             {
                 if (playerData.GetJumpCharges() > 0)
                 {

@@ -193,6 +193,12 @@ public:
 
     int stepsRemaining = 0;
 
+    virtual bool OccupiesTile(int row, int col) const
+    {
+        return nowRow == row &&
+            nowCol == col;
+    }
+
 protected:
 
     EnemyType type;

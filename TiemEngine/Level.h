@@ -40,6 +40,11 @@ struct DamagePopup {
 class Level
 {
 private:
+    /////////////
+    //Set Boss //
+    bool boss = false;
+	/// ///////////
+
 	int turnCount = 0;
 
     HighlightManager highlightManager;
