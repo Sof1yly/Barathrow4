@@ -286,6 +286,15 @@ void Level::LevelInit()
     }
 
     {
+        levelBannerText = new TextObject();
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelBannerText->LoadText(levelManager.GetLevelText(), color, 80);
+        levelBannerText->SetPosition(glm::vec3(0.0f, 10000.0f, 11.0f)); // hidden initially
+        objectsList.push_back(levelBannerText);
+        levelBannerTimer = 0;
+    }
+
+    {
         fastModeText = new TextObject();
         SDL_Color color = { 100, 220, 255, 255 };
         fastModeText->LoadText("3x mode", color, 24);
@@ -320,6 +329,17 @@ void Level::LevelUpdate()
         for (auto* obj : objectsList)
             obj->Update((float)deltaTime);
         return;
+    }
+
+    // ---- Level banner countdown ----
+    if (levelBannerTimer > 0)
+    {
+        levelBannerTimer -= deltaTime;
+        if (levelBannerTimer <= 0 && levelBannerText)
+        {
+            levelBannerTimer = 0;
+            levelBannerText->SetPosition(glm::vec3(0.0f, 10000.0f, 11.0f));
+        }
     }
 
     // ---- Update floating damage popups ----
@@ -777,6 +797,8 @@ void Level::LevelFree()
     gridTiles.clear();
     Background = nullptr;
     levelText = nullptr;
+    levelBannerText = nullptr;
+    levelBannerTimer = 0;
     fastMode = false;
     fastModeText = nullptr;
     viewDeckButton.Reset();
@@ -2228,6 +2250,15 @@ void Level::AdvanceToNextRound()
     {
         SDL_Color color = { 255, 230, 100, 255 };
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
+    }
+
+    // Show centered level banner for 2 seconds
+    if (levelBannerText)
+    {
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelBannerText->LoadText(levelManager.GetLevelText(), color, 80);
+        levelBannerText->SetPosition(glm::vec3(0.0f, 300.0f, 11.0f));
+        levelBannerTimer = LEVEL_BANNER_DURATION;
     }
 
     // Reset combat flags

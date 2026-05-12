@@ -49,6 +49,10 @@ private:
 	TextObject* winText = nullptr;
     bool isGameOver = false;
 
+    TextObject* levelBannerText = nullptr;
+    int levelBannerTimer = 0;
+    static constexpr int LEVEL_BANNER_DURATION = 2000;
+
     // UI HP bar
     ImageObject* hpBar = nullptr;
     ImageObject* hpMask = nullptr;
