@@ -220,6 +220,7 @@ void Level::LevelInit()
     }
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
+    winDisplayTimer = 0;
 
     cardSystem.ShuffleDeck();
 
@@ -631,15 +632,19 @@ void Level::LevelUpdate()
         }
         turnState = TurnState::GAME_OVER;
 
-        // Trigger once: open the reward box scene
+      
         if (!rewardPickedAfterWin)
         {
-            int coinsEarned = levelManager.RollCoins();
-            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
-            playerData.AddCoins(coinsEarned);
-            std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
-            rewardBoxScene.Open(coinsEarned, objectsList);
-            rewardPickedAfterWin = true;
+            winDisplayTimer += deltaTime;
+            if (winDisplayTimer >= 3000)
+            {
+                int coinsEarned = levelManager.RollCoins();
+                if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
+                playerData.AddCoins(coinsEarned);
+                std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
+                rewardBoxScene.Open(coinsEarned, objectsList);
+                rewardPickedAfterWin = true;
+            }
         }
 	}
     
@@ -766,6 +771,7 @@ void Level::LevelFree()
     viewDeckHintText = nullptr;
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
+    winDisplayTimer = 0;
     inShopOnlyLevel = false;
     levelManager.Reset();
     gridTiles.clear();

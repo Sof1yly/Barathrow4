@@ -151,6 +151,7 @@ private:
 
     CardRewardSystem cardRewardSystem;
     bool rewardPickedAfterWin = false;
+    int winDisplayTimer = 0;
 
     ShopSystem shopSystem;
     bool shopOpenedAfterWin = false;
