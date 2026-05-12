@@ -17,9 +17,9 @@ public:
 
     void TakeTurn() override;
 
-    bool OccupiesTile(int row, int col) const override;
+    std::vector<std::pair<int, int>> GetOccupiedTiles() const override;
 
-    std::vector<std::pair<int, int>> GetOccupiedTiles() const;
+    bool OccupiesTile(int row, int col) const override;
 
 private:
 

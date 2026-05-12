@@ -598,3 +598,8 @@ void Enemy::StartMove(glm::vec3 targetWorld)
 
     objSprite->SetAnimationLoop(0, 0, 2, 150);
 }
+
+std::vector<std::pair<int, int>> Enemy::GetOccupiedTiles() const
+{
+    return { { nowRow, nowCol } };
+}

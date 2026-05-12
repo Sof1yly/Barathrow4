@@ -1551,7 +1551,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            if (e->getNowRow() == x && e->getNowCol() == y)
+            if (e->OccupiesTile(x, y))
             {
                 e->getDamage(1);
                 cout << "  HIT!!! Enemy HP: " << e->getHealth() << endl;
@@ -1884,10 +1884,10 @@ void Level::PreviewMovePath(int steps, int dir)
     {
         if (!e || e->getIsDead()) continue;
 
-        enemyPositions.emplace_back(
-            e->getNowRow(),
-            e->getNowCol()
-        );
+        for (auto& tile : e->GetOccupiedTiles())
+        {
+            enemyPositions.push_back(tile);
+        }
     }
 
     highlightManager.ShowMovePreview(
@@ -1906,22 +1906,6 @@ void Level::PreviewMovePath(int steps, int dir)
     );
 }
 
-/*void Level::PreviewEnemyAttack(Enemy* e)
-{
-    if (!e) return;
-
-    auto cells = e->getCurrentPattern().applyTo(
-        e->getNowRow(),
-        e->getNowCol()
-    );
-
-    highlightManager.ShowEnemyAttack(
-        cells,
-        GridStartRow, GridEndRow,
-        GridStartCol, GridEndCol,
-        [this](int r, int c) { return GridToWorld(r, c); }
-    );
-}*/
 void Level::PreviewAllEnemyAttacks()
 {
     highlightManager.HideEnemyAttack(enemyHighlightIndex);

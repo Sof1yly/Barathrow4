@@ -6,6 +6,9 @@ Boss::Boss()
     maxHealth = 500;
     health = maxHealth;
 
+    SDL_Color white = { 255,255,255 };
+    hpText->LoadText("HP: " + std::to_string(health), white, 24);
+
     damage = 25;
 
     moveRange = 0;
@@ -41,40 +44,35 @@ void Boss::TakeTurn()
     std::cout << "Boss Turn!" << std::endl;
 }
 
-bool Boss::OccupiesTile(int row, int col) const
-{
-    int startRow = nowRow + hitboxTopOffset;
-    int endRow = nowRow + hitboxBottomOffset;
-
-    int startCol = nowCol + hitboxLeftOffset;
-    int endCol = nowCol + hitboxRightOffset;
-
-    return (
-        row >= startRow &&
-        row <= endRow &&
-        col >= startCol &&
-        col <= endCol
-        );
-}
-
-std::vector<std::pair<int, int>>
-Boss::GetOccupiedTiles() const
+std::vector<std::pair<int, int>> Boss::GetOccupiedTiles() const
 {
     std::vector<std::pair<int, int>> tiles;
 
-    int startRow = nowRow + hitboxTopOffset;
-    int endRow = nowRow + hitboxBottomOffset;
-
-    int startCol = nowCol + hitboxLeftOffset;
-    int endCol = nowCol + hitboxRightOffset;
-
-    for (int r = startRow; r <= endRow; r++)
+    for (int r = nowRow + hitboxTopOffset;
+        r <= nowRow + hitboxBottomOffset;
+        r++)
     {
-        for (int c = startCol; c <= endCol; c++)
+        for (int c = nowCol + hitboxLeftOffset;
+            c <= nowCol + hitboxRightOffset;
+            c++)
         {
             tiles.push_back({ r, c });
         }
     }
 
     return tiles;
+}
+
+bool Boss::OccupiesTile(int row, int col) const
+{
+    for (const auto& tile : GetOccupiedTiles())
+    {
+        if (tile.first == row &&
+            tile.second == col)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

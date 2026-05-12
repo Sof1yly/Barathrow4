@@ -198,6 +198,7 @@ public:
         return nowRow == row &&
             nowCol == col;
     }
+    virtual std::vector<std::pair<int, int>> GetOccupiedTiles() const;
 
 protected:
 
@@ -237,6 +238,12 @@ protected:
 
     int currentPatternIndex = 0;
 
+    TextObject* hpText = nullptr;
+
+    TextObject* corruptText = nullptr;
+
+    TextObject* debuffText = nullptr;
+
 private:
 
     void RefreshDebuffText();
@@ -256,12 +263,6 @@ private:
     float attackTimer = 0.0f;
 
     float attackDuration = 1.0f;
-
-    TextObject* hpText = nullptr;
-
-    TextObject* corruptText = nullptr;
-
-    TextObject* debuffText = nullptr;
 
     float attackTextTimer = 0.0f;
 
