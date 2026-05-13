@@ -106,11 +106,16 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
 {
     // Build a 5x9 grid where every cell is marked as an attack tile
     std::vector<std::string> fullGrid = {
-        "0XXXXXXXX",
         "XXXXXXXXX",
+		"XXXXXXXXX",
         "XXXXXXXXX",
-        "XXXXXXXXX",
-        "XXXXXXXXX"
+		".........",
+		"XX.....XX",
+		".........",
+		".........",
+        ".........",
+
+
     };
 
     return AttackPattern::fromGrid(fullGrid, 'X');
