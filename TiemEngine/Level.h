@@ -43,6 +43,8 @@ private:
     /////////////
     //Set Boss //
     bool boss = false;
+    Boss* bossEnemy = nullptr;
+    bool bossActed = false;
 	/// ///////////
 
 	int turnCount = 0;

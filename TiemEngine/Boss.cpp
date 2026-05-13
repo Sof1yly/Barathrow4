@@ -41,7 +41,13 @@ void Boss::Update(float dt)
 
 void Boss::TakeTurn()
 {
-    std::cout << "Boss Turn!" << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << "==========    Boss Turn   ============" << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << "======================================" << std::endl;
 }
 
 std::vector<std::pair<int, int>> Boss::GetOccupiedTiles() const

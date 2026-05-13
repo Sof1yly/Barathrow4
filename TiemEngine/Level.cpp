@@ -102,7 +102,7 @@ void Level::LevelInit()
 
     if (boss)//test boss spawn
     {
-        Boss* bossEnemy = new Boss();
+        bossEnemy = new Boss();
 
         bossEnemy->setNowPosition(4, 0);
 
@@ -1614,6 +1614,15 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
+        if (boss && bossEnemy && !bossEnemy->getIsDead() && !bossActed)
+        {
+            bossActed = true;
+
+            bossEnemy->TakeTurn();
+
+            return;
+        }
+
         if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
@@ -1957,6 +1966,7 @@ void Level::UpdateHPBar()
 void Level::EndTurn()
 {
     turnCount++;
+    bossActed = false;
     playerData.ResetShield();
     playerData.ExpireBarrier();
     playerData.ResetJumpCharges();
