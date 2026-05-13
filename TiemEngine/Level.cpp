@@ -1594,9 +1594,11 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
 {
     if (!e) return false;
 
+    if (e == bossEnemy)
+        return true;
+
     int er = e->getNowRow();
     int ec = e->getNowCol();
-
     return (abs(er - nowRow) <= 1 && abs(ec - nowCol) <= 1);
 }
 
@@ -1614,14 +1616,6 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
-        if (boss && bossEnemy && !bossEnemy->getIsDead() && !bossActed)
-        {
-            bossActed = true;
-
-            bossEnemy->TakeTurn();
-
-            return;
-        }
 
         if (enemies.empty())
         {
@@ -1966,7 +1960,6 @@ void Level::UpdateHPBar()
 void Level::EndTurn()
 {
     turnCount++;
-    bossActed = false;
     playerData.ResetShield();
     playerData.ExpireBarrier();
     playerData.ResetJumpCharges();

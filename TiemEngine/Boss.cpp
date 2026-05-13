@@ -42,11 +42,7 @@ void Boss::Update(float dt)
 void Boss::TakeTurn()
 {
     std::cout << "======================================" << std::endl;
-    std::cout << "======================================" << std::endl;
-    std::cout << "======================================" << std::endl;
     std::cout << "==========    Boss Turn   ============" << std::endl;
-    std::cout << "======================================" << std::endl;
-    std::cout << "======================================" << std::endl;
     std::cout << "======================================" << std::endl;
 }
 
@@ -105,4 +101,17 @@ bool Boss::IsHitBy(const std::vector<std::pair<IVec2, int>>& cells)
     }
 
     return false;
+}
+AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const
+{
+    // Build a 5x9 grid where every cell is marked as an attack tile
+    std::vector<std::string> fullGrid = {
+        "0XXXXXXXX",
+        "XXXXXXXXX",
+        "XXXXXXXXX",
+        "XXXXXXXXX",
+        "XXXXXXXXX"
+    };
+
+    return AttackPattern::fromGrid(fullGrid, 'X');
 }

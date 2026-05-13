@@ -183,7 +183,7 @@ public:
         damage = damage + attackInc;
     }
 
-    AttackPattern GetRotatedPatternTowardPlayer(
+    virtual AttackPattern GetRotatedPatternTowardPlayer(
         int playerRow,
         int playerCol) const;
 
