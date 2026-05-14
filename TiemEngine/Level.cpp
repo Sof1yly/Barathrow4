@@ -1626,7 +1626,7 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
-
+        UpdateBossPlayerPos();
         if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
@@ -2335,4 +2335,10 @@ void Level::SetPlayerSpawnPosition()
         nowRow = validTiles[idx].first;
         nowCol = validTiles[idx].second;
     }
+}
+
+void Level::UpdateBossPlayerPos()
+{
+    if (bossEnemy)
+        bossEnemy->setPlayerPosition(nowRow, nowCol);
 }

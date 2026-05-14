@@ -2,6 +2,7 @@
 #include "Enemy.h"
 #include "AttackPattern.h"
 #include <vector>
+#include <iostream>
 
 class Boss : public Enemy
 {
@@ -22,12 +23,22 @@ public:
     void getDamage(int damage) override;
     void setPreparingAttack(bool value) override;
 
+    void setPlayerPosition(int row, int col)
+    {
+        playerRow = row;
+        playerCol = col;
+		std::cout << "Player position set to (" << playerRow << ", " << playerCol << ")\n";
+	}
+
     int TryGetSummon();
 private:
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
     int hitboxLeftOffset = 0;
     int hitboxRightOffset = 1;
+
+	int playerCol = 0;
+	int playerRow = 0;
 
     void RollAttackPattern();
 

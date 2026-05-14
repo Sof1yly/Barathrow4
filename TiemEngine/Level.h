@@ -259,6 +259,7 @@ public:
 
     void SetPlayerSpawnPosition();
 
+    void UpdateBossPlayerPos();
 private:
     void SpawnEnemiesForLevel();
     void LoadEnemyData();
