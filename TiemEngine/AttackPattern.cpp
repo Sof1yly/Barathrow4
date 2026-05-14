@@ -32,6 +32,7 @@ AttackPattern AttackPattern::fromGrid(const std::vector<std::string>& grid,
                 int dx = c - originCol;
                 int dy = originRow-r; // y positive downward
                 p.addOffset(dx, dy, value);
+                
             }
         }
     }
@@ -63,6 +64,16 @@ AttackPattern AttackPattern::mirroredX() const {
         p.addOffset(-c.first.x, c.first.y, c.second);
     return p;
 }
+
+AttackPattern AttackPattern::mirroredY() const {
+    AttackPattern p;
+
+    for (auto& c : cells)
+        p.addOffset(c.first.x, -c.first.y, c.second);
+
+    return p;
+}
+
 
 bool AttackPattern::hasOffset(int dx, int dy) const {
     for (auto& c : cells)

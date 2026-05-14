@@ -109,10 +109,13 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(
     std::vector<std::string> fullGrid =
     {
         "XXXXXXXXX",
-        "XXXXoXXXX",
+		"XXXXoXXXX",
+        "XXXoooXXX",
+        "XXoooooXX",
         "XXXoooXXX",
         "XXXXoXXXX",
-        "XXXXoXXXo",
+        "XXXXXXXXX",
+
     };
 
     AttackPattern rotated =
@@ -120,17 +123,19 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(
             fullGrid,
             'X',
             4, // horizontal center
-            2  // vertical center
+            5  // vertical center
         );
+    //rotated = rotated.mirroredX();
 
-    rotated = rotated.mirroredX();
 
-    int rotateTimes = 2;
+    int rotateTimes = 0;
 
     for (int i = 0; i < rotateTimes; i++)
     {
         rotated = rotated.rotated90CW();
     }
+
+    
 
     return rotated;
 }

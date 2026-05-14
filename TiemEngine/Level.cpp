@@ -1934,7 +1934,7 @@ void Level::PreviewAllEnemyAttacks()
 
         if (dynamic_cast<Boss*>(e))
         {
-            centerRow += 2;
+            centerRow +=0;
         }
 
         auto cells =
@@ -2107,6 +2107,7 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(tb, 2);
     spawnAt(tc, 4);
     */
+    
 }
 
 void Level::AdvanceToNextRound()

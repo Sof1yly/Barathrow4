@@ -29,6 +29,7 @@ public:
     AttackPattern rotated90CW() const;
 	AttackPattern rotated90CCW() const;
     AttackPattern mirroredX() const;
+	AttackPattern mirroredY() const;
 
     bool hasOffset(int dx, int dy) const;
     size_t size() const;
