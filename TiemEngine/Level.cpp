@@ -49,7 +49,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	boss = true; //Set boss level, for testing ** change later ** 
+	boss = false; //Set boss level, for testing ** change later ** 
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -102,6 +102,7 @@ void Level::LevelInit()
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
+
     if (boss)//test boss spawn
     {
         bossEnemy = new Boss();
@@ -126,6 +127,7 @@ void Level::LevelInit()
         objectsList.push_back(bossEnemy->getDebuffText());
     }
 
+    SetPlayerSpawnPosition();
     LoadEnemyData();
     SpawnEnemiesForLevel();
 
@@ -2069,28 +2071,65 @@ void Level::LoadEnemyData()
 
 void Level::SpawnEnemiesForLevel()
 {
-    /*
-    Enemy::EnemyType ta, tb, tc;
-    levelManager.GetEnemyTypes(ta, tb, tc);
+    if (boss) return; // boss room enemies are handled separately
 
-    auto spawnAt = [&](Enemy::EnemyType type, int col)
+    static const Enemy::EnemyType pool[] = {
+        Enemy::EnemyType::A,
+        Enemy::EnemyType::B,
+        Enemy::EnemyType::C
+    };
+
+    for (int i = 0; i < 3; i++)
     {
+        std::vector<std::pair<int, int>> validTiles;
+
+        for (int r = GridStartRow; r < GridEndRow; r++)
+        {
+            for (int c = GridStartCol; c < GridEndCol; c++)
+            {
+                if (!walkable[r][c]) continue;
+
+                // At least 2 tiles away from player
+                if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+
+                // Not already occupied
+                bool occupied = false;
+                for (auto* e : enemies)
+                {
+                    if (!e || e->getIsDead()) continue;
+                    if (e->OccupiesTile(r, c)) { occupied = true; break; }
+                }
+                if (occupied) continue;
+
+                validTiles.push_back({ r, c });
+            }
+        }
+
+        if (validTiles.empty())
+        {
+            std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n";
+            break;
+        }
+
+        int idx = rand() % (int)validTiles.size();
+        int spawnRow = validTiles[idx].first;
+        int spawnCol = validTiles[idx].second;
+
+        Enemy::EnemyType type = pool[rand() % 3];
+
         Enemy* e = new Enemy(type);
-        int row = rand() % 8 + 1;
-        e->setNowPosition(row, col);
-        e->SetWorldPosition(GridToWorld(row, col));
+        e->setNowPosition(spawnRow, spawnCol);
+        e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+
         enemies.push_back(e);
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
-    };
 
-    spawnAt(ta, 0);
-    spawnAt(tb, 2);
-    spawnAt(tc, 4);
-    */
-    
+        std::cout << "[Spawn] Enemy " << i + 1 << " at ("
+            << spawnRow << ", " << spawnCol << ")\n";
+    }
 }
 
 void Level::AdvanceToNextRound()
@@ -2139,9 +2178,8 @@ void Level::AdvanceToNextRound()
     currentRotation     = 0;
 
     // Move player back to start; HP and coins carry over
-    nowRow = startRow;
-    nowCol = startCol;
-    playerDir   = PlayerDir::DOWN;
+    SetPlayerSpawnPosition();
+    playerDir = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     playerData.SetPosition(GridToWorld(nowRow, nowCol));
     UpdatePlayerAnimation();
@@ -2269,4 +2307,32 @@ void Level::SpawnBossSummon()
     objectsList.push_back(e->getDebuffText());
 
     std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+}
+
+void Level::SetPlayerSpawnPosition()
+{
+    if (boss)
+    {
+        nowRow = 4;
+        nowCol = 3;
+        return;
+    }
+
+    std::vector<std::pair<int, int>> validTiles;
+
+    for (int r = GridStartRow + 1; r < GridEndRow - 1; r++)
+    {
+        for (int c = GridStartCol + 1; c < GridEndCol - 1; c++)
+        {
+            if (walkable[r][c])
+                validTiles.push_back({ r, c });
+        }
+    }
+
+    if (!validTiles.empty())
+    {
+        int idx = rand() % (int)validTiles.size();
+        nowRow = validTiles[idx].first;
+        nowCol = validTiles[idx].second;
+    }
 }

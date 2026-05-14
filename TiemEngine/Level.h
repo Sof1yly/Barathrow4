@@ -257,6 +257,8 @@ public:
 
     void SpawnBossSummon();
 
+    void SetPlayerSpawnPosition();
+
 private:
     void SpawnEnemiesForLevel();
     void LoadEnemyData();
