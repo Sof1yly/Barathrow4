@@ -550,32 +550,31 @@ AttackPattern Enemy::GetRotatedPatternTowardPlayer(
 
     if (abs(dx) >= abs(dy))
     {
-        // horizontal
+        
 
         if (dx > 0)
         {
-            // RIGHT
-            rotateTimes = 2;
+
+            rotateTimes = 1;//down
         }
         else
         {
-            // LEFT
-            rotateTimes = 0;
+
+            rotateTimes = 3;//up
         }
     }
     else
     {
-        // vertical
 
         if (dy < 0)
         {
-            // UP
-            rotateTimes = 3;
+            
+            rotateTimes = 0;//down
         }
         else
         {
-            // DOWN
-            rotateTimes = 1;
+            
+            rotateTimes = 2;//right
         }
     }
 

@@ -1579,16 +1579,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
-
-
-    if (dynamic_cast<Boss*>(e))
-    {
-        centerRow += 0;
-		centerCol += 0;
-    }
-
-    auto attacks =
-        e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
         .applyTo(centerRow, centerCol);
 
     for (auto& cell : attacks)
@@ -1931,14 +1922,7 @@ void Level::PreviewAllEnemyAttacks()
 
         int centerRow = e->getNowRow();
         int centerCol = e->getNowCol();
-
-        if (dynamic_cast<Boss*>(e))
-        {
-            centerRow +=0;
-        }
-
-        auto cells =
-            e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
             .applyTo(centerRow, centerCol);
 
         highlightManager.ShowEnemyAttack(
@@ -2086,7 +2070,7 @@ void Level::LoadEnemyData()
 
 void Level::SpawnEnemiesForLevel()
 {
-    /*
+    
     Enemy::EnemyType ta, tb, tc;
     levelManager.GetEnemyTypes(ta, tb, tc);
 
@@ -2106,7 +2090,7 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(ta, 0);
     spawnAt(tb, 2);
     spawnAt(tc, 4);
-    */
+    
     
 }
 
