@@ -127,8 +127,8 @@ private:
     int distanceBetweenGridY = 21;
 
  //Set player start position
-    const int startRow = 3;
-    const int startCol = 2;
+    const int startRow = 4;
+    const int startCol = 3;
     int nowRow = startRow;
     int nowCol = startCol;
 
