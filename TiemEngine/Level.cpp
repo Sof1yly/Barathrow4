@@ -1856,20 +1856,7 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
     }
 
     if (!atk || !pat) return;
-
-    AttackPattern oriented = *pat;
-    int rotateTimes = 0;
-
-    switch (dz)
-    {
-    case 0: rotateTimes = 2; break;
-    case 1: rotateTimes = 1; break;
-    case 2: rotateTimes = 3; break;
-    case 3: rotateTimes = 0; break;
-    }
-
-    for (int i = 0; i < rotateTimes; i++)
-        oriented = oriented.rotated90CW();
+    AttackPattern oriented = CardActionExecutor::OrientPattern(*pat, dz);
 
     auto cells = oriented.applyTo(nowRow, nowCol);
 
@@ -1878,10 +1865,7 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
         GridStartRow, GridEndRow,
         GridStartCol, GridEndCol,
         walkable,
-        [this](int r, int c)
-        {
-            return GridToWorld(r, c);
-        }
+        [this](int r, int c) { return GridToWorld(r, c); }
     );
 }
 

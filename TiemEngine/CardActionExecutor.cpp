@@ -304,10 +304,10 @@ AttackPattern CardActionExecutor::OrientPattern(const AttackPattern& base, int d
 
     switch (dropZone)
     {
-    case 0: rotateTimes = 3; break; // LEFT
-    case 1: rotateTimes = 2; break; // UP
-    case 2: rotateTimes = 0; break; // DOWN
-    case 3: rotateTimes = 1; break; // RIGHT
+    case 0: rotateTimes = 0; break; // LEFT0
+    case 1: rotateTimes = 3; break; // UP3
+    case 2: rotateTimes = 1; break; // DOWN1
+    case 3: rotateTimes = 2; break; // RIGHT2
     }
 
     rotateTimes = (rotateTimes + 3) % 4;
