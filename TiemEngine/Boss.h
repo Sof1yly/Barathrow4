@@ -21,6 +21,8 @@ public:
     void PlayAttackAnimation(glm::vec3 playerPos) override;
     void getDamage(int damage) override;
     void setPreparingAttack(bool value) override;
+
+    int TryGetSummon();
 private:
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
@@ -30,4 +32,7 @@ private:
     void RollAttackPattern();
 
     int attackPatternChoice = 1;
+
+    bool summoned66 = false;
+    bool summoned33 = false;
 };

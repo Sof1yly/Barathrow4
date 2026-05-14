@@ -255,6 +255,8 @@ public:
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
     bool IsWalkable(int row, int col) const;
 
+    void SpawnBossSummon();
+
 private:
     void SpawnEnemiesForLevel();
     void LoadEnemyData();

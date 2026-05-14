@@ -3,7 +3,7 @@
 Boss::Boss()
     : Enemy(EnemyType::C)
 {
-    maxHealth = 500;
+    maxHealth = 50;
     health = maxHealth;
 
     SDL_Color white = { 255, 255, 255 };
@@ -168,4 +168,22 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     rotated = rotated.mirroredX();
     return rotated;
     //////////////////////////////
+}
+
+int Boss::TryGetSummon()
+{
+    int count = 0;
+    float hpPct = (float)health / maxHealth;
+
+    if (!summoned66 && hpPct <= 0.66f)
+    {
+        summoned66 = true;
+        count++;
+    }
+    if (!summoned33 && hpPct <= 0.33f)
+    {
+        summoned33 = true;
+        count++;
+    }
+    return count;
 }

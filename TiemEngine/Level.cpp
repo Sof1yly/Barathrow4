@@ -1670,6 +1670,12 @@ void Level::UpdateTurn()
             if (e->getCountDownR() <= 0)
             {
                 ApplyEnemyAttack(e);
+                if (Boss* b = dynamic_cast<Boss*>(e))
+                {
+                    int summons = b->TryGetSummon();
+                    for (int i = 0; i < summons; i++)
+                        SpawnBossSummon();
+                }
                 highlightManager.HideEnemyAttack(e->highlightIndex);
 
                 e->setPreparingAttack(false);
@@ -2083,8 +2089,8 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(ta, 0);
     spawnAt(tb, 2);
     spawnAt(tc, 4);
-    
     */
+    
 }
 
 void Level::AdvanceToNextRound()
@@ -2208,4 +2214,59 @@ bool Level::IsWalkable(int row, int col) const
     }
 
     return walkable[row][col];
+}
+void Level::SpawnBossSummon()
+{
+    std::vector<std::pair<int, int>> validTiles;
+
+    for (int r = GridStartRow; r < GridEndRow; r++)
+    {
+        for (int c = GridStartCol; c < GridEndCol; c++)
+        {
+            if (!walkable[r][c]) continue;
+
+            // Must be at least 2 tiles away from player (not same tile, not adjacent)
+            if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+
+            // Must not be occupied by any enemy
+            bool occupied = false;
+            for (auto* e : enemies)
+            {
+                if (!e || e->getIsDead()) continue;
+                if (e->OccupiesTile(r, c)) { occupied = true; break; }
+            }
+            if (occupied) continue;
+
+            validTiles.push_back({ r, c });
+        }
+    }
+
+    if (validTiles.empty())
+    {
+        std::cout << "[Boss] No valid tile for summon!\n";
+        return;
+    }
+
+    int idx = rand() % (int)validTiles.size();
+    int spawnRow = validTiles[idx].first;
+    int spawnCol = validTiles[idx].second;
+
+    static const Enemy::EnemyType pool[] = {
+        Enemy::EnemyType::A,
+        Enemy::EnemyType::B,
+        Enemy::EnemyType::C
+    };
+    Enemy::EnemyType type = pool[rand() % 3];
+
+    Enemy* e = new Enemy(type);
+    e->setNowPosition(spawnRow, spawnCol);
+    e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+
+    enemies.push_back(e);
+    objectsList.push_back(e->getObject());
+    objectsList.push_back(e->getHPText());
+    objectsList.push_back(e->getCorruptText());
+    objectsList.push_back(e->getDebuffText());
+
+    std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
 }

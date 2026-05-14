@@ -555,12 +555,12 @@ AttackPattern Enemy::GetRotatedPatternTowardPlayer(
         if (dx > 0)
         {
 
-            rotateTimes = 1;//down
+            rotateTimes = 3;
         }
         else
         {
 
-            rotateTimes = 3;//up
+            rotateTimes = 1;
         }
     }
     else
@@ -569,12 +569,12 @@ AttackPattern Enemy::GetRotatedPatternTowardPlayer(
         if (dy < 0)
         {
             
-            rotateTimes = 0;//down
+            rotateTimes = 4;
         }
         else
         {
             
-            rotateTimes = 2;//right
+            rotateTimes = 2;
         }
     }
 
