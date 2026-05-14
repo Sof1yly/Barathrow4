@@ -54,6 +54,8 @@
     <ClCompile Include="Level3.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="LevelManager.cpp" />
+    <ClCompile Include="PauseMenu.cpp" />
+    <ClCompile Include="SaveSystem.cpp" />
     <ClCompile Include="LevelTest.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshVbo.cpp" />
@@ -112,6 +114,8 @@
     <ClInclude Include="ImageObject.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="LevelTest.h" />
+    <ClInclude Include="PauseMenu.h" />
+    <ClInclude Include="SaveSystem.h" />
     <ClInclude Include="MeshVbo.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SpriteObject.h" />

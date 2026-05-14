@@ -174,6 +174,13 @@ public:
     void RemoveCardEverywhere(const std::string& name);
     void RemoveOneCard(const std::string& name);
 
+    // Rebuild deck from saved card names.
+    // Tries dataLoader first, then fallbackLoader for cards not in the starter file.
+    // Newly cloned Card* objects are appended to ownedOut for the caller to manage/delete.
+    void RebuildDeckFromSave(const std::vector<std::string>& names,
+                              GameDataLoader& fallbackLoader,
+                              std::vector<Card*>& ownedOut);
+
     // Combo system: find a card template by name, clone it, and add to hand
     void GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList);
 };
