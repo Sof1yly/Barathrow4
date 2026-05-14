@@ -71,7 +71,7 @@ void Level::LevelInit()
             walkable[r][c] = true;
         }
     }
-    /*
+    
 	if (boss) { //make a non-walkable area for boss level
         for (int i = 0; i < 2; i++) {
             for (int j = 2; j < 7; j++) {
@@ -79,7 +79,7 @@ void Level::LevelInit()
             }
         }
     }
-    */
+    
     for (int i = GridStartRow; i < GridEndRow; ++i) //Render
     {
         for (int j = GridStartCol; j < GridEndCol; ++j)
@@ -1579,6 +1579,10 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
+    if (dynamic_cast<Boss*>(e))
+    {
+        centerCol += 2;
+    }
     auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
         .applyTo(centerRow, centerCol);
 
@@ -1922,6 +1926,11 @@ void Level::PreviewAllEnemyAttacks()
 
         int centerRow = e->getNowRow();
         int centerCol = e->getNowCol();
+        if (dynamic_cast<Boss*>(e))
+        {
+            centerCol += 2;
+        }
+
         auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
             .applyTo(centerRow, centerCol);
 
@@ -2070,7 +2079,7 @@ void Level::LoadEnemyData()
 
 void Level::SpawnEnemiesForLevel()
 {
-    
+    /*
     Enemy::EnemyType ta, tb, tc;
     levelManager.GetEnemyTypes(ta, tb, tc);
 
@@ -2091,7 +2100,7 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(tb, 2);
     spawnAt(tc, 4);
     
-    
+    */
 }
 
 void Level::AdvanceToNextRound()
