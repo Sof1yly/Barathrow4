@@ -2,6 +2,10 @@
 #include "TextObject.h"
 #include "EnergyAction.h"
 #include "ComboAction.h"
+#include "AttackAction.h"
+#include "MoveAction.h"
+#include "BuffAction.h"
+#include "DebuffAction.h"
 
 #include <iostream>
 #include <algorithm>
@@ -1145,4 +1149,70 @@ void CardSystem::GenerateComboCard(const std::string& cardName, std::vector<Draw
     hand.AddCards(newCards, objectsList);
 
     std::cout << "[Combo] Added \"" << cardName << "\" to hand." << std::endl;
+}
+
+// ---------------------------------------------------------------------------
+// Clone a single card, re-registering action patterns in dstLoader.
+static Card* CloneCardForSave(const Card* src,
+                               const GameDataLoader& srcLoader,
+                               GameDataLoader& dstLoader)
+{
+    if (!src) return nullptr;
+
+    Card* copy = new Card(src->getName());
+    copy->setDescription(src->getDescription());
+    copy->setLevel(src->getLevel());
+    copy->setRarityCode(src->getRarityCode());
+    copy->setTypeCode(src->getTypeCode());
+    copy->setIsFast(src->getIsFast());
+    copy->setIsTemp(src->getIsTemp());
+    copy->setIsDeleteAfterUse(src->getIsDeleteAfterUse());
+    copy->setIsPersist(src->getIsPersist());
+    copy->setIsLag(src->getIsLag());
+    copy->setIsPreLoad(src->getIsPreLoad());
+    copy->setOverclockValue(src->getOverclockValue());
+
+    for (const Action* a : src->getActions()) {
+        Action* ac = a->clone();  // each subclass has its own complete clone()
+        if (ac) {
+            const AttackPattern* pat = srcLoader.getPatternForAction(a);
+            if (pat) dstLoader.linkPatternToAction(ac, pat);
+            copy->addAction(ac);
+        }
+    }
+
+    return copy;
+}
+
+void CardSystem::RebuildDeckFromSave(const std::vector<std::string>& names,
+                                      GameDataLoader& fallbackLoader,
+                                      std::vector<Card*>& ownedOut)
+{
+    deck.clear();
+    fullCollection.clear();
+
+    for (const auto& name : names) {
+        const Card* tmpl = dataLoader.findCardByName(name);
+        const GameDataLoader* srcLoader = &dataLoader;
+
+        if (!tmpl) {
+            tmpl = fallbackLoader.findCardByName(name);
+            srcLoader = &fallbackLoader;
+        }
+
+        if (!tmpl) {
+            std::cerr << "[Save] Card '" << name << "' not found, skipping.\n";
+            continue;
+        }
+
+        Card* clone = CloneCardForSave(tmpl, *srcLoader, dataLoader);
+        if (clone) {
+            deck.push_back(clone);
+            fullCollection.push_back(clone);
+            ownedOut.push_back(clone);
+        }
+    }
+
+    UpdatePileVisuals();
+    std::cout << "[Save] Deck rebuilt with " << deck.size() << " cards.\n";
 }

@@ -419,6 +419,8 @@ public:
     {
     }
 
+    GameDataLoader& GetRewardLoader() { return rewardLoader; }
+
     ~CardRewardSystem()
     {
         for (Card* c : ownedRewardCards)

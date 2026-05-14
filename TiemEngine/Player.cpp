@@ -109,6 +109,24 @@ void Player::AddCoins(int amount)
     std::cout << "  Coins: +" << amount << " (total: " << coins << ")" << std::endl;
 }
 
+void Player::SetCoins(int amount)
+{
+    coins = amount;
+    UpdateCoinTextUI();
+}
+
+void Player::SetBarrierCount(int amount)
+{
+    barrierCount = amount;
+    UpdateBarrierTextUI();
+}
+
+void Player::SetJumpCharges(int amount)
+{
+    jumpCharges = amount;
+    UpdateJumpTextUI();
+}
+
 bool Player::SpendCoins(int amount)
 {
     if (amount <= 0) return true;

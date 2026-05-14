@@ -1,6 +1,7 @@
 #include "MainMenu.h"
 #include "SquareMeshVbo.h"
 #include "GameStateList.h"
+#include "SaveSystem.h"
 #include <iostream>
 
 static const float BTN_W = 280.0f;
@@ -137,12 +138,17 @@ void MainMenu::HandleMouse(int type, int x, int y)
     }
     else if (btnContinue.IsClicked(rx, ry))
     {
-        // No save system yet — treat as start new game
-        GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL1;
+        if (SaveSystem::HasSaveFile()) {
+            SaveSystem::pendingLoad = true;
+            GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL1;
+        } else {
+            std::cout << "[MainMenu] No save file found.\n";
+        }
     }
     else if (btnAbandon.IsClicked(rx, ry))
     {
-        std::cout << "[MainMenu] No active run to abandon.\n";
+        SaveSystem::DeleteSave();
+        std::cout << "[MainMenu] Run abandoned. Save deleted.\n";
     }
     else if (btnSettings.IsClicked(rx, ry))
     {

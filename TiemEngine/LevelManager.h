@@ -9,11 +9,12 @@ private:
     static constexpr int MAX_LEVELS = 9;
 
 public:
-    int  GetLevel()        const { return currentLevel; }
-    bool CanAdvance()      const { return currentLevel < MAX_LEVELS; }
-    bool IsShopOnlyLevel() const { return currentLevel == 4 || currentLevel == 9; }
-    void Advance()               { if (CanAdvance()) currentLevel++; }
-    void Reset()                 { currentLevel = 1; }
+    int  GetLevel()              const { return currentLevel; }
+    bool CanAdvance()            const { return currentLevel < MAX_LEVELS; }
+    bool IsShopOnlyLevel()       const { return currentLevel == 4 || currentLevel == 9; }
+    void Advance()                     { if (CanAdvance()) currentLevel++; }
+    void Reset()                       { currentLevel = 1; }
+    void SetLevel(int level)           { currentLevel = level; }
 
     std::string GetLevelText() const;
 

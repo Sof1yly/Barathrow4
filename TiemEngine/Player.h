@@ -65,8 +65,12 @@ public:
     // =====================
     int GetCoins() const;
     void AddCoins(int amount);
+    void SetCoins(int amount);
     bool SpendCoins(int amount);  // returns false if not enough
     void HealHp(int amount);      // restore HP up to maxHp
+
+    void SetBarrierCount(int amount);
+    void SetJumpCharges(int amount);
 
 	void ResetShield();
 	int AbsorbDamage(int damage);

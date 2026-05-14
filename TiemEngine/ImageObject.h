@@ -8,12 +8,14 @@ class ImageObject : public DrawableObject
 {
 	unsigned int texture = 0;
 	float alpha = 1.0f;
-	bool ownsTexture = true; 
+	float colorR = 1.0f, colorG = 1.0f, colorB = 1.0f;
+	bool ownsTexture = true;
 
 public:
 	ImageObject();
 	~ImageObject();
 	void SetTexture(string path);
+	void SetColor(float r, float g, float b) { colorR = r; colorG = g; colorB = b; }
 	void SetAlpha(float a) { alpha = a; }
 	float GetAlpha() const { return alpha; }
 	unsigned int GetTextureId() const { return texture; }
