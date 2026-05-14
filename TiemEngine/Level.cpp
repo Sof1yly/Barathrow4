@@ -160,15 +160,6 @@ void Level::LevelInit()
         playerData.InitSprite(objectsList, startPos);
         playersprite = playerData.GetSprite();
     }
-
-    {
-        /*GameObject* obj2 = new GameObject();
-        obj2->SetColor(0.0f, 1.0f, 0.0f);
-        obj2->SetSize(50.0f, 50.0f);
-        obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-		objectsList.push_back(obj2);*/ //Green obj dont delete, for testing and save UI position
-    }
-
     {
         ImageObject* HPbg = new ImageObject();
         HPbg->SetSize(300.0f, -80.0f);
@@ -882,15 +873,6 @@ void Level::HandleKey(char key)
 		std::cout << "Switched to pattern #" << currentPatternIndex + 1 << std::endl;
 	}
 	if (key == 'x') {
-		/*currentRotation = (currentRotation + 90) % 360;
-
-		rotatedPattern = patterns[currentPatternIndex];
-		int times = currentRotation / 90;
-		for (int i = 0; i < times; ++i)
-			rotatedPattern = rotatedPattern.rotated90CW();
-
-		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
-        */
         playerData.AddShield(10);
 	}
 	if (key == ' ') {
