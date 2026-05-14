@@ -22,8 +22,8 @@
 namespace {
     constexpr const char* PATH_PATTERN        = "../Resource/GameData/Pattern.txt";
     constexpr const char* PATH_CARDS_STARTER  = "../Resource/GameData/CardActionStandard.txt";
-    constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardDesc_filled.txt";
-    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc_filled.txt";
+    constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardAction_filled.txt";
+    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc.txt";
     constexpr const char* PATH_ENEMY_DATA     = "../Resource/GameData/EnemyData.txt";
     constexpr const char* PATH_ENEMY_PATTERN  = "../Resource/GameData/EnemyPattern.txt";
 }
