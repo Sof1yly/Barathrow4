@@ -5,6 +5,7 @@
 #include "AttackAction.h"
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 // ExecuteCard  -  run every Action on the card, collect results
 
@@ -61,7 +62,7 @@ CardPlayResult CardActionExecutor::ExecuteCard(Card* card, CardPlayContext& ctx)
 }
 
 // ApplyAttackPatterns  -  resolve damage on the grid
-
+/* //Per grid output version
 void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayContext& ctx)
 {
     bool corruptionApplied = false;
@@ -131,7 +132,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
             for (auto* e : ctx.enemies)
             {
                 if (!e || e->getIsDead()) continue;
-                if (e->getNowRow() == gx && e->getNowCol() == gy)
+                if (e->OccupiesTile(gx, gy))
                 {
                     e->getDamage(attackDamage);
 
@@ -172,6 +173,111 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
         }
     }
 }
+*/
+void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayContext& ctx)
+{
+    bool corruptionApplied = false;
+
+    // ---- Apply "all enemy" debuffs first ----
+    if (result.pendingWeakenAllTurns > 0 ||
+        result.pendingDelayAllTurns > 0 ||
+        result.pendingCorruptAllStacks > 0)
+    {
+        for (auto* e : ctx.enemies)
+        {
+            if (!e || e->getIsDead()) continue;
+
+            if (result.pendingWeakenAllTurns > 0)
+                e->addWeaken(result.pendingWeakenAllTurns);
+
+            if (result.pendingDelayAllTurns > 0)
+                e->addDelay(result.pendingDelayAllTurns);
+
+            if (result.pendingCorruptAllStacks > 0)
+                e->addCorruption(result.pendingCorruptAllStacks);
+        }
+    }
+
+    // ---- Attack resolution ----
+    for (const PendingAttackInfo& pa : result.pendingAttacks)
+    {
+        AttackAction* atk = pa.atk;
+        const AttackPattern* basePat = pa.pattern;
+
+        if (!basePat) continue;
+
+        int attackDamage = pa.resolvedTotalDamage;
+
+        AttackPattern oriented = OrientPattern(*basePat, ctx.dropZone);
+        auto cells = oriented.applyTo(ctx.playerRow, ctx.playerCol);
+
+        std::cout << "Applying attack from ("
+            << ctx.playerRow << ", " << ctx.playerCol << ")\n";
+
+        // Track who already got hit in THIS attack
+        std::unordered_set<Enemy*> hitThisAttack;
+
+        for (const auto& cell : cells)
+        {
+            int gx = cell.first.x;
+            int gy = cell.first.y;
+
+            // bounds check
+            if (gx < ctx.gridStartRow || gx >= ctx.gridEndRow ||
+                gy < ctx.gridStartCol || gy >= ctx.gridEndCol)
+            {
+                continue;
+            }
+
+            std::cout << "  Attack cell (" << gx << ", " << gy << ")\n";
+
+            for (auto* e : ctx.enemies)
+            {
+                if (!e || e->getIsDead()) continue;
+
+                // already hit once in this attack
+                if (hitThisAttack.count(e)) continue;
+
+                if (e->OccupiesTile(gx, gy))
+                {
+                    e->getDamage(attackDamage);
+                    hitThisAttack.insert(e);
+
+                    std::cout << "    HIT enemy! HP: "
+                        << e->getHealth() << std::endl;
+
+                    // status effects (apply once per enemy)
+                    if (result.pendingDelayTurns > 0)
+                        e->addDelay(result.pendingDelayTurns);
+
+                    if (result.pendingWeakenTurns > 0)
+                        e->addWeaken(result.pendingWeakenTurns);
+
+                    if (!corruptionApplied && result.pendingCorruptionStacks > 0)
+                    {
+                        e->addCorruption(result.pendingCorruptionStacks);
+                        corruptionApplied = true;
+                    }
+
+                    if (e->getHealth() <= 0)
+                        std::cout << "    Enemy died!\n";
+                }
+            }
+        }
+
+        // Optional: spawn hit visuals
+        int perHit = pa.resolvedPerHitDamage;
+        int repeats = atk->getRepeatCount();
+
+        for (const auto& cell : cells)
+        {
+            for (int r = 0; r < repeats; r++)
+            {
+                result.hits.push_back({ cell.first.x, cell.first.y, perHit, r });
+            }
+        }
+    }
+}
 
 // GetRetreatDirection  -  opposite of the given drop zone
 
@@ -198,10 +304,10 @@ AttackPattern CardActionExecutor::OrientPattern(const AttackPattern& base, int d
 
     switch (dropZone)
     {
-    case 0: rotateTimes = 3; break; // LEFT
-    case 1: rotateTimes = 2; break; // UP
-    case 2: rotateTimes = 0; break; // DOWN
-    case 3: rotateTimes = 1; break; // RIGHT
+    case 0: rotateTimes = 0; break; // LEFT0
+    case 1: rotateTimes = 3; break; // UP3
+    case 2: rotateTimes = 1; break; // DOWN1
+    case 3: rotateTimes = 2; break; // RIGHT2
     }
 
     rotateTimes = (rotateTimes + 3) % 4;

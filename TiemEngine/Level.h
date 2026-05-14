@@ -15,6 +15,7 @@
 #include "AttackPattern.h"
 #include "CardSystem.h"
 #include "Enemy.h"
+#include "Boss.h"
 #include "HighlightManager.h"
 #include "Player.h"
 #include "DeckViewer.h"
@@ -39,6 +40,17 @@ struct DamagePopup {
 class Level
 {
 private:
+    /////////////
+    //Set Boss //
+    bool boss = false;
+    Boss* bossEnemy = nullptr;
+    bool bossActed = false;
+    ImageObject* bossHpBg = nullptr;
+    ImageObject* bossHpBar = nullptr;
+    ImageObject* bossHpMask = nullptr;
+    void UpdateBossHPBar();
+	/// ///////////
+
 	int turnCount = 0;
 
     HighlightManager highlightManager;
@@ -119,8 +131,8 @@ private:
     int distanceBetweenGridY = 21;
 
  //Set player start position
-    const int startRow = 3;
-    const int startCol = 2;
+    const int startRow = 4;
+    const int startCol = 3;
     int nowRow = startRow;
     int nowCol = startCol;
 
@@ -247,6 +259,11 @@ public:
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
     bool IsWalkable(int row, int col) const;
 
+    void SpawnBossSummon();
+
+    void SetPlayerSpawnPosition();
+
+    void UpdateBossPlayerPos();
 private:
     void SpawnEnemiesForLevel();
     void LoadEnemyData();

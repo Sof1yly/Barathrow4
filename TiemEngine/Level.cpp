@@ -49,6 +49,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
+	boss = false; //Set boss level, for testing ** change later ** 
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -62,7 +63,7 @@ void Level::LevelInit()
     UpdatePlayerAnimation();
 
     // 1) Tile grid
-    bool boss = true;
+    
 	for (int r = 0; r < GRID_ROWS; r++) // Initialize all tiles as walkable
     {
         for (int c = 0; c < GRID_COLS; c++)
@@ -70,6 +71,7 @@ void Level::LevelInit()
             walkable[r][c] = true;
         }
     }
+    
 	if (boss) { //make a non-walkable area for boss level
         for (int i = 0; i < 2; i++) {
             for (int j = 2; j < 7; j++) {
@@ -77,6 +79,7 @@ void Level::LevelInit()
             }
         }
     }
+    
     for (int i = GridStartRow; i < GridEndRow; ++i) //Render
     {
         for (int j = GridStartCol; j < GridEndCol; ++j)
@@ -99,6 +102,54 @@ void Level::LevelInit()
 
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
+
+    if (boss)//test boss spawn
+    {
+        bossEnemy = new Boss();
+
+        bossEnemy->setNowPosition(4, 0);
+
+        glm::vec3 pos = GridToWorld(
+            bossEnemy->getNowRow(),
+            bossEnemy->getNowCol()
+        );
+
+        bossEnemy->SetWorldPosition(pos);
+
+        enemies.push_back(bossEnemy);
+
+        objectsList.push_back(bossEnemy->getObject());
+
+        objectsList.push_back(bossEnemy->getHPText());
+
+        objectsList.push_back(bossEnemy->getCorruptText());
+
+        objectsList.push_back(bossEnemy->getDebuffText());
+        {
+            ImageObject* bg = new ImageObject();
+            bg->SetSize(600.0f, -100.0f);
+            bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
+            bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
+            objectsList.push_back(bg);
+            bossHpBg = bg;
+        }
+        {
+            bossHpBar = new ImageObject();
+            bossHpBar->SetSize(600.0f, -100.0f);
+            bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
+            bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
+            objectsList.push_back(bossHpBar);
+        }
+        {
+            bossHpMask = new ImageObject();
+            bossHpMask->SetSize(0.0f, -50.0f);
+            bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
+            bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+            objectsList.push_back(bossHpMask);
+        }
+    }
+
+    SetPlayerSpawnPosition();
     LoadEnemyData();
     SpawnEnemiesForLevel();
 
@@ -109,15 +160,6 @@ void Level::LevelInit()
         playerData.InitSprite(objectsList, startPos);
         playersprite = playerData.GetSprite();
     }
-
-    {
-        /*GameObject* obj2 = new GameObject();
-        obj2->SetColor(0.0f, 1.0f, 0.0f);
-        obj2->SetSize(50.0f, 50.0f);
-        obj2->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
-		objectsList.push_back(obj2);*/ //Green obj dont delete, for testing and save UI position
-    }
-
     {
         ImageObject* HPbg = new ImageObject();
         HPbg->SetSize(300.0f, -80.0f);
@@ -425,7 +467,7 @@ void Level::LevelUpdate()
         for (auto* e : enemies)
         {
             if (!e || e->getIsDead()) continue;
-            if (e->getNowRow() == targetRow && e->getNowCol() == targetCol)
+            if (e->OccupiesTile(targetRow, targetCol))
             {
                 if (playerData.GetJumpCharges() > 0)
                 {
@@ -831,15 +873,6 @@ void Level::HandleKey(char key)
 		std::cout << "Switched to pattern #" << currentPatternIndex + 1 << std::endl;
 	}
 	if (key == 'x') {
-		/*currentRotation = (currentRotation + 90) % 360;
-
-		rotatedPattern = patterns[currentPatternIndex];
-		int times = currentRotation / 90;
-		for (int i = 0; i < times; ++i)
-			rotatedPattern = rotatedPattern.rotated90CW();
-
-		std::cout << "Rotated pattern to " << currentRotation << " degrees\n";
-        */
         playerData.AddShield(10);
 	}
 	if (key == ' ') {
@@ -1508,35 +1541,33 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 {
     cout << "Using pattern #" << currentPatternIndex + 1 << endl;
 
-    for (const auto& item : cells)
+    for (auto* e : enemies)
     {
-        const IVec2& cell = item.first;
-        int x = cell.x;
-        int y = cell.y;
+        if (!e || e->getIsDead()) continue;
 
-        // Out-of-bound check
-        if (x < 0 || x >= GridEndRow || y < 0 || y >= GridEndCol) {
-            cout << "Skipped out-of-bound attack at (" << x << ", " << y << ")\n";
-            continue;
+        bool hit = false;
+
+        for (const auto& item : cells)
+        {
+            int row = item.first.x;
+            int col = item.first.y;
+
+            if (e->OccupiesTile(row, col))
+            {
+                hit = true;
+                break;
+            }
         }
 
-        cout << "attack at (" << x << ", " << y << ")\n";
-
-        // Check if enemy is hit
-        for (auto* e : enemies)
+        if (hit)
         {
-            if (!e || e->getIsDead()) continue;
-            if (e->getNowRow() == x && e->getNowCol() == y)
-            {
-                e->getDamage(1);
-                cout << "  HIT!!! Enemy HP: " << e->getHealth() << endl;
-            }
+            e->getDamage(1);
+            cout << "HIT!!! Enemy HP: " << e->getHealth() << endl;
         }
     }
 
     cout << endl;
 }
-
 void Level::ApplyEnemyAttack(Enemy* e)
 {
     if (!e || e->getIsDead())
@@ -1552,8 +1583,14 @@ void Level::ApplyEnemyAttack(Enemy* e)
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
 
-    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
-        e->getNowRow(), e->getNowCol());
+    int centerRow = e->getNowRow();
+    int centerCol = e->getNowCol();
+    if (dynamic_cast<Boss*>(e))
+    {
+        centerCol += 2;
+    }
+    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+        .applyTo(centerRow, centerCol);
 
     for (auto& cell : attacks)
     {
@@ -1571,9 +1608,11 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
 {
     if (!e) return false;
 
+    if (e == bossEnemy)
+        return true;
+
     int er = e->getNowRow();
     int ec = e->getNowCol();
-
     return (abs(er - nowRow) <= 1 && abs(ec - nowCol) <= 1);
 }
 
@@ -1591,6 +1630,7 @@ void Level::UpdateTurn()
 
     case TurnState::ENEMY_TURN:
     {
+        UpdateBossPlayerPos();
         if (enemies.empty())
         {
             turnState = TurnState::PLAYER_TURN;
@@ -1605,7 +1645,7 @@ void Level::UpdateTurn()
         }
 
         Enemy* e = enemies[currentEnemyIndex];
-
+        if (e == bossEnemy) UpdateBossHPBar();
         if (!e || e->getIsDead())
         {
             currentEnemyIndex++;
@@ -1636,6 +1676,12 @@ void Level::UpdateTurn()
             if (e->getCountDownR() <= 0)
             {
                 ApplyEnemyAttack(e);
+                if (Boss* b = dynamic_cast<Boss*>(e))
+                {
+                    int summons = b->TryGetSummon();
+                    for (int i = 0; i < summons; i++)
+                        SpawnBossSummon();
+                }
                 highlightManager.HideEnemyAttack(e->highlightIndex);
 
                 e->setPreparingAttack(false);
@@ -1822,20 +1868,7 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
     }
 
     if (!atk || !pat) return;
-
-    AttackPattern oriented = *pat;
-    int rotateTimes = 0;
-
-    switch (dz)
-    {
-    case 0: rotateTimes = 2; break;
-    case 1: rotateTimes = 1; break;
-    case 2: rotateTimes = 3; break;
-    case 3: rotateTimes = 0; break;
-    }
-
-    for (int i = 0; i < rotateTimes; i++)
-        oriented = oriented.rotated90CW();
+    AttackPattern oriented = CardActionExecutor::OrientPattern(*pat, dz);
 
     auto cells = oriented.applyTo(nowRow, nowCol);
 
@@ -1844,10 +1877,7 @@ void Level::PreviewAttackPattern(Card* cardData, int dz)
         GridStartRow, GridEndRow,
         GridStartCol, GridEndCol,
         walkable,
-        [this](int r, int c)
-        {
-            return GridToWorld(r, c);
-        }
+        [this](int r, int c) { return GridToWorld(r, c); }
     );
 }
 
@@ -1859,10 +1889,10 @@ void Level::PreviewMovePath(int steps, int dir)
     {
         if (!e || e->getIsDead()) continue;
 
-        enemyPositions.emplace_back(
-            e->getNowRow(),
-            e->getNowCol()
-        );
+        for (auto& tile : e->GetOccupiedTiles())
+        {
+            enemyPositions.push_back(tile);
+        }
     }
 
     highlightManager.ShowMovePreview(
@@ -1881,22 +1911,6 @@ void Level::PreviewMovePath(int steps, int dir)
     );
 }
 
-/*void Level::PreviewEnemyAttack(Enemy* e)
-{
-    if (!e) return;
-
-    auto cells = e->getCurrentPattern().applyTo(
-        e->getNowRow(),
-        e->getNowCol()
-    );
-
-    highlightManager.ShowEnemyAttack(
-        cells,
-        GridStartRow, GridEndRow,
-        GridStartCol, GridEndCol,
-        [this](int r, int c) { return GridToWorld(r, c); }
-    );
-}*/
 void Level::PreviewAllEnemyAttacks()
 {
     highlightManager.HideEnemyAttack(enemyHighlightIndex);
@@ -1906,10 +1920,15 @@ void Level::PreviewAllEnemyAttacks()
         if (!e || e->getIsDead()) continue;
         if (!e->isPreparingAttack()) continue;
 
-        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
-            e->getNowRow(),
-            e->getNowCol()
-        );
+        int centerRow = e->getNowRow();
+        int centerCol = e->getNowCol();
+        if (dynamic_cast<Boss*>(e))
+        {
+            centerCol += 2;
+        }
+
+        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+            .applyTo(centerRow, centerCol);
 
         highlightManager.ShowEnemyAttack(
             cells,
@@ -2056,25 +2075,70 @@ void Level::LoadEnemyData()
 
 void Level::SpawnEnemiesForLevel()
 {
-    Enemy::EnemyType ta, tb, tc;
-    levelManager.GetEnemyTypes(ta, tb, tc);
+    if (boss) return; // boss room enemies are handled separately
 
-    auto spawnAt = [&](Enemy::EnemyType type, int col)
+    static const Enemy::EnemyType pool[] = {
+        Enemy::EnemyType::A,
+        Enemy::EnemyType::B,
+        Enemy::EnemyType::C,
+		Enemy::EnemyType::D,
+		Enemy::EnemyType::E,
+		Enemy::EnemyType::F,
+		Enemy::EnemyType::G
+
+    };
+
+    for (int i = 0; i < 3; i++)
     {
+        std::vector<std::pair<int, int>> validTiles;
+
+        for (int r = GridStartRow; r < GridEndRow; r++)
+        {
+            for (int c = GridStartCol; c < GridEndCol; c++)
+            {
+                if (!walkable[r][c]) continue;
+
+                // At least 2 tiles away from player
+                if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+
+                // Not already occupied
+                bool occupied = false;
+                for (auto* e : enemies)
+                {
+                    if (!e || e->getIsDead()) continue;
+                    if (e->OccupiesTile(r, c)) { occupied = true; break; }
+                }
+                if (occupied) continue;
+
+                validTiles.push_back({ r, c });
+            }
+        }
+
+        if (validTiles.empty())
+        {
+            std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n";
+            break;
+        }
+
+        int idx = rand() % (int)validTiles.size();
+        int spawnRow = validTiles[idx].first;
+        int spawnCol = validTiles[idx].second;
+
+        Enemy::EnemyType type = pool[rand() % 7];
+
         Enemy* e = new Enemy(type);
-        int row = rand() % 8 + 1;
-        e->setNowPosition(row, col);
-        e->SetWorldPosition(GridToWorld(row, col));
+        e->setNowPosition(spawnRow, spawnCol);
+        e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+
         enemies.push_back(e);
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
-    };
 
-    spawnAt(ta, 0);
-    spawnAt(tb, 2);
-    spawnAt(tc, 4);
+        std::cout << "[Spawn] Enemy " << i + 1 << " at ("
+            << spawnRow << ", " << spawnCol << ")\n";
+    }
 }
 
 void Level::AdvanceToNextRound()
@@ -2123,9 +2187,8 @@ void Level::AdvanceToNextRound()
     currentRotation     = 0;
 
     // Move player back to start; HP and coins carry over
-    nowRow = startRow;
-    nowCol = startCol;
-    playerDir   = PlayerDir::DOWN;
+    SetPlayerSpawnPosition();
+    playerDir = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     playerData.SetPosition(GridToWorld(nowRow, nowCol));
     UpdatePlayerAnimation();
@@ -2198,4 +2261,111 @@ bool Level::IsWalkable(int row, int col) const
     }
 
     return walkable[row][col];
+}
+void Level::SpawnBossSummon()
+{
+    std::vector<std::pair<int, int>> validTiles;
+
+    for (int r = GridStartRow; r < GridEndRow; r++)
+    {
+        for (int c = GridStartCol; c < GridEndCol; c++)
+        {
+            if (!walkable[r][c]) continue;
+
+            // Must be at least 2 tiles away from player (not same tile, not adjacent)
+            if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+
+            // Must not be occupied by any enemy
+            bool occupied = false;
+            for (auto* e : enemies)
+            {
+                if (!e || e->getIsDead()) continue;
+                if (e->OccupiesTile(r, c)) { occupied = true; break; }
+            }
+            if (occupied) continue;
+
+            validTiles.push_back({ r, c });
+        }
+    }
+
+    if (validTiles.empty())
+    {
+        std::cout << "[Boss] No valid tile for summon!\n";
+        return;
+    }
+
+    int idx = rand() % (int)validTiles.size();
+    int spawnRow = validTiles[idx].first;
+    int spawnCol = validTiles[idx].second;
+
+    static const Enemy::EnemyType pool[] = {
+        Enemy::EnemyType::A,
+        Enemy::EnemyType::B,
+        Enemy::EnemyType::C,
+		Enemy::EnemyType::D,
+		Enemy::EnemyType::E,
+		Enemy::EnemyType::F,
+		Enemy::EnemyType::G
+    };
+    Enemy::EnemyType type = pool[rand() % 7];
+
+    Enemy* e = new Enemy(type);
+    e->setNowPosition(spawnRow, spawnCol);
+    e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+
+    enemies.push_back(e);
+    objectsList.push_back(e->getObject());
+    objectsList.push_back(e->getHPText());
+    objectsList.push_back(e->getCorruptText());
+    objectsList.push_back(e->getDebuffText());
+
+    std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+}
+
+void Level::SetPlayerSpawnPosition()
+{
+    if (boss)
+    {
+        nowRow = 4;
+        nowCol = 3;
+        return;
+    }
+
+    std::vector<std::pair<int, int>> validTiles;
+
+    for (int r = GridStartRow + 1; r < GridEndRow - 1; r++)
+    {
+        for (int c = GridStartCol + 1; c < GridEndCol - 1; c++)
+        {
+            if (walkable[r][c])
+                validTiles.push_back({ r, c });
+        }
+    }
+
+    if (!validTiles.empty())
+    {
+        int idx = rand() % (int)validTiles.size();
+        nowRow = validTiles[idx].first;
+        nowCol = validTiles[idx].second;
+    }
+}
+
+void Level::UpdateBossPlayerPos()
+{
+    if (bossEnemy)
+        bossEnemy->setPlayerPosition(nowRow, nowCol);
+}
+void Level::UpdateBossHPBar()
+{
+    if (!bossHpBar || !bossEnemy) return;
+
+    float fullWidth = 600.0f;
+    float barY = 490.0f;
+
+    int hp = std::max(0, bossEnemy->getHealth());
+    int maxHp = bossEnemy->getMaxHealth();
+    float percent = (maxHp > 0) ? (float)hp / maxHp : 0.0f;
+
+    bossHpBar->SetSize(fullWidth * percent, -100.0f);
+    bossHpBar->SetPosition(glm::vec3(0.0f, barY, 1.0f));
 }

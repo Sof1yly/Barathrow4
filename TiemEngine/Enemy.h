@@ -5,27 +5,45 @@
 #include "EnemyData.h"
 #include "EnemyLoadPattern.h"
 #include <functional>
+#include <iostream>
 
-class Enemy {
+class Enemy
+{
 public:
-    enum class EnemyType {
-        A, B, C, D, E, F, G, H, I
 
+    enum class EnemyType
+    {
+        A, B, C, D, E, F, G, H, I
     };
 
-    Enemy(EnemyType type);
-    ~Enemy();
+public:
 
-    AttackPattern getCurrentPattern() const {
+    Enemy(EnemyType type);
+
+    virtual ~Enemy();
+
+    virtual void Update(float dt);
+
+    virtual bool CanMove() const
+    {
+        return true;
+    }
+
+    virtual void TakeTurn()
+    {
+    }
+
+    AttackPattern getCurrentPattern() const
+    {
         return patterns[currentPatternIndex];
     }
 
     void rotatePattern();
 
-
     void setHealth(int h);
 
-    void setNowPosition(int row, int col) {
+    void setNowPosition(int row, int col)
+    {
         nowRow = row;
         nowCol = col;
     }
@@ -33,115 +51,228 @@ public:
     int getNowRow() const { return nowRow; }
     int getNowCol() const { return nowCol; }
 
-    int getHealth() const{ return health; }
+    int getHealth() const { return health; }
 
-    void getDamage(int damage);
+    virtual void getDamage(int damage);
 
     bool TryMoveTowardPlayer(
         int playerRow,
         int playerCol,
-        int gridStartRow, int gridEndRow,
-        int gridStartCol, int gridEndCol,
+        int gridStartRow,
+        int gridEndRow,
+        int gridStartCol,
+        int gridEndCol,
         const std::vector<Enemy*>& allEnemies,
         const std::function<bool(int, int)>& isWalkable,
-        int& outR, int& outC
+        int& outR,
+        int& outC
     );
 
-    void setObject(SpriteObject* obj) { objSprite = obj; }
-    SpriteObject* getObject() { return objSprite; }
+    void setObject(SpriteObject* obj)
+    {
+        objSprite = obj;
+    }
 
-    TextObject* getHPText() { return hpText; }
-    TextObject* getCorruptText() { return corruptText; }
-    TextObject* getDebuffText() { return debuffText; }
+    SpriteObject* getObject()
+    {
+        return objSprite;
+    }
 
-    void showAttackText() {
+    TextObject* getHPText()
+    {
+        return hpText;
+    }
+
+    TextObject* getCorruptText()
+    {
+        return corruptText;
+    }
+
+    TextObject* getDebuffText()
+    {
+        return debuffText;
+    }
+
+    void showAttackText()
+    {
         attackTextTimer = 1.0f;
     }
+
     void UpdateTextPosition();
-    void Update(float dt);
+
     void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
+
     bool isDelayed() const;
-    int getDelayTurns() const { return delayTurns; }
+
+    int getDelayTurns() const
+    {
+        return delayTurns;
+    }
+
     void decrementDelay();
 
-    void PlayAttackAnimation(glm::vec3 playerPos);
+    virtual void PlayAttackAnimation(glm::vec3 playerPos);
 
     void addCorruption(int stacks);
-    int getCorruption() const { return corruptionStacks; }
+
+    int getCorruption() const
+    {
+        return corruptionStacks;
+    }
 
     void addWeaken(int turns);
-    int getWeakenTurns() const { return weakenTurns; }
+
+    int getWeakenTurns() const
+    {
+        return weakenTurns;
+    }
+
     void decrementWeaken();
+
     int getAttackDamage() const;
 
-    bool isPreparingAttack()const;
-    void setPreparingAttack(bool value);
+    bool isPreparingAttack() const;
 
-    bool getIsDead() const { return isDead; }
-    void markDead() { isDead = true; }
+    virtual void setPreparingAttack(bool value);
 
-	bool getIsMoving() const { return isMoving; }
+    bool getIsDead() const
+    {
+        return isDead;
+    }
 
-	int getMoveRange() const { return moveRange; }
-	int getCountDown() const { return countdown; }
-    void setCountDownR() { countdownRemaning = countdown; }
-	void decreaseCountDownR() { if (countdownRemaning > 0) countdownRemaning--; }
-	int getCountDownR() const { return countdownRemaning; }
-    void addDamage() { damage = damage + attackInc; }
+    void markDead()
+    {
+        isDead = true;
+    }
 
-    AttackPattern GetRotatedPatternTowardPlayer(
+    bool getIsMoving() const
+    {
+        return isMoving;
+    }
+
+    int getMoveRange() const
+    {
+        return moveRange;
+    }
+
+    int getCountDown() const
+    {
+        return countdown;
+    }
+
+    void setCountDownR()
+    {
+        countdownRemaning = countdown;
+    }
+
+    void decreaseCountDownR()
+    {
+        if (countdownRemaning > 0)
+            countdownRemaning--;
+    }
+
+    int getCountDownR() const
+    {
+        return countdownRemaning;
+    }
+
+    void addDamage()
+    {
+        damage = damage + attackInc;
+    }
+
+    virtual AttackPattern GetRotatedPatternTowardPlayer(
         int playerRow,
         int playerCol) const;
 
     void StartMove(glm::vec3 targetWorld);
+
     int highlightIndex;
+
     int stepsRemaining = 0;
-private:
-    void RefreshDebuffText();
+
+    virtual bool OccupiesTile(int row, int col) const
+    {
+        return nowRow == row &&
+            nowCol == col;
+    }
+    virtual std::vector<std::pair<int, int>> GetOccupiedTiles() const;
+
+    int getMaxHealth() const { return maxHealth; }
+
+
+protected:
 
     EnemyType type;
 
     int maxHealth = 10;
+
     int health = maxHealth;
+
     int damage = 1;
-	int moveRange = 1;
-	int countdown = 0;
+
+    int moveRange = 1;
+
+    int countdown = 0;
+
     int countdownRemaning = 0;
+
     int attackInc = 0;
 
     int nowRow = 0;
+
     int nowCol = 0;
 
     bool isMoving = false;
-    glm::vec3 moveStart;
-    glm::vec3 moveTarget;
-    float moveTimer = 0.0f;
-    float moveDuration = 0.95f;//move duration
 
     bool preparingAttack = false;
+
     bool isDead = false;
 
     bool isTakingDamage = false;
-    float damageTimer = 0.0f;
-    float damageDuration = 2.0f;
 
     bool isAttacking = false;
-    float attackTimer = 0.0f;
-	float attackDuration = 1.0f;//attack animation duration
 
     SpriteObject* objSprite = nullptr;
+
     std::vector<AttackPattern> patterns;
+
     int currentPatternIndex = 0;
 
     TextObject* hpText = nullptr;
+
     TextObject* corruptText = nullptr;
+
     TextObject* debuffText = nullptr;
+
+    float moveTimer = 0.0f;
+
+    float moveDuration = 0.95f;
+
+    float damageTimer = 0.0f;
+
+    float damageDuration = 2.0f;
+
+    float attackTimer = 0.0f;
+
+    float attackDuration = 1.0f;
 
     float attackTextTimer = 0.0f;
 
     int delayTurns = 0;
+
     int corruptionStacks = 0;
+
     int weakenTurns = 0;
+
+private:
+
+    void RefreshDebuffText();
+
+    glm::vec3 moveStart;
+
+    glm::vec3 moveTarget;
+    
 };

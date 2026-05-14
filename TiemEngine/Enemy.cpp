@@ -101,8 +101,49 @@ Enemy::Enemy(EnemyType type)
             200  // ms per frame
         );
         objSprite->SetSize(200.0f, -200.0f);
-		break;
+        break;
+    case EnemyType::D:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy4.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::E:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy5.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::F:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy6.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::G:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy7.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
     }
+
     setNowPosition(8, 0);
     
 }
@@ -550,32 +591,31 @@ AttackPattern Enemy::GetRotatedPatternTowardPlayer(
 
     if (abs(dx) >= abs(dy))
     {
-        // horizontal
+        
 
         if (dx > 0)
         {
-            // RIGHT
-            rotateTimes = 2;
-        }
-        else
-        {
-            // LEFT
-            rotateTimes = 0;
-        }
-    }
-    else
-    {
-        // vertical
 
-        if (dy < 0)
-        {
-            // UP
             rotateTimes = 3;
         }
         else
         {
-            // DOWN
+
             rotateTimes = 1;
+        }
+    }
+    else
+    {
+
+        if (dy < 0)
+        {
+            
+            rotateTimes = 4;
+        }
+        else
+        {
+            
+            rotateTimes = 2;
         }
     }
 
@@ -597,4 +637,9 @@ void Enemy::StartMove(glm::vec3 targetWorld)
     isMoving = true;
 
     objSprite->SetAnimationLoop(0, 0, 2, 150);
+}
+
+std::vector<std::pair<int, int>> Enemy::GetOccupiedTiles() const
+{
+    return { { nowRow, nowCol } };
 }

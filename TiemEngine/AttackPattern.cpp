@@ -13,24 +13,19 @@ void AttackPattern::addOffset(int dx, int dy, int value) {
 }
 
 AttackPattern AttackPattern::fromGrid(const std::vector<std::string>& grid,
-    char markChar,
-    int originCol,
-    int originRow,
-    int value)
+    char markChar, int originCol, int originRow, int value)
 {
     AttackPattern p;
     int rows = static_cast<int>(grid.size());
     if (rows == 0) return p;
     int cols = static_cast<int>(grid[0].size());
-
     if (originCol < 0) originCol = cols / 2;
     if (originRow < 0) originRow = rows / 2;
-
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < static_cast<int>(grid[r].size()); ++c) {
             if (grid[r][c] == markChar) {
-                int dx = c - originCol;
-                int dy = originRow-r; // y positive downward
+                int dx = r - originRow;
+                int dy = c - originCol;
                 p.addOffset(dx, dy, value);
             }
         }
@@ -63,6 +58,16 @@ AttackPattern AttackPattern::mirroredX() const {
         p.addOffset(-c.first.x, c.first.y, c.second);
     return p;
 }
+
+AttackPattern AttackPattern::mirroredY() const {
+    AttackPattern p;
+
+    for (auto& c : cells)
+        p.addOffset(c.first.x, -c.first.y, c.second);
+
+    return p;
+}
+
 
 bool AttackPattern::hasOffset(int dx, int dy) const {
     for (auto& c : cells)
