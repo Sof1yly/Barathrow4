@@ -49,7 +49,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	boss = true; //Set boss level, for testing ** change later ** 
+	boss = false; //Set boss level, for testing ** change later ** 
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -2080,7 +2080,12 @@ void Level::SpawnEnemiesForLevel()
     static const Enemy::EnemyType pool[] = {
         Enemy::EnemyType::A,
         Enemy::EnemyType::B,
-        Enemy::EnemyType::C
+        Enemy::EnemyType::C,
+		Enemy::EnemyType::D,
+		Enemy::EnemyType::E,
+		Enemy::EnemyType::F,
+		Enemy::EnemyType::G
+
     };
 
     for (int i = 0; i < 3; i++)
@@ -2119,7 +2124,7 @@ void Level::SpawnEnemiesForLevel()
         int spawnRow = validTiles[idx].first;
         int spawnCol = validTiles[idx].second;
 
-        Enemy::EnemyType type = pool[rand() % 3];
+        Enemy::EnemyType type = pool[rand() % 7];
 
         Enemy* e = new Enemy(type);
         e->setNowPosition(spawnRow, spawnCol);
@@ -2296,9 +2301,13 @@ void Level::SpawnBossSummon()
     static const Enemy::EnemyType pool[] = {
         Enemy::EnemyType::A,
         Enemy::EnemyType::B,
-        Enemy::EnemyType::C
+        Enemy::EnemyType::C,
+		Enemy::EnemyType::D,
+		Enemy::EnemyType::E,
+		Enemy::EnemyType::F,
+		Enemy::EnemyType::G
     };
-    Enemy::EnemyType type = pool[rand() % 3];
+    Enemy::EnemyType type = pool[rand() % 7];
 
     Enemy* e = new Enemy(type);
     e->setNowPosition(spawnRow, spawnCol);

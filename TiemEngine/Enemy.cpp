@@ -101,8 +101,49 @@ Enemy::Enemy(EnemyType type)
             200  // ms per frame
         );
         objSprite->SetSize(200.0f, -200.0f);
-		break;
+        break;
+    case EnemyType::D:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy4.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::E:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy5.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::F:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy6.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
+    case EnemyType::G:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy7.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+        break;
     }
+
     setNowPosition(8, 0);
     
 }
