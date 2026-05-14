@@ -106,6 +106,7 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
 {
     std::vector<std::string> fullGrid =
     {
+        //test pattern
         "ooooooooo",  // row 0 
         "XoooXoooo",  // row 1
         "oooXXXooo",  // row 2
@@ -115,6 +116,8 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
         "ooooooooo",  // row 6  
     };
 
+    /////////////////////////////
+    //Don't touch this line Until end of the comment
     AttackPattern rotated =
         AttackPattern::fromGrid(
             fullGrid,
@@ -130,5 +133,5 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     rotated = rotated.mirroredX();
 
     return rotated;
-    //return AttackPattern::fromGrid(fullGrid, 'X', 4, 3);
+    //////////////////////////////
 }
