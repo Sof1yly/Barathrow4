@@ -45,6 +45,10 @@ private:
     bool boss = false;
     Boss* bossEnemy = nullptr;
     bool bossActed = false;
+    ImageObject* bossHpBg = nullptr;
+    ImageObject* bossHpBar = nullptr;
+    ImageObject* bossHpMask = nullptr;
+    void UpdateBossHPBar();
 	/// ///////////
 
 	int turnCount = 0;

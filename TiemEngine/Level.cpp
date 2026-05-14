@@ -125,6 +125,28 @@ void Level::LevelInit()
         objectsList.push_back(bossEnemy->getCorruptText());
 
         objectsList.push_back(bossEnemy->getDebuffText());
+        {
+            ImageObject* bg = new ImageObject();
+            bg->SetSize(600.0f, -100.0f);
+            bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
+            bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
+            objectsList.push_back(bg);
+            bossHpBg = bg;
+        }
+        {
+            bossHpBar = new ImageObject();
+            bossHpBar->SetSize(600.0f, -100.0f);
+            bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
+            bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
+            objectsList.push_back(bossHpBar);
+        }
+        {
+            bossHpMask = new ImageObject();
+            bossHpMask->SetSize(0.0f, -50.0f);
+            bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
+            bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+            objectsList.push_back(bossHpMask);
+        }
     }
 
     SetPlayerSpawnPosition();
@@ -1641,7 +1663,7 @@ void Level::UpdateTurn()
         }
 
         Enemy* e = enemies[currentEnemyIndex];
-
+        if (e == bossEnemy) UpdateBossHPBar();
         if (!e || e->getIsDead())
         {
             currentEnemyIndex++;
@@ -2341,4 +2363,18 @@ void Level::UpdateBossPlayerPos()
 {
     if (bossEnemy)
         bossEnemy->setPlayerPosition(nowRow, nowCol);
+}
+void Level::UpdateBossHPBar()
+{
+    if (!bossHpBar || !bossEnemy) return;
+
+    float fullWidth = 600.0f;
+    float barY = 490.0f;
+
+    int hp = std::max(0, bossEnemy->getHealth());
+    int maxHp = bossEnemy->getMaxHealth();
+    float percent = (maxHp > 0) ? (float)hp / maxHp : 0.0f;
+
+    bossHpBar->SetSize(fullWidth * percent, -100.0f);
+    bossHpBar->SetPosition(glm::vec3(0.0f, barY, 1.0f));
 }

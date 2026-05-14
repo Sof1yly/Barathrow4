@@ -200,6 +200,9 @@ public:
     }
     virtual std::vector<std::pair<int, int>> GetOccupiedTiles() const;
 
+    int getMaxHealth() const { return maxHealth; }
+
+
 protected:
 
     EnemyType type;
