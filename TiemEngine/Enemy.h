@@ -113,7 +113,7 @@ public:
 
     void decrementDelay();
 
-    void PlayAttackAnimation(glm::vec3 playerPos);
+    virtual void PlayAttackAnimation(glm::vec3 playerPos);
 
     void addCorruption(int stacks);
 
@@ -244,14 +244,6 @@ protected:
 
     TextObject* debuffText = nullptr;
 
-private:
-
-    void RefreshDebuffText();
-
-    glm::vec3 moveStart;
-
-    glm::vec3 moveTarget;
-
     float moveTimer = 0.0f;
 
     float moveDuration = 0.95f;
@@ -271,4 +263,13 @@ private:
     int corruptionStacks = 0;
 
     int weakenTurns = 0;
+
+private:
+
+    void RefreshDebuffText();
+
+    glm::vec3 moveStart;
+
+    glm::vec3 moveTarget;
+    
 };

@@ -18,9 +18,14 @@ public:
     bool IsHitBy(const std::vector<std::pair<IVec2, int>>& cells);
     AttackPattern GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const override;
 
+    void PlayAttackAnimation(glm::vec3 playerPos) override;
 private:
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
     int hitboxLeftOffset = 0;
     int hitboxRightOffset = 1;
+
+    void RollAttackPattern();
+
+    int attackPatternChoice = 1;
 };
