@@ -27,15 +27,34 @@ public:
     {
         playerRow = row;
         playerCol = col;
-		std::cout << "Player position set to (" << playerRow << ", " << playerCol << ")\n";
+		std::cout << "Player position set to (" "Row = "<< playerRow << ", Col =" << playerCol << ")\n";
+        if (playerRow % 2 == 0 && playerCol % 2 != 0) {
+            even = true;
+        }else if(playerRow % 2 != 0 && playerCol % 2 == 0){
+            even = true;
+        }
+        else {
+            even = false;
+		}
+		cout << "Player is on " << (even ? "even" : "odd") << " tile.\n";
+		/* // For reference, the grid is indexed as follows:
+            1  2  3  4  5  6  7  8  9
+			10 11 12 13 14 15 16 17 18
+			19 20 21 22 23 24 25 26 27
+			28 29 30 31 32 33 34 35 36
+			37 38 39 40 41 42 43 44 45
+        */
 	}
 
     int TryGetSummon();
+    
 private:
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
     int hitboxLeftOffset = 0;
     int hitboxRightOffset = 1;
+
+    bool even;
 
 	int playerCol = 0;
 	int playerRow = 0;
