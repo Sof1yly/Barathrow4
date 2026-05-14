@@ -42,27 +42,42 @@ void Boss::RollAttackPattern()
 
 void Boss::PlayAttackAnimation(glm::vec3 playerPos)
 {
-    RollAttackPattern();
+    // Pattern already rolled when preparing — don't roll again here
     if (!objSprite) return;
 
     switch (attackPatternChoice)
     {
-    case 1: //Attack animaiton
-        objSprite->SetAnimationOnce(/* row */ 2, 0, /* frames */ 11, 150);
-        attackDuration = 6 * 0.150f;
-        break;
-    case 2:
-        objSprite->SetAnimationOnce(/* row */ 2, 0, /* frames */ 11, 150);
-        attackDuration = 6 * 0.150f;
-        break;
-    case 3:
-        objSprite->SetAnimationOnce(/* row */ 2, 0, /* frames */ 11, 150);
-        attackDuration = 6 * 0.150f;
-        break;
+    case 1: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 2: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 3: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     }
 
     isAttacking = true;
     attackTimer = 0.0f;
+}
+void Boss::setPreparingAttack(bool value)
+{
+    if (value && !preparingAttack)
+        RollAttackPattern();
+
+    Enemy::setPreparingAttack(value);
+}
+
+void Boss::getDamage(int damage)
+{
+    Enemy::getDamage(damage);
+
+    if (!objSprite) return;
+
+    if (isDead)
+    {
+        objSprite->SetAnimationLoop(1, 0, 7, 150);//die
+    }
+    else
+    {
+        objSprite->SetAnimationOnce(3, 0, 9, 150);//get damage
+        damageDuration = 9 * 0.150f;
+    }
 }
 
 void Boss::TakeTurn()
@@ -107,39 +122,36 @@ bool Boss::IsHitBy(const std::vector<std::pair<IVec2, int>>& cells)
 
 AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const
 {
-    // Pattern 1 — TODO: design your own grid
     std::vector<std::string> grid1 =
     {
         "ooooooooo",
-        "XoooXoooo",
-        "oooXXXooo",
-        "XXXXXXXoo",
-        "oooXXXooo",
-        "XoooXoooo",
+        "XXXXXXXXX",
+        "XXXXXXXXX",
+        "XXXXXXXXX",
+        "ooooooooo",
+        "ooooooooo",
         "ooooooooo",
     };
 
-    // Pattern 2 — TODO: design your own grid
     std::vector<std::string> grid2 =
     {
         "ooooooooo",
         "ooooooooo",
         "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
+        "XoXoXoXoX",
+        "oXoXoXoXo",
+        "XoXoXoXoX",
         "ooooooooo",
     };
 
-    // Pattern 3 — TODO: design your own grid
     std::vector<std::string> grid3 =
     {
         "ooooooooo",
         "ooooooooo",
         "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
+        "oXoXoXoXo",
+        "XoXoXoXoX",
+        "oXoXoXoXo",
         "ooooooooo",
     };
 

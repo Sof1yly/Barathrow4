@@ -53,7 +53,7 @@ public:
 
     int getHealth() const { return health; }
 
-    void getDamage(int damage);
+    virtual void getDamage(int damage);
 
     bool TryMoveTowardPlayer(
         int playerRow,
@@ -135,7 +135,7 @@ public:
 
     bool isPreparingAttack() const;
 
-    void setPreparingAttack(bool value);
+    virtual void setPreparingAttack(bool value);
 
     bool getIsDead() const
     {

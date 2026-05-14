@@ -19,6 +19,8 @@ public:
     AttackPattern GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const override;
 
     void PlayAttackAnimation(glm::vec3 playerPos) override;
+    void getDamage(int damage) override;
+    void setPreparingAttack(bool value) override;
 private:
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
