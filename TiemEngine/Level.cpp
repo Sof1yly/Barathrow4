@@ -71,6 +71,7 @@ void Level::LevelInit()
             walkable[r][c] = true;
         }
     }
+    /*
 	if (boss) { //make a non-walkable area for boss level
         for (int i = 0; i < 2; i++) {
             for (int j = 2; j < 7; j++) {
@@ -78,6 +79,7 @@ void Level::LevelInit()
             }
         }
     }
+    */
     for (int i = GridStartRow; i < GridEndRow; ++i) //Render
     {
         for (int j = GridStartCol; j < GridEndCol; ++j)
@@ -1575,8 +1577,19 @@ void Level::ApplyEnemyAttack(Enemy* e)
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
 
-    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
-        e->getNowRow(), e->getNowCol());
+    int centerRow = e->getNowRow();
+    int centerCol = e->getNowCol();
+
+
+    if (dynamic_cast<Boss*>(e))
+    {
+        centerRow += 0;
+		centerCol += 0;
+    }
+
+    auto attacks =
+        e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+        .applyTo(centerRow, centerCol);
 
     for (auto& cell : attacks)
     {
@@ -1916,10 +1929,17 @@ void Level::PreviewAllEnemyAttacks()
         if (!e || e->getIsDead()) continue;
         if (!e->isPreparingAttack()) continue;
 
-        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol).applyTo(
-            e->getNowRow(),
-            e->getNowCol()
-        );
+        int centerRow = e->getNowRow();
+        int centerCol = e->getNowCol();
+
+        if (dynamic_cast<Boss*>(e))
+        {
+            centerRow += 2;
+        }
+
+        auto cells =
+            e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
+            .applyTo(centerRow, centerCol);
 
         highlightManager.ShowEnemyAttack(
             cells,
@@ -2066,6 +2086,7 @@ void Level::LoadEnemyData()
 
 void Level::SpawnEnemiesForLevel()
 {
+    /*
     Enemy::EnemyType ta, tb, tc;
     levelManager.GetEnemyTypes(ta, tb, tc);
 
@@ -2085,6 +2106,7 @@ void Level::SpawnEnemiesForLevel()
     spawnAt(ta, 0);
     spawnAt(tb, 2);
     spawnAt(tc, 4);
+    */
 }
 
 void Level::AdvanceToNextRound()

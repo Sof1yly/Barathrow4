@@ -102,21 +102,35 @@ bool Boss::IsHitBy(const std::vector<std::pair<IVec2, int>>& cells)
 
     return false;
 }
-AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const
+AttackPattern Boss::GetRotatedPatternTowardPlayer(
+    int playerRow,
+    int playerCol) const
 {
-    // Build a 5x9 grid where every cell is marked as an attack tile
-    std::vector<std::string> fullGrid = {
+    std::vector<std::string> fullGrid =
+    {
         "XXXXXXXXX",
-		"XXXXXXXXX",
-        "XXXXXXXXX",
-		".........",
-		"XX.....XX",
-		".........",
-		".........",
-        ".........",
-
-
+        "XXXXoXXXX",
+        "XXXoooXXX",
+        "XXXXoXXXX",
+        "XXXXoXXXo",
     };
 
-    return AttackPattern::fromGrid(fullGrid, 'X');
+    AttackPattern rotated =
+        AttackPattern::fromGrid(
+            fullGrid,
+            'X',
+            4, // horizontal center
+            2  // vertical center
+        );
+
+    rotated = rotated.mirroredX();
+
+    int rotateTimes = 2;
+
+    for (int i = 0; i < rotateTimes; i++)
+    {
+        rotated = rotated.rotated90CW();
+    }
+
+    return rotated;
 }
