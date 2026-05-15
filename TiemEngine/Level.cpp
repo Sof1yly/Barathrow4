@@ -1643,7 +1643,7 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
 
     int er = e->getNowRow();
     int ec = e->getNowCol();
-    return (abs(er - nowRow) <= 1 && abs(ec - nowCol) <= 1);
+    return (abs(er - nowRow) + abs(ec - nowCol) == 1);
 }
 
 void Level::UpdateTurn()
