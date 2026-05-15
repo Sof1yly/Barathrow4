@@ -228,6 +228,11 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\Resource\glm;..\Resource\SDL2-2.0.5\include;..\Resource\glew\include;..\Resource\SDL2_ttf\include;..\Resource\sdl_mixer\include</AdditionalIncludeDirectories>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>taskkill /F /IM "$(TargetName).exe" /T 2&gt;nul
+del "$(TargetPath)" /F /Q 2&gt;nul
+exit 0</Command>
+    </PreBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
