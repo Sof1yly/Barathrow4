@@ -123,7 +123,7 @@ bool Boss::IsHitBy(const std::vector<std::pair<IVec2, int>>& cells)
 AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) const
 {
     std::vector<std::string> grid1 =
-    {
+    {//hit up
         "ooooooooo",
         "XXXXXXXXX",
         "XXXXXXXXX",
@@ -134,10 +134,10 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     };
 
     std::vector<std::string> grid2 =
-    {
+    {//hit all odd
         "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
+        "XoooooooX",
+        "oXoooooXo",
         "XoXoXoXoX",
         "oXoXoXoXo",
         "XoXoXoXoX",
@@ -145,13 +145,53 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     };
 
     std::vector<std::string> grid3 =
-    {
+    {//hit all even
         "ooooooooo",
-        "ooooooooo",
-        "ooooooooo",
+        "oXoooooXo",
+        "XoooooooX",
         "oXoXoXoXo",
         "XoXoXoXoX",
         "oXoXoXoXo",
+        "ooooooooo",
+    };
+    std::vector<std::string> grid4 =
+    {//lock player
+        "ooooooooo",
+        "ooooXoooo",
+        "oooXXXooo",
+        "ooXXXXXoo",
+        "oooXXXooo",
+        "ooooXoooo",
+        "ooooooooo",
+    };
+    std::vector<std::string> grid5 =
+    {//lock player
+        "ooooooooo",
+        "oooXXXooo",
+        "oooXXXooo",
+        "oooXXXooo",
+        "oooXXXooo",
+        "oooXXXooo",
+        "ooooooooo",
+    };
+    std::vector<std::string> grid6 =
+    {//hit all left
+        "ooooooooo",
+        "XXXXXoooo",
+        "XXXXXoooo",
+        "XXXXXoooo",
+        "XXXXXoooo",
+        "XXXXXoooo",
+        "ooooooooo",
+    };
+    std::vector<std::string> grid7 =
+    {//hit all right
+        "ooooooooo",
+        "ooooXXXXX",
+        "ooooXXXXX",
+        "ooooXXXXX",
+        "ooooXXXXX",
+        "ooooXXXXX",
         "ooooooooo",
     };
 
