@@ -55,7 +55,7 @@ public:
 
     virtual void getDamage(int damage);
 
-    bool TryMoveTowardPlayer(
+    virtual bool TryMoveTowardPlayer(
         int playerRow,
         int playerCol,
         int gridStartRow,

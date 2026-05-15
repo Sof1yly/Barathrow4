@@ -29,14 +29,15 @@ public:
 
     int GetHealAmount() const { return healAmount; }
 
-    // Vertical-only BFS step toward the player's row.
-    // Replaces TryMoveTowardPlayer for this elite.
-    bool TryMoveVertical(
+    // Moves one step up or down toward the player's row only.
+    bool TryMoveTowardPlayer(
         int playerRow,
+        int playerCol,
         int gridStartRow, int gridEndRow,
+        int gridStartCol, int gridEndCol,
         const std::vector<Enemy*>& allEnemies,
         const std::function<bool(int, int)>& isWalkable,
-        int& outR, int& outC);
+        int& outR, int& outC) override;
 
 private:
     int healAmount = 5;     // HP restored to friendly Elite1 hit by row attack

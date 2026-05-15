@@ -12,9 +12,9 @@ EliteEnemy1::EliteEnemy1()
     // ── Sprite ───────────────────────────────────────────────────────────────
     // TODO: replace with actual Elite1 texture path
     if (objSprite) { delete objSprite; objSprite = nullptr; }
-    objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy1.png", 4, 12);
-    objSprite->SetAnimationLoop(0, 0, 2, 200);
-    objSprite->SetSize(200.0f, -200.0f);
+    objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy1.png", 8, 12);
+    objSprite->SetAnimationLoop(0, 0, 12, 200);
+    objSprite->SetSize(150.0f, -150.0f);
 
     SDL_Color white = { 255, 255, 255 };
     hpText->LoadText("HP: " + std::to_string(health), white, 24);
@@ -45,20 +45,25 @@ bool EliteEnemy1::ShouldHealInstead(const Enemy* other) const
     return dynamic_cast<const EliteEnemy1*>(other) != nullptr;
 }
 
-bool EliteEnemy1::TryMoveVertical(
+bool EliteEnemy1::TryMoveTowardPlayer(
     int playerRow,
+    int playerCol,
     int gridStartRow, int gridEndRow,
+    int gridStartCol, int gridEndCol,
     const std::vector<Enemy*>& allEnemies,
     const std::function<bool(int, int)>& isWalkable,
     int& outR, int& outC)
 {
-    if (nowRow == playerRow)
-        return false; // already on the correct row, no move needed
+    std::cout << "[Elite1] TryMove called — pos(" << nowRow << "," << nowCol
+              << ") player(" << playerRow << "," << playerCol << ")\n";
 
-    int targetR = nowRow + (playerRow > nowRow ? 1 : -1);
-    int targetC = nowCol;
+    if (nowCol == playerCol)
+        return false; // already on the correct column
 
-    if (targetR < gridStartRow || targetR >= gridEndRow)
+    int targetR = nowRow;
+    int targetC = nowCol + (playerCol > nowCol ? 1 : -1);
+
+    if (targetC < gridStartCol || targetC >= gridEndCol)
         return false;
 
     if (!isWalkable(targetR, targetC))

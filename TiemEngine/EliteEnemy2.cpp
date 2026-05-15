@@ -12,9 +12,9 @@ EliteEnemy2::EliteEnemy2()
     // ── Sprite ───────────────────────────────────────────────────────────────
     // TODO: replace with actual Elite2 texture path
     if (objSprite) { delete objSprite; objSprite = nullptr; }
-    objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy2.png", 4, 12);
-    objSprite->SetAnimationLoop(0, 0, 2, 200);
-    objSprite->SetSize(200.0f, -200.0f);
+    objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy2.png", 4, 7);
+    objSprite->SetAnimationLoop(0, 0, 6, 200);
+    objSprite->SetSize(150.0f, -150.0f);
 
     SDL_Color white = { 255, 255, 255 };
     hpText->LoadText("HP: " + std::to_string(health), white, 24);
