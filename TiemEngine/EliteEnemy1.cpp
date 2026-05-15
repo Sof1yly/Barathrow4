@@ -58,7 +58,11 @@ bool EliteEnemy1::TryMoveTowardPlayer(
               << ") player(" << playerRow << "," << playerCol << ")\n";
 
     if (nowCol == playerCol)
-        return false; // already on the correct column
+    {
+        
+        std::cout << "[Elite1] Aligned with player column " << playerCol << "\n";
+        return false;
+    }
 
     int targetR = nowRow;
     int targetC = nowCol + (playerCol > nowCol ? 1 : -1);
