@@ -22,8 +22,8 @@
 namespace {
     constexpr const char* PATH_PATTERN        = "../Resource/GameData/Pattern.txt";
     constexpr const char* PATH_CARDS_STARTER  = "../Resource/GameData/CardActionStandard.txt";
-    constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardDesc_filled.txt";
-    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc_filled.txt";
+    constexpr const char* PATH_CARDS_ALL      = "../Resource/GameData/CardAction_filled.txt";
+    constexpr const char* PATH_CARD_DESC      = "../Resource/GameData/CardDesc.txt";
     constexpr const char* PATH_ENEMY_DATA     = "../Resource/GameData/EnemyData.txt";
     constexpr const char* PATH_ENEMY_PATTERN  = "../Resource/GameData/EnemyPattern.txt";
 }
@@ -286,6 +286,14 @@ void Level::LevelInit()
     }
 
     {
+        levelNameBanner = new TextObject();
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelNameBanner->LoadText(levelManager.GetLevelText(), color, 80);
+        levelNameBanner->SetPosition(glm::vec3(0.0f, 10000.0f, 11.0f));
+        objectsList.push_back(levelNameBanner);
+    }
+
+    {
         levelText = new TextObject();
         SDL_Color color = { 255, 230, 100, 255 };
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
@@ -356,6 +364,28 @@ void Level::LevelUpdate()
             [](const DamagePopup& p) { return p.expired; }),
         damagePopups.end()
     );
+
+    if (winDelayActive)
+    {
+        winDelay += deltaTime;
+        if (winDelay >= 2500.0f)
+        {
+            winDelayActive = false;
+            rewardBoxScene.Open(pendingCoinsEarned, objectsList);
+            rewardPickedAfterWin = true;
+        }
+    }
+
+    if (levelBannerActive)
+    {
+        levelBannerTimer += deltaTime;
+        if (levelBannerTimer >= 2000.0f)
+        {
+            levelBannerActive = false;
+            if (levelNameBanner) levelNameBanner->SetPosition(glm::vec3(0.0f, 10000.0f, 11.0f));
+        }
+    }
+
     if (playerPlayingOneShot)
     {
         playerAnimTimer += deltaTime;
@@ -634,15 +664,15 @@ void Level::LevelUpdate()
         }
         turnState = TurnState::GAME_OVER;
 
-        // Trigger once: open the reward box scene
-        if (!rewardPickedAfterWin)
+        // Trigger once: start 2-second delay before opening reward box
+        if (!rewardPickedAfterWin && !winDelayActive)
         {
-            int coinsEarned = levelManager.RollCoins();
-            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
-            playerData.AddCoins(coinsEarned);
-            std::cout << "[" << levelManager.GetLevelText() << "] Earned " << coinsEarned << " coins." << std::endl;
-            rewardBoxScene.Open(coinsEarned, objectsList);
-            rewardPickedAfterWin = true;
+            pendingCoinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) pendingCoinsEarned = pendingCoinsEarned * 5 / 4;
+            playerData.AddCoins(pendingCoinsEarned);
+            std::cout << "[" << levelManager.GetLevelText() << "] Earned " << pendingCoinsEarned << " coins." << std::endl;
+            winDelay = 0.0f;
+            winDelayActive = true;
         }
 	}
     
@@ -910,13 +940,13 @@ void Level::HandleKey(char key)
 
         turnState = TurnState::GAME_OVER;
 
-        if (!rewardPickedAfterWin)
+        if (!rewardPickedAfterWin && !winDelayActive)
         {
-            int coinsEarned = levelManager.RollCoins();
-            if (goldBonusActive) coinsEarned = coinsEarned * 5 / 4;
-            playerData.AddCoins(coinsEarned);
-            rewardBoxScene.Open(coinsEarned, objectsList);
-            rewardPickedAfterWin = true;
+            pendingCoinsEarned = levelManager.RollCoins();
+            if (goldBonusActive) pendingCoinsEarned = pendingCoinsEarned * 5 / 4;
+            playerData.AddCoins(pendingCoinsEarned);
+            winDelay = 0.0f;
+            winDelayActive = true;
         }
 
         return;
@@ -2152,6 +2182,19 @@ void Level::AdvanceToNextRound()
         SDL_Color color = { 255, 230, 100, 255 };
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
     }
+
+    // Show level name banner at top-middle for 2 seconds
+    if (levelNameBanner)
+    {
+        SDL_Color color = { 255, 230, 100, 255 };
+        levelNameBanner->LoadText(levelManager.GetLevelText(), color, 80);
+        levelNameBanner->SetPosition(glm::vec3(0.0f, 480.0f, 11.0f));
+        levelBannerTimer = 0.0f;
+        levelBannerActive = true;
+    }
+
+    winDelayActive = false;
+    winDelay = 0.0f;
 
     // Reset combat flags
     isGameOver             = false;

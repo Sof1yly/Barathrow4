@@ -58,6 +58,12 @@ private:
     TextObject* gameOverText = nullptr;
 	TextObject* winText = nullptr;
     bool isGameOver = false;
+    float winDelay = 0.0f;
+    bool winDelayActive = false;
+    int pendingCoinsEarned = 0;
+    TextObject* levelNameBanner = nullptr;
+    float levelBannerTimer = 0.0f;
+    bool levelBannerActive = false;
 
     // UI HP bar
     ImageObject* hpBar = nullptr;

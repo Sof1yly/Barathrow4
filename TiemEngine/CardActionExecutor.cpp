@@ -216,6 +216,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
         // Track who already got hit in THIS attack
         std::unordered_set<Enemy*> hitThisAttack;
+        std::vector<std::pair<int, int>> hitCells;
 
         for (const auto& cell : cells)
         {
@@ -231,6 +232,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
             std::cout << "  Attack cell (" << gx << ", " << gy << ")\n";
 
+            bool cellHit = false;
             for (auto* e : ctx.enemies)
             {
                 if (!e || e->getIsDead()) continue;
@@ -242,6 +244,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
                 {
                     e->getDamage(attackDamage);
                     hitThisAttack.insert(e);
+                    cellHit = true;
 
                     std::cout << "    HIT enemy! HP: "
                         << e->getHealth() << std::endl;
@@ -263,17 +266,20 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
                         std::cout << "    Enemy died!\n";
                 }
             }
+
+            if (cellHit)
+                hitCells.push_back({ gx, gy });
         }
 
-        // Optional: spawn hit visuals
+        // Spawn hit visuals only for cells that actually hit an enemy
         int perHit = pa.resolvedPerHitDamage;
         int repeats = atk->getRepeatCount();
 
-        for (const auto& cell : cells)
+        for (const auto& hc : hitCells)
         {
             for (int r = 0; r < repeats; r++)
             {
-                result.hits.push_back({ cell.first.x, cell.first.y, perHit, r });
+                result.hits.push_back({ hc.first, hc.second, perHit, r });
             }
         }
     }
