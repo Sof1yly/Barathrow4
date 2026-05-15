@@ -1,4 +1,6 @@
 ﻿#include "Level.h"
+#include "EliteEnemy1.h"
+#include "EliteEnemy2.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "TriangleMeshVbo.h"
@@ -2107,56 +2109,83 @@ void Level::SpawnEnemiesForLevel()
 {
     if (boss) return; // boss room enemies are handled separately
 
-    static const Enemy::EnemyType pool[] = {
-        Enemy::EnemyType::A,
-        Enemy::EnemyType::B,
-        Enemy::EnemyType::C,
-		Enemy::EnemyType::D,
-		Enemy::EnemyType::E,
-		Enemy::EnemyType::F,
-		Enemy::EnemyType::G
+    //-- Old random spawn (3 enemies) -- commented out --
+    //static const Enemy::EnemyType pool[] = {
+    //    Enemy::EnemyType::A,
+    //    Enemy::EnemyType::B,
+    //    Enemy::EnemyType::C,
+    //    Enemy::EnemyType::D,
+    //    Enemy::EnemyType::E,
+    //    Enemy::EnemyType::F,
+    //    Enemy::EnemyType::G
+    //};
+    //for (int i = 0; i < 3; i++)
+    //{
+    //    std::vector<std::pair<int, int>> validTiles;
+    //    for (int r = GridStartRow; r < GridEndRow; r++)
+    //    {
+    //        for (int c = GridStartCol; c < GridEndCol; c++)
+    //        {
+    //            if (!walkable[r][c]) continue;
+    //            if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+    //            bool occupied = false;
+    //            for (auto* e : enemies)
+    //            {
+    //                if (!e || e->getIsDead()) continue;
+    //                if (e->OccupiesTile(r, c)) { occupied = true; break; }
+    //            }
+    //            if (occupied) continue;
+    //            validTiles.push_back({ r, c });
+    //        }
+    //    }
+    //    if (validTiles.empty()) { std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n"; break; }
+    //    int idx = rand() % (int)validTiles.size();
+    //    int spawnRow = validTiles[idx].first;
+    //    int spawnCol = validTiles[idx].second;
+    //    Enemy::EnemyType type = pool[rand() % 7];
+    //    Enemy* e = new Enemy(type);
+    //    e->setNowPosition(spawnRow, spawnCol);
+    //    e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+    //    enemies.push_back(e);
+    //    objectsList.push_back(e->getObject());
+    //    objectsList.push_back(e->getHPText());
+    //    objectsList.push_back(e->getCorruptText());
+    //    objectsList.push_back(e->getDebuffText());
+    //    std::cout << "[Spawn] Enemy " << i + 1 << " at (" << spawnRow << ", " << spawnCol << ")\n";
+    //}
 
-    };
-
-    for (int i = 0; i < 3; i++)
+    // Spawn 1 EliteEnemy1 and 1 EliteEnemy2 at random valid tiles
+    auto SpawnElite = [&](Enemy* e, int index)
     {
         std::vector<std::pair<int, int>> validTiles;
-
         for (int r = GridStartRow; r < GridEndRow; r++)
         {
             for (int c = GridStartCol; c < GridEndCol; c++)
             {
                 if (!walkable[r][c]) continue;
-
-                // At least 2 tiles away from player
                 if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
-
-                // Not already occupied
                 bool occupied = false;
-                for (auto* e : enemies)
+                for (auto* ex : enemies)
                 {
-                    if (!e || e->getIsDead()) continue;
-                    if (e->OccupiesTile(r, c)) { occupied = true; break; }
+                    if (!ex || ex->getIsDead()) continue;
+                    if (ex->OccupiesTile(r, c)) { occupied = true; break; }
                 }
                 if (occupied) continue;
-
                 validTiles.push_back({ r, c });
             }
         }
 
         if (validTiles.empty())
         {
-            std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n";
-            break;
+            std::cout << "[Spawn] No valid tile for elite " << index << "\n";
+            delete e;
+            return;
         }
 
         int idx = rand() % (int)validTiles.size();
         int spawnRow = validTiles[idx].first;
         int spawnCol = validTiles[idx].second;
 
-        Enemy::EnemyType type = pool[rand() % 7];
-
-        Enemy* e = new Enemy(type);
         e->setNowPosition(spawnRow, spawnCol);
         e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
 
@@ -2166,9 +2195,12 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
 
-        std::cout << "[Spawn] Enemy " << i + 1 << " at ("
+        std::cout << "[Spawn] Elite " << index << " at ("
             << spawnRow << ", " << spawnCol << ")\n";
-    }
+    };
+
+    SpawnElite(new EliteEnemy1(), 1);
+    SpawnElite(new EliteEnemy2(), 2);
 }
 
 void Level::AdvanceToNextRound()
