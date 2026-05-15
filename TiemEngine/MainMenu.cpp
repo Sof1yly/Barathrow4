@@ -4,12 +4,16 @@
 #include "SaveSystem.h"
 #include <iostream>
 
-static const float BTN_W = 280.0f;
-static const float BTN_H = 60.0f;
-static const float BTN_X = -400.0f;
+static const char* TEX_BG       = "../Resource/Texture/UI/Menu/BG.png";
+static const char* TEX_FADE     = "../Resource/Texture/UI/Menu/Fade.png";
+static const char* TEX_LOGO     = "../Resource/Texture/UI/Menu/Logo.png";
+static const char* TEX_START    = "../Resource/Texture/UI/Menu/START GAME.png";
+static const char* TEX_CONT     = "../Resource/Texture/UI/Menu/CONTINUE.png";
+static const char* TEX_ABANDON  = "../Resource/Texture/UI/Menu/ABANDON RUN.png";
+static const char* TEX_SETTINGS = "../Resource/Texture/UI/Menu/SETTINGS.png";
+static const char* TEX_QUIT     = "../Resource/Texture/UI/Menu/QUIT GAME.png";
 
-void MainMenu::InitButton(MenuButton& btn, const std::string& text,
-                           const std::string& texPath, SDL_Color labelColor,
+void MainMenu::InitButton(MenuButton& btn, const std::string& texPath,
                            glm::vec3 pos, glm::vec2 size)
 {
     btn.pos  = pos;
@@ -21,10 +25,7 @@ void MainMenu::InitButton(MenuButton& btn, const std::string& text,
     btn.bg->SetPosition(pos);
     objectsList.push_back(btn.bg);
 
-    btn.label = new TextObject();
-    btn.label->LoadText(text, labelColor, 30);
-    btn.label->SetPosition(glm::vec3(pos.x, pos.y, pos.z + 1.0f));
-    objectsList.push_back(btn.label);
+    btn.label = nullptr;
 }
 
 void MainMenu::GetRealMousePos(int x, int y, float& rx, float& ry) const
@@ -47,27 +48,34 @@ void MainMenu::LevelLoad()
 
 void MainMenu::LevelInit()
 {
-    // Background
+    // 1. Background — full screen
     auto* bg = new ImageObject();
+    bg->SetTexture(TEX_BG);
     bg->SetSize(1920.0f, -1080.0f);
     bg->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    bg->SetTexture("../Resource/Texture/TestMainMenu.png");
     objectsList.push_back(bg);
 
-    // Button textures
-    const std::string whiteBtn = "../Resource/Texture/Mock/Whtg.png";
-    const std::string redBtn   = "../Resource/Texture/Mock/Redg.png";
+    // 2. Fade — darkens left side so menu text is readable over the BG art
+    auto* fade = new ImageObject();
+    fade->SetTexture(TEX_FADE);
+    fade->SetSize(1920.0f, -1080.0f);
+    fade->SetPosition(glm::vec3(0.0f, 0.0f, 0.5f));
+    objectsList.push_back(fade);
 
-    // Label colors
-    SDL_Color dark  = {40,  40,  40,  255};
-    SDL_Color light = {255, 255, 255, 255};
+    // 3. Logo — upper-left, left-aligned with buttons (left edge ~100 px from screen left)
+    auto* logo = new ImageObject();
+    logo->SetTexture(TEX_LOGO);
+    logo->SetSize(551.0f, -264.0f);
+    logo->SetPosition(glm::vec3(-580.0f, 320.0f, 2.0f));
+    objectsList.push_back(logo);
 
-    // Buttons stacked vertically on the left side
-    InitButton(btnStart,    "Start Game",  whiteBtn, dark,  glm::vec3(BTN_X,  230.0f, 1.0f), glm::vec2(BTN_W, BTN_H));
-    InitButton(btnContinue, "Continue",    whiteBtn, dark,  glm::vec3(BTN_X,  115.0f, 1.0f), glm::vec2(BTN_W, BTN_H));
-    InitButton(btnAbandon,  "Abandon Run", whiteBtn, dark,  glm::vec3(BTN_X,    0.0f, 1.0f), glm::vec2(BTN_W, BTN_H));
-    InitButton(btnSettings, "Settings",    whiteBtn, dark,  glm::vec3(BTN_X, -115.0f, 1.0f), glm::vec2(BTN_W, BTN_H));
-    InitButton(btnQuit,     "Quit Game",   redBtn,   light, glm::vec3(BTN_X, -230.0f, 1.0f), glm::vec2(BTN_W, BTN_H));
+    // 4. Buttons — text baked into each PNG; all share the same left edge (-860 game-x)
+    //    Main group spaced 50 px apart; sub-group 90 px below with a visible gap
+    InitButton(btnStart,    TEX_START,    glm::vec3(-695.0f,  50.0f, 3.0f), glm::vec2(329.0f, 41.0f));
+    InitButton(btnContinue, TEX_CONT,     glm::vec3(-736.0f,   0.0f, 3.0f), glm::vec2(248.0f, 41.0f));
+    InitButton(btnAbandon,  TEX_ABANDON,  glm::vec3(-689.0f, -50.0f, 3.0f), glm::vec2(342.0f, 41.0f));
+    InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-770.0f,-150.0f, 3.0f), glm::vec2(179.0f, 29.0f));
+    InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-763.0f,-190.0f, 3.0f), glm::vec2(193.0f, 29.0f));
 }
 
 void MainMenu::LevelUpdate()
@@ -110,7 +118,7 @@ void MainMenu::HandleMouse(int type, int x, int y)
 
     MenuButton* buttons[] = { &btnStart, &btnContinue, &btnAbandon, &btnSettings, &btnQuit };
 
-    if (type == 3) // hover — highlight hovered button
+    if (type == 3) // hover — dim non-hovered buttons
     {
         bool anyHovered = false;
         for (auto* btn : buttons)
@@ -130,7 +138,7 @@ void MainMenu::HandleMouse(int type, int x, int y)
         return;
     }
 
-    if (type != 0) return; // only handle left-click down from here
+    if (type != 0) return;
 
     if (btnStart.IsClicked(rx, ry))
     {

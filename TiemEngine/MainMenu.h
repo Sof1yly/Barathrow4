@@ -32,8 +32,7 @@ private:
     MenuButton btnSettings;
     MenuButton btnQuit;
 
-    void InitButton(MenuButton& btn, const std::string& text,
-                    const std::string& texPath, SDL_Color labelColor,
+    void InitButton(MenuButton& btn, const std::string& texPath,
                     glm::vec3 pos, glm::vec2 size);
     void GetRealMousePos(int x, int y, float& rx, float& ry) const;
 
