@@ -70,11 +70,11 @@ void MainMenu::LevelInit()
 
     // 4. Buttons 
 
-    InitButton(btnStart,    TEX_START,    glm::vec3(-635.0f,  70.0f, 3.0f), glm::vec2(450.0f, 56.5f));
-    InitButton(btnContinue, TEX_CONT,     glm::vec3(-635.0f, -16.0f, 3.0f), glm::vec2(450.0f, 56.5f));
-    InitButton(btnAbandon,  TEX_ABANDON,  glm::vec3(-635.0f,-107.0f, 3.0f), glm::vec2(450.0f, 56.5f));
-    InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-735.0f,-255.0f, 3.0f), glm::vec2(250.5f, 37.0f));
-    InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-735.0f,-330.0f, 3.0f), glm::vec2(250.5f, 37.0f));
+    InitButton(btnStart,    TEX_START,    glm::vec3(-635.0f,  70.0f, 3.0f), glm::vec2(329.0f, 41.0f));
+    InitButton(btnContinue, TEX_CONT,     glm::vec3(-675.0f, -16.0f, 3.0f), glm::vec2(248.0f, 41.0f));
+    InitButton(btnAbandon,  TEX_ABANDON,  glm::vec3(-627.0f,-107.0f, 3.0f), glm::vec2(342.0f, 41.0f));
+    InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-699.0f,-255.0f, 3.0f), glm::vec2(193.5f, 29.0f));
+    InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-704.0f,-330.0f, 3.0f), glm::vec2(179.5f, 29.0f));
 }
 
 void MainMenu::LevelUpdate()
