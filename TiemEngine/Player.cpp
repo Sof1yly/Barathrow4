@@ -206,10 +206,16 @@ void Player::InitShieldUI(std::vector<DrawableObject*>& objectsList)
 	objectsList.push_back(jumpText);
 	UpdateJumpTextUI();
 
+	coinIcon = new ImageObject();
+	coinIcon->SetSize(80.0f, -80.0f);
+	coinIcon->SetPosition(glm::vec3(-900.0f, 390.0f, 10.0f));
+	coinIcon->SetTexture("../Resource/Texture/UI/Currency.PNG");
+	objectsList.push_back(coinIcon);
+
 	coinText = new TextObject();
 	SDL_Color coinColor = { 255, 210, 40, 255 };
-	coinText->LoadText("Coins: 100", coinColor, 22);
-	coinText->SetPosition(glm::vec3(-800.0f, 350.0f, 10.0f));
+	coinText->LoadText("100", coinColor, 22);
+    coinText->SetPosition(glm::vec3(-820.0f, 380.0f, 10.0f));
 	objectsList.push_back(coinText);
 	UpdateCoinTextUI();
 }
@@ -251,8 +257,8 @@ void Player::UpdateCoinTextUI()
 	if (!coinText) return;
 
 	SDL_Color coinColor = { 255, 210, 40, 255 };
-	coinText->LoadText("Coins: " + std::to_string(coins), coinColor, 22);
-	coinText->SetPosition(glm::vec3(-800.0f, 350.0f, 10.0f));
+	coinText->LoadText(std::to_string(coins), coinColor, 22);
+    coinText->SetPosition(glm::vec3(-820.0f, 380.0f, 10.0f));
 }
 
 void Player::UpdateShieldBar()
