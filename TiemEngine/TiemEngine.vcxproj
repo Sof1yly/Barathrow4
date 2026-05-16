@@ -57,6 +57,7 @@
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="LevelManager.cpp" />
     <ClCompile Include="PauseMenu.cpp" />
+    <ClCompile Include="SettingPage.cpp" />
     <ClCompile Include="SaveSystem.cpp" />
     <ClCompile Include="LevelTest.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -119,6 +120,7 @@
     <ClInclude Include="MapScene.h" />
     <ClInclude Include="LevelTest.h" />
     <ClInclude Include="PauseMenu.h" />
+    <ClInclude Include="SettingPage.h" />
     <ClInclude Include="SaveSystem.h" />
     <ClInclude Include="MeshVbo.h" />
     <ClInclude Include="Shader.h" />

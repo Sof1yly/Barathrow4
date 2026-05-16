@@ -30,6 +30,7 @@ public:
 	void Render(vector<DrawableObject*> renderObjects);
 	int GetWindowWidth();
 	int GetWindowHeight();
+	void SetWindowSize(int w, int h);
 	int GetDeltaTime();
 	void SetDeltaTime(int dt);
 };

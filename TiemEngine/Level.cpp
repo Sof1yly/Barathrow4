@@ -346,6 +346,8 @@ void Level::LevelInit()
         ApplyEventEffect(EventScene::EffectType::REMOVE_CARDS);
     }
 
+    settingPage.Init(objectsList);
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -355,6 +357,13 @@ void Level::LevelUpdate()
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
+
+    if (settingPageActive)
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        return;
+    }
 
     if (eventRemoveScene.IsActive())
     {
@@ -733,6 +742,13 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (settingPageActive)
+    {
+        settingPage.Hide();
+        settingPageActive = false;
+    }
+    settingPage.Reset();
+
     if (mapSceneActive)
     {
         mapScene.Close(objectsList);
@@ -1076,6 +1092,17 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    // Route all input to the setting page while it is open
+    if (settingPageActive)
+    {
+        if (type == 0)
+        {
+            if (settingPage.HandleClick(realX, realY) == SettingPage::Action::CLOSE)
+                settingPageActive = false;
+        }
+        return;
+    }
+
     if (mapSceneActive)
     {
         if (mapScene.IsViewOnly() && type == 0)
@@ -1311,21 +1338,12 @@ void Level::HandleMouse(int type, int x, int y)
     // Left Click
     if (type == 0)
     {
-        // menu toggle
-        if (realX >= 875 && realX <= 925 && realY <= 530 && realY >= 470)
+        // Setting gear icon (world pos 900,500, size 80x80)
+        if (realX >= 860.0f && realX <= 940.0f && realY >= 460.0f && realY <= 540.0f)
         {
-            if (!Button::getMenu()) {
-                Button::setMenu(true);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 0, 0));
-                }
-            }
-            else {
-                Button::setMenu(false);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 20000, 0));
-                }
-            }
+            settingPage.Show();
+            settingPageActive = true;
+            return;
         }
 
         // SKIP TURN BUTTON 

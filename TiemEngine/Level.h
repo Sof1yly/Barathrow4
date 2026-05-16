@@ -28,6 +28,7 @@
 #include "EventScene.h"
 #include "EventRemoveScene.h"
 #include "MapScene.h"
+#include "SettingPage.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -192,6 +193,10 @@ private:
     // Map scene — shown between levels after all rewards are collected
     MapScene mapScene;
     bool mapSceneActive = false;
+
+    // Setting page
+    SettingPage settingPage;
+    bool settingPageActive = false;
 
     // Persistent run effects granted by the event scene
     int  baseHandSize        = 5;
