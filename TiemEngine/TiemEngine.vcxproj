@@ -54,6 +54,7 @@
     <ClCompile Include="HighlightManager.cpp" />
     <ClCompile Include="ImageObject.cpp" />
     <ClCompile Include="Level.cpp" />
+    <ClCompile Include="EventPage.cpp" />
     <ClCompile Include="Level3.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="LevelManager.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="GridConfig.h" />
     <ClInclude Include="Hand.h" />
     <ClInclude Include="HighlightManager.h" />
+    <ClInclude Include="EventPage.h" />
     <ClInclude Include="Level3.h" />
     <ClInclude Include="MainMenu.h" />
     <ClInclude Include="LevelManager.h" />
@@ -234,6 +236,11 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\Resource\glm;..\Resource\SDL2-2.0.5\include;..\Resource\glew\include;..\Resource\SDL2_ttf\include;..\Resource\sdl_mixer\include</AdditionalIncludeDirectories>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>taskkill /F /IM "$(TargetName).exe" /T 2&gt;nul
+del "$(TargetPath)" /F /Q 2&gt;nul
+exit 0</Command>
+    </PreBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
