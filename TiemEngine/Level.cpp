@@ -235,6 +235,18 @@ void Level::LevelInit()
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
 
+    // Apply event effect chosen in EventPage (stored in GameData)
+    if (GameData::GetInstance()->eventEffectType >= 0)
+    {
+        EventScene::EffectType eff = static_cast<EventScene::EffectType>(GameData::GetInstance()->eventEffectType);
+        GameData::GetInstance()->eventEffectType = -1;
+
+        if (eff != EventScene::EffectType::REMOVE_CARDS)
+            eventSceneDone = true;
+
+        ApplyEventEffect(eff);
+    }
+
     cardSystem.ShuffleDeck();
 
     if (eventSceneDone)
@@ -309,12 +321,6 @@ void Level::LevelInit()
         objectsList.push_back(fastModeText);
     }
 
-    // Open event scene last so it renders on top of all game UI
-    if (!eventSceneDone)
-    {
-        eventScene.Open(objectsList);
-    }
-
     std::cout << "Init Level" << std::endl;
 }
 
@@ -325,7 +331,7 @@ void Level::LevelUpdate()
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
 
-    if (eventScene.IsActive() || eventRemoveScene.IsActive())
+    if (eventRemoveScene.IsActive())
     {
         for (auto* obj : objectsList)
             obj->Update((float)deltaTime);
@@ -1011,28 +1017,6 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
-
-    if (eventScene.IsActive())
-    {
-        if (type == 0)
-        {
-            EventScene::EffectType effect;
-            if (eventScene.HandleMouseClick(realX, realY, effect))
-            {
-                ApplyEventEffect(effect);
-                eventScene.Close(objectsList);
-                eventSceneDone = true;
-                // Purge opens the remove scene; deal hand only after that finishes
-                if (!eventRemoveScene.IsActive())
-                {
-                    cardSystem.DealNewHand(baseHandSize, objectsList);
-                    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
-                    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
-                }
-            }
-        }
-        return;
-    }
 
     if (eventRemoveScene.IsActive())
     {

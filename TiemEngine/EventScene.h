@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "DrawableObject.h"
-#include "GameObject.h"
+#include "ImageObject.h"
 #include "TextObject.h"
 
 class EventScene
@@ -30,102 +30,123 @@ private:
         EffectType  effect;
         std::string title;
         std::string description;
-        float r, g, b;
     };
 
-    struct ClickArea
+    struct ChoiceBox
     {
-        EffectType effect;
+        EffectType   effect;
+        ImageObject* normalImg   = nullptr;
+        ImageObject* hoverImg    = nullptr;
+        ImageObject* selectedImg = nullptr;
+        TextObject*  label       = nullptr;
+        TextObject*  descLabel   = nullptr;
         float minX, maxX, minY, maxY;
     };
 
-    static constexpr int OFFER_COUNT = 3;
+    static constexpr int   OFFER_COUNT  = 3;
+    static constexpr float SELECT_DELAY = 2000.0f; // ms
 
     std::vector<Option>          offered;
     std::vector<DrawableObject*> uiObjects;
-    std::vector<ClickArea>       clickAreas;
-    bool         active = false;
+    std::vector<ChoiceBox>       choiceBoxes;
+
+    bool       active        = false;
+    int        hoveredIdx    = -1;
+    int        selectedIdx   = -1;
+    float      selectTimer   = 0.0f;
+    bool       pendingClose  = false;
+    EffectType pendingEffect = EffectType::EXTRA_DRAW;
+
     std::mt19937 rng;
 
-    bool IsInside(const ClickArea& area, float x, float y) const
+    bool IsInside(const ChoiceBox& b, float x, float y) const
     {
-        return x >= area.minX && x <= area.maxX && y >= area.minY && y <= area.maxY;
+        return x >= b.minX && x <= b.maxX && y >= b.minY && y <= b.maxY;
+    }
+
+    void ShowBoxState(ChoiceBox& b, int state) // 0=normal, 1=hover, 2=selected
+    {
+        if (b.normalImg)   b.normalImg->SetAlpha(  state == 0 ? 1.0f : 0.0f);
+        if (b.hoverImg)    b.hoverImg->SetAlpha(   state == 1 ? 1.0f : 0.0f);
+        if (b.selectedImg) b.selectedImg->SetAlpha(state == 2 ? 1.0f : 0.0f);
+    }
+
+    void Push(DrawableObject* obj, std::vector<DrawableObject*>& objectsList)
+    {
+        uiObjects.push_back(obj);
+        objectsList.push_back(obj);
     }
 
     void BuildUI(std::vector<DrawableObject*>& objectsList)
     {
+        // Speech bubble / text box (upper center)
         {
-            GameObject* panel = new GameObject();
-            panel->SetSize(1920.0f, 1080.0f);
-            panel->SetPosition(glm::vec3(0.0f, 0.0f, 700.0f));
-            panel->SetColor(0.0f, 0.0f, 0.0f, 0.82f);
-            uiObjects.push_back(panel);
-            objectsList.push_back(panel);
+            ImageObject* bg = new ImageObject();
+            bg->SetTexture("../Resource/Texture/UI/Event/Text Box.png");
+            bg->SetSize(735.0f, -393.0f);
+            bg->SetPosition(glm::vec3(0.0f, 100.0f, 700.0f));
+            Push(bg, objectsList);
         }
 
+        // Event headline inside the bubble
         {
             TextObject* title = new TextObject();
             SDL_Color white = { 245, 245, 245, 255 };
-            title->LoadText("Choose a Blessing", white, 60);
-            title->SetPosition(glm::vec3(0.0f, 370.0f, 705.0f));
-            uiObjects.push_back(title);
-            objectsList.push_back(title);
+            title->LoadText("Choose a Blessing", white, 38);
+            title->SetPosition(glm::vec3(0.0f, 130.0f, 705.0f));
+            Push(title, objectsList);
         }
 
-        {
-            TextObject* sub = new TextObject();
-            SDL_Color gray = { 200, 200, 200, 255 };
-            sub->LoadText("Pick one to carry through your journey", gray, 28);
-            sub->SetPosition(glm::vec3(0.0f, 305.0f, 705.0f));
-            uiObjects.push_back(sub);
-            objectsList.push_back(sub);
-        }
+        const float BOX_W  = 735.0f;
+        const float BOX_H  = 110.0f;
+        const float step   = BOX_H + 24.0f;
+        const float startY = -200.0f;
 
-        const float tabW  = 850.0f;
-        const float tabH  = 80.0f;
-        const float gap   = 20.0f;
-        const float step  = tabH + gap;
-        const float startY = step * (OFFER_COUNT - 1) * 0.5f;
-
-        for (int i = 0; i < static_cast<int>(offered.size()); i++)
+        for (int i = 0; i < (int)offered.size(); i++)
         {
-            const Option& opt = offered[i];
             float cy = startY - step * i;
 
+            ChoiceBox box;
+            box.effect = offered[i].effect;
+            box.minX   = -BOX_W * 0.5f;
+            box.maxX   =  BOX_W * 0.5f;
+            box.minY   = cy - BOX_H * 0.5f;
+            box.maxY   = cy + BOX_H * 0.5f;
+
+            auto mkImg = [&](const char* tex, float w, float h, float z, float alpha) -> ImageObject*
             {
-                GameObject* bg = new GameObject();
-                bg->SetSize(tabW, tabH);
-                bg->SetPosition(glm::vec3(0.0f, cy, 710.0f));
-                bg->SetColor(opt.r, opt.g, opt.b, 0.90f);
-                uiObjects.push_back(bg);
-                objectsList.push_back(bg);
-            }
+                ImageObject* img = new ImageObject();
+                img->SetTexture(tex);
+                img->SetSize(w, -h);
+                img->SetPosition(glm::vec3(0.0f, cy, z));
+                img->SetAlpha(alpha);
+                Push(img, objectsList);
+                return img;
+            };
+
+            box.normalImg   = mkImg("../Resource/Texture/UI/Event/Normal choice Box.png",   BOX_W, BOX_H, 710.0f, 1.0f);
+            box.hoverImg    = mkImg("../Resource/Texture/UI/Event/Hover choice Box.png",    BOX_W, BOX_H, 710.0f, 0.0f);
+            box.selectedImg = mkImg("../Resource/Texture/UI/Event/Selected choice Box.png", BOX_W, BOX_H, 710.0f, 0.0f);
 
             {
-                TextObject* ttl = new TextObject();
-                SDL_Color titleColor = { 255, 255, 200, 255 };
-                ttl->LoadText(opt.title, titleColor, 30);
-                ttl->SetPosition(glm::vec3(-tabW * 0.28f, cy, 715.0f));
-                uiObjects.push_back(ttl);
-                objectsList.push_back(ttl);
+                TextObject* lbl = new TextObject();
+                SDL_Color c = { 255, 255, 200, 255 };
+                lbl->LoadText(offered[i].title, c, 26);
+                lbl->SetPosition(glm::vec3(0.0f, cy + 22.0f, 715.0f));
+                box.label = lbl;
+                Push(lbl, objectsList);
             }
 
             {
                 TextObject* desc = new TextObject();
-                SDL_Color descColor = { 230, 230, 230, 255 };
-                desc->LoadText(opt.description, descColor, 26);
-                desc->SetPosition(glm::vec3(tabW * 0.12f, cy, 715.0f));
-                uiObjects.push_back(desc);
-                objectsList.push_back(desc);
+                SDL_Color c = { 200, 200, 200, 255 };
+                desc->LoadText(offered[i].description, c, 20);
+                desc->SetPosition(glm::vec3(0.0f, cy - 22.0f, 715.0f));
+                box.descLabel = desc;
+                Push(desc, objectsList);
             }
 
-            ClickArea area;
-            area.effect = opt.effect;
-            area.minX   = -tabW * 0.5f;
-            area.maxX   =  tabW * 0.5f;
-            area.minY   = cy - tabH * 0.5f;
-            area.maxY   = cy + tabH * 0.5f;
-            clickAreas.push_back(area);
+            choiceBoxes.push_back(box);
         }
     }
 
@@ -138,7 +159,7 @@ private:
             delete obj;
         }
         uiObjects.clear();
-        clickAreas.clear();
+        choiceBoxes.clear();
     }
 
 public:
@@ -149,49 +170,85 @@ public:
         if (active) return;
 
         static const Option ALL_OPTIONS[] = {
-            { EffectType::EXTRA_DRAW,      "Extra Draw",  "+1 card per draw",       0.10f, 0.30f, 0.60f },
-            { EffectType::GOLD_BONUS,      "Gold Rush",   "+25% gold gain",         0.50f, 0.40f, 0.05f },
-            { EffectType::START_BARRIER,   "Fortified",   "Start with 1 Barrier",   0.20f, 0.50f, 0.20f },
-            { EffectType::START_OVERCLOCK, "Overclock",   "Start with 3 Overclock", 0.60f, 0.15f, 0.15f },
-            { EffectType::MAX_HP,          "Vitality",    "Gain 10 max HP",         0.15f, 0.50f, 0.40f },
-            { EffectType::CURRENCY,        "Windfall",    "Gain 300 currency",      0.50f, 0.45f, 0.10f },
-            { EffectType::REMOVE_CARDS,    "Purge",       "Remove 2 deck cards",    0.40f, 0.10f, 0.40f },
+            { EffectType::EXTRA_DRAW,      "Extra Draw",  "Draw an extra card at the start of each turn"   },
+            { EffectType::GOLD_BONUS,      "Gold Rush",   "Gain bonus gold at the end of each round"       },
+            { EffectType::START_BARRIER,   "Fortified",   "Begin each level with a protective barrier"     },
+            { EffectType::START_OVERCLOCK, "Overclock",   "Start each level in an overclocked state"       },
+            { EffectType::MAX_HP,          "Vitality",    "Increase your maximum health permanently"       },
+            { EffectType::CURRENCY,        "Windfall",    "Receive a windfall of bonus currency"           },
+            { EffectType::REMOVE_CARDS,    "Purge",       "Remove unwanted cards from your deck"           },
         };
-        static constexpr int OPTION_COUNT = static_cast<int>(sizeof(ALL_OPTIONS) / sizeof(ALL_OPTIONS[0]));
+        static constexpr int N = (int)(sizeof(ALL_OPTIONS) / sizeof(ALL_OPTIONS[0]));
 
-        std::vector<int> indices(OPTION_COUNT);
-        std::iota(indices.begin(), indices.end(), 0);
-        std::shuffle(indices.begin(), indices.end(), rng);
+        std::vector<int> idx(N);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::shuffle(idx.begin(), idx.end(), rng);
 
         offered.clear();
         for (int i = 0; i < OFFER_COUNT; i++)
-            offered.push_back(ALL_OPTIONS[indices[i]]);
+            offered.push_back(ALL_OPTIONS[idx[i]]);
 
         BuildUI(objectsList);
-        active = true;
+        active       = true;
+        hoveredIdx   = -1;
+        selectedIdx  = -1;
+        selectTimer  = 0.0f;
+        pendingClose = false;
     }
 
-    // Returns true when an option was clicked; sets outEffect to the chosen effect.
-    bool HandleMouseClick(float x, float y, EffectType& outEffect)
+    void HandleMouseHover(float x, float y)
     {
-        if (!active) return false;
-        for (const ClickArea& area : clickAreas)
+        if (!active || selectedIdx >= 0) return;
+
+        int newIdx = -1;
+        for (int i = 0; i < (int)choiceBoxes.size(); i++)
+            if (IsInside(choiceBoxes[i], x, y)) { newIdx = i; break; }
+
+        if (newIdx == hoveredIdx) return;
+        hoveredIdx = newIdx;
+
+        for (int i = 0; i < (int)choiceBoxes.size(); i++)
+            ShowBoxState(choiceBoxes[i], i == hoveredIdx ? 1 : 0);
+    }
+
+    void HandleMouseClick(float x, float y)
+    {
+        if (!active || selectedIdx >= 0) return;
+
+        for (int i = 0; i < (int)choiceBoxes.size(); i++)
         {
-            if (IsInside(area, x, y))
+            if (IsInside(choiceBoxes[i], x, y))
             {
-                outEffect = area.effect;
-                return true;
+                selectedIdx   = i;
+                selectTimer   = 0.0f;
+                pendingEffect = choiceBoxes[i].effect;
+                ShowBoxState(choiceBoxes[i], 2);
+                return;
             }
         }
-        return false;
     }
+
+    void Update(float dt)
+    {
+        if (!active || selectedIdx < 0 || pendingClose) return;
+        selectTimer += dt;
+        if (selectTimer >= SELECT_DELAY)
+            pendingClose = true;
+    }
+
+    bool       IsReadyToClose()    const { return pendingClose; }
+    EffectType GetPendingEffect()  const { return pendingEffect; }
 
     void Close(std::vector<DrawableObject*>& objectsList)
     {
         if (!active && uiObjects.empty()) return;
         ClearUI(objectsList);
         offered.clear();
-        active = false;
+        hoveredIdx   = -1;
+        selectedIdx  = -1;
+        selectTimer  = 0.0f;
+        pendingClose = false;
+        active       = false;
     }
 
     bool IsActive() const { return active; }

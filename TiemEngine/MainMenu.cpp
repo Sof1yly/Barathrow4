@@ -141,7 +141,7 @@ void MainMenu::HandleMouse(int type, int x, int y)
 
     if (btnStart.IsClicked(rx, ry))
     {
-        GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL1;
+        GameData::GetInstance()->gGameStateNext = GameState::GS_EVENT_PAGE;
     }
     else if (btnContinue.IsClicked(rx, ry))
     {
