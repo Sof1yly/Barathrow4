@@ -71,6 +71,7 @@ private:
     ImageObject* hpMask = nullptr;
     TextObject* skipTurnHintText = nullptr;
     TextObject* viewDeckHintText = nullptr;
+    TextObject* viewMapHintText  = nullptr;
 
     Player playerData;
 
@@ -84,6 +85,7 @@ private:
     ImageObject* mainMenu = nullptr;
     Button viewDeckButton;
     Button skipTurnButton;
+    ImageObject* viewMapIcon = nullptr;  // existing Info button used as map shortcut
     ImageObject* testEnemy;
 	ImageObject* Background = nullptr;
 	std::vector<ImageObject*> gridTiles;

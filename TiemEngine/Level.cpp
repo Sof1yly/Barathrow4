@@ -195,11 +195,11 @@ void Level::LevelInit()
     }
 
     {
-        ImageObject* Info = new ImageObject();
-        Info->SetSize(80.0f, -80.0f);
-        Info->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
-        Info->SetTexture("../Resource/Texture/UI/Info.PNG");
-        objectsList.push_back(Info);
+        viewMapIcon = new ImageObject();
+        viewMapIcon->SetSize(80.0f, -80.0f);
+        viewMapIcon->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
+        viewMapIcon->SetTexture("../Resource/Texture/UI/Info.PNG");
+        objectsList.push_back(viewMapIcon);
     }
 
     {
@@ -289,6 +289,14 @@ void Level::LevelInit()
     }
 
     {
+        viewMapHintText = new TextObject();
+        SDL_Color hintColor = { 245, 245, 245, 255 };
+        viewMapHintText->LoadText("View the level map", hintColor, 22);
+        viewMapHintText->SetPosition(Button::HiddenHintPosition());
+        objectsList.push_back(viewMapHintText);
+    }
+
+    {
         gameOverText = new TextObject();
         SDL_Color color = { 255, 255, 255 };
 
@@ -355,7 +363,7 @@ void Level::LevelUpdate()
         return;
     }
 
-    // Map scene between levels: update objects then run state machine
+    // Map scene (win transition or view-only): update objects then run state machine
     if (mapSceneActive)
     {
         for (auto* obj : objectsList)
@@ -363,9 +371,11 @@ void Level::LevelUpdate()
         mapScene.Update((float)deltaTime);
         if (mapScene.IsDone())
         {
+            bool wasViewOnly = mapScene.IsViewOnly();
             mapScene.Close(objectsList);
             mapSceneActive = false;
-            ResetForNextCombat();
+            if (!wasViewOnly)
+                ResetForNextCombat();
         }
         return;
     }
@@ -835,6 +845,7 @@ void Level::LevelFree()
     hpMask = nullptr;
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
+    viewMapHintText  = nullptr;
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
     inShopOnlyLevel = false;
@@ -846,6 +857,7 @@ void Level::LevelFree()
     fastModeText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
+    viewMapIcon = nullptr;
     eventSceneDone        = false;
     baseHandSize          = 5;
     goldBonusActive       = false;
@@ -889,7 +901,13 @@ void Level::HandleKey(char key)
         return;
     }
 
-    if (mapSceneActive) return;
+    if (mapSceneActive)
+    {
+        // In view-only mode any key (except q/r/f already handled above) closes the map
+        if (mapScene.IsViewOnly())
+            mapScene.HandleClose();
+        return;
+    }
 
     if (eventScene.IsActive() || eventRemoveScene.IsActive()) return;
 
@@ -1058,7 +1076,12 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
-    if (mapSceneActive) return;
+    if (mapSceneActive)
+    {
+        if (mapScene.IsViewOnly() && type == 0)
+            mapScene.HandleClick(realX, realY);
+        return;
+    }
 
     if (eventRemoveScene.IsActive())
     {
@@ -1135,7 +1158,34 @@ void Level::HandleMouse(int type, int x, int y)
             viewDeckHintText->SetPosition(Button::HiddenHintPosition());
     }
 
-    // ViewDeck button 
+    // Info button (existing UI) doubles as view-map shortcut
+    auto viewMapIconHit = [&]() {
+        return viewMapIcon
+            && realX >= 805.0f - 40.0f && realX <= 805.0f + 40.0f
+            && realY >= 500.0f - 40.0f && realY <= 500.0f + 40.0f;
+    };
+
+    if (viewMapHintText)
+    {
+        if (viewMapIconHit())
+            viewMapHintText->SetPosition(glm::vec3(800.0f, 440.0f, 20.0f));
+        else
+            viewMapHintText->SetPosition(Button::HiddenHintPosition());
+    }
+
+    if (type == 0 && viewMapIconHit())
+    {
+        if (!mapSceneActive)
+        {
+            cardInspect.Hide(objectsList);
+            if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+            mapScene.OpenViewOnly(levelManager.GetLevel(), objectsList);
+            mapSceneActive = true;
+        }
+        return;
+    }
+
+    // ViewDeck button
     if (type == 0 && viewDeckButton.IsClicked(realX, realY))
     {
         cardInspect.Hide(objectsList);

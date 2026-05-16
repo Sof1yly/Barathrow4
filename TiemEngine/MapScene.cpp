@@ -8,10 +8,15 @@ bool MapScene::IsShopLevel(int level1Based)
 void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& objectsList)
 {
     if (active) return;
-    active = true;
-    done   = false;
-    state  = State::FADE_IN;
-    timer  = 0.0f;
+    active   = true;
+    done     = false;
+    viewOnly = false;
+    state    = State::FADE_IN;
+    timer    = 0.0f;
+
+    // Default to win-transition timings
+    activeFadeInTime  = FADE_IN_TIME;
+    activeFadeOutTime = FADE_OUT_TIME;
 
     // Node positions: 9 nodes evenly spaced left-to-right, centered on screen
     const float startX  = -700.0f;
@@ -88,13 +93,67 @@ void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& ob
     ownedObjects.push_back(playerSprite);
     objectsList.push_back(playerSprite);
 
-    // Fade overlay — rendered last so it sits on top of everything
+    // Fade overlay — added last so it renders on top of everything
     fadeOverlay = new GameObject();
     fadeOverlay->SetSize(1920.0f, 1080.0f);
     fadeOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, 1.0f);  // starts fully black
     ownedObjects.push_back(fadeOverlay);
     objectsList.push_back(fadeOverlay);
+}
+
+void MapScene::OpenViewOnly(int currentLevel, std::vector<DrawableObject*>& objectsList)
+{
+    Open(currentLevel, currentLevel, objectsList);
+    viewOnly          = true;
+    activeFadeInTime  = VIEW_FADE_IN_TIME;
+    activeFadeOutTime = VIEW_FADE_OUT_TIME;
+
+    // Back button with "Return" label — inserted BEFORE the fade overlay so the
+    // fade reveals them rather than them rendering on top of the overlay.
+    backBtnPos  = glm::vec3(0.0f, -370.0f, 0.0f);
+    backBtnSize = glm::vec2(200.0f, 70.0f);
+
+    backButton = new ImageObject();
+    backButton->SetTexture("../Resource/Texture/UI/SettingUI/Back.png");
+    backButton->SetSize(backBtnSize.x, -backBtnSize.y);
+    backButton->SetPosition(backBtnPos);
+    ownedObjects.push_back(backButton);
+    objectsList.insert(objectsList.end() - 1, backButton);  // before fadeOverlay
+
+    returnText = new TextObject();
+    SDL_Color white = { 255, 255, 255, 255 };
+    returnText->LoadText("Return", white, 28);
+    returnText->SetPosition(backBtnPos);
+    ownedObjects.push_back(returnText);
+    objectsList.insert(objectsList.end() - 1, returnText);  // before fadeOverlay
+}
+
+void MapScene::HandleClose()
+{
+    if (!active || done) return;
+    if (state == State::VIEW_IDLE)
+    {
+        state = State::FADE_OUT;
+        timer = 0.0f;
+    }
+}
+
+bool MapScene::HandleClick(float worldX, float worldY)
+{
+    if (!active || !viewOnly || done) return false;
+    if (state != State::VIEW_IDLE) return false;
+
+    float halfW = backBtnSize.x * 0.5f;
+    float halfH = backBtnSize.y * 0.5f;
+
+    if (worldX >= backBtnPos.x - halfW && worldX <= backBtnPos.x + halfW &&
+        worldY >= backBtnPos.y - halfH && worldY <= backBtnPos.y + halfH)
+    {
+        HandleClose();
+        return true;
+    }
+    return false;
 }
 
 void MapScene::Update(float dt)
@@ -107,24 +166,29 @@ void MapScene::Update(float dt)
     {
     case State::FADE_IN:
     {
-        // Black overlay fades out to reveal the map
-        float alpha = 1.0f - (timer / FADE_IN_TIME);
+        float alpha = 1.0f - (timer / activeFadeInTime);
         alpha = std::max(0.0f, std::min(1.0f, alpha));
         if (fadeOverlay) fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, alpha);
 
-        if (timer >= FADE_IN_TIME)
+        if (timer >= activeFadeInTime)
         {
             if (fadeOverlay) fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, 0.0f);
-            // Begin walking to the next node
-            if (playerSprite) playerSprite->SetAnimationLoop(1, 12, 4, 150);  // walk right
-            state = State::WALKING;
+            if (viewOnly)
+            {
+                state = State::VIEW_IDLE;
+            }
+            else
+            {
+                if (playerSprite) playerSprite->SetAnimationLoop(1, 12, 4, 150);
+                state = State::WALKING;
+            }
             timer = 0.0f;
         }
         break;
     }
     case State::WALKING:
     {
-        float t   = std::min(1.0f, timer / walkDuration);
+        float t       = std::min(1.0f, timer / walkDuration);
         glm::vec3 pos = walkStart + (walkEnd - walkStart) * t;
         if (playerSprite) playerSprite->SetPosition(pos);
 
@@ -133,7 +197,7 @@ void MapScene::Update(float dt)
             if (playerSprite)
             {
                 playerSprite->SetPosition(walkEnd);
-                playerSprite->SetAnimationLoop(0, 6, 2, 800);  // idle right at destination
+                playerSprite->SetAnimationLoop(0, 6, 2, 800);
             }
             state = State::PAUSE;
             timer = 0.0f;
@@ -149,13 +213,16 @@ void MapScene::Update(float dt)
         }
         break;
     }
+    case State::VIEW_IDLE:
+        // Waiting for Back button click or key press
+        break;
+
     case State::FADE_OUT:
     {
-        // Black overlay fades back in
-        float alpha = std::min(1.0f, timer / FADE_OUT_TIME);
+        float alpha = std::min(1.0f, timer / activeFadeOutTime);
         if (fadeOverlay) fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, alpha);
 
-        if (timer >= FADE_OUT_TIME)
+        if (timer >= activeFadeOutTime)
             done = true;
         break;
     }
@@ -179,6 +246,8 @@ void MapScene::Close(std::vector<DrawableObject*>& objectsList)
     }
     playerSprite = nullptr;
     fadeOverlay  = nullptr;
+    backButton   = nullptr;
+    returnText   = nullptr;
     active = false;
     done   = false;
 }
