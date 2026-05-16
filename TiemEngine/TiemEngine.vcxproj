@@ -51,6 +51,7 @@
     <ClCompile Include="HighlightManager.cpp" />
     <ClCompile Include="ImageObject.cpp" />
     <ClCompile Include="Level.cpp" />
+    <ClCompile Include="MapScene.cpp" />
     <ClCompile Include="EventPage.cpp" />
     <ClCompile Include="Level3.cpp" />
     <ClCompile Include="MainMenu.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="SpriteMeshVbo.h" />
     <ClInclude Include="ImageObject.h" />
     <ClInclude Include="Level.h" />
+    <ClInclude Include="MapScene.h" />
     <ClInclude Include="LevelTest.h" />
     <ClInclude Include="PauseMenu.h" />
     <ClInclude Include="SaveSystem.h" />

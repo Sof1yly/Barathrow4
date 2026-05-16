@@ -355,6 +355,21 @@ void Level::LevelUpdate()
         return;
     }
 
+    // Map scene between levels: update objects then run state machine
+    if (mapSceneActive)
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        mapScene.Update((float)deltaTime);
+        if (mapScene.IsDone())
+        {
+            mapScene.Close(objectsList);
+            mapSceneActive = false;
+            ResetForNextCombat();
+        }
+        return;
+    }
+
     // ---- Update floating damage popups ----
     for (auto& popup : damagePopups)
     {
@@ -708,6 +723,12 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (mapSceneActive)
+    {
+        mapScene.Close(objectsList);
+        mapSceneActive = false;
+    }
+
     eventScene.Close(objectsList);
     eventRemoveScene.Close(objectsList);
     cardInspect.Hide(objectsList);
@@ -867,6 +888,8 @@ void Level::HandleKey(char key)
                 : glm::vec3(0.0f, 10000.0f, 10.0f));
         return;
     }
+
+    if (mapSceneActive) return;
 
     if (eventScene.IsActive() || eventRemoveScene.IsActive()) return;
 
@@ -1034,6 +1057,8 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    if (mapSceneActive) return;
 
     if (eventRemoveScene.IsActive())
     {
@@ -2174,9 +2199,23 @@ void Level::SpawnEnemiesForLevel()
 
 void Level::AdvanceToNextRound()
 {
+    int fromLevel = levelManager.GetLevel();
     levelManager.Advance();
+    int toLevel = levelManager.GetLevel();
 
-    // Hide win text, update level indicator
+    // Close overlays that should not appear behind the map screen
+    rewardBoxScene.Close(objectsList);
+    cardInspect.Hide(objectsList);
+    if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+
+    // Show the map scene with fade-in, player walk, fade-out
+    mapScene.Open(fromLevel, toLevel, objectsList);
+    mapSceneActive = true;
+}
+
+void Level::ResetForNextCombat()
+{
+    // Update level indicator UI
     if (winText)   winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
     if (levelText)
     {
@@ -2184,7 +2223,7 @@ void Level::AdvanceToNextRound()
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
     }
 
-    // Show level name banner at top-middle for 2 seconds
+    // Show level name banner for 2 seconds
     if (levelNameBanner)
     {
         SDL_Color color = { 255, 230, 100, 255 };
@@ -2210,29 +2249,29 @@ void Level::AdvanceToNextRound()
     enemyHighlightIndex    = 0;
 
     // Reset turn state
-    turnState      = TurnState::PLAYER_TURN;
-    turnCount      = 0;
-    lagTurns       = 0;
+    turnState       = TurnState::PLAYER_TURN;
+    turnCount       = 0;
+    lagTurns        = 0;
     tempDiscardDone = false;
 
     // Reset player movement / animation
-    playerMoving        = false;
-    playerAttacking     = false;
-    playerMoveTimer     = 0.0f;
-    attackTimer         = 0.0f;
-    pendingAttack       = false;
-    pendingMoveSteps    = 0;
-    pendingMoveZone     = -1;
-    pendingFastCard     = false;
+    playerMoving         = false;
+    playerAttacking      = false;
+    playerMoveTimer      = 0.0f;
+    attackTimer          = 0.0f;
+    pendingAttack        = false;
+    pendingMoveSteps     = 0;
+    pendingMoveZone      = -1;
+    pendingFastCard      = false;
     playerPlayingOneShot = false;
-    playerAnimTimer     = 0.0f;
-    playerAnimDuration  = 0.0f;
-    currentPatternIndex = 0;
-    currentRotation     = 0;
+    playerAnimTimer      = 0.0f;
+    playerAnimDuration   = 0.0f;
+    currentPatternIndex  = 0;
+    currentRotation      = 0;
 
     // Move player back to start; HP and coins carry over
     SetPlayerSpawnPosition();
-    playerDir = PlayerDir::DOWN;
+    playerDir   = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     playerData.SetPosition(GridToWorld(nowRow, nowCol));
     UpdatePlayerAnimation();
@@ -2240,10 +2279,7 @@ void Level::AdvanceToNextRound()
     playerData.ResetJumpCharges();
     UpdateHPBar();
 
-    // Close any open overlays
-    rewardBoxScene.Close(objectsList);
-    cardInspect.Hide(objectsList);
-    if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+    // Hide remaining overlays
     highlightManager.HideAllPlayer();
     highlightManager.HideAllEnemy();
 
