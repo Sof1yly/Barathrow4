@@ -236,15 +236,22 @@ void Level::LevelInit()
     shopOpenedAfterWin = false;
 
     // Apply event effect chosen in EventPage (stored in GameData)
+    bool pendingRemoveCards = false;
     if (GameData::GetInstance()->eventEffectType >= 0)
     {
         EventScene::EffectType eff = static_cast<EventScene::EffectType>(GameData::GetInstance()->eventEffectType);
         GameData::GetInstance()->eventEffectType = -1;
 
-        if (eff != EventScene::EffectType::REMOVE_CARDS)
+        if (eff == EventScene::EffectType::REMOVE_CARDS)
+        {
+            // Defer until after InitUI so the overlay renders on top of the draw pile
+            pendingRemoveCards = true;
+        }
+        else
+        {
             eventSceneDone = true;
-
-        ApplyEventEffect(eff);
+            ApplyEventEffect(eff);
+        }
     }
 
     cardSystem.ShuffleDeck();
@@ -256,6 +263,10 @@ void Level::LevelInit()
 
     // Card system UI (discard/draw pile buttons + drop zones)
     cardSystem.InitUI(objectsList);
+
+    // Apply start-of-combat buffs from event effects (mirrors AdvanceToNextRound)
+    if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
+    if (startCombatOverclock > 0) cardSystem.ApplyOverclock(startCombatOverclock);
 
     {
         skipTurnButton.InitPreset(Button::Preset::SkipTurn, objectsList);
@@ -319,6 +330,12 @@ void Level::LevelInit()
         fastModeText->LoadText("3x mode", color, 24);
         fastModeText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f)); // hidden until toggled
         objectsList.push_back(fastModeText);
+    }
+
+    // Open remove scene last so its overlay renders on top of all other UI
+    if (pendingRemoveCards)
+    {
+        ApplyEventEffect(EventScene::EffectType::REMOVE_CARDS);
     }
 
     std::cout << "Init Level" << std::endl;
