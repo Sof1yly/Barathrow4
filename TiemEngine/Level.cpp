@@ -1095,7 +1095,9 @@ void Level::HandleMouse(int type, int x, int y)
     // Route all input to the setting page while it is open
     if (settingPageActive)
     {
-        if (type == 0)
+        if (type == 3)
+            settingPage.HandleHover(realX, realY);
+        else if (type == 0)
         {
             if (settingPage.HandleClick(realX, realY) == SettingPage::Action::CLOSE)
                 settingPageActive = false;

@@ -12,10 +12,12 @@ extern SDL_Window* window;
 // Layout constants (world units, 1920x1080 virtual space)
 // ─────────────────────────────────────────────────────────────────────────────
 namespace {
-    constexpr float OVL_Z  = 90.0f;
-    constexpr float PNL_Z  = 91.0f;
-    constexpr float ELM_Z  = 92.0f;
-    constexpr float TOP_Z  = 93.0f;
+    // Cards in hand use z=100–190, dragged cards z=600, hovered cards z=1000.
+    // Setting page must sit above all of those.
+    constexpr float OVL_Z  = 1100.0f;
+    constexpr float PNL_Z  = 1101.0f;
+    constexpr float ELM_Z  = 1102.0f;
+    constexpr float TOP_Z  = 1103.0f;
 
     // Row vertical centres
     constexpr float ROW1_Y =  165.0f;   // Music
@@ -329,6 +331,17 @@ SettingPage::Action SettingPage::HandleClick(float wx, float wy) {
     }
 
     return Action::NONE;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+void SettingPage::HandleHover(float wx, float wy) {
+    if (!visible) return;
+
+    if (backBtnImg)
+        backBtnImg->SetAlpha(areaBack.Hit(wx, wy) ? 1.0f : 0.65f);
+
+    if (applyBtnImg)
+        applyBtnImg->SetAlpha(areaApply.Hit(wx, wy) ? 1.0f : 0.65f);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

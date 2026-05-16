@@ -194,10 +194,6 @@ private:
     MapScene mapScene;
     bool mapSceneActive = false;
 
-    // Setting page
-    SettingPage settingPage;
-    bool settingPageActive = false;
-
     // Persistent run effects granted by the event scene
     int  baseHandSize        = 5;
     bool goldBonusActive     = false;
@@ -227,6 +223,11 @@ private:
     TurnState turnState = TurnState::PLAYER_TURN;
     bool tempDiscardDone = false;
 	//end gameloop
+
+protected:
+    // Shared with subclasses (e.g. MainMenu) so they can open the setting page
+    SettingPage settingPage;
+    bool settingPageActive = false;
 
 public:
     virtual void LevelLoad();

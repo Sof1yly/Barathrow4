@@ -2,6 +2,7 @@
 #include "SquareMeshVbo.h"
 #include "GameStateList.h"
 #include "SaveSystem.h"
+#include "SettingPage.h"
 #include <iostream>
 
 static const char* TEX_BG       = "../Resource/Texture/UI/Menu/BG.png";
@@ -75,6 +76,8 @@ void MainMenu::LevelInit()
     InitButton(btnAbandon,  TEX_ABANDON,  glm::vec3(-627.0f,-107.0f, 3.0f), glm::vec2(342.0f, 41.0f));
     InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-699.0f,-255.0f, 3.0f), glm::vec2(193.5f, 29.0f));
     InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-704.0f,-330.0f, 3.0f), glm::vec2(179.5f, 29.0f));
+
+    settingPage.Init(objectsList);
 }
 
 void MainMenu::LevelUpdate()
@@ -88,6 +91,7 @@ void MainMenu::LevelDraw()
 
 void MainMenu::LevelFree()
 {
+    settingPage.Reset();   // null out pointers before objectsList deletes them
     for (DrawableObject* obj : objectsList)
         delete obj;
     objectsList.clear();
@@ -114,6 +118,19 @@ void MainMenu::HandleMouse(int type, int x, int y)
 {
     float rx, ry;
     GetRealMousePos(x, y, rx, ry);
+
+    // Route all input to the setting page while it is open
+    if (settingPageActive)
+    {
+        if (type == 3)
+            settingPage.HandleHover(rx, ry);
+        else if (type == 0)
+        {
+            if (settingPage.HandleClick(rx, ry) == SettingPage::Action::CLOSE)
+                settingPageActive = false;
+        }
+        return;
+    }
 
     MenuButton* buttons[] = { &btnStart, &btnContinue, &btnAbandon, &btnSettings, &btnQuit };
 
@@ -159,7 +176,8 @@ void MainMenu::HandleMouse(int type, int x, int y)
     }
     else if (btnSettings.IsClicked(rx, ry))
     {
-        std::cout << "[MainMenu] Settings not implemented yet.\n";
+        settingPage.Show();
+        settingPageActive = true;
     }
     else if (btnQuit.IsClicked(rx, ry))
     {

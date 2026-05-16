@@ -15,6 +15,7 @@ public:
     bool IsVisible() const { return visible; }
 
     Action HandleClick(float wx, float wy);
+    void   HandleHover(float wx, float wy);
 
 private:
     bool visible = false;
