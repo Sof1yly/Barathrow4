@@ -575,6 +575,13 @@ void Enemy::setPreparingAttack(bool value)
     preparingAttack = value;
 }
 
+void Enemy::LockAttackPattern(int playerRow, int playerCol)
+{
+    lockedAttackPattern = GetRotatedPatternTowardPlayer(playerRow, playerCol);
+    lockedPlayerRow = playerRow;
+    lockedPlayerCol = playerCol;
+}
+
 AttackPattern Enemy::GetRotatedPatternTowardPlayer(
     int playerRow,
     int playerCol) const

@@ -20,8 +20,8 @@ public:
     // Returns every tile in this elite's row across the grid column range.
     // The Level uses this list to apply the row attack.
     std::vector<std::pair<int, int>> GetRowAttackTiles(
-        int gridStartCol,
-        int gridEndCol) const;
+        int gridStartRow,
+        int gridEndRow) const;
 
     // Returns true when 'other' is also an EliteEnemy1 — the Level should
     // heal 'other' by GetHealAmount() instead of dealing damage.

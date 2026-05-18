@@ -31,12 +31,12 @@ void EliteEnemy1::Update(float dt)
 }
 
 std::vector<std::pair<int, int>> EliteEnemy1::GetRowAttackTiles(
-    int gridStartCol,
-    int gridEndCol) const
+    int gridStartRow,
+    int gridEndRow) const
 {
     std::vector<std::pair<int, int>> tiles;
-    for (int c = gridStartCol; c < gridEndCol; ++c)
-        tiles.push_back({ nowRow, c });
+    for (int r = gridStartRow; r < gridEndRow; ++r)
+        tiles.push_back({ r, nowCol });
     return tiles;
 }
 
@@ -59,8 +59,7 @@ bool EliteEnemy1::TryMoveTowardPlayer(
 
     if (nowCol == playerCol)
     {
-        
-        std::cout << "[Elite1] Aligned with player column " << playerCol << "\n";
+        std::cout << "[Elite1] Aligned with player col " << playerCol << "\n";
         return false;
     }
 

@@ -1604,36 +1604,76 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 void Level::ApplyEnemyAttack(Enemy* e)
 {
     if (!e || e->getIsDead())
-    {
         return;
-    }
 
     if (!playersprite)
-    {
         return;
-    }
 
     e->PlayAttackAnimation(playersprite->GetPosition());
     e->showAttackText();
 
+    // EliteEnemy1: full-row attack; heals friendly Elite1s it hits
+    if (EliteEnemy1* elite1 = dynamic_cast<EliteEnemy1*>(e))
+    {
+        auto rowTiles = elite1->GetRowAttackTiles(GridStartRow, GridEndRow);
+        for (auto& tile : rowTiles)
+        {
+            int r = tile.first, c = tile.second;
+            if (nowRow == r && nowCol == c)
+                PlayerTakeDamage(elite1->getAttackDamage());
+
+            for (auto* other : enemies)
+            {
+                if (!other || other == elite1 || other->getIsDead()) continue;
+                if (other->getNowRow() == r && other->getNowCol() == c)
+                {
+                    if (elite1->ShouldHealInstead(other))
+                    {
+                        int healed = std::min(other->getHealth() + elite1->GetHealAmount(),
+                                              other->getMaxHealth());
+                        other->setHealth(healed);
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    // EliteEnemy2: cycling pattern or fallback cross, then advance phase
+    if (EliteEnemy2* elite2 = dynamic_cast<EliteEnemy2*>(e))
+    {
+        int lockedRow = elite2->getLockedPlayerRow();
+        int lockedCol = elite2->getLockedPlayerCol();
+
+        std::vector<std::pair<int, int>> hitTiles;
+        if (elite2->IsPlayerInPatternRange(lockedRow, lockedCol))
+            hitTiles = elite2->GetCurrentPatternTiles();
+        else
+            hitTiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
+
+        for (auto& tile : hitTiles)
+        {
+            if (nowRow == tile.first && nowCol == tile.second)
+                PlayerTakeDamage(elite2->getAttackDamage());
+        }
+        elite2->AdvancePattern();
+        return;
+    }
+
+    // Regular enemies (including Boss)
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
     if (dynamic_cast<Boss*>(e))
-    {
         centerCol += 2;
-    }
-    auto attacks = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
-        .applyTo(centerRow, centerCol);
+
+    auto attacks = e->getLockedAttackPattern().applyTo(centerRow, centerCol);
 
     for (auto& cell : attacks)
     {
         int x = cell.first.x;
         int y = cell.first.y;
-
         if (nowRow == x && nowCol == y)
-        {
             PlayerTakeDamage(e->getAttackDamage());
-        }
     }
 }
 
@@ -1642,6 +1682,14 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
     if (!e) return false;
 
     if (e == bossEnemy)
+        return true;
+
+    // Elite1 attacks when its column aligns with the player's column
+    if (dynamic_cast<EliteEnemy1*>(e))
+        return e->getNowCol() == nowCol;
+
+    // Elite2 always attacks from any position (pattern caster)
+    if (dynamic_cast<EliteEnemy2*>(e))
         return true;
 
     int er = e->getNowRow();
@@ -1733,6 +1781,7 @@ void Level::UpdateTurn()
         {
             e->setPreparingAttack(true);
             e->setCountDownR();
+            e->LockAttackPattern(nowRow, nowCol);
 
             PreviewAllEnemyAttacks();
 
@@ -1948,20 +1997,47 @@ void Level::PreviewAllEnemyAttacks()
 {
     highlightManager.HideEnemyAttack(enemyHighlightIndex);
 
+    // Helper: convert {row,col} pairs to the Cell format ShowEnemyAttack expects
+    auto toHighlightCells = [](const std::vector<std::pair<int, int>>& tiles)
+    {
+        std::vector<std::pair<IVec2, int>> cells;
+        cells.reserve(tiles.size());
+        for (auto& tile : tiles)
+            cells.push_back({ IVec2(tile.first, tile.second), 1 });
+        return cells;
+    };
+
     for (auto* e : enemies)
     {
         if (!e || e->getIsDead()) continue;
         if (!e->isPreparingAttack()) continue;
 
-        int centerRow = e->getNowRow();
-        int centerCol = e->getNowCol();
-        if (dynamic_cast<Boss*>(e))
-        {
-            centerCol += 2;
-        }
+        std::vector<std::pair<IVec2, int>> cells;
 
-        auto cells = e->GetRotatedPatternTowardPlayer(nowRow, nowCol)
-            .applyTo(centerRow, centerCol);
+        if (EliteEnemy1* elite1 = dynamic_cast<EliteEnemy1*>(e))
+        {
+            cells = toHighlightCells(elite1->GetRowAttackTiles(GridStartRow, GridEndRow));
+        }
+        else if (EliteEnemy2* elite2 = dynamic_cast<EliteEnemy2*>(e))
+        {
+            int lockedRow = elite2->getLockedPlayerRow();
+            int lockedCol = elite2->getLockedPlayerCol();
+
+            std::vector<std::pair<int, int>> tiles;
+            if (elite2->IsPlayerInPatternRange(lockedRow, lockedCol))
+                tiles = elite2->GetCurrentPatternTiles();
+            else
+                tiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
+            cells = toHighlightCells(tiles);
+        }
+        else
+        {
+            int centerRow = e->getNowRow();
+            int centerCol = e->getNowCol();
+            if (dynamic_cast<Boss*>(e))
+                centerCol += 2;
+            cells = e->getLockedAttackPattern().applyTo(centerRow, centerCol);
+        }
 
         highlightManager.ShowEnemyAttack(
             cells,

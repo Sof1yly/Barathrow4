@@ -137,6 +137,11 @@ public:
 
     virtual void setPreparingAttack(bool value);
 
+    void LockAttackPattern(int playerRow, int playerCol);
+    const AttackPattern& getLockedAttackPattern() const { return lockedAttackPattern; }
+    int getLockedPlayerRow() const { return lockedPlayerRow; }
+    int getLockedPlayerCol() const { return lockedPlayerCol; }
+
     bool getIsDead() const
     {
         return isDead;
@@ -240,6 +245,10 @@ protected:
     std::vector<AttackPattern> patterns;
 
     int currentPatternIndex = 0;
+
+    AttackPattern lockedAttackPattern;
+    int lockedPlayerRow = 0;
+    int lockedPlayerCol = 0;
 
     TextObject* hpText = nullptr;
 
