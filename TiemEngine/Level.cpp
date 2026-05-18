@@ -524,6 +524,21 @@ void Level::LevelUpdate()
 
             return;
         }
+        for (auto* e : enemies)
+        {
+            if (!e || e->getIsDead() || e->getHealth() <= 0) continue;
+            if (dynamic_cast<EliteEnemy1*>(e) && e->getNowRow() == targetRow)
+            {
+                std::cout << "[Move Blocked] Elite1 guards this edge row.\n";
+                pendingMoveSteps = 0;
+                playerMoving = false;
+                playerState = PlayerState::IDLE;
+                UpdatePlayerAnimation();
+                if (pendingFastCard) { turnState = TurnState::PLAYER_TURN; pendingFastCard = false; }
+                else                 { turnState = TurnState::ENEMY_TURN; }
+                return;
+            }
+        }
         bool moveBlocked = false;
         for (auto* e : enemies)
         {
@@ -1017,6 +1032,16 @@ void Level::HandleKey(char key)
     {
         std::cout << "[Blocked] Void tile.\n";
         return;
+    }
+
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead() || e->getHealth() <= 0) continue;
+        if (dynamic_cast<EliteEnemy1*>(e) && e->getNowRow() == targetRow)
+        {
+            std::cout << "[Blocked] Elite1 guards this edge row.\n";
+            return;
+        }
     }
 
     playerMoving = true;
@@ -1978,8 +2003,14 @@ void Level::PreviewMovePath(int steps, int dir)
         if (!e || e->getIsDead()) continue;
 
         for (auto& tile : e->GetOccupiedTiles())
-        {
             enemyPositions.push_back(tile);
+
+        // Treat every tile in a living Elite1's row as blocked for the preview
+        if (e->getHealth() > 0 && dynamic_cast<EliteEnemy1*>(e))
+        {
+            int guardedRow = e->getNowRow();
+            for (int c = GridStartCol; c < GridEndCol; c++)
+                enemyPositions.push_back({ guardedRow, c });
         }
     }
 
