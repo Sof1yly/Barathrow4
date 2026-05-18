@@ -4,10 +4,15 @@
 
 // Elite type 2 — Pattern Caster
 //   - Never moves (CanMove returns false)
-//   - Each turn cycles through 4 attack patterns (1 → 2 → 3 → 4 → 1 ...)
-//   - If the player is inside the current pattern's tiles → use the pattern
-//   - If the player is out of range → fire a cross attack:
-//       player's tile + the 4 orthogonal neighbours (always hits)
+//   - Each turn cycles through 4 attack patterns (1->2->3->4->1 ...)
+//   - If the player is inside the current pattern -> use the pattern
+//   - If the player is out of range -> cross attack centred on locked player pos
+//
+// Sprite sheet layout (4 rows x 7 cols, left-facing only — right is X-flipped):
+//   Row 0 : Idle       (6 frames)
+//   Row 1 : Attack     (6 frames)
+//   Row 2 : Get Damage (6 frames)
+//   Row 3 : Death      (6 frames)
 class EliteEnemy2 : public EliteEnemy
 {
 public:
@@ -18,24 +23,25 @@ public:
 
     bool CanMove() const override { return false; }
 
-    // Advance to the next phase (call once per turn after attacking).
+    void PlayIdleAnimation()   override;
+    void PlayAttackAnimation(glm::vec3 playerPos) override;
+
     void AdvancePattern();
+    int  getCurrentPhase() const { return currentPhase; }
 
-    int getCurrentPhase() const { return currentPhase; }
-
-    // Returns true when the player's tile falls inside the current pattern.
     bool IsPlayerInPatternRange(int playerRow, int playerCol) const;
 
-    // Cross of 5 tiles centred on the player — used when out of pattern range.
     std::vector<std::pair<int, int>> GetCrossAttackTiles(
-        int playerRow,
-        int playerCol) const;
+        int playerRow, int playerCol) const;
 
-    // World-space tile list for the current pattern (relative to this elite's pos).
     std::vector<std::pair<int, int>> GetCurrentPatternTiles() const;
 
+protected:
+    void PlayDeathAnimation()  override;
+    void PlayDamageAnimation() override;
+
 private:
-    int currentPhase = 0; // 0-3 → patterns 1-4
+    int currentPhase = 0;   // 0-3
 
     void BuildPatterns();
 };

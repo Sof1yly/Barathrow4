@@ -396,31 +396,49 @@ void Enemy::UpdateTextPosition()
 void Enemy::rotatePattern() {
     patterns[currentPatternIndex] = patterns[currentPatternIndex].rotated90CW();
 }
+void Enemy::PlayIdleAnimation()
+{
+    if (!objSprite) return;
+    objSprite->SetAnimationLoop(0, 0, 2, 200);
+}
+
+void Enemy::UpdateMoveTween(float dt)
+{
+    if (!isMoving) return;
+
+    moveTimer += dt;
+    float t = std::min(moveTimer / moveDuration, 1.0f);
+
+    objSprite->SetPosition(moveStart + (moveTarget - moveStart) * t);
+
+    if (t >= 1.0f)
+    {
+        objSprite->SetPosition(moveTarget);
+        isMoving = false;
+        PlayIdleAnimation();
+    }
+}
+
 void Enemy::Update(float dt)
 {
     if (!objSprite) return;
 
     glm::vec3 pos = objSprite->GetPosition();
 
-    // HP above enemy
     hpText->SetPosition(glm::vec3(pos.x, pos.y + 80, 200));
 
-    // Corruption text below HP
     if (corruptText)
         corruptText->SetPosition(glm::vec3(pos.x, pos.y + 55, 200));
 
     if (debuffText)
         debuffText->SetPosition(glm::vec3(pos.x, pos.y + 30, 200));
 
-	//Reset to idle after damage/attack animation
     if (isTakingDamage)
     {
         damageTimer += dt;
-
         if (damageTimer >= damageDuration)
         {
-            objSprite->SetAnimationLoop(0, 0, 2, 200);
-
+            PlayIdleAnimation();
             isTakingDamage = false;
             damageTimer = 0.0f;
         }
@@ -428,33 +446,15 @@ void Enemy::Update(float dt)
     if (isAttacking)
     {
         attackTimer += dt;
-
         if (attackTimer >= attackDuration)
         {
-            objSprite->SetAnimationLoop(0, 0, 2, 200);
-
+            PlayIdleAnimation();
             isAttacking = false;
             attackTimer = 0.0f;
         }
     }
-    if (isMoving)
-    {
-        moveTimer += dt;
-        float t = moveTimer / (moveDuration);
-        t = std::min(t, 1.0f);
 
-        glm::vec3 newPos = moveStart + (moveTarget - moveStart) * t;
-        objSprite->SetPosition(newPos);
-
-        if (t >= 1.0f)
-        {
-            objSprite->SetPosition(moveTarget);
-            isMoving = false;
-
-            objSprite->SetAnimationLoop(0, 0, 2, 200);
-        }
-    }
-
+    UpdateMoveTween(dt);
 }
 
 void Enemy::addDelay(int turns)
@@ -643,7 +643,7 @@ void Enemy::StartMove(glm::vec3 targetWorld)
     moveTimer = 0.0f;
     isMoving = true;
 
-    objSprite->SetAnimationLoop(0, 0, 2, 150);
+    PlayIdleAnimation();
 }
 
 std::vector<std::pair<int, int>> Enemy::GetOccupiedTiles() const

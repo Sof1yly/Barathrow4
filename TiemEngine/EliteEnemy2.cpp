@@ -1,20 +1,28 @@
 #include "EliteEnemy2.h"
 
+// Sprite sheet rows (adjust frame counts to match your actual asset):
+static constexpr int E2_ROW_IDLE   = 0;
+static constexpr int E2_ROW_ATTACK = 1;
+static constexpr int E2_ROW_DAMAGE = 2;
+static constexpr int E2_ROW_DEATH  = 3;
+
+static constexpr int E2_FRAMES_IDLE   = 6;
+static constexpr int E2_FRAMES_ATTACK = 6;
+static constexpr int E2_FRAMES_DAMAGE = 6;
+static constexpr int E2_FRAMES_DEATH  = 6;
+
 EliteEnemy2::EliteEnemy2()
     : EliteEnemy(EliteType::Pattern)
 {
-    // ── Stats ────────────────────────────────────────────────────────────────
-    maxHealth = 80;
+    maxHealth = 60;
     health    = maxHealth;
     damage    = 20;
     moveRange = 0;
+    spriteSize = 150.0f;
 
-    // ── Sprite ───────────────────────────────────────────────────────────────
-    // TODO: replace with actual Elite2 texture path
     if (objSprite) { delete objSprite; objSprite = nullptr; }
     objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy2.png", 4, 7);
-    objSprite->SetAnimationLoop(0, 0, 6, 200);
-    objSprite->SetSize(150.0f, -150.0f);
+    PlayIdleAnimation();
 
     SDL_Color white = { 255, 255, 255 };
     hpText->LoadText("HP: " + std::to_string(health), white, 24);
@@ -23,53 +31,112 @@ EliteEnemy2::EliteEnemy2()
     currentPatternIndex = currentPhase;
 }
 
+// ── Idle ─────────────────────────────────────────────────────────────────────
+void EliteEnemy2::PlayIdleAnimation()
+{
+    if (!objSprite) return;
+    objSprite->SetAnimationLoop(E2_ROW_IDLE, 0, E2_FRAMES_IDLE, 200);
+    float sx = facingRight ? -spriteSize : spriteSize;
+    objSprite->SetSize(sx, -spriteSize);
+}
+
+// ── Attack ────────────────────────────────────────────────────────────────────
+void EliteEnemy2::PlayAttackAnimation(glm::vec3 playerPos)
+{
+    if (!objSprite) return;
+
+    facingRight = (playerPos.x > objSprite->GetPosition().x);
+    float sx = facingRight ? -spriteSize : spriteSize;
+    objSprite->SetSize(sx, -spriteSize);
+
+    objSprite->SetAnimationOnce(E2_ROW_ATTACK, 0, E2_FRAMES_ATTACK, 120);
+    isAttacking = true;
+    attackTimer = 0.0f;
+}
+
+// ── Damage ────────────────────────────────────────────────────────────────────
+void EliteEnemy2::PlayDamageAnimation()
+{
+    if (!objSprite) return;
+    objSprite->SetAnimationOnce(E2_ROW_DAMAGE, 0, E2_FRAMES_DAMAGE, 100);
+}
+
+// ── Death ─────────────────────────────────────────────────────────────────────
+void EliteEnemy2::PlayDeathAnimation()
+{
+    if (!objSprite) return;
+    objSprite->SetAnimationOnce(E2_ROW_DEATH, 0, E2_FRAMES_DEATH, 120);
+}
+
+// ── Update ────────────────────────────────────────────────────────────────────
+void EliteEnemy2::Update(float dt)
+{
+    if (!objSprite) return;
+
+    if (isDeadAnimating)
+    {
+        if (objSprite->IsFinished())
+        {
+            isDead          = true;
+            isDeadAnimating = false;
+        }
+        Enemy::UpdateTextPosition();
+        return;
+    }
+
+    if (isAttacking && objSprite->IsFinished())
+    {
+        isAttacking = false;
+        attackTimer = 0.0f;
+        PlayIdleAnimation();
+    }
+    if (isTakingDamage && objSprite->IsFinished())
+    {
+        isTakingDamage = false;
+        damageTimer    = 0.0f;
+        PlayIdleAnimation();
+    }
+
+    UpdateMoveTween(dt);
+    Enemy::UpdateTextPosition();
+}
+
+// ── Pattern logic ─────────────────────────────────────────────────────────────
 void EliteEnemy2::BuildPatterns()
 {
     patterns.clear();
 
-    // ── Pattern 1 ────────────────────────────────────────────────────────────
-    // TODO: edit grid to the shape you want (O = origin / elite position)
-    patterns.push_back(AttackPattern::fromGrid({
-        ".....",
-        ".XXX.",
-        ".XOX.",
-        ".XXX.",
-        ".....",
-    }, 'X'));
-
-    // ── Pattern 2 ────────────────────────────────────────────────────────────
     patterns.push_back(AttackPattern::fromGrid({
         "..X..",
-        ".XXX.",
+        "..X..",
         "XXOXX",
-        ".XXX.",
+        "..X..",
         "..X..",
     }, 'X'));
 
-    // ── Pattern 3 ────────────────────────────────────────────────────────────
+    patterns.push_back(AttackPattern::fromGrid({
+        "X...X",
+        ".X.X.",
+        "..O..",
+        ".X.X.",
+        "X...X",
+    }, 'X'));
+
     patterns.push_back(AttackPattern::fromGrid({
         "XXXXX",
+        ".....",
+        "X.O.X",
+        ".....",
+        "XXXXX",
+    }, 'X'));
+
+    patterns.push_back(AttackPattern::fromGrid({
+        "..X..",
         "XXXXX",
         "XXOXX",
         "XXXXX",
-        "XXXXX",
+        "..X..",
     }, 'X'));
-
-    // ── Pattern 4 ────────────────────────────────────────────────────────────
-    patterns.push_back(AttackPattern::fromGrid({
-        "XXXXXXX",
-        "XXXXXXX",
-        "XXXXXXX",
-        "XXXOXXX",
-        "XXXXXXX",
-        "XXXXXXX",
-        "XXXXXXX",
-    }, 'X'));
-}
-
-void EliteEnemy2::Update(float dt)
-{
-    Enemy::Update(dt);
 }
 
 void EliteEnemy2::AdvancePattern()
@@ -95,14 +162,13 @@ std::vector<std::pair<int, int>> EliteEnemy2::GetCurrentPatternTiles() const
 }
 
 std::vector<std::pair<int, int>> EliteEnemy2::GetCrossAttackTiles(
-    int playerRow,
-    int playerCol) const
+    int playerRow, int playerCol) const
 {
     return {
-        { playerRow,     playerCol     },   // player tile
-        { playerRow - 1, playerCol     },   // N
-        { playerRow + 1, playerCol     },   // S
-        { playerRow,     playerCol - 1 },   // W
-        { playerRow,     playerCol + 1 },   // E
+        { playerRow,     playerCol     },
+        { playerRow - 1, playerCol     },
+        { playerRow + 1, playerCol     },
+        { playerRow,     playerCol - 1 },
+        { playerRow,     playerCol + 1 },
     };
 }

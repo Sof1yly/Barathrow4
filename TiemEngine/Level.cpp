@@ -1,4 +1,5 @@
 ﻿#include "Level.h"
+#include "EliteEnemy.h"
 #include "EliteEnemy1.h"
 #include "EliteEnemy2.h"
 #include "SquareMeshVbo.h"
@@ -442,6 +443,11 @@ void Level::LevelUpdate()
     for (auto* e : enemies)
     {
         if (!e || e->getIsDead()) continue;
+
+        if (playersprite)
+            if (EliteEnemy* elite = dynamic_cast<EliteEnemy*>(e))
+                elite->UpdateFacing(playersprite->GetPosition());
+
         e->UpdateTextPosition();
         e->Update(deltaTime / 1000.0f);
     }

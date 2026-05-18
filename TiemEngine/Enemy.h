@@ -115,6 +115,8 @@ public:
 
     virtual void PlayAttackAnimation(glm::vec3 playerPos);
 
+    virtual void PlayIdleAnimation();
+
     void addCorruption(int stacks);
 
     int getCorruption() const
@@ -209,6 +211,8 @@ public:
 
 
 protected:
+
+    void UpdateMoveTween(float dt);
 
     EnemyType type;
 
