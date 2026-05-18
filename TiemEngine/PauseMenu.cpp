@@ -1,9 +1,21 @@
 #include "PauseMenu.h"
 #include "Button.h"
+#include <SDL.h>
 #include <algorithm>
 
-static const float BTN_W = 450.0f;
-static const float BTN_H = 70.0f;
+static const std::string DIR = "../Resource/Texture/UI/PauseMenu/";
+
+// Button dimensions — wider to accommodate long labels
+static const float BTN_W = 620.0f;
+static const float BTN_H = 122.0f;
+// Step between button centres (height + gap)
+static const float BTN_STEP = BTN_H + 15.0f;
+
+// Z layers — sit above cards (max z=1000) and match SettingPage hierarchy
+static const float OVL_Z = 1100.0f;
+static const float BTN_Z = 1102.0f;
+static const float TXT_Z = 1103.0f;
+
 const glm::vec3 PauseMenu::HIDDEN = glm::vec3(0.0f, 10000.0f, 0.0f);
 
 // ---------------------------------------------------------------------------
@@ -25,74 +37,72 @@ void PauseMenu::AddPauseObject(DrawableObject* obj, glm::vec3 visiblePos,
 }
 
 void PauseMenu::InitButton(PauseButton& btn, const std::string& labelStr,
-    const std::string& texPath, SDL_Color color,
-    glm::vec3 pos, glm::vec2 size, bool enabled,
+    SDL_Color color,
+    glm::vec3 pos, glm::vec2 size,
     std::vector<DrawableObject*>& objectsList)
 {
     btn.pos     = pos;
     btn.size    = size;
-    btn.enabled = enabled;
+    btn.enabled = true;
 
     btn.bg = new ImageObject();
-    btn.bg->SetTexture(texPath);
+    btn.bg->SetTexture(DIR + "button_icon.png");
     btn.bg->SetSize(size.x, -size.y);
-    if (!enabled) btn.bg->SetAlpha(0.35f);
-    AddPauseObject(btn.bg, pos, objectsList);
+    btn.bg->SetAlpha(1.0f);
+    AddPauseObject(btn.bg, glm::vec3(pos.x, pos.y, BTN_Z), objectsList);
 
     btn.label = new TextObject();
-    btn.label->LoadText(labelStr, color, 32);
-    if (!enabled) btn.label->SetAlpha(0.5f);
-    AddPauseObject(btn.label, glm::vec3(pos.x, pos.y, pos.z + 1.0f), objectsList);
+    btn.label->LoadText(labelStr, color, 34);
+    AddPauseObject(btn.label, glm::vec3(pos.x, pos.y, TXT_Z), objectsList);
 }
 
 // ---------------------------------------------------------------------------
 void PauseMenu::Init(std::vector<DrawableObject*>& objectsList)
 {
-    const std::string whiteBtn = "../Resource/Texture/Mock/Whtg.png";
-    const std::string redBtn   = "../Resource/Texture/Mock/Redg.png";
-    SDL_Color dark  = { 40,  40,  40, 255 };
-    SDL_Color light = { 255, 255, 255, 255 };
-    SDL_Color gray  = { 120, 120, 120, 255 };
+    SDL_Color white = { 240, 240, 240, 255 };
+    SDL_Color title = { 255, 255, 255, 255 };
 
-    // Full-screen black overlay (1920x1080 world units)
+    // Full-screen dim overlay
     panel = new ImageObject();
     panel->SetColor(0.0f, 0.0f, 0.0f);
-    panel->SetAlpha(0.6f);
+    panel->SetAlpha(0.65f);
     panel->SetSize(1920.0f, -1080.0f);
-    AddPauseObject(panel, glm::vec3(0.0f, 0.0f, 87.0f), objectsList);
+    AddPauseObject(panel, glm::vec3(0.0f, 0.0f, OVL_Z), objectsList);
 
-    // Title
+    // "PAUSE" title
     titleText = new TextObject();
-    SDL_Color titleColor = { 255, 230, 100, 255 };
-    titleText->LoadText("PAUSE", titleColor, 64);
-    AddPauseObject(titleText, glm::vec3(0.0f, 240.0f, 90.0f), objectsList);
+    titleText->LoadText("PAUSE", title, 64);
+    AddPauseObject(titleText, glm::vec3(0.0f, 330.0f, TXT_Z), objectsList);
 
-    // Buttons (top to bottom, 82 px spacing, 12 px gap between 70 px tall buttons)
-    //   y= 150: Resume
-    //   y=  68: Setting            (disabled)
-    //   y= -14: Abandon Run
-    //   y= -96: Save & Quit to Main
-    //   y=-178: Save & Quit to Desktop (disabled)
-    InitButton(btnResume,      "Resume",                  whiteBtn, dark,
-               glm::vec3(0.0f,  150.0f, 89.0f), glm::vec2(BTN_W, BTN_H), true,  objectsList);
-    InitButton(btnSetting,     "Setting",                 whiteBtn, gray,
-               glm::vec3(0.0f,   68.0f, 89.0f), glm::vec2(BTN_W, BTN_H), false, objectsList);
-    InitButton(btnAbandon,     "Abandon Run",             redBtn,   light,
-               glm::vec3(0.0f,  -14.0f, 89.0f), glm::vec2(BTN_W, BTN_H), true,  objectsList);
-    InitButton(btnSaveQuit,    "Save & Quit to Main",     whiteBtn, dark,
-               glm::vec3(0.0f,  -96.0f, 89.0f), glm::vec2(BTN_W, BTN_H), true,  objectsList);
-    InitButton(btnQuitDesktop, "Save & Quit to Desktop",  whiteBtn, gray,
-               glm::vec3(0.0f, -178.0f, 89.0f), glm::vec2(BTN_W, BTN_H), false, objectsList);
+    // 5 buttons top to bottom, centred on x=0
+    //   Resume             y = +175
+    //   Setting            y = +175 - BTN_STEP
+    //   Abandon Run        y = +175 - 2*BTN_STEP
+    //   Save & Quit Main   y = +175 - 3*BTN_STEP
+    //   Save & Quit Desk   y = +175 - 4*BTN_STEP
+    const float TOP_Y = 175.0f;
+    InitButton(btnResume,      "Resume",                   white, glm::vec3(0.0f, TOP_Y - 0 * BTN_STEP, 0.0f), glm::vec2(BTN_W, BTN_H), objectsList);
+    InitButton(btnSetting,     "Setting",                  white, glm::vec3(0.0f, TOP_Y - 1 * BTN_STEP, 0.0f), glm::vec2(BTN_W, BTN_H), objectsList);
+    InitButton(btnAbandon,     "Abandon Run",              white, glm::vec3(0.0f, TOP_Y - 2 * BTN_STEP, 0.0f), glm::vec2(BTN_W, BTN_H), objectsList);
+    InitButton(btnSaveQuit,    "Save & Quit to Main Menu", white, glm::vec3(0.0f, TOP_Y - 3 * BTN_STEP, 0.0f), glm::vec2(BTN_W, BTN_H), objectsList);
+    InitButton(btnQuitDesktop, "Save & Quit to Desktop",   white, glm::vec3(0.0f, TOP_Y - 4 * BTN_STEP, 0.0f), glm::vec2(BTN_W, BTN_H), objectsList);
 
     visible = false;
 }
 
-void PauseMenu::Show()
+void PauseMenu::Show(std::vector<DrawableObject*>& objectsList)
 {
     visible = true;
     Button::setMenu(true);
-    for (auto& pair : pauseObjects)
-        if (pair.first) pair.first->SetPosition(pair.second);
+    // Re-append every pause object to the END of objectsList so they always
+    // render on top, regardless of which card was last hovered.
+    for (auto& pair : pauseObjects) {
+        if (!pair.first) continue;
+        auto it = std::find(objectsList.begin(), objectsList.end(), pair.first);
+        if (it != objectsList.end()) objectsList.erase(it);
+        objectsList.push_back(pair.first);
+        pair.first->SetPosition(pair.second);
+    }
 }
 
 void PauseMenu::Hide()
@@ -101,12 +111,17 @@ void PauseMenu::Hide()
     Button::setMenu(false);
     for (auto& pair : pauseObjects)
         if (pair.first) pair.first->SetPosition(HIDDEN);
+
+    // Reset button tints so they open fresh next time
+    PauseButton* buttons[] = { &btnResume, &btnSetting, &btnAbandon, &btnSaveQuit, &btnQuitDesktop };
+    for (auto* btn : buttons)
+        if (btn->bg) btn->bg->SetColor(1.0f, 1.0f, 1.0f);
 }
 
 void PauseMenu::Reset()
 {
-    panel        = nullptr;
-    titleText    = nullptr;
+    panel          = nullptr;
+    titleText      = nullptr;
     btnResume      = PauseButton{};
     btnSetting     = PauseButton{};
     btnAbandon     = PauseButton{};
@@ -121,9 +136,10 @@ PauseMenu::Action PauseMenu::HandleClick(float wx, float wy)
 {
     if (!visible) return Action::NONE;
     if (btnResume.IsClicked(wx, wy))      return Action::RESUME;
+    if (btnSetting.IsClicked(wx, wy))     return Action::SETTING;
+    if (btnAbandon.IsClicked(wx, wy))     return Action::ABANDON;
     if (btnSaveQuit.IsClicked(wx, wy))    return Action::SAVE_QUIT_MAIN;
     if (btnQuitDesktop.IsClicked(wx, wy)) return Action::SAVE_QUIT_DESKTOP;
-    if (btnAbandon.IsClicked(wx, wy))     return Action::ABANDON;
     return Action::NONE;
 }
 
@@ -132,15 +148,14 @@ void PauseMenu::HandleHover(float wx, float wy)
     if (!visible) return;
     PauseButton* buttons[] = { &btnResume, &btnSetting, &btnAbandon, &btnSaveQuit, &btnQuitDesktop };
     for (auto* btn : buttons) {
-        if (!btn->enabled) {
-            // keep disabled buttons dimmed
-            if (btn->bg) btn->bg->SetAlpha(0.35f);
-            continue;
-        }
+        if (!btn->bg) continue;
+        btn->bg->SetAlpha(1.0f);
         if (btn->IsClicked(wx, wy)) {
-            if (btn->bg) btn->bg->SetAlpha(1.0f);
+            // Brighten hovered button with a warm highlight
+            btn->bg->SetColor(1.0f, 0.85f, 0.4f);
+            if (btn->label) btn->label->SetAlpha(1.0f);
         } else {
-            if (btn->bg) btn->bg->SetAlpha(0.65f);
+            btn->bg->SetColor(1.0f, 1.0f, 1.0f);
         }
     }
 }

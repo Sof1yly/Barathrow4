@@ -1,4 +1,5 @@
 ﻿#include "Level.h"
+#include "SaveSystem.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "TriangleMeshVbo.h"
@@ -347,6 +348,7 @@ void Level::LevelInit()
     }
 
     settingPage.Init(objectsList);
+    pauseMenu.Init(objectsList);
 
     std::cout << "Init Level" << std::endl;
 }
@@ -357,6 +359,9 @@ void Level::LevelUpdate()
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
+
+    if (pauseMenuActive)
+        return;
 
     if (settingPageActive)
     {
@@ -742,6 +747,13 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (pauseMenuActive)
+    {
+        pauseMenu.Hide();
+        pauseMenuActive = false;
+    }
+    pauseMenu.Reset();
+
     if (settingPageActive)
     {
         settingPage.Hide();
@@ -1092,6 +1104,70 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    // Route all input to the pause menu while it is open
+    if (pauseMenuActive)
+    {
+        if (type == 3)
+        {
+            pauseMenu.HandleHover(realX, realY);
+        }
+        else if (type == 0)
+        {
+            auto action = pauseMenu.HandleClick(realX, realY);
+            switch (action)
+            {
+            case PauseMenu::Action::RESUME:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                break;
+            case PauseMenu::Action::SETTING:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                settingPage.Show();
+                settingPageActive = true;
+                break;
+            case PauseMenu::Action::SAVE_QUIT_MAIN:
+            case PauseMenu::Action::SAVE_QUIT_DESKTOP:
+            {
+                SaveData sd;
+                sd.playerRow            = nowRow;
+                sd.playerCol            = nowCol;
+                sd.playerHp             = playerData.getHp();
+                sd.playerMaxHp          = playerData.getMaxHp();
+                sd.playerCoins          = playerData.GetCoins();
+                sd.playerBarrierCount   = playerData.GetBarrierCount();
+                sd.playerJumpCharges    = playerData.GetJumpCharges();
+                sd.currentLevel         = levelManager.GetLevel();
+                sd.baseHandSize         = baseHandSize;
+                sd.goldBonusActive      = goldBonusActive;
+                sd.startCombatBarrier   = startCombatBarrier;
+                sd.startCombatOverclock = startCombatOverclock;
+                sd.eventSceneDone       = eventSceneDone;
+                for (Card* c : cardSystem.GetAllCards())
+                    sd.cardNames.push_back(c->getName());
+                SaveSystem::Save(sd);
+
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                auto next = (action == PauseMenu::Action::SAVE_QUIT_MAIN)
+                            ? GameState::GS_MAIN_MENU
+                            : GameState::GS_QUIT;
+                GameData::GetInstance()->gGameStateNext = next;
+                break;
+            }
+            case PauseMenu::Action::ABANDON:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                SaveSystem::DeleteSave();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+                break;
+            default:
+                break;
+            }
+        }
+        return;
+    }
+
     // Route all input to the setting page while it is open
     if (settingPageActive)
     {
@@ -1340,11 +1416,12 @@ void Level::HandleMouse(int type, int x, int y)
     // Left Click
     if (type == 0)
     {
-        // Setting gear icon (world pos 900,500, size 80x80)
+        // Pause button (world pos 900,500, size 80x80)
         if (realX >= 860.0f && realX <= 940.0f && realY >= 460.0f && realY <= 540.0f)
         {
-            settingPage.Show();
-            settingPageActive = true;
+            cardSystem.UpdateHover(mousePos, true, objectsList);
+            pauseMenu.Show(objectsList);
+            pauseMenuActive = true;
             return;
         }
 

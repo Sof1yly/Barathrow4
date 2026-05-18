@@ -29,6 +29,7 @@
 #include "EventRemoveScene.h"
 #include "MapScene.h"
 #include "SettingPage.h"
+#include "PauseMenu.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -228,6 +229,10 @@ protected:
     // Shared with subclasses (e.g. MainMenu) so they can open the setting page
     SettingPage settingPage;
     bool settingPageActive = false;
+
+private:
+    PauseMenu pauseMenu;
+    bool pauseMenuActive = false;
 
 public:
     virtual void LevelLoad();
