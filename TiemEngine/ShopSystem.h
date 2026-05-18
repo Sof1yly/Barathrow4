@@ -104,6 +104,8 @@ public:
     void Open(std::vector<DrawableObject*>& objectsList, Player& player);
     void Close(std::vector<DrawableObject*>& objectsList);
 
+    void HandleHover(float x, float y);
+    Card* PeekCardAt(float x, float y) const;
     bool HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSystem,Player& player,std::vector<DrawableObject*>& objectsList);
 
     void ApplyRemovals(CardSystem& cardSystem);

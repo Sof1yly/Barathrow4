@@ -1278,12 +1278,31 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (shopSystem.IsActive())
     {
-        if (type == 0)
+        if (type == 3)
+        {
+            shopSystem.HandleHover(mousePos.x, mousePos.y);
+        }
+        else if (type == 0)
         {
             shopSystem.HandleMouseClick(mousePos, cardSystem, playerData, objectsList);
             UpdateHPBar();
             if (!shopSystem.IsActive() && inShopOnlyLevel)
                 AdvanceToNextRound();
+        }
+        else if (type == 4)
+        {
+            Card* shopCard = shopSystem.PeekCardAt(mousePos.x, mousePos.y);
+            if (shopCard)
+            {
+                if (cardInspect.IsInspecting(shopCard))
+                    cardInspect.Hide(objectsList);
+                else
+                    cardInspect.Show(shopCard, cardSystem, objectsList);
+            }
+            else
+            {
+                cardInspect.Hide(objectsList);
+            }
         }
         return;
     }

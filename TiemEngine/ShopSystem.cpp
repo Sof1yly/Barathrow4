@@ -108,45 +108,54 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
 {
     ClearUI(objectsList);
 
-    // Semi-transparent dark panel
+    // Dark overlay behind backboard
     GameObject* panel = new GameObject();
     panel->SetSize(1920.0f, 1080.0f);
-    panel->SetPosition(glm::vec3(0.0f, 0.0f, 800.0f));
-    panel->SetColor(0.0f, 0.0f, 0.0f, 0.85f);
+    panel->SetPosition(glm::vec3(0.0f, 0.0f, 799.0f));
+    panel->SetColor(0.0f, 0.0f, 0.0f, 0.75f);
     uiObjects.push_back(panel);
     objectsList.push_back(panel);
 
-    // Title
-    TextObject* title = new TextObject();
-    SDL_Color titleColor = { 255, 215, 90, 255 };
-    title->LoadText("Shop", titleColor, 58);
-    title->SetPosition(glm::vec3(0.0f, 430.0f, 810.0f));
-    uiObjects.push_back(title);
-    objectsList.push_back(title);
+    // Backboard
+    ImageObject* board = new ImageObject();
+    board->SetTexture("../Resource/Texture/UI/Shop/Backboard.png");
+    board->SetSize(1543.0f, -778.0f);
+    board->SetPosition(glm::vec3(0.0f, 0.0f, 800.0f));
+    uiObjects.push_back(board);
+    objectsList.push_back(board);
 
-    // Sub-hint
-    TextObject* hint = new TextObject();
-    SDL_Color hintColor = { 200, 200, 200, 255 };
-    hint->LoadText("Click a card to purchase it", hintColor, 26);
-    hint->SetPosition(glm::vec3(0.0f, 368.0f, 810.0f));
-    uiObjects.push_back(hint);
-    objectsList.push_back(hint);
+    // ShopBanner straddles the top border of the backboard (10px above it)
+    const float bannerY = 778.0f * 0.5f - 125.0f * 0.5f + 35.0f;
+    ImageObject* banner = new ImageObject();
+    banner->SetTexture("../Resource/Texture/UI/Shop/ShopBanner.PNG");
+    banner->SetSize(579.0f, -125.0f);
+    banner->SetPosition(glm::vec3(0.0f, bannerY, 803.0f));
+    uiObjects.push_back(banner);
+    objectsList.push_back(banner);
+
+    // "Shop" text centred on banner
+    TextObject* shopTitle = new TextObject();
+    SDL_Color white = { 245, 245, 245, 255 };
+    shopTitle->LoadText("Shop", white, 46);
+    shopTitle->SetPosition(glm::vec3(0.0f, bannerY - 5.0f, 804.0f));
+    uiObjects.push_back(shopTitle);
+    objectsList.push_back(shopTitle);
 
     // Live coin counter
     coinDisplay = new TextObject();
     SDL_Color coinColor = { 255, 210, 40, 255 };
     int startCoins = playerRef ? playerRef->GetCoins() : 0;
     coinDisplay->LoadText("Coins: " + std::to_string(startCoins), coinColor, 30);
-    coinDisplay->SetPosition(glm::vec3(0.0f, 312.0f, 810.0f));
+    coinDisplay->SetPosition(glm::vec3(0.0f, bannerY - 125.0f * 0.5f - 22.0f, 810.0f));
     uiObjects.push_back(coinDisplay);
     objectsList.push_back(coinDisplay);
 
-    const float cardWidth  = 270.0f;
-    const float cardHeight = 400.0f;
+    const float cardWidth  = 270.0f / 1.2f;
+    const float cardHeight = 400.0f / 1.2f;
     const float spacingX   = 320.0f;
     const int   count      = static_cast<int>(shopSlots.size());
     const float startX     = -0.5f * static_cast<float>(count - 1) * spacingX;
-    const float centerY    = 20.0f;
+    const float centerY    = 80.0f;
 
     auto cloneImage = [](ImageObject* src, const glm::vec3& pos, float w, float h) -> ImageObject*
     {
@@ -239,25 +248,40 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
         slot.maxY = cardPos.y + cardHeight * 0.5f;
     }
 
-    // Close / Leave button (center bottom)
-    closeButton.Init("../Resource/Texture/UI/SkipBut.png", glm::vec3(0.0f, -370.0f, 812.0f), glm::vec2(190.0f, -90.0f), objectsList);
+    // Leave button straddles the bottom border of the backboard (12px below it)
+    const float leaveY = -(778.0f * 0.5f) + 84.0f * 0.5f - 35.0f;
+    closeButton.Init("../Resource/Texture/UI/Shop/LeaveButton.PNG",
+                     glm::vec3(0.0f, leaveY, 812.0f),
+                     glm::vec2(265.0f, -84.0f), objectsList);
+    TextObject* leaveText = new TextObject();
+    SDL_Color leaveColor = { 245, 245, 245, 255 };
+    leaveText->LoadText("Leave", leaveColor, 28);
+    leaveText->SetPosition(glm::vec3(0.0f, leaveY - 4.0f, 813.0f));
+    uiObjects.push_back(leaveText);
+    objectsList.push_back(leaveText);
 
     SDL_Color goldColor = { 255, 210, 40, 255 };
 
-    // Heal button (right bottom)
-    healButton.Init("../Resource/Texture/UI/SkipBut.png", glm::vec3(350.0f, -370.0f, 812.0f), glm::vec2(190.0f, -90.0f), objectsList);
+    // Heal button — bottom left, ~1/4 in from the left edge, sized down 1.4x
+    const float healW = 243.0f / (1.4f * 1.2f);
+    const float healH = 272.0f / (1.4f * 1.2f);
+    healButton.Init("../Resource/Texture/UI/Shop/Heal.PNG",
+                    glm::vec3(-385.0f, -210.0f, 812.0f),
+                    glm::vec2(healW, -healH), objectsList);
     healPriceLabel = new TextObject();
     {
         int hCost = GetHealCost();
         std::string hStr = (hCost == 0) ? "Heal: FREE" : ("Heal: " + std::to_string(hCost) + "g");
         healPriceLabel->LoadText(hStr, goldColor, 22);
     }
-    healPriceLabel->SetPosition(glm::vec3(350.0f, -310.0f, 812.0f));
+    healPriceLabel->SetPosition(glm::vec3(-385.0f, -210.0f - healH * 0.5f - 18.0f, 812.0f));
     uiObjects.push_back(healPriceLabel);
     objectsList.push_back(healPriceLabel);
 
-    // Remove card button (left bottom)
-    removeButton.Init("../Resource/Texture/UI/cross.png", glm::vec3(-350.0f, -370.0f, 812.0f), glm::vec2(190.0f, -90.0f), objectsList);
+    // Remove card button — bottom right, ~1/4 in from the right edge, sized down 1.4x
+    removeButton.Init("../Resource/Texture/UI/Shop/RemoveCard.png",
+                      glm::vec3(385.0f, -210.0f, 812.0f),
+                      glm::vec2(healW, -healH), objectsList);
     removePriceLabel = new TextObject();
     {
         std::string rStr = removeUsedThisShop
@@ -268,7 +292,7 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
             : goldColor;
         removePriceLabel->LoadText(rStr, rColor, 22);
     }
-    removePriceLabel->SetPosition(glm::vec3(-350.0f, -310.0f, 812.0f));
+    removePriceLabel->SetPosition(glm::vec3(385.0f, -210.0f - healH * 0.5f - 18.0f, 812.0f));
     uiObjects.push_back(removePriceLabel);
     objectsList.push_back(removePriceLabel);
 }
@@ -818,6 +842,34 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
     }
 
     return false;
+}
+
+Card* ShopSystem::PeekCardAt(float x, float y) const
+{
+    for (const ShopSlot& slot : shopSlots)
+    {
+        if (slot.sold || !slot.card) continue;
+        if (x >= slot.minX && x <= slot.maxX && y >= slot.minY && y <= slot.maxY)
+            return slot.card;
+    }
+    return nullptr;
+}
+
+void ShopSystem::HandleHover(float x, float y)
+{
+    if (!active || selectingCardToRemove) return;
+
+    auto applyHover = [](Button& btn, bool hovered)
+    {
+        ImageObject* img = btn.GetImage();
+        if (!img) return;
+        if (hovered) img->SetColor(1.4f, 1.4f, 1.0f);
+        else         img->SetColor(1.0f, 1.0f, 1.0f);
+    };
+
+    applyHover(closeButton,  closeButton.IsClicked(x, y));
+    applyHover(healButton,   healButton.IsClicked(x, y));
+    applyHover(removeButton, removeButton.IsClicked(x, y));
 }
 
 bool ShopSystem::IsActive() const
