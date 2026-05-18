@@ -4,9 +4,9 @@ EliteEnemy1::EliteEnemy1()
     : EliteEnemy(EliteType::Row)
 {
     // ── Stats ────────────────────────────────────────────────────────────────
-    maxHealth = 80;
+    maxHealth = 30;
     health    = maxHealth;
-    damage    = 15;
+    damage    = 10;
     moveRange = 1;
 
     // ── Sprite ───────────────────────────────────────────────────────────────

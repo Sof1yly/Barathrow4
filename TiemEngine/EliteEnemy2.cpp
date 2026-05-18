@@ -4,7 +4,7 @@ EliteEnemy2::EliteEnemy2()
     : EliteEnemy(EliteType::Pattern)
 {
     // ── Stats ────────────────────────────────────────────────────────────────
-    maxHealth = 60;
+    maxHealth = 80;
     health    = maxHealth;
     damage    = 20;
     moveRange = 0;
