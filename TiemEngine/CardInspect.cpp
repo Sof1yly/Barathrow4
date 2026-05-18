@@ -139,11 +139,9 @@ std::string CardInspect::GetKeywordTitle(const Action* action, const std::string
     return fallbackCode;
 }
 
-std::string CardInspect::BuildInspectText(Card* cardData, const CardSystem& cardSystem) const
+std::string CardInspect::BuildInspectText(Card* cardData, const GameDataLoader& loader) const
 {
     if (!cardData) return "";
-
-    const GameDataLoader& loader = cardSystem.GetDataLoader();
 
     std::unordered_set<std::string> seen;
     std::vector<std::pair<Action*, std::string>> orderedActions;
@@ -217,7 +215,7 @@ std::string CardInspect::BuildInspectText(Card* cardData, const CardSystem& card
     return out;
 }
 
-void CardInspect::BuildInspectGrid(Card* cardData, const CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
+void CardInspect::BuildInspectGrid(Card* cardData, const GameDataLoader& loader, std::vector<DrawableObject*>& objectsList)
 {
     std::vector<std::pair<IVec2, int>> cells;
 
@@ -228,7 +226,7 @@ void CardInspect::BuildInspectGrid(Card* cardData, const CardSystem& cardSystem,
             AttackAction* atk = dynamic_cast<AttackAction*>(a);
             if (!atk) continue;
 
-            const AttackPattern* pat = cardSystem.GetDataLoader().getPatternForAction(a);
+            const AttackPattern* pat = loader.getPatternForAction(a);
             if (pat) {
                 cells = pat->applyTo(0, 0);
                 break;
@@ -294,6 +292,11 @@ void CardInspect::BuildInspectGrid(Card* cardData, const CardSystem& cardSystem,
 }
 
 void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
+{
+    Show(cardData, cardSystem, cardSystem.GetDataLoader(), objectsList);
+}
+
+void CardInspect::Show(Card* cardData, CardSystem& cardSystem, const GameDataLoader& patternLoader, std::vector<DrawableObject*>& objectsList)
 {
     if (!cardData) {
         Hide(objectsList);
@@ -387,7 +390,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<Drawa
     inspectObjects.push_back(title);
     objectsList.push_back(title);
 
-    std::string keywordText = BuildInspectText(cardData, cardSystem);
+    std::string keywordText = BuildInspectText(cardData, patternLoader);
     if (!keywordText.empty())
     {
         TextObject* body = new TextObject();
@@ -398,7 +401,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, std::vector<Drawa
         objectsList.push_back(body);
     }
 
-    BuildInspectGrid(cardData, cardSystem, objectsList);
+    BuildInspectGrid(cardData, patternLoader, objectsList);
 
     inspectedCard = cardData;
     visible = true;

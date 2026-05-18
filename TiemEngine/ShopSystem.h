@@ -101,6 +101,8 @@ public:
     ShopSystem();
     ~ShopSystem();
 
+    const GameDataLoader& GetShopLoader() const { return shopLoader; }
+
     bool LoadPoolData(const std::string& patternFile,const std::string& cardFile,const std::string& cardDescFile,std::string* outError = nullptr);
 
     void Open(std::vector<DrawableObject*>& objectsList, Player& player);

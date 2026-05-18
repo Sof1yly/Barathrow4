@@ -21,6 +21,7 @@ private:
     {
         Card* card = nullptr;
         float minX = 0, maxX = 0, minY = 0, maxY = 0;
+        std::vector<DrawableObject*> layers;
     };
 
     std::vector<DrawableObject*> staticObjects;
@@ -32,16 +33,27 @@ private:
     TextObject* pageLabel  = nullptr;
     Button leftBtn, rightBtn;
 
-    int  currentPage = 0;
-    int  totalPages  = 0;
-    int  removesLeft = 0;
-    bool active      = false;
+    int  currentPage    = 0;
+    int  totalPages     = 0;
+    int  removesLeft    = 0;
+    int  hoveredCardIdx = -1;
+    bool active         = false;
 
     static constexpr int   CARDS_PER_PAGE = 5;
     static constexpr float CARD_W   = 280.0f;
     static constexpr float CARD_H   = 410.0f;
     static constexpr float SPACING  = 320.0f;
     static constexpr float CENTER_Y = 20.0f;
+
+    static void ScaleLayers(std::vector<DrawableObject*>& layers, float cx, float cy, float scale)
+    {
+        for (DrawableObject* obj : layers) {
+            glm::vec3 pos = obj->GetPosition();
+            glm::vec2 sz  = obj->GetSize();
+            obj->SetPosition(glm::vec3(cx + (pos.x - cx) * scale, cy + (pos.y - cy) * scale, pos.z));
+            obj->SetSize(sz.x * scale, sz.y * scale);
+        }
+    }
 
     static ImageObject* CloneImg(ImageObject* src, const glm::vec3& pos, float w, float h)
     {
@@ -68,6 +80,7 @@ private:
         }
         cardObjects.clear();
         candidates.clear();
+        hoveredCardIdx = -1;
     }
 
     void UpdateTitle()
@@ -108,14 +121,29 @@ private:
             if (!card) continue;
             if (!card->HasVisuals()) card->CreateVisuals();
 
-            float       cardX   = startX + i * SPACING;
-            glm::vec3   cardPos(cardX, CENTER_Y, 818.0f);
+            float     cardX   = startX + i * SPACING;
+            glm::vec3 cardPos(cardX, CENTER_Y, 818.0f);
 
-            push(CloneImg(card->GetBackground(),  cardPos, CARD_W, -CARD_H));
-            push(CloneImg(card->GetStarOverlay(), cardPos, CARD_W, -CARD_H));
-            push(CloneImg(card->GetTypeIcon(),    cardPos, CARD_W, -CARD_H));
-            push(CloneImg(card->GetVisual(),      cardPos, CARD_W, -CARD_H));
-            push(CloneImg(card->GetCardFrame(),   cardPos, CARD_W, -CARD_H));
+            CardSlot slot;
+            slot.card = card;
+            slot.minX = cardX - CARD_W * 0.5f;
+            slot.maxX = cardX + CARD_W * 0.5f;
+            slot.minY = CENTER_Y - CARD_H * 0.5f;
+            slot.maxY = CENTER_Y + CARD_H * 0.5f;
+
+            auto trackCard = [&](DrawableObject* obj) {
+                if (obj) {
+                    slot.layers.push_back(obj);
+                    cardObjects.push_back(obj);
+                    objectsList.push_back(obj);
+                }
+            };
+
+            trackCard(CloneImg(card->GetBackground(),  cardPos, CARD_W, -CARD_H));
+            trackCard(CloneImg(card->GetStarOverlay(), cardPos, CARD_W, -CARD_H));
+            trackCard(CloneImg(card->GetTypeIcon(),    cardPos, CARD_W, -CARD_H));
+            trackCard(CloneImg(card->GetVisual(),      cardPos, CARD_W, -CARD_H));
+            trackCard(CloneImg(card->GetCardFrame(),   cardPos, CARD_W, -CARD_H));
 
             if (card->GetNameText())
             {
@@ -130,7 +158,7 @@ private:
                 float leftX = (cardX - CARD_W * 0.5f) + (local.x * CARD_W);
                 float centX = leftX + copy->GetSize().x * 0.5f + 12.0f;
                 copy->SetPosition(glm::vec3(centX, CENTER_Y + local.y * CARD_H, 822.0f));
-                push(copy);
+                trackCard(copy);
             }
 
             if (card->GetDescriptionText())
@@ -143,16 +171,10 @@ private:
                 float leftX = (cardX - CARD_W * 0.5f) + (local.x * CARD_W);
                 float centX = leftX + copy->GetSize().x * 0.5f;
                 copy->SetPosition(glm::vec3(centX, CENTER_Y + local.y * CARD_H, 822.0f));
-                push(copy);
+                trackCard(copy);
             }
 
-            CardSlot slot;
-            slot.card = card;
-            slot.minX = cardX - CARD_W * 0.5f;
-            slot.maxX = cardX + CARD_W * 0.5f;
-            slot.minY = CENTER_Y - CARD_H * 0.5f;
-            slot.maxY = CENTER_Y + CARD_H * 0.5f;
-            candidates.push_back(slot);
+            candidates.push_back(std::move(slot));
         }
     }
 
@@ -210,6 +232,41 @@ public:
 
         active = true;
         RebuildPage(objectsList);
+    }
+
+    Card* PeekCardAt(float x, float y) const
+    {
+        for (const CardSlot& s : candidates)
+        {
+            if (!s.card) continue;
+            if (x >= s.minX && x <= s.maxX && y >= s.minY && y <= s.maxY)
+                return s.card;
+        }
+        return nullptr;
+    }
+
+    void HandleHover(float x, float y)
+    {
+        if (!active) return;
+        int newIdx = -1;
+        for (int i = 0; i < (int)candidates.size(); ++i) {
+            const CardSlot& s = candidates[i];
+            if (x >= s.minX && x <= s.maxX && y >= s.minY && y <= s.maxY) {
+                newIdx = i; break;
+            }
+        }
+        if (newIdx == hoveredCardIdx) return;
+        if (hoveredCardIdx >= 0 && hoveredCardIdx < (int)candidates.size()) {
+            CardSlot& s = candidates[hoveredCardIdx];
+            float cx = (s.minX + s.maxX) * 0.5f;
+            ScaleLayers(s.layers, cx, CENTER_Y, 1.0f / 1.08f);
+        }
+        if (newIdx >= 0) {
+            CardSlot& s = candidates[newIdx];
+            float cx = (s.minX + s.maxX) * 0.5f;
+            ScaleLayers(s.layers, cx, CENTER_Y, 1.08f);
+        }
+        hoveredCardIdx = newIdx;
     }
 
     // Returns true if the click was handled.

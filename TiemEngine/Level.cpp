@@ -1265,8 +1265,28 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (eventRemoveScene.IsActive())
     {
-        if (type == 0)
+        if (type == 3)
         {
+            eventRemoveScene.HandleHover(mousePos.x, mousePos.y);
+        }
+        else if (type == 4)
+        {
+            Card* evCard = eventRemoveScene.PeekCardAt(mousePos.x, mousePos.y);
+            if (evCard)
+            {
+                if (cardInspect.IsInspecting(evCard))
+                    cardInspect.Hide(objectsList);
+                else
+                    cardInspect.Show(evCard, cardSystem, objectsList);
+            }
+            else
+            {
+                cardInspect.Hide(objectsList);
+            }
+        }
+        else if (type == 0)
+        {
+            cardInspect.Hide(objectsList);
             if (eventRemoveScene.HandleMouseClick(realX, realY, cardSystem, objectsList))
             {
                 if (!eventRemoveScene.IsActive())
@@ -1297,7 +1317,7 @@ void Level::HandleMouse(int type, int x, int y)
                 if (cardInspect.IsInspecting(shopCard))
                     cardInspect.Hide(objectsList);
                 else
-                    cardInspect.Show(shopCard, cardSystem, objectsList);
+                    cardInspect.Show(shopCard, cardSystem, shopSystem.GetShopLoader(), objectsList);
             }
             else
             {
@@ -1321,7 +1341,7 @@ void Level::HandleMouse(int type, int x, int y)
                 if (cardInspect.IsInspecting(rewardCard))
                     cardInspect.Hide(objectsList);
                 else
-                    cardInspect.Show(rewardCard, cardSystem, objectsList);
+                    cardInspect.Show(rewardCard, cardSystem, cardRewardSystem.GetRewardLoader(), objectsList);
             }
             else
             {
