@@ -119,19 +119,20 @@ private:
         uiObjects.push_back(panel);
         objectsList.push_back(panel);
 
-        TextObject* title = new TextObject();
-        SDL_Color titleColor = { 245, 245, 245, 255 };
-        title->LoadText("Choose 1 Card Reward", titleColor, 54);
-        title->SetPosition(glm::vec3(0.0f, 420.0f, 810.0f));
-        uiObjects.push_back(title);
-        objectsList.push_back(title);
+        // ChooseCard banner
+        ImageObject* chooseBanner = new ImageObject();
+        chooseBanner->SetTexture("../Resource/Texture/UI/RewardScene/CardReward/ChooseCard.PNG");
+        chooseBanner->SetSize(960.0f, -167.0f);
+        chooseBanner->SetPosition(glm::vec3(0.0f, 420.0f, 810.0f));
+        uiObjects.push_back(chooseBanner);
+        objectsList.push_back(chooseBanner);
 
-        TextObject* hint = new TextObject();
-        SDL_Color hintColor = { 220, 220, 220, 255 };
-        hint->LoadText("Click a card to claim reward", hintColor, 30);
-        hint->SetPosition(glm::vec3(0.0f, 350.0f, 810.0f));
-        uiObjects.push_back(hint);
-        objectsList.push_back(hint);
+        TextObject* chooseText = new TextObject();
+        SDL_Color white = { 245, 245, 245, 255 };
+        chooseText->LoadText("Choose a card", white, 40);
+        chooseText->SetPosition(glm::vec3(0.0f, 416.0f, 811.0f));
+        uiObjects.push_back(chooseText);
+        objectsList.push_back(chooseText);
 
         const float cardWidth = 280.0f;
         const float cardHeight = 410.0f;
@@ -256,11 +257,18 @@ private:
         }
 
         skipButton.Init(
-            "../Resource/Texture/UI/SkipBut.png",
+            "../Resource/Texture/UI/RewardScene/CardReward/Skip.PNG",
             glm::vec3(0.0f, -320.0f, 812.0f),
-            glm::vec2(190.0f, -90.0f),
+            glm::vec2(456.0f, -99.0f),
             objectsList
         );
+
+        TextObject* skipText = new TextObject();
+        SDL_Color skipColor = { 245, 245, 245, 255 };
+        skipText->LoadText("Skip", skipColor, 34);
+        skipText->SetPosition(glm::vec3(0.0f, -324.0f, 813.0f));
+        uiObjects.push_back(skipText);
+        objectsList.push_back(skipText);
     }
 
     void ClearUI(std::vector<DrawableObject*>& objectsList)
@@ -557,6 +565,17 @@ public:
         GrantReward(selected, cardSystem);
         Close(objectsList);
         return true;
+    }
+
+    void HandleHover(float x, float y)
+    {
+        if (!active) return;
+        ImageObject* img = skipButton.GetImage();
+        if (!img) return;
+        if (skipButton.IsClicked(x, y))
+            img->SetColor(1.4f, 1.4f, 1.0f);
+        else
+            img->SetColor(1.0f, 1.0f, 1.0f);
     }
 
     bool HandleMouseClick(const glm::vec3& mousePos, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)

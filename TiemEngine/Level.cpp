@@ -1290,7 +1290,11 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (cardRewardSystem.IsActive())
     {
-        if (type == 0)
+        if (type == 3)
+        {
+            cardRewardSystem.HandleHover(mousePos.x, mousePos.y);
+        }
+        else if (type == 0)
         {
             if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
             {
