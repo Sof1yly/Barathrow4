@@ -47,5 +47,5 @@ protected:
     void PlayDamageAnimation() override;
 
 private:
-    int healAmount = 5;
+    int healAmount = 10;
 };

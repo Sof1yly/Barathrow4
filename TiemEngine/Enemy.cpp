@@ -151,6 +151,11 @@ Enemy::Enemy(EnemyType type)
 void Enemy::setHealth(int h)
 {
 	health = h;
+    if (hpText)
+    {
+        SDL_Color white = { 255, 255, 255 };
+        hpText->LoadText("HP: " + std::to_string(health), white, 24);
+    }
 }
 
 void Enemy::getDamage(int damage)

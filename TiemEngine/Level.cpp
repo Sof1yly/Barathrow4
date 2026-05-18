@@ -1609,7 +1609,7 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 }
 void Level::ApplyEnemyAttack(Enemy* e)
 {
-    if (!e || e->getIsDead())
+    if (!e || e->getIsDead() || e->getHealth() <= 0)
         return;
 
     if (!playersprite)
@@ -1630,7 +1630,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
             for (auto* other : enemies)
             {
-                if (!other || other == elite1 || other->getIsDead()) continue;
+                if (!other || other == elite1 || other->getIsDead() || other->getHealth() <= 0) continue;
                 if (other->getNowRow() == r && other->getNowCol() == c)
                 {
                     if (elite1->ShouldHealInstead(other))
@@ -1733,7 +1733,7 @@ void Level::UpdateTurn()
 
         Enemy* e = enemies[currentEnemyIndex];
         if (e == bossEnemy) UpdateBossHPBar();
-        if (!e || e->getIsDead())
+        if (!e || e->getIsDead() || e->getHealth() <= 0)
         {
             currentEnemyIndex++;
             return;
@@ -1836,7 +1836,7 @@ void Level::UpdateTurn()
 
         for (auto* e : enemies)
         {
-            if (!e || e->getIsDead()) continue;
+            if (!e || e->getIsDead() || e->getHealth() <= 0) continue;
 
             e->decrementWeaken();
 
@@ -2015,7 +2015,7 @@ void Level::PreviewAllEnemyAttacks()
 
     for (auto* e : enemies)
     {
-        if (!e || e->getIsDead()) continue;
+        if (!e || e->getIsDead() || e->getHealth() <= 0) continue;
         if (!e->isPreparingAttack()) continue;
 
         std::vector<std::pair<IVec2, int>> cells;
@@ -2237,7 +2237,48 @@ void Level::SpawnEnemiesForLevel()
     //    std::cout << "[Spawn] Enemy " << i + 1 << " at (" << spawnRow << ", " << spawnCol << ")\n";
     //}
 
-    // Spawn 1 EliteEnemy1 and 1 EliteEnemy2 at random valid tiles
+    // Helper: place an enemy at a specific row (edge), random valid col.
+    auto SpawnEliteAtRow = [&](Enemy* e, int fixedRow, int index)
+    {
+        std::vector<int> validCols;
+        for (int c = GridStartCol; c < GridEndCol; c++)
+        {
+            if (!walkable[fixedRow][c]) continue;
+            if (abs(fixedRow - nowRow) + abs(c - nowCol) <= 1) continue;
+            bool occupied = false;
+            for (auto* ex : enemies)
+            {
+                if (!ex || ex->getIsDead()) continue;
+                if (ex->OccupiesTile(fixedRow, c)) { occupied = true; break; }
+            }
+            if (occupied) continue;
+            validCols.push_back(c);
+        }
+
+        if (validCols.empty())
+        {
+            std::cout << "[Spawn] No valid col for elite " << index
+                      << " at row " << fixedRow << "\n";
+            delete e;
+            return;
+        }
+
+        int spawnCol = validCols[rand() % (int)validCols.size()];
+
+        e->setNowPosition(fixedRow, spawnCol);
+        e->SetWorldPosition(GridToWorld(fixedRow, spawnCol));
+
+        enemies.push_back(e);
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
+
+        std::cout << "[Spawn] Elite " << index << " at ("
+                  << fixedRow << ", " << spawnCol << ")\n";
+    };
+
+    // Helper: place an enemy at any valid tile (used for Elite2).
     auto SpawnElite = [&](Enemy* e, int index)
     {
         std::vector<std::pair<int, int>> validTiles;
@@ -2279,11 +2320,13 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getDebuffText());
 
         std::cout << "[Spawn] Elite " << index << " at ("
-            << spawnRow << ", " << spawnCol << ")\n";
+                  << spawnRow << ", " << spawnCol << ")\n";
     };
 
-    SpawnElite(new EliteEnemy1(), 1);
-    SpawnElite(new EliteEnemy2(), 2);
+    // Elite1 x2: one on the left edge, one on the right edge; random col each.
+    SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,      1);
+    SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1,    2);
+    SpawnElite(new EliteEnemy2(), 3);
 }
 
 void Level::AdvanceToNextRound()
