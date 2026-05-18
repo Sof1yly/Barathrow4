@@ -32,6 +32,7 @@ private:
         float maxX = 0.0f;
         float minY = 0.0f;
         float maxY = 0.0f;
+        std::vector<DrawableObject*> layers;
     };
 
     GameDataLoader rewardLoader;
@@ -43,6 +44,7 @@ private:
     std::vector<DrawableObject*> uiObjects;
     std::vector<OptionArea> optionAreas;
     Button skipButton;
+    int hoveredCardIdx = -1;
 
     bool poolLoaded = false;
     bool active = false;
@@ -53,6 +55,16 @@ private:
     static constexpr int RARITY_BUCKET_COM = 0;
     static constexpr int RARITY_BUCKET_RAR = 1;
     static constexpr int RARITY_BUCKET_LEG = 2;
+
+    static void ScaleLayers(std::vector<DrawableObject*>& layers, float cx, float cy, float scale)
+    {
+        for (DrawableObject* obj : layers) {
+            glm::vec3 pos = obj->GetPosition();
+            glm::vec2 sz  = obj->GetSize();
+            obj->SetPosition(glm::vec3(cx + (pos.x - cx) * scale, cy + (pos.y - cy) * scale, pos.z));
+            obj->SetSize(sz.x * scale, sz.y * scale);
+        }
+    }
 
     void BuildOffer()
     {
@@ -158,51 +170,33 @@ private:
         {
             Card* card = offeredCards[i];
             if (!card)
-            {
                 continue;
-            }
 
             if (!card->HasVisuals())
-            {
                 card->CreateVisuals();
-            }
 
             glm::vec3 cardPos(startX + (spacingX * i), centerY, 805.0f);
 
-            ImageObject* bg = cloneImage(card->GetBackground(), cardPos, cardWidth, -cardHeight);
-            if (bg)
-            {
-                uiObjects.push_back(bg);
-                objectsList.push_back(bg);
-            }
+            OptionArea area;
+            area.card = card;
+            area.minX = cardPos.x - cardWidth * 0.5f;
+            area.maxX = cardPos.x + cardWidth * 0.5f;
+            area.minY = cardPos.y - cardHeight * 0.5f;
+            area.maxY = cardPos.y + cardHeight * 0.5f;
 
-            ImageObject* stars = cloneImage(card->GetStarOverlay(), cardPos, cardWidth, -cardHeight);
-            if (stars)
-            {
-                uiObjects.push_back(stars);
-                objectsList.push_back(stars);
-            }
+            auto trackLayer = [&](DrawableObject* obj) {
+                if (obj) {
+                    area.layers.push_back(obj);
+                    uiObjects.push_back(obj);
+                    objectsList.push_back(obj);
+                }
+            };
 
-            ImageObject* type = cloneImage(card->GetTypeIcon(), cardPos, cardWidth, -cardHeight);
-            if (type)
-            {
-                uiObjects.push_back(type);
-                objectsList.push_back(type);
-            }
-
-            ImageObject* visual = cloneImage(card->GetVisual(), cardPos, cardWidth, -cardHeight);
-            if (visual)
-            {
-                uiObjects.push_back(visual);
-                objectsList.push_back(visual);
-            }
-
-            ImageObject* frame = cloneImage(card->GetCardFrame(), cardPos, cardWidth, -cardHeight);
-            if (frame)
-            {
-                uiObjects.push_back(frame);
-                objectsList.push_back(frame);
-            }
+            trackLayer(cloneImage(card->GetBackground(),  cardPos, cardWidth, -cardHeight));
+            trackLayer(cloneImage(card->GetStarOverlay(), cardPos, cardWidth, -cardHeight));
+            trackLayer(cloneImage(card->GetTypeIcon(),    cardPos, cardWidth, -cardHeight));
+            trackLayer(cloneImage(card->GetVisual(),      cardPos, cardWidth, -cardHeight));
+            trackLayer(cloneImage(card->GetCardFrame(),   cardPos, cardWidth, -cardHeight));
 
             if (card->GetNameText())
             {
@@ -212,23 +206,14 @@ private:
 
                 float nameW = src->GetSize().x - 2.5f;
                 float nameH = src->GetSize().y - 1.5f;
-                if (nameH < 0.0f)
-                {
-                    nameH += 2.0f;
-                }
-                else
-                {
-                    nameH -= 2.0f;
-                }
+                nameH = (nameH < 0.0f) ? nameH + 2.0f : nameH - 2.0f;
 
                 copy->SetSize(nameW, nameH);
                 glm::vec3 local = src->GetLocalPosition();
                 float leftAnchorX = (cardPos.x - (cardWidth * 0.5f)) + (local.x * cardWidth);
                 float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f) + 12.0f;
                 copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * cardHeight), 810.0f));
-
-                uiObjects.push_back(copy);
-                objectsList.push_back(copy);
+                trackLayer(copy);
             }
 
             if (card->GetDescriptionText())
@@ -242,18 +227,10 @@ private:
                 float leftAnchorX = (cardPos.x - (cardWidth * 0.5f)) + (local.x * cardWidth);
                 float centeredX = leftAnchorX + (copy->GetSize().x * 0.5f);
                 copy->SetPosition(glm::vec3(centeredX, cardPos.y + (local.y * cardHeight), 810.0f));
-
-                uiObjects.push_back(copy);
-                objectsList.push_back(copy);
+                trackLayer(copy);
             }
 
-            OptionArea area;
-            area.card = card;
-            area.minX = cardPos.x - cardWidth * 0.5f;
-            area.maxX = cardPos.x + cardWidth * 0.5f;
-            area.minY = cardPos.y - cardHeight * 0.5f;
-            area.maxY = cardPos.y + cardHeight * 0.5f;
-            optionAreas.push_back(area);
+            optionAreas.push_back(std::move(area));
         }
 
         skipButton.Init(
@@ -291,6 +268,7 @@ private:
 
         uiObjects.clear();
         optionAreas.clear();
+        hoveredCardIdx = -1;
 
         auto removeButtonImage = [&](Button& button)
             {
@@ -570,12 +548,38 @@ public:
     void HandleHover(float x, float y)
     {
         if (!active) return;
+
+        // Skip button tinting
         ImageObject* img = skipButton.GetImage();
-        if (!img) return;
-        if (skipButton.IsClicked(x, y))
-            img->SetColor(1.4f, 1.4f, 1.0f);
-        else
-            img->SetColor(1.0f, 1.0f, 1.0f);
+        if (img) {
+            if (skipButton.IsClicked(x, y))
+                img->SetColor(1.4f, 1.4f, 1.0f);
+            else
+                img->SetColor(1.0f, 1.0f, 1.0f);
+        }
+
+        // Card hover scale
+        int newIdx = -1;
+        for (int i = 0; i < (int)optionAreas.size(); ++i) {
+            const auto& a = optionAreas[i];
+            if (x >= a.minX && x <= a.maxX && y >= a.minY && y <= a.maxY) {
+                newIdx = i; break;
+            }
+        }
+        if (newIdx == hoveredCardIdx) return;
+        if (hoveredCardIdx >= 0 && hoveredCardIdx < (int)optionAreas.size()) {
+            auto& a = optionAreas[hoveredCardIdx];
+            float cx = (a.minX + a.maxX) * 0.5f;
+            float cy = (a.minY + a.maxY) * 0.5f;
+            ScaleLayers(a.layers, cx, cy, 1.0f / 1.08f);
+        }
+        if (newIdx >= 0) {
+            auto& a = optionAreas[newIdx];
+            float cx = (a.minX + a.maxX) * 0.5f;
+            float cy = (a.minY + a.maxY) * 0.5f;
+            ScaleLayers(a.layers, cx, cy, 1.08f);
+        }
+        hoveredCardIdx = newIdx;
     }
 
     bool HandleMouseClick(const glm::vec3& mousePos, CardSystem& cardSystem, std::vector<DrawableObject*>& objectsList)
@@ -607,6 +611,17 @@ public:
         }
 
         return false;
+    }
+
+    Card* PeekCardAt(float x, float y) const
+    {
+        for (const OptionArea& a : optionAreas)
+        {
+            if (!a.card) continue;
+            if (x >= a.minX && x <= a.maxX && y >= a.minY && y <= a.maxY)
+                return a.card;
+        }
+        return nullptr;
     }
 
     bool IsActive() const

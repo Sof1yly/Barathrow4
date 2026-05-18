@@ -16,6 +16,16 @@
 #include "MoveAction.h"
 
 
+static void ScaleLayers(std::vector<DrawableObject*>& layers, float cx, float cy, float scale)
+{
+    for (DrawableObject* obj : layers) {
+        glm::vec3 pos = obj->GetPosition();
+        glm::vec2 sz  = obj->GetSize();
+        obj->SetPosition(glm::vec3(cx + (pos.x - cx) * scale, cy + (pos.y - cy) * scale, pos.z));
+        obj->SetSize(sz.x * scale, sz.y * scale);
+    }
+}
+
 ShopSystem::ShopSystem(): rng(std::random_device{}())
 {
 }
@@ -167,15 +177,6 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
         return copy;
     };
 
-    auto pushObj = [&](DrawableObject* obj)
-    {
-        if (obj)
-        {
-            uiObjects.push_back(obj);
-            objectsList.push_back(obj);
-        }
-    };
-
     for (int i = 0; i < count; ++i)
     {
         ShopSlot& slot = shopSlots[i];
@@ -187,12 +188,26 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
 
         glm::vec3 cardPos(startX + spacingX * i, centerY, 805.0f);
 
-        // Clone card visual layers
-        pushObj(cloneImage(card->GetBackground(),cardPos, cardWidth, -cardHeight));
-        pushObj(cloneImage(card->GetStarOverlay(),cardPos, cardWidth, -cardHeight));
-        pushObj(cloneImage(card->GetTypeIcon(), cardPos, cardWidth, -cardHeight));
-        pushObj(cloneImage(card->GetVisual(),cardPos, cardWidth, -cardHeight));
-        pushObj(cloneImage(card->GetCardFrame(),cardPos, cardWidth, -cardHeight));
+        // Click area
+        slot.minX = cardPos.x - cardWidth  * 0.5f;
+        slot.maxX = cardPos.x + cardWidth  * 0.5f;
+        slot.minY = cardPos.y - cardHeight * 0.5f;
+        slot.maxY = cardPos.y + cardHeight * 0.5f;
+        slot.layers.clear();
+
+        auto trackCard = [&](DrawableObject* obj) {
+            if (obj) {
+                slot.layers.push_back(obj);
+                uiObjects.push_back(obj);
+                objectsList.push_back(obj);
+            }
+        };
+
+        trackCard(cloneImage(card->GetBackground(),  cardPos, cardWidth, -cardHeight));
+        trackCard(cloneImage(card->GetStarOverlay(), cardPos, cardWidth, -cardHeight));
+        trackCard(cloneImage(card->GetTypeIcon(),    cardPos, cardWidth, -cardHeight));
+        trackCard(cloneImage(card->GetVisual(),      cardPos, cardWidth, -cardHeight));
+        trackCard(cloneImage(card->GetCardFrame(),   cardPos, cardWidth, -cardHeight));
 
         // Name text
         if (card->GetNameText())
@@ -210,8 +225,7 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
             float leftAnchorX = (cardPos.x - cardWidth * 0.5f) + (local.x * cardWidth);
             float centeredX   = leftAnchorX + copy->GetSize().x * 0.5f + 12.0f;
             copy->SetPosition(glm::vec3(centeredX, cardPos.y + local.y * cardHeight, 810.0f));
-            uiObjects.push_back(copy);
-            objectsList.push_back(copy);
+            trackCard(copy);
         }
 
         // Description text
@@ -226,26 +240,19 @@ void ShopSystem::BuildUI(std::vector<DrawableObject*>& objectsList)
             float leftAnchorX = (cardPos.x - cardWidth * 0.5f) + (local.x * cardWidth);
             float centeredX   = leftAnchorX + copy->GetSize().x * 0.5f;
             copy->SetPosition(glm::vec3(centeredX, cardPos.y + local.y * cardHeight, 810.0f));
-            uiObjects.push_back(copy);
-            objectsList.push_back(copy);
+            trackCard(copy);
         }
 
-        // Price label below card
+        // Price label below card (not part of scaled layers)
         {
             SDL_Color priceColor = { 255, 210, 40, 255 };
             TextObject* priceText = new TextObject();
             priceText->LoadText(std::to_string(slot.price) + " coins", priceColor, 24);
-            priceText->SetPosition(glm::vec3(cardPos.x,cardPos.y - cardHeight * 0.5f - 30.0f,812.0f));
+            priceText->SetPosition(glm::vec3(cardPos.x, cardPos.y - cardHeight * 0.5f - 30.0f, 812.0f));
             uiObjects.push_back(priceText);
             objectsList.push_back(priceText);
             slot.priceLabel = priceText;
         }
-
-        // Click area
-        slot.minX = cardPos.x - cardWidth  * 0.5f;
-        slot.maxX = cardPos.x + cardWidth  * 0.5f;
-        slot.minY = cardPos.y - cardHeight * 0.5f;
-        slot.maxY = cardPos.y + cardHeight * 0.5f;
     }
 
     // Leave button straddles the bottom border of the backboard (12px below it)
@@ -314,8 +321,11 @@ void ShopSystem::ClearUI(std::vector<DrawableObject*>& objectsList)
     healPriceLabel  = nullptr;
     removePriceLabel = nullptr;
 
-    for (ShopSlot& s : shopSlots)
+    for (ShopSlot& s : shopSlots) {
         s.priceLabel = nullptr;
+        s.layers.clear();
+    }
+    hoveredCardIdx = -1;
 
     auto removeButtonImage = [&](Button& button)
     {
@@ -870,6 +880,30 @@ void ShopSystem::HandleHover(float x, float y)
     applyHover(closeButton,  closeButton.IsClicked(x, y));
     applyHover(healButton,   healButton.IsClicked(x, y));
     applyHover(removeButton, removeButton.IsClicked(x, y));
+
+    // Card hover scale
+    int newIdx = -1;
+    for (int i = 0; i < (int)shopSlots.size(); ++i) {
+        const ShopSlot& s = shopSlots[i];
+        if (s.sold || !s.card) continue;
+        if (x >= s.minX && x <= s.maxX && y >= s.minY && y <= s.maxY) {
+            newIdx = i; break;
+        }
+    }
+    if (newIdx == hoveredCardIdx) return;
+    if (hoveredCardIdx >= 0 && hoveredCardIdx < (int)shopSlots.size()) {
+        ShopSlot& s = shopSlots[hoveredCardIdx];
+        float cx = (s.minX + s.maxX) * 0.5f;
+        float cy = (s.minY + s.maxY) * 0.5f;
+        ScaleLayers(s.layers, cx, cy, 1.0f / 1.08f);
+    }
+    if (newIdx >= 0) {
+        ShopSlot& s = shopSlots[newIdx];
+        float cx = (s.minX + s.maxX) * 0.5f;
+        float cy = (s.minY + s.maxY) * 0.5f;
+        ScaleLayers(s.layers, cx, cy, 1.08f);
+    }
+    hoveredCardIdx = newIdx;
 }
 
 bool ShopSystem::IsActive() const

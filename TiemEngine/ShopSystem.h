@@ -26,8 +26,9 @@ private:
         float minX = 0.0f;
         float maxX = 0.0f;
         float minY = 0.0f;
-        float maxY= 0.0f;
+        float maxY = 0.0f;
         TextObject* priceLabel = nullptr;
+        std::vector<DrawableObject*> layers;
     };
 
     GameDataLoader shopLoader;
@@ -39,6 +40,7 @@ private:
 
     TextObject* coinDisplay = nullptr;
     Player* playerRef = nullptr;
+    int hoveredCardIdx = -1;
 
     bool poolLoaded = false;
     bool active = false;

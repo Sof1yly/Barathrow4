@@ -1313,8 +1313,24 @@ void Level::HandleMouse(int type, int x, int y)
         {
             cardRewardSystem.HandleHover(mousePos.x, mousePos.y);
         }
+        else if (type == 4)
+        {
+            Card* rewardCard = cardRewardSystem.PeekCardAt(mousePos.x, mousePos.y);
+            if (rewardCard)
+            {
+                if (cardInspect.IsInspecting(rewardCard))
+                    cardInspect.Hide(objectsList);
+                else
+                    cardInspect.Show(rewardCard, cardSystem, objectsList);
+            }
+            else
+            {
+                cardInspect.Hide(objectsList);
+            }
+        }
         else if (type == 0)
         {
+            cardInspect.Hide(objectsList);
             if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
             {
                 rewardBoxScene.ClaimCard();
@@ -1496,7 +1512,9 @@ void Level::HandleMouse(int type, int x, int y)
     // If deck viewer is active, handle navigation
     if (deckViewer.IsActive())
     {
-        if (type == 0)
+        if (type == 3)
+            deckViewer.HandleHover(mousePos);
+        else if (type == 0)
         {
             if (deckViewer.HandleClick(mousePos, objectsList))
                 return;

@@ -30,6 +30,7 @@ private:
     int totalPages = 0;
 
     bool isActive = false;
+    int hoveredIdx = -1;
 
     Button leftNavButton;
     Button rightNavButton;
@@ -55,6 +56,7 @@ public:
     void PrevPage(vector<DrawableObject*>& objectsList);
     Card* PeekAt(const glm::vec3& mousePos) const;
     bool HandleClick(const glm::vec3& mousePos, vector<DrawableObject*>& objectsList);
+    void HandleHover(const glm::vec3& mousePos);
 
     int GetCurrentPage() const { return currentPage; }
     int GetTotalPages() const { return totalPages; }

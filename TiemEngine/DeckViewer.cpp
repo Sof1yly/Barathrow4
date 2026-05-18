@@ -256,8 +256,19 @@ void DeckViewer::createCardVisuals(vector<DrawableObject*>& objectsList)
     }
 }
 
+static void ScaleLayers(std::vector<DrawableObject*>& layers, float cx, float cy, float scale)
+{
+    for (DrawableObject* obj : layers) {
+        glm::vec3 pos = obj->GetPosition();
+        glm::vec2 sz  = obj->GetSize();
+        obj->SetPosition(glm::vec3(cx + (pos.x - cx) * scale, cy + (pos.y - cy) * scale, pos.z));
+        obj->SetSize(sz.x * scale, sz.y * scale);
+    }
+}
+
 void DeckViewer::clearCardVisuals(vector<DrawableObject*>& objectsList)
 {
+    hoveredIdx = -1;
     for (auto& view : cardViews)
     {
         for (auto* layer : view.layers)
@@ -319,7 +330,25 @@ void DeckViewer::PrevPage(vector<DrawableObject*>& objectsList)
     if (currentPage < 0) {
         currentPage = 0;
     }
-        
+
 
     createCardVisuals(objectsList);
+}
+
+void DeckViewer::HandleHover(const glm::vec3& mousePos)
+{
+    if (!isActive) return;
+    int newIdx = -1;
+    for (int i = 0; i < (int)cardViews.size(); ++i)
+        if (isPointInsideCard(mousePos, cardViews[i])) { newIdx = i; break; }
+    if (newIdx == hoveredIdx) return;
+    if (hoveredIdx >= 0 && hoveredIdx < (int)cardViews.size()) {
+        auto& v = cardViews[hoveredIdx];
+        ScaleLayers(v.layers, v.cardPos.x, v.cardPos.y, 1.0f / 1.08f);
+    }
+    if (newIdx >= 0) {
+        auto& v = cardViews[newIdx];
+        ScaleLayers(v.layers, v.cardPos.x, v.cardPos.y, 1.08f);
+    }
+    hoveredIdx = newIdx;
 }
