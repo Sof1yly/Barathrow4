@@ -56,7 +56,7 @@ void ImageObject::Render(glm::mat4 globalModelTransform)
 			glUniform4f(colorId, colorR, colorG, colorB, alpha);
 		} else {
 			glUniform1i(renderModeId, 2);
-			glUniform4f(colorId, 1.0f, 1.0f, 1.0f, alpha);
+			glUniform4f(colorId, colorR, colorG, colorB, alpha);
 			glBindTexture(GL_TEXTURE_2D, texture);
 		}
 		squareMesh->Render();

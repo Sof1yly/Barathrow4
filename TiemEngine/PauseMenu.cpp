@@ -112,10 +112,13 @@ void PauseMenu::Hide()
     for (auto& pair : pauseObjects)
         if (pair.first) pair.first->SetPosition(HIDDEN);
 
-    // Reset button tints so they open fresh next time
     PauseButton* buttons[] = { &btnResume, &btnSetting, &btnAbandon, &btnSaveQuit, &btnQuitDesktop };
-    for (auto* btn : buttons)
-        if (btn->bg) btn->bg->SetColor(1.0f, 1.0f, 1.0f);
+    for (auto* btn : buttons) {
+        if (btn->bg) {
+            btn->bg->SetColor(1.0f, 1.0f, 1.0f);
+            btn->bg->SetAlpha(1.0f);
+        }
+    }
 }
 
 void PauseMenu::Reset()
@@ -149,12 +152,12 @@ void PauseMenu::HandleHover(float wx, float wy)
     PauseButton* buttons[] = { &btnResume, &btnSetting, &btnAbandon, &btnSaveQuit, &btnQuitDesktop };
     for (auto* btn : buttons) {
         if (!btn->bg) continue;
-        btn->bg->SetAlpha(1.0f);
         if (btn->IsClicked(wx, wy)) {
-            // Brighten hovered button with a warm highlight
-            btn->bg->SetColor(1.0f, 0.85f, 0.4f);
-            if (btn->label) btn->label->SetAlpha(1.0f);
+            // Overbright warm gold — multiplies the dark texture pixels visibly lighter
+            btn->bg->SetAlpha(1.0f);
+            btn->bg->SetColor(4.0f, 3.0f, 1.5f);
         } else {
+            btn->bg->SetAlpha(1.0f);
             btn->bg->SetColor(1.0f, 1.0f, 1.0f);
         }
     }
