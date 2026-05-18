@@ -22,6 +22,7 @@ private:
 	ImageObject* shieldBg = nullptr;
 	ImageObject* shieldBar = nullptr;
 	ImageObject* shieldMask = nullptr;
+	ImageObject* coinIcon = nullptr;
 	TextObject* barrierText = nullptr;
 	TextObject* jumpText = nullptr;
 	TextObject* coinText = nullptr;

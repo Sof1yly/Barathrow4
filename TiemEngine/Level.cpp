@@ -2,6 +2,7 @@
 #include "EliteEnemy.h"
 #include "EliteEnemy1.h"
 #include "EliteEnemy2.h"
+#include "SaveSystem.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
 #include "TriangleMeshVbo.h"
@@ -198,11 +199,11 @@ void Level::LevelInit()
     }
 
     {
-        ImageObject* Info = new ImageObject();
-        Info->SetSize(80.0f, -80.0f);
-        Info->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
-        Info->SetTexture("../Resource/Texture/UI/Info.PNG");
-        objectsList.push_back(Info);
+        viewMapIcon = new ImageObject();
+        viewMapIcon->SetSize(80.0f, -80.0f);
+        viewMapIcon->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
+        viewMapIcon->SetTexture("../Resource/Texture/UI/Info.PNG");
+        objectsList.push_back(viewMapIcon);
     }
 
     {
@@ -292,6 +293,14 @@ void Level::LevelInit()
     }
 
     {
+        viewMapHintText = new TextObject();
+        SDL_Color hintColor = { 245, 245, 245, 255 };
+        viewMapHintText->LoadText("View the level map", hintColor, 22);
+        viewMapHintText->SetPosition(Button::HiddenHintPosition());
+        objectsList.push_back(viewMapHintText);
+    }
+
+    {
         gameOverText = new TextObject();
         SDL_Color color = { 255, 255, 255 };
 
@@ -341,6 +350,9 @@ void Level::LevelInit()
         ApplyEventEffect(EventScene::EffectType::REMOVE_CARDS);
     }
 
+    settingPage.Init(objectsList);
+    pauseMenu.Init(objectsList);
+
     std::cout << "Init Level" << std::endl;
 }
 
@@ -351,10 +363,37 @@ void Level::LevelUpdate()
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 3;
 
+    if (pauseMenuActive)
+        return;
+
+    if (settingPageActive)
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        return;
+    }
+
     if (eventRemoveScene.IsActive())
     {
         for (auto* obj : objectsList)
             obj->Update((float)deltaTime);
+        return;
+    }
+
+    // Map scene (win transition or view-only): update objects then run state machine
+    if (mapSceneActive)
+    {
+        for (auto* obj : objectsList)
+            obj->Update((float)deltaTime);
+        mapScene.Update((float)deltaTime);
+        if (mapScene.IsDone())
+        {
+            bool wasViewOnly = mapScene.IsViewOnly();
+            mapScene.Close(objectsList);
+            mapSceneActive = false;
+            if (!wasViewOnly)
+                ResetForNextCombat();
+        }
         return;
     }
 
@@ -731,6 +770,26 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (pauseMenuActive)
+    {
+        pauseMenu.Hide();
+        pauseMenuActive = false;
+    }
+    pauseMenu.Reset();
+
+    if (settingPageActive)
+    {
+        settingPage.Hide();
+        settingPageActive = false;
+    }
+    settingPage.Reset();
+
+    if (mapSceneActive)
+    {
+        mapScene.Close(objectsList);
+        mapSceneActive = false;
+    }
+
     eventScene.Close(objectsList);
     eventRemoveScene.Close(objectsList);
     cardInspect.Hide(objectsList);
@@ -837,6 +896,7 @@ void Level::LevelFree()
     hpMask = nullptr;
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
+    viewMapHintText  = nullptr;
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
     inShopOnlyLevel = false;
@@ -848,6 +908,7 @@ void Level::LevelFree()
     fastModeText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
+    viewMapIcon = nullptr;
     eventSceneDone        = false;
     baseHandSize          = 5;
     goldBonusActive       = false;
@@ -888,6 +949,14 @@ void Level::HandleKey(char key)
             fastModeText->SetPosition(fastMode
                 ? glm::vec3(-880.0f, 430.0f, 10.0f)
                 : glm::vec3(0.0f, 10000.0f, 10.0f));
+        return;
+    }
+
+    if (mapSceneActive)
+    {
+        // In view-only mode any key (except q/r/f already handled above) closes the map
+        if (mapScene.IsViewOnly())
+            mapScene.HandleClose();
         return;
     }
 
@@ -1068,6 +1137,90 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    // Route all input to the pause menu while it is open
+    if (pauseMenuActive)
+    {
+        if (type == 3)
+        {
+            pauseMenu.HandleHover(realX, realY);
+        }
+        else if (type == 0)
+        {
+            auto action = pauseMenu.HandleClick(realX, realY);
+            switch (action)
+            {
+            case PauseMenu::Action::RESUME:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                break;
+            case PauseMenu::Action::SETTING:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                settingPage.Show();
+                settingPageActive = true;
+                break;
+            case PauseMenu::Action::SAVE_QUIT_MAIN:
+            case PauseMenu::Action::SAVE_QUIT_DESKTOP:
+            {
+                SaveData sd;
+                sd.playerRow            = nowRow;
+                sd.playerCol            = nowCol;
+                sd.playerHp             = playerData.getHp();
+                sd.playerMaxHp          = playerData.getMaxHp();
+                sd.playerCoins          = playerData.GetCoins();
+                sd.playerBarrierCount   = playerData.GetBarrierCount();
+                sd.playerJumpCharges    = playerData.GetJumpCharges();
+                sd.currentLevel         = levelManager.GetLevel();
+                sd.baseHandSize         = baseHandSize;
+                sd.goldBonusActive      = goldBonusActive;
+                sd.startCombatBarrier   = startCombatBarrier;
+                sd.startCombatOverclock = startCombatOverclock;
+                sd.eventSceneDone       = eventSceneDone;
+                for (Card* c : cardSystem.GetAllCards())
+                    sd.cardNames.push_back(c->getName());
+                SaveSystem::Save(sd);
+
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                auto next = (action == PauseMenu::Action::SAVE_QUIT_MAIN)
+                            ? GameState::GS_MAIN_MENU
+                            : GameState::GS_QUIT;
+                GameData::GetInstance()->gGameStateNext = next;
+                break;
+            }
+            case PauseMenu::Action::ABANDON:
+                pauseMenu.Hide();
+                pauseMenuActive = false;
+                SaveSystem::DeleteSave();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+                break;
+            default:
+                break;
+            }
+        }
+        return;
+    }
+
+    // Route all input to the setting page while it is open
+    if (settingPageActive)
+    {
+        if (type == 3)
+            settingPage.HandleHover(realX, realY);
+        else if (type == 0)
+        {
+            if (settingPage.HandleClick(realX, realY) == SettingPage::Action::CLOSE)
+                settingPageActive = false;
+        }
+        return;
+    }
+
+    if (mapSceneActive)
+    {
+        if (mapScene.IsViewOnly() && type == 0)
+            mapScene.HandleClick(realX, realY);
+        return;
+    }
+
     if (eventRemoveScene.IsActive())
     {
         if (type == 0)
@@ -1143,7 +1296,34 @@ void Level::HandleMouse(int type, int x, int y)
             viewDeckHintText->SetPosition(Button::HiddenHintPosition());
     }
 
-    // ViewDeck button 
+    // Info button (existing UI) doubles as view-map shortcut
+    auto viewMapIconHit = [&]() {
+        return viewMapIcon
+            && realX >= 805.0f - 40.0f && realX <= 805.0f + 40.0f
+            && realY >= 500.0f - 40.0f && realY <= 500.0f + 40.0f;
+    };
+
+    if (viewMapHintText)
+    {
+        if (viewMapIconHit())
+            viewMapHintText->SetPosition(glm::vec3(800.0f, 440.0f, 20.0f));
+        else
+            viewMapHintText->SetPosition(Button::HiddenHintPosition());
+    }
+
+    if (type == 0 && viewMapIconHit())
+    {
+        if (!mapSceneActive)
+        {
+            cardInspect.Hide(objectsList);
+            if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+            mapScene.OpenViewOnly(levelManager.GetLevel(), objectsList);
+            mapSceneActive = true;
+        }
+        return;
+    }
+
+    // ViewDeck button
     if (type == 0 && viewDeckButton.IsClicked(realX, realY))
     {
         cardInspect.Hide(objectsList);
@@ -1269,21 +1449,13 @@ void Level::HandleMouse(int type, int x, int y)
     // Left Click
     if (type == 0)
     {
-        // menu toggle
-        if (realX >= 875 && realX <= 925 && realY <= 530 && realY >= 470)
+        // Pause button (world pos 900,500, size 80x80)
+        if (realX >= 860.0f && realX <= 940.0f && realY >= 460.0f && realY <= 540.0f)
         {
-            if (!Button::getMenu()) {
-                Button::setMenu(true);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 0, 0));
-                }
-            }
-            else {
-                Button::setMenu(false);
-                if (mainMenu) {
-                    mainMenu->SetPosition(glm::vec3(0, 20000, 0));
-                }
-            }
+            cardSystem.UpdateHover(mousePos, true, objectsList);
+            pauseMenu.Show(objectsList);
+            pauseMenuActive = true;
+            return;
         }
 
         // SKIP TURN BUTTON 
@@ -2362,9 +2534,23 @@ void Level::SpawnEnemiesForLevel()
 
 void Level::AdvanceToNextRound()
 {
+    int fromLevel = levelManager.GetLevel();
     levelManager.Advance();
+    int toLevel = levelManager.GetLevel();
 
-    // Hide win text, update level indicator
+    // Close overlays that should not appear behind the map screen
+    rewardBoxScene.Close(objectsList);
+    cardInspect.Hide(objectsList);
+    if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+
+    // Show the map scene with fade-in, player walk, fade-out
+    mapScene.Open(fromLevel, toLevel, objectsList);
+    mapSceneActive = true;
+}
+
+void Level::ResetForNextCombat()
+{
+    // Update level indicator UI
     if (winText)   winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
     if (levelText)
     {
@@ -2372,7 +2558,7 @@ void Level::AdvanceToNextRound()
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
     }
 
-    // Show level name banner at top-middle for 2 seconds
+    // Show level name banner for 2 seconds
     if (levelNameBanner)
     {
         SDL_Color color = { 255, 230, 100, 255 };
@@ -2398,29 +2584,29 @@ void Level::AdvanceToNextRound()
     enemyHighlightIndex    = 0;
 
     // Reset turn state
-    turnState      = TurnState::PLAYER_TURN;
-    turnCount      = 0;
-    lagTurns       = 0;
+    turnState       = TurnState::PLAYER_TURN;
+    turnCount       = 0;
+    lagTurns        = 0;
     tempDiscardDone = false;
 
     // Reset player movement / animation
-    playerMoving        = false;
-    playerAttacking     = false;
-    playerMoveTimer     = 0.0f;
-    attackTimer         = 0.0f;
-    pendingAttack       = false;
-    pendingMoveSteps    = 0;
-    pendingMoveZone     = -1;
-    pendingFastCard     = false;
+    playerMoving         = false;
+    playerAttacking      = false;
+    playerMoveTimer      = 0.0f;
+    attackTimer          = 0.0f;
+    pendingAttack        = false;
+    pendingMoveSteps     = 0;
+    pendingMoveZone      = -1;
+    pendingFastCard      = false;
     playerPlayingOneShot = false;
-    playerAnimTimer     = 0.0f;
-    playerAnimDuration  = 0.0f;
-    currentPatternIndex = 0;
-    currentRotation     = 0;
+    playerAnimTimer      = 0.0f;
+    playerAnimDuration   = 0.0f;
+    currentPatternIndex  = 0;
+    currentRotation      = 0;
 
     // Move player back to start; HP and coins carry over
     SetPlayerSpawnPosition();
-    playerDir = PlayerDir::DOWN;
+    playerDir   = PlayerDir::DOWN;
     playerState = PlayerState::IDLE;
     playerData.SetPosition(GridToWorld(nowRow, nowCol));
     UpdatePlayerAnimation();
@@ -2428,10 +2614,7 @@ void Level::AdvanceToNextRound()
     playerData.ResetJumpCharges();
     UpdateHPBar();
 
-    // Close any open overlays
-    rewardBoxScene.Close(objectsList);
-    cardInspect.Hide(objectsList);
-    if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+    // Hide remaining overlays
     highlightManager.HideAllPlayer();
     highlightManager.HideAllEnemy();
 

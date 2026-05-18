@@ -27,6 +27,9 @@
 #include "LevelManager.h"
 #include "EventScene.h"
 #include "EventRemoveScene.h"
+#include "MapScene.h"
+#include "SettingPage.h"
+#include "PauseMenu.h"
 
 // Floating damage number that drifts upward and fades out
 struct DamagePopup {
@@ -70,6 +73,7 @@ private:
     ImageObject* hpMask = nullptr;
     TextObject* skipTurnHintText = nullptr;
     TextObject* viewDeckHintText = nullptr;
+    TextObject* viewMapHintText  = nullptr;
 
     Player playerData;
 
@@ -83,6 +87,7 @@ private:
     ImageObject* mainMenu = nullptr;
     Button viewDeckButton;
     Button skipTurnButton;
+    ImageObject* viewMapIcon = nullptr;  // existing Info button used as map shortcut
     ImageObject* testEnemy;
 	ImageObject* Background = nullptr;
 	std::vector<ImageObject*> gridTiles;
@@ -186,6 +191,10 @@ private:
     EventRemoveScene eventRemoveScene;
     bool eventSceneDone = false;
 
+    // Map scene — shown between levels after all rewards are collected
+    MapScene mapScene;
+    bool mapSceneActive = false;
+
     // Persistent run effects granted by the event scene
     int  baseHandSize        = 5;
     bool goldBonusActive     = false;
@@ -215,6 +224,15 @@ private:
     TurnState turnState = TurnState::PLAYER_TURN;
     bool tempDiscardDone = false;
 	//end gameloop
+
+protected:
+    // Shared with subclasses (e.g. MainMenu) so they can open the setting page
+    SettingPage settingPage;
+    bool settingPageActive = false;
+
+private:
+    PauseMenu pauseMenu;
+    bool pauseMenuActive = false;
 
 public:
     virtual void LevelLoad();
@@ -273,5 +291,6 @@ public:
 private:
     void SpawnEnemiesForLevel();
     void LoadEnemyData();
+    void ResetForNextCombat();
 
 };

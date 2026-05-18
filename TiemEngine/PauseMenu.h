@@ -2,16 +2,17 @@
 
 #include "ImageObject.h"
 #include "TextObject.h"
+#include <SDL.h>
 #include <vector>
 
 class PauseMenu {
 public:
-    enum class Action { NONE, RESUME, SAVE_QUIT_MAIN, SAVE_QUIT_DESKTOP, ABANDON };
+    enum class Action { NONE, RESUME, SETTING, SAVE_QUIT_MAIN, SAVE_QUIT_DESKTOP, ABANDON };
 
     void Init(std::vector<DrawableObject*>& objectsList);
     void Reset();   // null out pointers without deleting (objectsList owns them)
 
-    void Show();
+    void Show(std::vector<DrawableObject*>& objectsList);
     void Hide();
     bool IsVisible() const { return visible; }
 
@@ -46,7 +47,7 @@ private:
     void AddPauseObject(DrawableObject* obj, glm::vec3 visiblePos,
                         std::vector<DrawableObject*>& objectsList);
     void InitButton(PauseButton& btn, const std::string& labelStr,
-                    const std::string& texPath, SDL_Color color,
-                    glm::vec3 pos, glm::vec2 size, bool enabled,
+                    SDL_Color color,
+                    glm::vec3 pos, glm::vec2 size,
                     std::vector<DrawableObject*>& objectsList);
 };

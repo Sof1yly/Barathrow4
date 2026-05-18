@@ -106,6 +106,12 @@ int GameEngine::GetWindowHeight()
 	return winHeight;
 }
 
+void GameEngine::SetWindowSize(int w, int h)
+{
+	winWidth  = w;
+	winHeight = h;
+}
+
 int GameEngine::GetDeltaTime()
 {
 	return deltaTime;
