@@ -235,38 +235,78 @@ void Level::LevelInit()
         std::cerr << "Error loading shop card pool: " << error << std::endl;
     }
 
-    cardRewardSystem.ApplyOwnedRewards(cardSystem);
     rewardPickedAfterWin = false;
-    shopOpenedAfterWin = false;
-
-    // Apply event effect chosen in EventPage (stored in GameData)
+    shopOpenedAfterWin   = false;
     bool pendingRemoveCards = false;
-    if (GameData::GetInstance()->eventEffectType >= 0)
+
+    if (SaveSystem::pendingLoad)
     {
-        EventScene::EffectType eff = static_cast<EventScene::EffectType>(GameData::GetInstance()->eventEffectType);
-        GameData::GetInstance()->eventEffectType = -1;
+        SaveData sd;
+        if (SaveSystem::Load(sd))
+        {
+            // Restore player stats
+            playerData.setHp(sd.playerHp);
+            playerData.setMaxHp(sd.playerMaxHp);
+            playerData.SetCoins(sd.playerCoins);
+            playerData.SetBarrierCount(sd.playerBarrierCount);
+            playerData.SetJumpCharges(sd.playerJumpCharges);
 
-        if (eff == EventScene::EffectType::REMOVE_CARDS)
-        {
-            // Defer until after InitUI so the overlay renders on top of the draw pile
-            pendingRemoveCards = true;
+            // Restore position
+            nowRow = sd.playerRow;
+            nowCol = sd.playerCol;
+            playerData.SetPosition(GridToWorld(nowRow, nowCol));
+
+            // Restore level and run effects
+            levelManager.SetLevel(sd.currentLevel);
+            baseHandSize         = sd.baseHandSize;
+            goldBonusActive      = sd.goldBonusActive;
+            startCombatBarrier   = sd.startCombatBarrier;
+            startCombatOverclock = sd.startCombatOverclock;
+            eventSceneDone       = sd.eventSceneDone;
+
+            // Restore cards, then deal saved hand (or fresh hand if entry-checkpoint save)
+            std::vector<Card*> owned;
+            cardSystem.RebuildDeckFromSave(sd.cardNames, cardRewardSystem.GetRewardLoader(), owned);
+            cardSystem.InitUI(objectsList);
+            cardSystem.DealSavedHand(sd.handCardNames, baseHandSize, objectsList);
+
+            UpdateHPBar();
+            if (levelText)
+            {
+                SDL_Color col = { 255, 230, 100, 255 };
+                levelText->LoadText(levelManager.GetLevelText(), col, 30);
+            }
         }
-        else
-        {
-            eventSceneDone = true;
-            ApplyEventEffect(eff);
-        }
+        SaveSystem::pendingLoad = false;
     }
-
-    cardSystem.ShuffleDeck();
-
-    if (eventSceneDone)
+    else
     {
-        cardSystem.DealNewHand(baseHandSize, objectsList);
-    }
+        // Normal new-game path
+        cardRewardSystem.ApplyOwnedRewards(cardSystem);
 
-    // Card system UI (discard/draw pile buttons + drop zones)
-    cardSystem.InitUI(objectsList);
+        if (GameData::GetInstance()->eventEffectType >= 0)
+        {
+            EventScene::EffectType eff = static_cast<EventScene::EffectType>(GameData::GetInstance()->eventEffectType);
+            GameData::GetInstance()->eventEffectType = -1;
+
+            if (eff == EventScene::EffectType::REMOVE_CARDS)
+            {
+                pendingRemoveCards = true;
+            }
+            else
+            {
+                eventSceneDone = true;
+                ApplyEventEffect(eff);
+            }
+        }
+
+        cardSystem.ShuffleDeck();
+
+        if (eventSceneDone)
+            cardSystem.DealNewHand(baseHandSize, objectsList);
+
+        cardSystem.InitUI(objectsList);
+    }
 
     // Apply start-of-combat buffs from event effects (mirrors AdvanceToNextRound)
     if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
@@ -1178,6 +1218,8 @@ void Level::HandleMouse(int type, int x, int y)
                 sd.eventSceneDone       = eventSceneDone;
                 for (Card* c : cardSystem.GetAllCards())
                     sd.cardNames.push_back(c->getName());
+                for (Card* c : cardSystem.GetHand().CollectAllCardData())
+                    sd.handCardNames.push_back(c->getName());
                 SaveSystem::Save(sd);
 
                 pauseMenu.Hide();
@@ -2613,6 +2655,27 @@ void Level::ResetForNextCombat()
     playerData.ResetShield();
     playerData.ResetJumpCharges();
     UpdateHPBar();
+
+    // Auto-save when player first enters this level
+    {
+        SaveData sd;
+        sd.playerRow            = nowRow;
+        sd.playerCol            = nowCol;
+        sd.playerHp             = playerData.getHp();
+        sd.playerMaxHp          = playerData.getMaxHp();
+        sd.playerCoins          = playerData.GetCoins();
+        sd.playerBarrierCount   = playerData.GetBarrierCount();
+        sd.playerJumpCharges    = playerData.GetJumpCharges();
+        sd.currentLevel         = levelManager.GetLevel();
+        sd.baseHandSize         = baseHandSize;
+        sd.goldBonusActive      = goldBonusActive;
+        sd.startCombatBarrier   = startCombatBarrier;
+        sd.startCombatOverclock = startCombatOverclock;
+        sd.eventSceneDone       = eventSceneDone;
+        for (Card* c : cardSystem.GetAllCards())
+            sd.cardNames.push_back(c->getName());
+        SaveSystem::Save(sd);
+    }
 
     // Hide remaining overlays
     highlightManager.HideAllPlayer();

@@ -210,6 +210,36 @@ void CardSystem::DealNewHand(int cardCount,std::vector<DrawableObject*>& objects
     UpdatePileVisuals();
 }
 
+void CardSystem::DealSavedHand(const std::vector<std::string>& handNames, int baseHandSize,
+                                std::vector<DrawableObject*>& objectsList)
+{
+    hand.Clear(objectsList);
+
+    if (handNames.empty())
+    {
+        // No saved hand — deal a fresh random hand
+        DealNewHand(baseHandSize, objectsList);
+        return;
+    }
+
+    std::vector<Card*> handCards;
+    for (const auto& name : handNames)
+    {
+        auto it = std::find_if(deck.begin(), deck.end(),
+            [&name](Card* c) { return c && c->getName() == name; });
+        if (it != deck.end())
+        {
+            handCards.push_back(*it);
+            deck.erase(it);
+        }
+    }
+
+    if (!handCards.empty())
+        hand.AddCards(handCards, objectsList);
+
+    UpdatePileVisuals();
+}
+
 void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& objectsList)
 {
     cout << "============================" << endl;

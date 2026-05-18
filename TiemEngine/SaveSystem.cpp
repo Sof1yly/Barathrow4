@@ -5,8 +5,8 @@
 #include <cstdio>     // std::remove
 #include <direct.h>   // _mkdir on Windows
 
-const std::string SaveSystem::SAVE_DIR  = "../Save";
-const std::string SaveSystem::SAVE_FILE = "../Save/save.dat";
+const std::string SaveSystem::SAVE_DIR  = "../Resource/GameData/Save";
+const std::string SaveSystem::SAVE_FILE = "../Resource/GameData/Save/save.dat";
 bool              SaveSystem::pendingLoad = false;
 
 bool SaveSystem::EnsureSaveDir()
@@ -47,6 +47,10 @@ bool SaveSystem::Save(const SaveData& d)
     f << "CARD_COUNT=" << d.cardNames.size() << "\n";
     for (const auto& name : d.cardNames)
         f << "CARD " << name << "\n";
+
+    f << "HAND_COUNT=" << d.handCardNames.size() << "\n";
+    for (const auto& name : d.handCardNames)
+        f << "HAND " << name << "\n";
 
     std::cout << "[Save] Saved to " << SAVE_FILE << "\n";
     return true;
@@ -93,6 +97,8 @@ bool SaveSystem::Load(SaveData& d)
             d.enemies.push_back(e);
         } else if (line.substr(0, 5) == "CARD ") {
             d.cardNames.push_back(line.substr(5));
+        } else if (line.substr(0, 5) == "HAND ") {
+            d.handCardNames.push_back(line.substr(5));
         }
     }
 

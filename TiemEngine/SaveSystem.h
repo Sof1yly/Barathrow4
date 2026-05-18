@@ -30,6 +30,9 @@ struct SaveData {
     int  startCombatBarrier   = 0;
     int  startCombatOverclock = 0;
     bool eventSceneDone       = false;
+
+    // Cards currently in hand when saving (empty = deal a fresh hand on load)
+    std::vector<std::string> handCardNames;
 };
 
 class SaveSystem {

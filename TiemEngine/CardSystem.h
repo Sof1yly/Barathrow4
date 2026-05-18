@@ -95,6 +95,7 @@ public:
     // Deck management
     void ShuffleDeck();
     void DealNewHand(int cardCount, std::vector<DrawableObject*>& objectsList);
+    void DealSavedHand(const std::vector<std::string>& handNames, int baseHandSize, std::vector<DrawableObject*>& objectsList);
     void DiscardHandAndDraw(int cardCount, std::vector<DrawableObject*>& objectsList);
     void DiscardCard(Card* card);
     void DiscardTempCardsFromHand(std::vector<DrawableObject*>& objectsList);
