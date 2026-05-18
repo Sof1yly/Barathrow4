@@ -1304,7 +1304,11 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (rewardBoxScene.IsActive())
     {
-        if (type == 0)
+        if (type == 3)
+        {
+            rewardBoxScene.HandleHover(mousePos.x, mousePos.y);
+        }
+        else if (type == 0)
         {
             int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y, objectsList);
             if (clicked == 2)
