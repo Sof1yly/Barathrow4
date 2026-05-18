@@ -30,38 +30,40 @@ void EliteEnemy2::BuildPatterns()
     // ── Pattern 1 ────────────────────────────────────────────────────────────
     // TODO: edit grid to the shape you want (O = origin / elite position)
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "..X..",
-        "XXOXX",
-        "..X..",
-        "..X..",
+        ".....",
+        ".XXX.",
+        ".XOX.",
+        ".XXX.",
+        ".....",
     }, 'X'));
 
     // ── Pattern 2 ────────────────────────────────────────────────────────────
     patterns.push_back(AttackPattern::fromGrid({
-        "X...X",
-        ".X.X.",
-        "..O..",
-        ".X.X.",
-        "X...X",
+        "..X..",
+        ".XXX.",
+        "XXOXX",
+        ".XXX.",
+        "..X..",
     }, 'X'));
 
     // ── Pattern 3 ────────────────────────────────────────────────────────────
     patterns.push_back(AttackPattern::fromGrid({
         "XXXXX",
-        ".....",
-        "X.O.X",
-        ".....",
+        "XXXXX",
+        "XXOXX",
+        "XXXXX",
         "XXXXX",
     }, 'X'));
 
     // ── Pattern 4 ────────────────────────────────────────────────────────────
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "XXXXX",
-        "XXOXX",
-        "XXXXX",
-        "..X..",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXOXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
     }, 'X'));
 }
 
