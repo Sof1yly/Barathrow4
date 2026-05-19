@@ -14,6 +14,7 @@
 #include "GameObject.h"
 #include "ImageObject.h"
 #include "MoveAction.h"
+#include "ComboAction.h"
 
 
 static void ScaleLayers(std::vector<DrawableObject*>& layers, float cx, float cy, float scale)
@@ -359,10 +360,15 @@ Action* ShopSystem::CloneAction(const Action* src) const
         copy = new BuffAction(bf->getSubType());
     }  
     else if (const auto* db = dynamic_cast<const DebuffAction*>(src)) {
-        copy = new DebuffAction(db->getSubType());
-    }  
+        auto* dbCopy = new DebuffAction(db->getSubType());
+        dbCopy->setApplyToAll(db->getApplyToAll());
+        copy = dbCopy;
+    }
     else if (const auto* en = dynamic_cast<const EnergyAction*>(src)) {
         copy = new EnergyAction(en->getSubType());
+    }
+    else if (const auto* combo = dynamic_cast<const ComboAction*>(src)) {
+        copy = new ComboAction(combo->getTargetCardName());
     }
 
     if (!copy) return nullptr;

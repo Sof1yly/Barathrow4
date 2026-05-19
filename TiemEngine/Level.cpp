@@ -229,6 +229,9 @@ void Level::LevelInit()
         std::cerr << "Error loading shop card pool: " << error << std::endl;
     }
 
+    // Let the card system find combo targets (e.g. Blade Throw) in the full card pool
+    cardSystem.SetComboFallbackLoader(&cardRewardSystem.GetRewardLoader());
+
     rewardPickedAfterWin = false;
     shopOpenedAfterWin   = false;
     bool pendingRemoveCards = false;
@@ -568,6 +571,7 @@ void Level::LevelUpdate()
             objectsList.push_back(ne->getObject());
             objectsList.push_back(ne->getHPText());
             objectsList.push_back(ne->getCorruptText());
+            objectsList.push_back(ne->getWeakenText());
             objectsList.push_back(ne->getDebuffText());
             objectsList.push_back(ne->getCountdownIcon());
             objectsList.push_back(ne->getCountdownText());
@@ -879,6 +883,7 @@ void Level::LevelUpdate()
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getWeakenText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownIcon()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
@@ -1009,6 +1014,13 @@ void Level::LevelFree()
         if (cor)
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), cor);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        TextObject* wek = e->getWeakenText();
+        if (wek)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), wek);
             if (it != objectsList.end()) objectsList.erase(it);
         }
 
@@ -1248,6 +1260,7 @@ void Level::HandleKey(char key)
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getObject()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getWeakenText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownIcon()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
@@ -2863,6 +2876,7 @@ void Level::InitBossLevel()
     objectsList.push_back(bossEnemy->getObject());
     objectsList.push_back(bossEnemy->getHPText());
     objectsList.push_back(bossEnemy->getCorruptText());
+    objectsList.push_back(bossEnemy->getWeakenText());
     objectsList.push_back(bossEnemy->getDebuffText());
 
     // Boss HP bar UI
@@ -2921,6 +2935,7 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getWeakenText());
         objectsList.push_back(e->getDebuffText());
         objectsList.push_back(e->getCountdownIcon());
         objectsList.push_back(e->getCountdownText());
@@ -2975,6 +2990,7 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getWeakenText());
         objectsList.push_back(e->getDebuffText());
         objectsList.push_back(e->getCountdownIcon());
         objectsList.push_back(e->getCountdownText());
@@ -2994,6 +3010,7 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getWeakenText());
         objectsList.push_back(e->getDebuffText());
         objectsList.push_back(e->getCountdownIcon());
         objectsList.push_back(e->getCountdownText());
@@ -3039,6 +3056,7 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getWeakenText());
         objectsList.push_back(e->getDebuffText());
         objectsList.push_back(e->getCountdownIcon());
         objectsList.push_back(e->getCountdownText());
@@ -3227,6 +3245,7 @@ void Level::ResetForNextCombat()
         removeObj(e->getObject());
         removeObj(e->getHPText());
         removeObj(e->getCorruptText());
+        removeObj(e->getWeakenText());
         removeObj(e->getDebuffText());
         removeObj(e->getCountdownIcon());
         removeObj(e->getCountdownText());
@@ -3282,6 +3301,7 @@ void Level::ResetForNextCombat()
     std::string err;
     cardSystem.Clear(objectsList);
     cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &err);
+    cardSystem.SetComboFallbackLoader(&cardRewardSystem.GetRewardLoader());
     cardRewardSystem.ApplyOwnedRewards(cardSystem);
     shopSystem.ApplyRemovals(cardSystem);
     cardSystem.InitUI(objectsList);
@@ -3505,6 +3525,7 @@ void Level::SpawnBatteries()
         objectsList.push_back(bat->getObject());
         objectsList.push_back(bat->getHPText());
         objectsList.push_back(bat->getCorruptText());
+        objectsList.push_back(bat->getWeakenText());
         objectsList.push_back(bat->getDebuffText());
         objectsList.push_back(bat->getCountdownIcon());
         objectsList.push_back(bat->getCountdownText());

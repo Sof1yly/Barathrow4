@@ -1,27 +1,39 @@
-PLAYER_ROW=6
-PLAYER_COL=1
-PLAYER_HP=60
-PLAYER_MAX_HP=60
-PLAYER_COINS=120
+PLAYER_ROW=4
+PLAYER_COL=3
+PLAYER_HP=36
+PLAYER_MAX_HP=50
+PLAYER_COINS=166
 PLAYER_BARRIER=0
 PLAYER_JUMPS=0
-LEVEL=2
+LEVEL=20
 BASE_HAND=5
 GOLD_BONUS=0
 START_BARRIER=0
-START_OC=0
+START_OC=3
 EVENT_DONE=1
 ENEMY_COUNT=0
-CARD_COUNT=11
-CARD Sweep Attack
-CARD Walk
-CARD Walk
+CARD_COUNT=23
 CARD Basic Attack
-CARD Basic Attack
-CARD Offensive Stance
 CARD Sweep Attack
-CARD Sweep Attack
-CARD Basic Attack
-CARD Panic Roll
 CARD Sprint
+CARD Lazer Beam
+CARD Panic Roll
+CARD Battery
+CARD Sweep Attack
+CARD Corrupting Strike
+CARD Freeze
+CARD Walk
+CARD Strength
+CARD Shotgun
+CARD Alpha
+CARD Basic Attack
+CARD Hack
+CARD Charge
+CARD Walk
+CARD Double Attack
+CARD Alpha
+CARD Energy Shield
+CARD Delaying Stomp
+CARD Corrupting Strike
+CARD Weakening Strike
 HAND_COUNT=0

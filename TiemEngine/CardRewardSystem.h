@@ -19,6 +19,7 @@
 #include "GameDataLoader.h"
 #include "GameObject.h"
 #include "MoveAction.h"
+#include "ComboAction.h"
 #include "TextObject.h"
 #include "Button.h"
 
@@ -326,11 +327,17 @@ private:
         }
         else if (const auto* debuff = dynamic_cast<const DebuffAction*>(src))
         {
-            copy = new DebuffAction(debuff->getSubType());
+            auto* debuffCopy = new DebuffAction(debuff->getSubType());
+            debuffCopy->setApplyToAll(debuff->getApplyToAll());
+            copy = debuffCopy;
         }
         else if (const auto* energy = dynamic_cast<const EnergyAction*>(src))
         {
             copy = new EnergyAction(energy->getSubType());
+        }
+        else if (const auto* combo = dynamic_cast<const ComboAction*>(src))
+        {
+            copy = new ComboAction(combo->getTargetCardName());
         }
 
         if (!copy)

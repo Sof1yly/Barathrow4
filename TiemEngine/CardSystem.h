@@ -19,6 +19,7 @@ class CardSystem
 private:
     //Data
     GameDataLoader dataLoader;
+    GameDataLoader* comboFallbackLoader = nullptr;
     Hand hand;
 
     // Piles
@@ -184,4 +185,7 @@ public:
 
     // Combo system: find a card template by name, clone it, and add to hand
     void GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList);
+
+    // Set a fallback loader searched when the primary loader can't find a card (e.g. combo targets)
+    void SetComboFallbackLoader(GameDataLoader* loader) { comboFallbackLoader = loader; }
 };

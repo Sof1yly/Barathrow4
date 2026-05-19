@@ -1139,7 +1139,14 @@ void CardSystem::ConsumeEnergyCards(int count, std::vector<DrawableObject*>& obj
 
 void CardSystem::GenerateComboCard(const std::string& cardName, std::vector<DrawableObject*>& objectsList)
 {
+    // Search primary loader first, then fall back to the full-card loader (e.g. reward pool)
     Card* templateCard = dataLoader.findCardByName(cardName);
+    GameDataLoader* srcLoader = &dataLoader;
+    if (!templateCard && comboFallbackLoader)
+    {
+        templateCard = comboFallbackLoader->findCardByName(cardName);
+        srcLoader = comboFallbackLoader;
+    }
     if (!templateCard) {
         std::cout << "[Combo] Card \"" << cardName << "\" not found in card data!" << std::endl;
         return;
@@ -1165,7 +1172,7 @@ void CardSystem::GenerateComboCard(const std::string& cardName, std::vector<Draw
         comboCard->addAction(cloned);
 
         // If the original action had a linked attack pattern, link it to the clone too
-        const AttackPattern* pat = dataLoader.getPatternForAction(a);
+        const AttackPattern* pat = srcLoader->getPatternForAction(a);
         if (pat) {
             dataLoader.linkPatternToAction(cloned, pat);
         }

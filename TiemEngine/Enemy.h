@@ -94,6 +94,8 @@ public:
         return debuffText;
     }
 
+    TextObject* getWeakenText() const { return weakenText; }
+
     void showAttackText()
     {
         attackTextTimer = 1.0f;
@@ -270,6 +272,8 @@ protected:
 
     TextObject* debuffText = nullptr;
 
+    TextObject* weakenText = nullptr;
+
     ImageObject* countdownIcon = nullptr;
 
     TextObject* countdownText = nullptr;
@@ -299,6 +303,7 @@ private:
     bool shieldedFromPlayer = false;  // set by Level; blocks player damage via CardActionExecutor
 
     void RefreshDebuffText();
+    void RefreshWeakenText();
     void RefreshCountdownIcon();
 
     glm::vec3 moveStart;
