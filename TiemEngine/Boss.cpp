@@ -3,7 +3,7 @@
 Boss::Boss()
     : Enemy(EnemyType::C)
 {
-    maxHealth = 10;
+    maxHealth = 50;
     health = maxHealth;
 
     SDL_Color white = { 255, 255, 255 };

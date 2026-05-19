@@ -1119,6 +1119,13 @@ void Level::HandleKey(char key)
         return;
     }
 
+    if (key == 'o')
+    {
+        levelManager.SetLevel(17); // SetLevel(17) so Advance() brings it to 18
+        AdvanceToNextRound();
+        return;
+    }
+
     if (key == 'f')
     {
         fastMode = !fastMode;
@@ -2801,6 +2808,18 @@ void Level::LoadEnemyData()
 void Level::InitBossLevel()
 {
     boss = true;
+
+    // Hide grid tiles that fall inside the boss's occupied area (rows 2-6, cols 0-1).
+    // Tiles are stored row-major so tile(row,col) = gridTiles[row * GRID_COLS + col].
+    for (int row = 2; row <= 6; row++)
+    {
+        for (int col = 0; col <= 1; col++)
+        {
+            int idx = row * GRID_COLS + col;
+            if (idx < (int)gridTiles.size() && gridTiles[idx])
+                gridTiles[idx]->SetSize(0.0f, 0.0f);
+        }
+    }
 
     // Remove stale HP bar objects if they exist (e.g. re-entering boss level)
     auto removeObj = [&](ImageObject*& ptr)
