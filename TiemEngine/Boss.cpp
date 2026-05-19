@@ -26,7 +26,7 @@ void Boss::Update(float dt)
 
     Enemy::Update(dt);
 
-    // Enemy::Update resets idle to (0,0,2,200) � override with Boss idle
+    // Enemy::Update resets idle to (0,0,2,200) � override with Boss idle
     if ((wasAttacking && !isAttacking) || (wasTakingDamage && !isTakingDamage))
     {
         if (objSprite)
@@ -36,13 +36,59 @@ void Boss::Update(float dt)
 
 void Boss::RollAttackPattern()
 {
-    attackPatternChoice = (rand() % 3) + 1;
-    std::cout << "[Boss] Attack pattern " << attackPatternChoice << std::endl;
+    // Pattern center is applied at (nowRow, nowCol+2) in Level.cpp.
+    // The combined transform (3×rot90CW + mirrorX) maps raw cell (dx,dy) → (dy,dx),
+    // so a player at relative offset (relRow,relCol) is hit iff (relCol,relRow) exists
+    // in the raw grid.
+    //
+    // Grid coverage after transform (boss fixed at nowRow=4, nowCol=0, center=(4,2)):
+    //   grid1  – upper rows (playerCol 0-2); only offered when player is there
+    //   grid2  – checkerboard where (playerRow+playerCol) is even  → even==false
+    //   grid3  – checkerboard where (playerRow+playerCol) is odd   → even==true
+    //   grid6  – left  half: rows 0-4, all cols
+    //   grid7  – right half: rows 4-8, all cols
+
+    int relRow = playerRow - nowRow;          // +ve = player is to the right of boss
+
+    // grid1 hits playerCol 0-2 (top visual rows).  Add it as a 4th option only
+    // when the player is actually up there so it has a real chance of hitting them.
+    int numOptions = (playerCol <= 2) ? 4 : 3;
+
+    switch (rand() % numOptions)
+    {
+    case 0:
+        // Checkerboard — always lands on the player's exact tile parity.
+        // even==true  → (playerRow+playerCol) odd  → grid3 covers that parity
+        // even==false → (playerRow+playerCol) even → grid2 covers that parity
+        attackPatternChoice = even ? 3 : 2;
+        break;
+
+    case 1:
+        // Directional half-field — attacks whichever side the player is standing on.
+        // grid6 covers rows 0-4 (relRow ≤ 0); grid7 covers rows 4-8 (relRow ≥ 0).
+        attackPatternChoice = (relRow <= 0) ? 6 : 7;
+        break;
+
+    case 2:
+        // Directional again as third base option (mirrors case 1 logic, adds variety).
+        attackPatternChoice = (relRow > 0) ? 7 : 6;
+        break;
+
+    case 3:
+        // Grid1: upper-row sweep — only reachable when playerCol <= 2.
+        attackPatternChoice = 1;
+        break;
+    }
+
+    std::cout << "[Boss] Pattern " << attackPatternChoice
+              << " | player(" << playerRow << "," << playerCol << ")"
+              << " relRow=" << relRow
+              << " even=" << even << std::endl;
 }
 
 void Boss::PlayAttackAnimation(glm::vec3 playerPos)
 {
-    // Pattern already rolled when preparing � don't roll again here
+    // Pattern already rolled when preparing � don't roll again here
     if (!objSprite) return;
 
     switch (attackPatternChoice)
@@ -50,6 +96,9 @@ void Boss::PlayAttackAnimation(glm::vec3 playerPos)
     case 1: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 2: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 3: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 6: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 7: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    default: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     }
 
     isAttacking = true;
@@ -154,26 +203,6 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
         "oXoXoXoXo",
         "ooooooooo",
     };
-    std::vector<std::string> grid4 =
-    {//lock player
-        "ooooooooo",
-        "ooooXoooo",
-        "oooXXXooo",
-        "ooXXXXXoo",
-        "oooXXXooo",
-        "ooooXoooo",
-        "ooooooooo",
-    };
-    std::vector<std::string> grid5 =
-    {//lock player
-        "ooooooooo",
-        "oooXXXooo",
-        "oooXXXooo",
-        "oooXXXooo",
-        "oooXXXooo",
-        "oooXXXooo",
-        "ooooooooo",
-    };
     std::vector<std::string> grid6 =
     {//hit all left
         "ooooooooo",
@@ -200,6 +229,8 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     const std::vector<std::string>* chosen = &grid1;
     if (attackPatternChoice == 2) chosen = &grid2;
     if (attackPatternChoice == 3) chosen = &grid3;
+    if (attackPatternChoice == 6) chosen = &grid6;
+    if (attackPatternChoice == 7) chosen = &grid7;
 
     AttackPattern rotated = AttackPattern::fromGrid(*chosen, 'X', 4, 3);
     int rotateTimes = 3;
