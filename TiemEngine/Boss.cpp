@@ -71,16 +71,26 @@ void Boss::RollAttackPattern()
     if (!lastWasCross)
         candidates.push_back(8);
 
+    // Summon (choice 9): re-enters pool after ≥3 other skills have been used — not guaranteed
+    if (skillsSinceLastSummon >= 3)
+        candidates.push_back(9);
+
     attackPatternChoice = candidates[rand() % (int)candidates.size()];
 
-    // Track for the no-double-cross rule
+    // Maintain the no-double-cross rule
     lastWasCross = (attackPatternChoice == 8);
+
+    // Track how many non-summon skills have been used since the last summon
+    if (attackPatternChoice == 9)
+        skillsSinceLastSummon = 0;
+    else
+        skillsSinceLastSummon++;
 
     std::cout << "[Boss] Pattern " << attackPatternChoice
               << " | player(" << playerRow << "," << playerCol << ")"
               << " relRow=" << relRow
               << " even=" << even
-              << " lastWasCross=" << lastWasCross << std::endl;
+              << " skillsSinceLastSummon=" << skillsSinceLastSummon << std::endl;
 }
 
 void Boss::PlayAttackAnimation(glm::vec3 playerPos)
@@ -96,6 +106,7 @@ void Boss::PlayAttackAnimation(glm::vec3 playerPos)
     case 6: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 7: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 8: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 9: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break; // summon
     default: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     }
 
@@ -230,6 +241,10 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     if (attackPatternChoice == 6) chosen = &grid6;
     if (attackPatternChoice == 7) chosen = &grid7;
 
+    // Summon (choice 9) — no tile attack, just spawns a minion via TryGetSummon().
+    if (attackPatternChoice == 9)
+        return AttackPattern{};
+
     // Cross attack (choice 8) — built dynamically from locked player position.
     // Pattern is applied at (nowRow, nowCol+2) = (4,2), so offsets are relative to that.
     if (attackPatternChoice == 8)
@@ -308,6 +323,10 @@ int Boss::getAttackDamage() const
         baseDamage = (health * 2 < maxHealth) ? 20 : 5;
         break;
 
+    case 9:
+        baseDamage = 0; // summon skill — no direct tile damage
+        break;
+
     default:
         baseDamage = damage; // fallback to base damage field
         break;
@@ -323,18 +342,6 @@ int Boss::getAttackDamage() const
 
 int Boss::TryGetSummon()
 {
-    int count = 0;
-    float hpPct = (float)health / maxHealth;
-
-    if (!summoned66 && hpPct <= 0.66f)
-    {
-        summoned66 = true;
-        count++;
-    }
-    if (!summoned33 && hpPct <= 0.33f)
-    {
-        summoned33 = true;
-        count++;
-    }
-    return count;
+    // Summon is now a normal rolled skill (choice 9) rather than HP-threshold based.
+    return (attackPatternChoice == 9) ? 1 : 0;
 }

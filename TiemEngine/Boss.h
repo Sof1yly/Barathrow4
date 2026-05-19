@@ -64,8 +64,9 @@ private:
 
     int attackPatternChoice = 1;
 
-    bool summoned66 = false;
-    bool summoned33 = false;
+    bool lastWasCross = false;      // prevents cross attack from being picked twice in a row
 
-    bool lastWasCross = false;  // prevents cross attack from being picked twice in a row
+    // Summon is a normal skill now (choice 9).
+    // It re-enters the pool only after the boss uses ≥3 other skills (not guaranteed).
+    int skillsSinceLastSummon = 0;
 };
