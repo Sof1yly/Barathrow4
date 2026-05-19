@@ -53,9 +53,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	boss   = false; //Set boss level,   for testing ** change later **
-	elite1 = false; //Set elite1 level, for testing ** change later **
-	elite2 = false; //Set elite2 level, for testing ** change later **
+	boss = levelManager.IsBossLevel();
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -109,55 +107,37 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
 
-    if (boss)//test boss spawn
+    if (boss)
+        InitBossLevel();
+
+    // Load save data early so player position and enemy layout are correct from the start
+    SaveData pendingSave;
+    bool hasSave = false;
+    if (SaveSystem::pendingLoad)
     {
-        bossEnemy = new Boss();
-
-        bossEnemy->setNowPosition(4, 0);
-
-        glm::vec3 pos = GridToWorld(
-            bossEnemy->getNowRow(),
-            bossEnemy->getNowCol()
-        );
-
-        bossEnemy->SetWorldPosition(pos);
-
-        enemies.push_back(bossEnemy);
-
-        objectsList.push_back(bossEnemy->getObject());
-
-        objectsList.push_back(bossEnemy->getHPText());
-
-        objectsList.push_back(bossEnemy->getCorruptText());
-
-        objectsList.push_back(bossEnemy->getDebuffText());
+        hasSave = SaveSystem::Load(pendingSave);
+        if (hasSave)
         {
-            ImageObject* bg = new ImageObject();
-            bg->SetSize(600.0f, -100.0f);
-            bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
-            bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
-            objectsList.push_back(bg);
-            bossHpBg = bg;
-        }
-        {
-            bossHpBar = new ImageObject();
-            bossHpBar->SetSize(600.0f, -100.0f);
-            bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
-            bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
-            objectsList.push_back(bossHpBar);
-        }
-        {
-            bossHpMask = new ImageObject();
-            bossHpMask->SetSize(0.0f, -50.0f);
-            bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
-            bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
-            objectsList.push_back(bossHpMask);
+            nowRow              = pendingSave.playerRow;
+            nowCol              = pendingSave.playerCol;
+            levelManager.SetLevel(pendingSave.currentLevel);
+            baseHandSize        = pendingSave.baseHandSize;
+            goldBonusActive     = pendingSave.goldBonusActive;
+            startCombatBarrier  = pendingSave.startCombatBarrier;
+            startCombatOverclock = pendingSave.startCombatOverclock;
+            eventSceneDone      = pendingSave.eventSceneDone;
         }
     }
 
-    SetPlayerSpawnPosition();
+    if (!hasSave)
+        SetPlayerSpawnPosition();
+
     LoadEnemyData();
-    SpawnEnemiesForLevel();
+
+    if (hasSave)
+        RestoreEnemiesFromSave(pendingSave);
+    else
+        SpawnEnemiesForLevel();
 
 
     // 3) Player sprite (3x4, 192x256)
@@ -241,43 +221,28 @@ void Level::LevelInit()
     shopOpenedAfterWin   = false;
     bool pendingRemoveCards = false;
 
-    if (SaveSystem::pendingLoad)
+    if (hasSave)
     {
-        SaveData sd;
-        if (SaveSystem::Load(sd))
+        // Position, level, and run-effects were already applied early in LevelInit.
+        // Finish restoring player stats, then cards.
+        playerData.setHp(pendingSave.playerHp);
+        playerData.setMaxHp(pendingSave.playerMaxHp);
+        playerData.SetCoins(pendingSave.playerCoins);
+        playerData.SetBarrierCount(pendingSave.playerBarrierCount);
+        playerData.SetJumpCharges(pendingSave.playerJumpCharges);
+        playerData.SetPosition(GridToWorld(nowRow, nowCol));
+
+        // Restore deck and hand
+        std::vector<Card*> owned;
+        cardSystem.RebuildDeckFromSave(pendingSave.cardNames, cardRewardSystem.GetRewardLoader(), owned);
+        cardSystem.InitUI(objectsList);
+        cardSystem.DealSavedHand(pendingSave.handCardNames, baseHandSize, objectsList);
+
+        UpdateHPBar();
+        if (levelText)
         {
-            // Restore player stats
-            playerData.setHp(sd.playerHp);
-            playerData.setMaxHp(sd.playerMaxHp);
-            playerData.SetCoins(sd.playerCoins);
-            playerData.SetBarrierCount(sd.playerBarrierCount);
-            playerData.SetJumpCharges(sd.playerJumpCharges);
-
-            // Restore position
-            nowRow = sd.playerRow;
-            nowCol = sd.playerCol;
-            playerData.SetPosition(GridToWorld(nowRow, nowCol));
-
-            // Restore level and run effects
-            levelManager.SetLevel(sd.currentLevel);
-            baseHandSize         = sd.baseHandSize;
-            goldBonusActive      = sd.goldBonusActive;
-            startCombatBarrier   = sd.startCombatBarrier;
-            startCombatOverclock = sd.startCombatOverclock;
-            eventSceneDone       = sd.eventSceneDone;
-
-            // Restore cards, then deal saved hand (or fresh hand if entry-checkpoint save)
-            std::vector<Card*> owned;
-            cardSystem.RebuildDeckFromSave(sd.cardNames, cardRewardSystem.GetRewardLoader(), owned);
-            cardSystem.InitUI(objectsList);
-            cardSystem.DealSavedHand(sd.handCardNames, baseHandSize, objectsList);
-
-            UpdateHPBar();
-            if (levelText)
-            {
-                SDL_Color col = { 255, 230, 100, 255 };
-                levelText->LoadText(levelManager.GetLevelText(), col, 30);
-            }
+            SDL_Color col = { 255, 230, 100, 255 };
+            levelText->LoadText(levelManager.GetLevelText(), col, 30);
         }
         SaveSystem::pendingLoad = false;
     }
@@ -947,8 +912,6 @@ void Level::LevelUpdate()
         {
             pendingCoinsEarned = levelManager.RollCoins();
             if (goldBonusActive) pendingCoinsEarned = pendingCoinsEarned * 5 / 4;
-            playerData.AddCoins(pendingCoinsEarned);
-            std::cout << "[" << levelManager.GetLevelText() << "] Earned " << pendingCoinsEarned << " coins." << std::endl;
             winDelay = 0.0f;
             winDelayActive = true;
         }
@@ -1267,7 +1230,6 @@ void Level::HandleKey(char key)
         {
             pendingCoinsEarned = levelManager.RollCoins();
             if (goldBonusActive) pendingCoinsEarned = pendingCoinsEarned * 5 / 4;
-            playerData.AddCoins(pendingCoinsEarned);
             winDelay = 0.0f;
             winDelayActive = true;
         }
@@ -1388,6 +1350,25 @@ void Level::HandleMouse(int type, int x, int y)
                     sd.cardNames.push_back(c->getName());
                 for (Card* c : cardSystem.GetHand().CollectAllCardData())
                     sd.handCardNames.push_back(c->getName());
+
+                // Serialize live enemies (skip dead ones)
+                for (Enemy* e : enemies)
+                {
+                    if (!e || e->getIsDead()) continue;
+                    EnemySaveData esd;
+                    if      (dynamic_cast<Boss*>(e))        esd.typeIndex = 11;
+                    else if (dynamic_cast<EliteEnemy2*>(e)) esd.typeIndex = 10;
+                    else if (dynamic_cast<EliteEnemy1*>(e)) esd.typeIndex = 9;
+                    else                                     esd.typeIndex = (int)e->getType();
+                    esd.row              = e->getNowRow();
+                    esd.col              = e->getNowCol();
+                    esd.health           = e->getHealth();
+                    esd.delayTurns       = e->getDelayTurns();
+                    esd.corruptionStacks = e->getCorruption();
+                    esd.weakenTurns      = e->getWeakenTurns();
+                    sd.enemies.push_back(esd);
+                }
+
                 SaveSystem::Save(sd);
 
                 pauseMenu.Hide();
@@ -1566,6 +1547,13 @@ void Level::HandleMouse(int type, int x, int y)
         else if (type == 0)
         {
             int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y, objectsList);
+            if (clicked == 1 || clicked == 3)
+            {
+                // Coin row kept or skipped — grant coins now
+                playerData.AddCoins(pendingCoinsEarned);
+                std::cout << "[" << levelManager.GetLevelText() << "] Earned "
+                          << pendingCoinsEarned << " coins." << std::endl;
+            }
             if (clicked == 2)
             {
                 cardRewardSystem.Open(objectsList);
@@ -2798,63 +2786,118 @@ void Level::LoadEnemyData()
     EnemyLoadPattern::LoadFromFile(PATH_ENEMY_PATTERN);
 }
 
+void Level::InitBossLevel()
+{
+    boss = true;
+
+    // Remove stale HP bar objects if they exist (e.g. re-entering boss level)
+    auto removeObj = [&](ImageObject*& ptr)
+    {
+        if (!ptr) return;
+        objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), ptr), objectsList.end());
+        delete ptr;
+        ptr = nullptr;
+    };
+    removeObj(bossHpBg);
+    removeObj(bossHpBar);
+    removeObj(bossHpMask);
+
+    // Spawn boss
+    bossEnemy = new Boss();
+    bossEnemy->setNowPosition(4, 0);
+    bossEnemy->SetWorldPosition(GridToWorld(4, 0));
+
+    enemies.push_back(bossEnemy);
+    objectsList.push_back(bossEnemy->getObject());
+    objectsList.push_back(bossEnemy->getHPText());
+    objectsList.push_back(bossEnemy->getCorruptText());
+    objectsList.push_back(bossEnemy->getDebuffText());
+
+    // Boss HP bar UI
+    {
+        ImageObject* bg = new ImageObject();
+        bg->SetSize(600.0f, -100.0f);
+        bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
+        bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
+        objectsList.push_back(bg);
+        bossHpBg = bg;
+    }
+    {
+        bossHpBar = new ImageObject();
+        bossHpBar->SetSize(600.0f, -100.0f);
+        bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
+        bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
+        objectsList.push_back(bossHpBar);
+    }
+    {
+        bossHpMask = new ImageObject();
+        bossHpMask->SetSize(0.0f, -50.0f);
+        bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
+        bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+        objectsList.push_back(bossHpMask);
+    }
+}
+
+void Level::RestoreEnemiesFromSave(const SaveData& sd)
+{
+    for (const auto& esd : sd.enemies)
+    {
+        Enemy* e = nullptr;
+
+        if (esd.typeIndex == 11)
+        {
+            // Boss is already spawned in LevelInit; just restore its health.
+            if (bossEnemy)
+                bossEnemy->setHealth(esd.health);
+            continue;
+        }
+        else if (esd.typeIndex == 10)
+            e = new EliteEnemy2();
+        else if (esd.typeIndex == 9)
+            e = new EliteEnemy1();
+        else
+            e = new Enemy(static_cast<Enemy::EnemyType>(esd.typeIndex));
+
+        e->setNowPosition(esd.row, esd.col);
+        e->SetWorldPosition(GridToWorld(esd.row, esd.col));
+        e->setHealth(esd.health);
+        if (esd.delayTurns       > 0) e->addDelay(esd.delayTurns);
+        if (esd.corruptionStacks > 0) e->addCorruption(esd.corruptionStacks);
+        if (esd.weakenTurns      > 0) e->addWeaken(esd.weakenTurns);
+
+        enemies.push_back(e);
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
+
+        std::cout << "[Load] Restored enemy type=" << esd.typeIndex
+                  << " at (" << esd.row << "," << esd.col
+                  << ") hp=" << esd.health << "\n";
+    }
+}
+
 void Level::SpawnEnemiesForLevel()
 {
-    if (boss) return; // boss room enemies are handled separately
+    LevelConfig cfg = levelManager.GetCurrentConfig();
 
-    //-- Old random spawn (3 enemies) -- commented out --
-    //static const Enemy::EnemyType pool[] = {
-    //    Enemy::EnemyType::A,
-    //    Enemy::EnemyType::B,
-    //    Enemy::EnemyType::C,
-    //    Enemy::EnemyType::D,
-    //    Enemy::EnemyType::E,
-    //    Enemy::EnemyType::F,
-    //    Enemy::EnemyType::G
-    //};
-    //for (int i = 0; i < 3; i++)
-    //{
-    //    std::vector<std::pair<int, int>> validTiles;
-    //    for (int r = GridStartRow; r < GridEndRow; r++)
-    //    {
-    //        for (int c = GridStartCol; c < GridEndCol; c++)
-    //        {
-    //            if (!walkable[r][c]) continue;
-    //            if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
-    //            bool occupied = false;
-    //            for (auto* e : enemies)
-    //            {
-    //                if (!e || e->getIsDead()) continue;
-    //                if (e->OccupiesTile(r, c)) { occupied = true; break; }
-    //            }
-    //            if (occupied) continue;
-    //            validTiles.push_back({ r, c });
-    //        }
-    //    }
-    //    if (validTiles.empty()) { std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n"; break; }
-    //    int idx = rand() % (int)validTiles.size();
-    //    int spawnRow = validTiles[idx].first;
-    //    int spawnCol = validTiles[idx].second;
-    //    Enemy::EnemyType type = pool[rand() % 7];
-    //    Enemy* e = new Enemy(type);
-    //    e->setNowPosition(spawnRow, spawnCol);
-    //    e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
-    //    enemies.push_back(e);
-    //    objectsList.push_back(e->getObject());
-    //    objectsList.push_back(e->getHPText());
-    //    objectsList.push_back(e->getCorruptText());
-    //    objectsList.push_back(e->getDebuffText());
-    //    std::cout << "[Spawn] Enemy " << i + 1 << " at (" << spawnRow << ", " << spawnCol << ")\n";
-    //}
+    // Boss level — full setup (spawn + HP bar).
+    if (cfg.type == LevelConfig::Type::Boss)
+    {
+        InitBossLevel();
+        return;
+    }
 
-    // Helper: place an enemy at a specific row (edge), random valid col.
+    // ---- Helpers ------------------------------------------------------------
+
+    // Place an elite on a specific row, random valid column.
     auto SpawnEliteAtRow = [&](Enemy* e, int fixedRow, int index)
     {
         std::vector<int> validCols;
         for (int c = GridStartCol; c < GridEndCol; c++)
         {
             if (!walkable[fixedRow][c]) continue;
-            if (abs(fixedRow - nowRow) + abs(c - nowCol) <= 1) continue;
+            if (abs(fixedRow - nowRow) <= 1 && abs(c - nowCol) <= 1) continue;
             bool occupied = false;
             for (auto* ex : enemies)
             {
@@ -2864,7 +2907,6 @@ void Level::SpawnEnemiesForLevel()
             if (occupied) continue;
             validCols.push_back(c);
         }
-
         if (validCols.empty())
         {
             std::cout << "[Spawn] No valid col for elite " << index
@@ -2872,122 +2914,113 @@ void Level::SpawnEnemiesForLevel()
             delete e;
             return;
         }
-
         int spawnCol = validCols[rand() % (int)validCols.size()];
-
         e->setNowPosition(fixedRow, spawnCol);
         e->SetWorldPosition(GridToWorld(fixedRow, spawnCol));
-
         enemies.push_back(e);
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
-
         std::cout << "[Spawn] Elite " << index << " at ("
                   << fixedRow << ", " << spawnCol << ")\n";
     };
 
-    // Helper: place an enemy at any valid tile (used for Elite2).
-    auto SpawnElite = [&](Enemy* e, int index)
+    // Place Elite2 at its fixed mid-grid position.
+    auto SpawnElite2Fixed = [&](int index)
     {
-        // --- FIXED SPAWN for testing: visual row=2 top-to-bottom, col=6 left-to-right
-        //     In code: nowRow=6 (horizontal), nowCol=2 (vertical)
         const int fixedRow = 6;
         const int fixedCol = 2;
-
-        int spawnRow = fixedRow;
-        int spawnCol = fixedCol;
-
-        e->setNowPosition(spawnRow, spawnCol);
-        e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
-
+        auto* e = new EliteEnemy2();
+        e->setNowPosition(fixedRow, fixedCol);
+        e->SetWorldPosition(GridToWorld(fixedRow, fixedCol));
         enemies.push_back(e);
         objectsList.push_back(e->getObject());
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
-
-        std::cout << "[Spawn] Elite " << index << " at ("
-                  << spawnRow << ", " << spawnCol << ") [fixed]\n";
+        std::cout << "[Spawn] Elite2 " << index << " at ("
+                  << fixedRow << ", " << fixedCol << ") [fixed]\n";
     };
 
-    // ── Decide which enemy set to spawn ─────────────────────────────────────
-    if (elite1 && elite2)
+    // Place one normal enemy at a random unoccupied border tile.
+    auto SpawnNormalEnemy = [&](Enemy::EnemyType type)
     {
-        // Both elite types present
-        SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
-        SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
-        SpawnElite(new EliteEnemy2(), 3);
-    }
-    else if (elite1)
-    {
-        // Elite1 only
-        SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
-        SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
-    }
-    else if (elite2)
-    {
-        // Elite2 only
-        SpawnElite(new EliteEnemy2(), 1);
-    }
-    else
-    {
-        // Normal combat: spawn 3 random enemies from the pool
-        static const Enemy::EnemyType pool[] = {
-            Enemy::EnemyType::A,
-            Enemy::EnemyType::B,
-            Enemy::EnemyType::C,
-            Enemy::EnemyType::D,
-            Enemy::EnemyType::E,
-            Enemy::EnemyType::F,
-            Enemy::EnemyType::G
-        };
-
-        for (int i = 0; i < 3; i++)
+        std::vector<std::pair<int, int>> valid;
+        for (int r = GridStartRow; r < GridEndRow; r++)
         {
-            std::vector<std::pair<int, int>> validTiles;
-            for (int r = GridStartRow; r < GridEndRow; r++)
+            for (int c = GridStartCol; c < GridEndCol; c++)
             {
-                for (int c = GridStartCol; c < GridEndCol; c++)
+                bool isBorder = (r == GridStartRow || r == GridEndRow - 1 ||
+                                 c == GridStartCol  || c == GridEndCol  - 1);
+                if (!isBorder)                                              continue;
+                if (!walkable[r][c])                                        continue;
+                if (abs(r - nowRow) <= 1 && abs(c - nowCol) <= 1)          continue;
+                bool occupied = false;
+                for (auto* ex : enemies)
                 {
-                    if (!walkable[r][c]) continue;
-                    if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
-                    bool occupied = false;
-                    for (auto* ex : enemies)
-                    {
-                        if (!ex || ex->getIsDead()) continue;
-                        if (ex->OccupiesTile(r, c)) { occupied = true; break; }
-                    }
-                    if (occupied) continue;
-                    validTiles.push_back({ r, c });
+                    if (!ex || ex->getIsDead()) continue;
+                    if (ex->OccupiesTile(r, c)) { occupied = true; break; }
                 }
+                if (occupied) continue;
+                valid.push_back({ r, c });
             }
+        }
+        if (valid.empty())
+        {
+            std::cout << "[Spawn] No border tile available for normal enemy\n";
+            return;
+        }
+        int pick = rand() % (int)valid.size();
+        int spawnRow = valid[pick].first;
+        int spawnCol = valid[pick].second;
+        Enemy* e = new Enemy(type);
+        e->setNowPosition(spawnRow, spawnCol);
+        e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+        enemies.push_back(e);
+        objectsList.push_back(e->getObject());
+        objectsList.push_back(e->getHPText());
+        objectsList.push_back(e->getCorruptText());
+        objectsList.push_back(e->getDebuffText());
+        std::cout << "[Spawn] Normal enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+    };
 
-            if (validTiles.empty())
-            {
-                std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n";
-                break;
-            }
+    // ---- Elite levels -------------------------------------------------------
 
-            int idx      = rand() % (int)validTiles.size();
-            int spawnRow = validTiles[idx].first;
-            int spawnCol = validTiles[idx].second;
-            Enemy::EnemyType type = pool[rand() % 7];
+    if (cfg.type == LevelConfig::Type::Elite1)
+    {
+        SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
+        SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
+        return;
+    }
+    if (cfg.type == LevelConfig::Type::Elite2)
+    {
+        SpawnElite2Fixed(1);
+        return;
+    }
+    if (cfg.type == LevelConfig::Type::EliteRandom)
+    {
+        if (rand() % 2 == 0)
+        {
+            SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
+            SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
+        }
+        else
+        {
+            SpawnElite2Fixed(1);
+        }
+        return;
+    }
 
-            Enemy* e = new Enemy(type);
-            e->setNowPosition(spawnRow, spawnCol);
-            e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+    // ---- Normal combat levels -----------------------------------------------
 
-            enemies.push_back(e);
-            objectsList.push_back(e->getObject());
-            objectsList.push_back(e->getHPText());
-            objectsList.push_back(e->getCorruptText());
-            objectsList.push_back(e->getDebuffText());
-
-            std::cout << "[Spawn] Normal enemy " << i + 1
-                      << " (type " << (int)type << ") at ("
-                      << spawnRow << ", " << spawnCol << ")\n";
+    for (const auto& group : cfg.groups)
+    {
+        const auto& pool = group.pool;
+        for (int i = 0; i < group.count; i++)
+        {
+            Enemy::EnemyType type = pool[rand() % (int)pool.size()];
+            SpawnNormalEnemy(type);
         }
     }
 }
@@ -3064,6 +3097,19 @@ void Level::ResetForNextCombat()
     currentPatternIndex  = 0;
     currentRotation      = 0;
 
+    // Reset boss state — enemies were not cleared yet here but pointers need refresh
+    bossActed = false;
+    boss = levelManager.IsBossLevel();
+
+    // Reset walkable array for the new level, then apply boss constraints if needed
+    for (int r = 0; r < GRID_ROWS; r++)
+        for (int c = 0; c < GRID_COLS; c++)
+            walkable[r][c] = true;
+    if (boss)
+        for (int col = 0; col < 2; col++)
+            for (int row = 2; row < 7; row++)
+                walkable[row][col] = false;
+
     // Move player back to start; HP and coins carry over
     SetPlayerSpawnPosition();
     playerDir   = PlayerDir::DOWN;
@@ -3113,6 +3159,7 @@ void Level::ResetForNextCombat()
         delete e;
     }
     enemies.clear();
+    bossEnemy = nullptr; // pointer is dangling after delete above
 
     // Expire lingering damage popups
     for (auto& p : damagePopups)
@@ -3144,7 +3191,7 @@ void Level::ResetForNextCombat()
 
     std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 
-    // Shop-only levels (4 and 9): open shop, skip combat setup
+    // Shop-only levels (4, 9, 14, 19): open shop, skip combat setup
     if (levelManager.IsShopOnlyLevel())
     {
         inShopOnlyLevel = true;
@@ -3191,8 +3238,8 @@ void Level::SpawnBossSummon()
         {
             if (!walkable[r][c]) continue;
 
-            // Must be at least 2 tiles away from player (not same tile, not adjacent)
-            if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+            // Must not be within the 3x3 block surrounding the player
+            if (abs(r - nowRow) <= 1 && abs(c - nowCol) <= 1) continue;
 
             // Must not be occupied by any enemy
             bool occupied = false;

@@ -208,6 +208,7 @@ public:
     virtual std::vector<std::pair<int, int>> GetOccupiedTiles() const;
 
     int getMaxHealth() const { return maxHealth; }
+    EnemyType getType() const { return type; }
 
     // Set by Level each frame: while true, CardActionExecutor skips player damage on this enemy
     void setShieldedFromPlayer(bool v) { shieldedFromPlayer = v; }

@@ -2,7 +2,18 @@
 
 bool MapScene::IsShopLevel(int level1Based)
 {
-    return level1Based == 4 || level1Based == 9;
+    return level1Based == 4  || level1Based == 9  ||
+           level1Based == 14 || level1Based == 19;
+}
+
+bool MapScene::IsEliteLevel(int level1Based)
+{
+    return level1Based == 5 || level1Based == 10 || level1Based == 15;
+}
+
+bool MapScene::IsBossLevel(int level1Based)
+{
+    return level1Based == 20;
 }
 
 void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& objectsList)
@@ -14,22 +25,27 @@ void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& ob
     state    = State::FADE_IN;
     timer    = 0.0f;
 
-    // Default to win-transition timings
     activeFadeInTime  = FADE_IN_TIME;
     activeFadeOutTime = FADE_OUT_TIME;
 
-    // Node positions: 9 nodes evenly spaced left-to-right, centered on screen
-    const float startX  = -700.0f;
+    // Page 0 = levels 1-10, page 1 = levels 11-20
+    int page     = (toLevel - 1) / NODE_COUNT;
+    int pageBase = page * NODE_COUNT; // absolute level of node 0 on this page
+
+    // 10 nodes centered on screen (-787.5 to +787.5 at 175px spacing)
     const float spacing = 175.0f;
+    const float startX  = -(spacing * (NODE_COUNT - 1)) * 0.5f;
     const float nodeY   =   30.0f;
 
     for (int i = 0; i < NODE_COUNT; i++)
         nodePositions[i] = glm::vec3(startX + i * spacing, nodeY, 0.0f);
 
-    int fromIdx = std::max(0, std::min(fromLevel - 1, NODE_COUNT - 1));
-    int toIdx   = std::max(0, std::min(toLevel   - 1, NODE_COUNT - 1));
+    // Within-page indices; if fromLevel is on a different page, walk in from off-screen left
+    int fromPage = (fromLevel - 1) / NODE_COUNT;
+    int fromIdx  = (fromPage == page) ? (fromLevel - 1) % NODE_COUNT : -1;
+    int toIdx    = (toLevel   - 1) % NODE_COUNT;
 
-    // Dark background — covers all game content underneath
+    // Dark background
     auto* bg = new GameObject();
     bg->SetSize(1920.0f, 1080.0f);
     bg->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -51,12 +67,16 @@ void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& ob
         objectsList.push_back(line);
     }
 
-    // Node icons and labels
+    // Node icons and labels — use absolute level number for icon type and label text
     for (int i = 0; i < NODE_COUNT; i++)
     {
-        const char* texPath = IsShopLevel(i + 1)
-            ? "../Resource/Texture/MapIcon/Shop.PNG"
-            : "../Resource/Texture/MapIcon/Normal.PNG";
+        int absLevel = pageBase + i + 1;
+
+        const char* texPath =
+            IsBossLevel(absLevel)  ? "../Resource/Texture/MapIcon/Boss.PNG"  :
+            IsEliteLevel(absLevel) ? "../Resource/Texture/MapIcon/Elite.PNG" :
+            IsShopLevel(absLevel)  ? "../Resource/Texture/MapIcon/Shop.PNG"  :
+                                     "../Resource/Texture/MapIcon/Normal.PNG";
 
         auto* icon = new ImageObject();
         icon->SetTexture(texPath);
@@ -71,17 +91,19 @@ void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& ob
             : SDL_Color{ 170, 170, 170, 255 };
 
         auto* label = new TextObject();
-        label->LoadText(std::to_string(i + 1), labelCol, 22);
+        label->LoadText(std::to_string(absLevel), labelCol, 22);
         label->SetPosition(glm::vec3(nodePositions[i].x, nodePositions[i].y - 68.0f, 0.0f));
         ownedObjects.push_back(label);
         objectsList.push_back(label);
         nodeLabels[i] = label;
     }
 
-    // Player sprite — starts at fromLevel node
+    // Player sprite — walks from fromIdx (or off-screen left) to toIdx
     const float playerY = nodeY + 8.0f;
-    walkStart = glm::vec3(nodePositions[fromIdx].x, playerY, 0.0f);
-    walkEnd   = glm::vec3(nodePositions[toIdx  ].x, playerY, 0.0f);
+    walkStart = (fromIdx >= 0)
+        ? glm::vec3(nodePositions[fromIdx].x, playerY, 0.0f)
+        : glm::vec3(nodePositions[0].x - spacing, playerY, 0.0f); // off-screen left
+    walkEnd = glm::vec3(nodePositions[toIdx].x, playerY, 0.0f);
 
     float dist   = std::abs(walkEnd.x - walkStart.x);
     walkDuration = (dist > 0.0f) ? (dist / WALK_SPEED) : PAUSE_TIME;
@@ -89,15 +111,15 @@ void MapScene::Open(int fromLevel, int toLevel, std::vector<DrawableObject*>& ob
     playerSprite = new SpriteObject("../Resource/Texture/Player_sprite2.png", 9, 16);
     playerSprite->SetSize(100.0f, -100.0f);
     playerSprite->SetPosition(walkStart);
-    playerSprite->SetAnimationLoop(0, 6, 2, 800);   // idle facing right
+    playerSprite->SetAnimationLoop(0, 6, 2, 800);
     ownedObjects.push_back(playerSprite);
     objectsList.push_back(playerSprite);
 
-    // Fade overlay — added last so it renders on top of everything
+    // Fade overlay — on top of everything, starts fully black
     fadeOverlay = new GameObject();
     fadeOverlay->SetSize(1920.0f, 1080.0f);
     fadeOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, 1.0f);  // starts fully black
+    fadeOverlay->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
     ownedObjects.push_back(fadeOverlay);
     objectsList.push_back(fadeOverlay);
 }
