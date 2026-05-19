@@ -3256,6 +3256,11 @@ void Level::SpawnBatteries()
 
         std::cout << "[Boss] Battery spawned at (" << r << ", " << c << ")\n";
     }
+
+    // Play the dedicated battery-summon animation on the boss
+    if (bossEnemy)
+        bossEnemy->PlayBatterySummonAnimation();
+
     // Boss continues to attack normally while batteries are alive.
     // Player attacks on the boss are blocked (ApplyAttackCells checks AnyBatteryAlive).
 }

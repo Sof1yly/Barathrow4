@@ -100,19 +100,52 @@ void Boss::PlayAttackAnimation(glm::vec3 playerPos)
 
     switch (attackPatternChoice)
     {
-    case 1: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 2: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 3: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 6: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 7: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 8: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
-    case 9: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break; // summon
-    default: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 1:
+        // Grid 1 — upper row sweep
+        objSprite->SetAnimationOnce(5, 0, 11, 150);
+        attackDuration = 11 * 0.150f;
+        break;
+
+    case 2:
+    case 3:
+        // Grid 2/3 — checkerboard
+        objSprite->SetAnimationOnce(4, 0, 11, 150);
+        attackDuration = 11 * 0.150f;
+        break;
+
+    case 6:
+    case 7:
+    case 8:
+        // Grid 6/7 half-field and cross attack
+        objSprite->SetAnimationOnce(6, 0, 11, 150);
+        attackDuration = 11 * 0.150f;
+        break;
+
+    case 9:
+        // Summon enemy — get-damage anim (row 3, 9 frames) at 3x speed, looped 3 times
+        objSprite->SetAnimationLoop(3, 0, 9, 50);   // 150ms / 3 = 50ms per frame
+        attackDuration = 9 * 3 * 0.050f;            // 3 loops = 1.35 s
+        break;
+
+    default:
+        objSprite->SetAnimationOnce(6, 0, 11, 150);
+        attackDuration = 11 * 0.150f;
+        break;
     }
 
     isAttacking = true;
     attackTimer = 0.0f;
 }
+
+void Boss::PlayBatterySummonAnimation()
+{
+    if (!objSprite) return;
+    objSprite->SetAnimationOnce(7, 0, 11, 150);
+    attackDuration = 11 * 0.150f;
+    isAttacking    = true;
+    attackTimer    = 0.0f;
+}
+
 void Boss::setPreparingAttack(bool value)
 {
     if (value && !preparingAttack)

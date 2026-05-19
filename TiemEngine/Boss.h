@@ -50,6 +50,9 @@ public:
     int TryGetSummon();
     int getAttackPatternChoice() const { return attackPatternChoice; }
 
+    // Plays the battery-summon animation (row 7) — called by Level when batteries spawn
+    void PlayBatterySummonAnimation();
+
     // Returns true (exactly once) when boss HP drops to ≤50% and batteries haven't been spawned yet.
     bool ShouldSpawnBatteries();
 
