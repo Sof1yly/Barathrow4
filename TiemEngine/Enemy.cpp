@@ -67,6 +67,13 @@ Enemy::Enemy(EnemyType type)
     debuffText = new TextObject();
     debuffText->SetSize(0, 0);
 
+    countdownIcon = new ImageObject();
+    countdownIcon->SetTexture("../Resource/Texture/Vfx/debuffT.png");
+    countdownIcon->SetSize(0.0f, 0.0f); // hidden until preparingAttack
+
+    countdownText = new TextObject();
+    countdownText->SetSize(0, 0);
+
 	//Sprite Create
     switch (type)
     {
@@ -438,6 +445,12 @@ void Enemy::Update(float dt)
     if (debuffText)
         debuffText->SetPosition(glm::vec3(pos.x, pos.y + 30, 200));
 
+    if (countdownIcon)
+        countdownIcon->SetPosition(glm::vec3(pos.x + 55.0f, pos.y - 55.0f, 100.0f));
+
+    if (countdownText)
+        countdownText->SetPosition(glm::vec3(pos.x + 55.0f, pos.y - 55.0f, 105.0f));
+
     if (isTakingDamage)
     {
         damageTimer += dt;
@@ -561,6 +574,14 @@ Enemy::~Enemy()
         delete hpText;
         hpText = nullptr;
     }
+    if (countdownIcon) {
+        delete countdownIcon;
+        countdownIcon = nullptr;
+    }
+    if (countdownText) {
+        delete countdownText;
+        countdownText = nullptr;
+    }
 }
 void Enemy::SetWorldPosition(glm::vec3 pos)
 {
@@ -578,6 +599,29 @@ bool Enemy::isPreparingAttack() const
 void Enemy::setPreparingAttack(bool value)
 {
     preparingAttack = value;
+    RefreshCountdownIcon();
+}
+
+void Enemy::RefreshCountdownIcon()
+{
+    if (!countdownIcon || !countdownText) return;
+
+    if (!preparingAttack)
+    {
+        countdownIcon->SetSize(0.0f, 0.0f);
+        countdownText->SetSize(0.0f, 0.0f);
+        return;
+    }
+
+    // Show icon — attack.png when 1 turn remains (warning), debuffT.png otherwise
+    bool warning = (countdownRemaning <= 1);
+    countdownIcon->SetTexture(warning
+        ? "../Resource/Texture/Vfx/attack.png"
+        : "../Resource/Texture/Vfx/debuffT.png");
+    countdownIcon->SetSize(55.0f, -55.0f);
+
+    SDL_Color white = { 255, 255, 255, 255 };
+    countdownText->LoadText(std::to_string(countdownRemaning), white, 22);
 }
 
 void Enemy::LockAttackPattern(int playerRow, int playerCol)

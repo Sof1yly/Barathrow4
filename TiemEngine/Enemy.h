@@ -2,6 +2,7 @@
 #include "SpriteObject.h"
 #include "AttackPattern.h"
 #include "TextObject.h"
+#include "ImageObject.h"
 #include "EnemyData.h"
 #include "EnemyLoadPattern.h"
 #include <functional>
@@ -172,18 +173,23 @@ public:
     void setCountDownR()
     {
         countdownRemaning = countdown;
+        RefreshCountdownIcon();
     }
 
     void decreaseCountDownR()
     {
         if (countdownRemaning > 0)
             countdownRemaning--;
+        RefreshCountdownIcon();
     }
 
     int getCountDownR() const
     {
         return countdownRemaning;
     }
+
+    ImageObject* getCountdownIcon() const { return countdownIcon; }
+    TextObject*  getCountdownText() const { return countdownText; }
 
     void addDamage()
     {
@@ -264,6 +270,10 @@ protected:
 
     TextObject* debuffText = nullptr;
 
+    ImageObject* countdownIcon = nullptr;
+
+    TextObject* countdownText = nullptr;
+
     float moveTimer = 0.0f;
 
     float moveDuration = 0.95f;
@@ -289,6 +299,7 @@ private:
     bool shieldedFromPlayer = false;  // set by Level; blocks player damage via CardActionExecutor
 
     void RefreshDebuffText();
+    void RefreshCountdownIcon();
 
     glm::vec3 moveStart;
 

@@ -569,6 +569,8 @@ void Level::LevelUpdate()
             objectsList.push_back(ne->getHPText());
             objectsList.push_back(ne->getCorruptText());
             objectsList.push_back(ne->getDebuffText());
+            objectsList.push_back(ne->getCountdownIcon());
+            objectsList.push_back(ne->getCountdownText());
             portal.enemySpawned = true;
             std::cout << "[Boss] Summoned enemy at ("
                       << portal.spawnRow << ", " << portal.spawnCol << ")\n";
@@ -878,6 +880,8 @@ void Level::LevelUpdate()
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownIcon()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
 
             delete e;
             it = enemies.erase(it);
@@ -1012,6 +1016,20 @@ void Level::LevelFree()
         if (deb)
         {
             auto it = std::find(objectsList.begin(), objectsList.end(), deb);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        ImageObject* cdi = e->getCountdownIcon();
+        if (cdi)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), cdi);
+            if (it != objectsList.end()) objectsList.erase(it);
+        }
+
+        TextObject* cdt = e->getCountdownText();
+        if (cdt)
+        {
+            auto it = std::find(objectsList.begin(), objectsList.end(), cdt);
             if (it != objectsList.end()) objectsList.erase(it);
         }
 
@@ -1231,6 +1249,8 @@ void Level::HandleKey(char key)
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getHPText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCorruptText()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getDebuffText()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownIcon()), objectsList.end());
+            objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
 
             delete e;
         }
@@ -2901,6 +2921,8 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
+        objectsList.push_back(e->getCountdownIcon());
+        objectsList.push_back(e->getCountdownText());
 
         std::cout << "[Load] Restored enemy type=" << esd.typeIndex
                   << " at (" << esd.row << "," << esd.col
@@ -2953,6 +2975,8 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
+        objectsList.push_back(e->getCountdownIcon());
+        objectsList.push_back(e->getCountdownText());
         std::cout << "[Spawn] Elite " << index << " at ("
                   << fixedRow << ", " << spawnCol << ")\n";
     };
@@ -2970,6 +2994,8 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
+        objectsList.push_back(e->getCountdownIcon());
+        objectsList.push_back(e->getCountdownText());
         std::cout << "[Spawn] Elite2 " << index << " at ("
                   << fixedRow << ", " << fixedCol << ") [fixed]\n";
     };
@@ -3013,6 +3039,8 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getHPText());
         objectsList.push_back(e->getCorruptText());
         objectsList.push_back(e->getDebuffText());
+        objectsList.push_back(e->getCountdownIcon());
+        objectsList.push_back(e->getCountdownText());
         std::cout << "[Spawn] Normal enemy at (" << spawnRow << ", " << spawnCol << ")\n";
     };
 
@@ -3199,6 +3227,8 @@ void Level::ResetForNextCombat()
         removeObj(e->getHPText());
         removeObj(e->getCorruptText());
         removeObj(e->getDebuffText());
+        removeObj(e->getCountdownIcon());
+        removeObj(e->getCountdownText());
         delete e;
     }
     enemies.clear();
@@ -3475,6 +3505,8 @@ void Level::SpawnBatteries()
         objectsList.push_back(bat->getHPText());
         objectsList.push_back(bat->getCorruptText());
         objectsList.push_back(bat->getDebuffText());
+        objectsList.push_back(bat->getCountdownIcon());
+        objectsList.push_back(bat->getCountdownText());
 
         std::cout << "[Boss] Battery spawned at (" << r << ", " << c << ")\n";
     }
