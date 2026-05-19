@@ -17,7 +17,7 @@ class MapScene
 private:
     std::vector<DrawableObject*> ownedObjects;
 
-    static constexpr int NODE_COUNT = 9;
+    static constexpr int NODE_COUNT = 10;
     ImageObject* nodeIcons[NODE_COUNT]  = {};
     TextObject*  nodeLabels[NODE_COUNT] = {};
 
@@ -60,6 +60,8 @@ private:
     bool done   = false;
 
     static bool IsShopLevel(int level1Based);
+    static bool IsEliteLevel(int level1Based);
+    static bool IsBossLevel(int level1Based);
 
 public:
     // Win transition: player walks from fromLevel to toLevel, then fade out

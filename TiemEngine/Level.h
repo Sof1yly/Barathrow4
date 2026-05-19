@@ -26,6 +26,7 @@
 #include "RewardBoxScene.h"
 #include "CardActionExecutor.h"
 #include "LevelManager.h"
+#include "SaveSystem.h"
 #include "EventScene.h"
 #include "EventRemoveScene.h"
 #include "MapScene.h"
@@ -320,6 +321,7 @@ public:
     void UpdateBossPlayerPos();
 private:
     void SpawnEnemiesForLevel();
+    void RestoreEnemiesFromSave(const SaveData& sd);
     void LoadEnemyData();
     void ResetForNextCombat();
 

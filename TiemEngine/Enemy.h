@@ -208,6 +208,7 @@ public:
     virtual std::vector<std::pair<int, int>> GetOccupiedTiles() const;
 
     int getMaxHealth() const { return maxHealth; }
+    EnemyType getType() const { return type; }
 
 
 protected:
