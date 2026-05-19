@@ -42,48 +42,45 @@ void Boss::RollAttackPattern()
     // in the raw grid.
     //
     // Grid coverage after transform (boss fixed at nowRow=4, nowCol=0, center=(4,2)):
-    //   grid1  – upper rows (playerCol 0-2); only offered when player is there
-    //   grid2  – checkerboard where (playerRow+playerCol) is even  → even==false
-    //   grid3  – checkerboard where (playerRow+playerCol) is odd   → even==true
-    //   grid6  – left  half: rows 0-4, all cols
-    //   grid7  – right half: rows 4-8, all cols
+    //   1  – upper rows sweep (playerCol 0-2 only)
+    //   2  – checkerboard: (playerRow+playerCol) even  → even==false
+    //   3  – checkerboard: (playerRow+playerCol) odd   → even==true
+    //   6  – left  half: rows 0-4, all cols
+    //   7  – right half: rows 4-8, all cols
+    //   8  – cross/plus centered on player (3-wide bars when HP < 50%)
 
-    int relRow = playerRow - nowRow;          // +ve = player is to the right of boss
+    int relRow = playerRow - nowRow;  // +ve = player is right of boss center
 
-    // grid1 hits playerCol 0-2 (top visual rows).  Add it as a 4th option only
-    // when the player is actually up there so it has a real chance of hitting them.
-    int numOptions = (playerCol <= 2) ? 4 : 3;
+    // Build the candidate pool based on current player position and state
+    std::vector<int> candidates;
 
-    switch (rand() % numOptions)
-    {
-    case 0:
-        // Checkerboard — always lands on the player's exact tile parity.
-        // even==true  → (playerRow+playerCol) odd  → grid3 covers that parity
-        // even==false → (playerRow+playerCol) even → grid2 covers that parity
-        attackPatternChoice = even ? 3 : 2;
-        break;
+    // Checkerboard — guaranteed to land on the player's tile parity
+    candidates.push_back(even ? 3 : 2);
 
-    case 1:
-        // Directional half-field — attacks whichever side the player is standing on.
-        // grid6 covers rows 0-4 (relRow ≤ 0); grid7 covers rows 4-8 (relRow ≥ 0).
-        attackPatternChoice = (relRow <= 0) ? 6 : 7;
-        break;
+    // Directional — attack the half the player is standing on
+    candidates.push_back(relRow <= 0 ? 6 : 7);
 
-    case 2:
-        // Directional again as third base option (mirrors case 1 logic, adds variety).
-        attackPatternChoice = (relRow > 0) ? 7 : 6;
-        break;
+    // Opposite directional for variety
+    candidates.push_back(relRow > 0 ? 7 : 6);
 
-    case 3:
-        // Grid1: upper-row sweep — only reachable when playerCol <= 2.
-        attackPatternChoice = 1;
-        break;
-    }
+    // Grid1 — upper-row sweep: only useful when player is in top visual rows (col 0-2)
+    if (playerCol <= 2)
+        candidates.push_back(1);
+
+    // Cross attack: enters pool only when the last attack was NOT cross
+    if (!lastWasCross)
+        candidates.push_back(8);
+
+    attackPatternChoice = candidates[rand() % (int)candidates.size()];
+
+    // Track for the no-double-cross rule
+    lastWasCross = (attackPatternChoice == 8);
 
     std::cout << "[Boss] Pattern " << attackPatternChoice
               << " | player(" << playerRow << "," << playerCol << ")"
               << " relRow=" << relRow
-              << " even=" << even << std::endl;
+              << " even=" << even
+              << " lastWasCross=" << lastWasCross << std::endl;
 }
 
 void Boss::PlayAttackAnimation(glm::vec3 playerPos)
@@ -98,6 +95,7 @@ void Boss::PlayAttackAnimation(glm::vec3 playerPos)
     case 3: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 6: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     case 7: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
+    case 8: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     default: objSprite->SetAnimationOnce(2, 0, 11, 150); attackDuration = 11 * 0.150f; break;
     }
 
@@ -231,6 +229,53 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     if (attackPatternChoice == 3) chosen = &grid3;
     if (attackPatternChoice == 6) chosen = &grid6;
     if (attackPatternChoice == 7) chosen = &grid7;
+
+    // Cross attack (choice 8) — built dynamically from locked player position.
+    // Pattern is applied at (nowRow, nowCol+2) = (4,2), so offsets are relative to that.
+    if (attackPatternChoice == 8)
+    {
+        int drP = playerRow - nowRow;          // player row offset from pattern center
+        int dcP = playerCol - (nowCol + 2);    // player col offset from pattern center (with +2 shift)
+
+        bool enhanced = (health * 2 < maxHealth); // HP < 50% → 3-wide bars
+
+        AttackPattern cross;
+
+        if (!enhanced)
+        {
+            // Simple '+': full player row (all 5 cols) + full player col (all 9 rows)
+            // Row sweep — all cols (dc: -2 to +2 covers grid cols 0-4)
+            for (int dc = -2; dc <= 2; dc++)
+                cross.addOffset(drP, dc, 1);
+
+            // Col sweep — all rows (dr: -4 to +4 covers grid rows 0-8), skip player tile
+            // (already added by row sweep above to avoid double damage)
+            for (int dr = -4; dr <= 4; dr++)
+            {
+                if (dr == drP) continue; // already in row sweep
+                cross.addOffset(dr, dcP, 1);
+            }
+        }
+        else
+        {
+            // Enhanced '+': 3-tile thick bars
+            // Horizontal band: playerRow-1/+0/+1, all cols
+            for (int ddr = -1; ddr <= 1; ddr++)
+                for (int dc = -2; dc <= 2; dc++)
+                    cross.addOffset(drP + ddr, dc, 1);
+
+            // Vertical band: all rows, playerCol-1/+0/+1
+            // Skip rows already covered by the horizontal band to avoid duplicate damage
+            for (int dr = -4; dr <= 4; dr++)
+            {
+                if (dr >= drP - 1 && dr <= drP + 1) continue; // already in horizontal band
+                for (int ddc = -1; ddc <= 1; ddc++)
+                    cross.addOffset(dr, dcP + ddc, 1);
+            }
+        }
+
+        return cross;
+    }
 
     AttackPattern rotated = AttackPattern::fromGrid(*chosen, 'X', 4, 3);
     int rotateTimes = 3;

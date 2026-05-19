@@ -65,4 +65,6 @@ private:
 
     bool summoned66 = false;
     bool summoned33 = false;
+
+    bool lastWasCross = false;  // prevents cross attack from being picked twice in a row
 };
