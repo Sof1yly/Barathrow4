@@ -787,6 +787,7 @@ void Level::LevelUpdate()
             if (EnemyCanAttackPlayer(e))
             {
                 e->setPreparingAttack(true);
+                e->LockAttackPattern(nowRow, nowCol); // must lock so preview & damage use correct position
             }
             else
             {
@@ -1908,11 +1909,13 @@ void Level::ApplyEnemyAttack(Enemy* e)
         if (elite2->IsPlayerInPatternRange(lockedRow, lockedCol))
         {
             hitTiles = elite2->GetCurrentPatternTiles();
+            elite2->AdvancePattern(); // only advance when in-range pattern fires
         }
         else
         {
             hitTiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
             SpawnElite2Projectile(lockedRow, lockedCol);
+            // pattern phase stays unchanged — waits for player to step into range
         }
 
         for (auto& tile : hitTiles)
@@ -1920,7 +1923,6 @@ void Level::ApplyEnemyAttack(Enemy* e)
             if (nowRow == tile.first && nowCol == tile.second)
                 PlayerTakeDamage(elite2->getAttackDamage());
         }
-        elite2->AdvancePattern();
         return;
     }
 
@@ -2601,34 +2603,13 @@ void Level::SpawnEnemiesForLevel()
     // Helper: place an enemy at any valid tile (used for Elite2).
     auto SpawnElite = [&](Enemy* e, int index)
     {
-        std::vector<std::pair<int, int>> validTiles;
-        for (int r = GridStartRow; r < GridEndRow; r++)
-        {
-            for (int c = GridStartCol; c < GridEndCol; c++)
-            {
-                if (!walkable[r][c]) continue;
-                if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
-                bool occupied = false;
-                for (auto* ex : enemies)
-                {
-                    if (!ex || ex->getIsDead()) continue;
-                    if (ex->OccupiesTile(r, c)) { occupied = true; break; }
-                }
-                if (occupied) continue;
-                validTiles.push_back({ r, c });
-            }
-        }
+        // --- FIXED SPAWN for testing: visual row=2 top-to-bottom, col=6 left-to-right
+        //     In code: nowRow=6 (horizontal), nowCol=2 (vertical)
+        const int fixedRow = 6;
+        const int fixedCol = 2;
 
-        if (validTiles.empty())
-        {
-            std::cout << "[Spawn] No valid tile for elite " << index << "\n";
-            delete e;
-            return;
-        }
-
-        int idx = rand() % (int)validTiles.size();
-        int spawnRow = validTiles[idx].first;
-        int spawnCol = validTiles[idx].second;
+        int spawnRow = fixedRow;
+        int spawnCol = fixedCol;
 
         e->setNowPosition(spawnRow, spawnCol);
         e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
@@ -2640,7 +2621,7 @@ void Level::SpawnEnemiesForLevel()
         objectsList.push_back(e->getDebuffText());
 
         std::cout << "[Spawn] Elite " << index << " at ("
-                  << spawnRow << ", " << spawnCol << ")\n";
+                  << spawnRow << ", " << spawnCol << ") [fixed]\n";
     };
 
     // Elite1 x2: one on the left edge, one on the right edge; random col each.

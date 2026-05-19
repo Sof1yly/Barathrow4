@@ -107,35 +107,43 @@ void EliteEnemy2::BuildPatterns()
     patterns.clear();
 
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "..X..",
-        "XXOXX",
-        "..X..",
-        "..X..",
+        ".......",
+        ".......",
+        "..XXX..",
+        "..XOX..",
+        "..XXX..",
+        ".......",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "X...X",
-        ".X.X.",
-        "..O..",
-        ".X.X.",
-        "X...X",
+		".......",
+        "...X...",
+        "..XXX..",
+        ".XXOXX.",
+        "..XXX..",
+        "...X...",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "XXXXX",
-        ".....",
-        "X.O.X",
-        ".....",
-        "XXXXX",
+		".......",
+        ".XXXXX.",
+        ".XXXXX.",
+        ".XXOXX.",
+        ".XXXXX.",
+        ".XXXXX.",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "XXXXX",
-        "XXOXX",
-        "XXXXX",
-        "..X..",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXOXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
     }, 'X'));
 }
 
