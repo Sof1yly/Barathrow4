@@ -18,7 +18,7 @@ EliteEnemy1::EliteEnemy1()
     maxHealth = 30;
     health    = maxHealth;
     damage    = 10;
-    moveRange = 1;
+    moveRange = 2;
     spriteSize = 150.0f;
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }
