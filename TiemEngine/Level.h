@@ -16,6 +16,7 @@
 #include "CardSystem.h"
 #include "Enemy.h"
 #include "Boss.h"
+#include "Battery.h"
 #include "EliteEnemy1.h"
 #include "HighlightManager.h"
 #include "Player.h"
@@ -314,6 +315,10 @@ public:
     bool IsWalkable(int row, int col) const;
 
     void SpawnBossSummon();
+    void SpawnBatteries();
+
+    // Returns true if any Battery is still alive in the enemies list
+    bool AnyBatteryAlive() const;
 
     void SetPlayerSpawnPosition();
 

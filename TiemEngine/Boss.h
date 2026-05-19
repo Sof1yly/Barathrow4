@@ -48,8 +48,12 @@ public:
 	}
 
     int TryGetSummon();
-    
+
+    // Returns true (exactly once) when boss HP drops to ≤50% and batteries haven't been spawned yet.
+    bool ShouldSpawnBatteries();
+
 private:
+    bool batteriesSummoned = false; // ensures batteries spawn only once
     int hitboxTopOffset = -2;
     int hitboxBottomOffset = 2;
     int hitboxLeftOffset = 0;

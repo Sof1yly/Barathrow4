@@ -242,6 +242,13 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
                 if (e->OccupiesTile(gx, gy))
                 {
+                    // Boss (or any enemy) can be shielded by batteries — skip damage
+                    if (e->getShieldedFromPlayer())
+                    {
+                        std::cout << "    [Battery Shield] Enemy is protected — damage blocked!\n";
+                        continue;
+                    }
+
                     e->getDamage(attackDamage);
                     hitThisAttack.insert(e);
                     cellHit = true;

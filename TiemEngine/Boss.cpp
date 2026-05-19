@@ -3,7 +3,7 @@
 Boss::Boss()
     : Enemy(EnemyType::C)
 {
-    maxHealth = 50;
+    maxHealth = 10;
     health = maxHealth;
 
     SDL_Color white = { 255, 255, 255 };
@@ -344,4 +344,16 @@ int Boss::TryGetSummon()
 {
     // Summon is now a normal rolled skill (choice 9) rather than HP-threshold based.
     return (attackPatternChoice == 9) ? 1 : 0;
+}
+
+bool Boss::ShouldSpawnBatteries()
+{
+    if (batteriesSummoned) return false;
+    if (health * 2 <= maxHealth)      // HP ≤ 50%
+    {
+        batteriesSummoned = true;
+        std::cout << "[Boss] HP ≤ 50% — spawning batteries!\n";
+        return true;
+    }
+    return false;
 }

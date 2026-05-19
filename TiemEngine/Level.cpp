@@ -578,6 +578,14 @@ void Level::LevelUpdate()
         HandlePlayerDeath();
     }
 
+    // Battery spawn trigger: fires once when boss HP drops to ≤50%
+    if (boss && bossEnemy && !bossEnemy->getIsDead() && bossEnemy->ShouldSpawnBatteries())
+        SpawnBatteries();
+
+    // Keep boss shield flag in sync: blocks player damage while any battery is alive
+    if (boss && bossEnemy && !bossEnemy->getIsDead())
+        bossEnemy->setShieldedFromPlayer(AnyBatteryAlive());
+
     UpdateTurn();
     for (auto* e : enemies)
     {
@@ -2005,6 +2013,13 @@ void Level::ApplyAttackCells(const std::vector<std::pair<IVec2, int>>& cells)
 
         if (hit)
         {
+            // While batteries are alive the player cannot damage the Boss
+            if (dynamic_cast<Boss*>(e) && AnyBatteryAlive())
+            {
+                std::cout << "[Battery Shield] Boss is protected — damage blocked!\n";
+                continue;
+            }
+
             e->getDamage(1);
             cout << "HIT!!! Enemy HP: " << e->getHealth() << endl;
         }
@@ -2099,6 +2114,9 @@ void Level::ApplyEnemyAttack(Enemy* e)
 bool Level::EnemyCanAttackPlayer(Enemy* e)
 {
     if (!e) return false;
+
+    // Batteries never attack the player
+    if (dynamic_cast<Battery*>(e)) return false;
 
     if (e == bossEnemy)
         return true;
@@ -3017,6 +3035,43 @@ void Level::SpawnBossSummon()
     objectsList.push_back(e->getDebuffText());
 
     std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+}
+
+bool Level::AnyBatteryAlive() const
+{
+    for (auto* e : enemies)
+    {
+        if (!e || e->getIsDead()) continue;
+        if (dynamic_cast<const Battery*>(e)) return true;
+    }
+    return false;
+}
+
+void Level::SpawnBatteries()
+{
+    // Spawn two batteries: left edge bottom (row 0, col 4) and right edge bottom (row 8, col 4).
+    // "col 4" is the far column away from the player start (bottom of the visual grid).
+    const std::pair<int,int> spawnPoints[] = { {0, 4}, {8, 4} };
+
+    for (auto& sp : spawnPoints)
+    {
+        int r = sp.first;
+        int c = sp.second;
+
+        Battery* bat = new Battery();
+        bat->setNowPosition(r, c);
+        bat->SetWorldPosition(GridToWorld(r, c));
+
+        enemies.push_back(bat);
+        objectsList.push_back(bat->getObject());
+        objectsList.push_back(bat->getHPText());
+        objectsList.push_back(bat->getCorruptText());
+        objectsList.push_back(bat->getDebuffText());
+
+        std::cout << "[Boss] Battery spawned at (" << r << ", " << c << ")\n";
+    }
+    // Boss continues to attack normally while batteries are alive.
+    // Player attacks on the boss are blocked (ApplyAttackCells checks AnyBatteryAlive).
 }
 
 void Level::SetPlayerSpawnPosition()

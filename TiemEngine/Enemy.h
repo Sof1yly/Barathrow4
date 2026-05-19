@@ -209,6 +209,9 @@ public:
 
     int getMaxHealth() const { return maxHealth; }
 
+    // Set by Level each frame: while true, CardActionExecutor skips player damage on this enemy
+    void setShieldedFromPlayer(bool v) { shieldedFromPlayer = v; }
+    bool getShieldedFromPlayer()  const { return shieldedFromPlayer; }
 
 protected:
 
@@ -281,6 +284,8 @@ protected:
     int weakenTurns = 0;
 
 private:
+
+    bool shieldedFromPlayer = false;  // set by Level; blocks player damage via CardActionExecutor
 
     void RefreshDebuffText();
 
