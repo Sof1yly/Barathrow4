@@ -918,6 +918,11 @@ void Level::LevelFree()
 
     // 5. Reset game state
     damagePopups.clear();
+
+    // Projectile sprites were already freed above via objectsList — just drop the structs.
+    // Leaving these vectors non-empty causes a dangling-pointer crash on the next LevelUpdate.
+    elite1Projectiles.clear();
+    elite2Projectiles.clear();
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;
