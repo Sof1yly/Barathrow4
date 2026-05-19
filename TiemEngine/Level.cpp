@@ -916,15 +916,19 @@ void Level::LevelUpdate()
         {
             if (!e || e->getIsDead()) continue;
 
-            if (EnemyCanAttackPlayer(e))
+            if (e->isPreparingAttack())
             {
-                e->setPreparingAttack(true);
-                e->LockAttackPattern(nowRow, nowCol); // must lock so preview & damage use correct position
+                // Enemy was mid-countdown: keep it preparing but refresh the locked
+                // position so highlights and damage land in the right place.
+                if (EnemyCanAttackPlayer(e))
+                    e->LockAttackPattern(nowRow, nowCol);
+                else
+                    e->setPreparingAttack(false); // can no longer reach player
             }
-            else
-            {
-                e->setPreparingAttack(false);
-            }
+            // Enemies that are NOT preparing are intentionally left alone.
+            // UpdateTurn will arm them (with the correct countdown) on their next turn.
+            // Re-arming them here without setCountDownR() causes double damage because
+            // countdownRemaining stays at 0 and they fire again immediately next turn.
         }
         PreviewAllEnemyAttacks();
     }
