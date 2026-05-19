@@ -320,6 +320,7 @@ public:
 
     void UpdateBossPlayerPos();
 private:
+    void InitBossLevel();
     void SpawnEnemiesForLevel();
     void RestoreEnemiesFromSave(const SaveData& sd);
     void LoadEnemyData();

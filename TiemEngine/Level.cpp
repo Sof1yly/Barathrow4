@@ -107,51 +107,8 @@ void Level::LevelInit()
     highlightManager.Init(objectsList, GridWide, GridHigh);
 
 
-    if (boss)//test boss spawn
-    {
-        bossEnemy = new Boss();
-
-        bossEnemy->setNowPosition(4, 0);
-
-        glm::vec3 pos = GridToWorld(
-            bossEnemy->getNowRow(),
-            bossEnemy->getNowCol()
-        );
-
-        bossEnemy->SetWorldPosition(pos);
-
-        enemies.push_back(bossEnemy);
-
-        objectsList.push_back(bossEnemy->getObject());
-
-        objectsList.push_back(bossEnemy->getHPText());
-
-        objectsList.push_back(bossEnemy->getCorruptText());
-
-        objectsList.push_back(bossEnemy->getDebuffText());
-        {
-            ImageObject* bg = new ImageObject();
-            bg->SetSize(600.0f, -100.0f);
-            bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
-            bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
-            objectsList.push_back(bg);
-            bossHpBg = bg;
-        }
-        {
-            bossHpBar = new ImageObject();
-            bossHpBar->SetSize(600.0f, -100.0f);
-            bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
-            bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
-            objectsList.push_back(bossHpBar);
-        }
-        {
-            bossHpMask = new ImageObject();
-            bossHpMask->SetSize(0.0f, -50.0f);
-            bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
-            bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
-            objectsList.push_back(bossHpMask);
-        }
-    }
+    if (boss)
+        InitBossLevel();
 
     // Load save data early so player position and enemy layout are correct from the start
     SaveData pendingSave;
@@ -2696,6 +2653,58 @@ void Level::LoadEnemyData()
     EnemyLoadPattern::LoadFromFile(PATH_ENEMY_PATTERN);
 }
 
+void Level::InitBossLevel()
+{
+    boss = true;
+
+    // Remove stale HP bar objects if they exist (e.g. re-entering boss level)
+    auto removeObj = [&](ImageObject*& ptr)
+    {
+        if (!ptr) return;
+        objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), ptr), objectsList.end());
+        delete ptr;
+        ptr = nullptr;
+    };
+    removeObj(bossHpBg);
+    removeObj(bossHpBar);
+    removeObj(bossHpMask);
+
+    // Spawn boss
+    bossEnemy = new Boss();
+    bossEnemy->setNowPosition(4, 0);
+    bossEnemy->SetWorldPosition(GridToWorld(4, 0));
+
+    enemies.push_back(bossEnemy);
+    objectsList.push_back(bossEnemy->getObject());
+    objectsList.push_back(bossEnemy->getHPText());
+    objectsList.push_back(bossEnemy->getCorruptText());
+    objectsList.push_back(bossEnemy->getDebuffText());
+
+    // Boss HP bar UI
+    {
+        ImageObject* bg = new ImageObject();
+        bg->SetSize(600.0f, -100.0f);
+        bg->SetPosition(glm::vec3(0.0f, 490.0f, 0.0f));
+        bg->SetTexture("../Resource/Texture/UI/Boss_HPbar_Blank.PNG");
+        objectsList.push_back(bg);
+        bossHpBg = bg;
+    }
+    {
+        bossHpBar = new ImageObject();
+        bossHpBar->SetSize(600.0f, -100.0f);
+        bossHpBar->SetPosition(glm::vec3(0.0f, 490.0f, 1.0f));
+        bossHpBar->SetTexture("../Resource/Texture/UI/Boss_HPbar.PNG");
+        objectsList.push_back(bossHpBar);
+    }
+    {
+        bossHpMask = new ImageObject();
+        bossHpMask->SetSize(0.0f, -50.0f);
+        bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
+        bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
+        objectsList.push_back(bossHpMask);
+    }
+}
+
 void Level::RestoreEnemiesFromSave(const SaveData& sd)
 {
     for (const auto& esd : sd.enemies)
@@ -2739,10 +2748,10 @@ void Level::SpawnEnemiesForLevel()
 {
     LevelConfig cfg = levelManager.GetCurrentConfig();
 
-    // Boss level — setup already runs in LevelInit; just guard the flag here.
+    // Boss level — full setup (spawn + HP bar).
     if (cfg.type == LevelConfig::Type::Boss)
     {
-        boss = true;
+        InitBossLevel();
         return;
     }
 
@@ -2955,6 +2964,19 @@ void Level::ResetForNextCombat()
     currentPatternIndex  = 0;
     currentRotation      = 0;
 
+    // Reset boss state — enemies were not cleared yet here but pointers need refresh
+    bossActed = false;
+    boss = levelManager.IsBossLevel();
+
+    // Reset walkable array for the new level, then apply boss constraints if needed
+    for (int r = 0; r < GRID_ROWS; r++)
+        for (int c = 0; c < GRID_COLS; c++)
+            walkable[r][c] = true;
+    if (boss)
+        for (int col = 0; col < 2; col++)
+            for (int row = 2; row < 7; row++)
+                walkable[row][col] = false;
+
     // Move player back to start; HP and coins carry over
     SetPlayerSpawnPosition();
     playerDir   = PlayerDir::DOWN;
@@ -3004,6 +3026,7 @@ void Level::ResetForNextCombat()
         delete e;
     }
     enemies.clear();
+    bossEnemy = nullptr; // pointer is dangling after delete above
 
     // Expire lingering damage popups
     for (auto& p : damagePopups)
