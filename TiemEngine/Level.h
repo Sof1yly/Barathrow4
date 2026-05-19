@@ -16,6 +16,7 @@
 #include "CardSystem.h"
 #include "Enemy.h"
 #include "Boss.h"
+#include "EliteEnemy1.h"
 #include "HighlightManager.h"
 #include "Player.h"
 #include "DeckViewer.h"
@@ -38,6 +39,26 @@ struct DamagePopup {
     float duration = 1200.0f; // total lifetime ms
     float floatSpeed = 0.07f; // pixels per ms (upward)
     bool  expired  = false;
+};
+
+// Travelling projectile fired by EliteEnemy1
+struct Elite1Projectile {
+    SpriteObject* sprite   = nullptr;
+    glm::vec3     startPos;
+    glm::vec3     endPos;
+    float         timer    = 0.0f;
+    float         duration = 1000.0f; // ms to cross the full grid
+    bool          done     = false;
+};
+
+// Projectile dropped from the top of the screen by EliteEnemy2 (cross attack)
+struct Elite2Projectile {
+    SpriteObject* sprite   = nullptr;
+    glm::vec3     startPos;
+    glm::vec3     endPos;
+    float         timer    = 0.0f;
+    float         duration = 700.0f; // ms to fall
+    bool          done     = false;
 };
 
 class Level
@@ -205,6 +226,12 @@ private:
     // Floating damage popups
     std::vector<DamagePopup> damagePopups;
 
+    // Elite1 travelling projectiles
+    std::vector<Elite1Projectile> elite1Projectiles;
+
+    // Elite2 falling projectiles
+    std::vector<Elite2Projectile> elite2Projectiles;
+
     // Patterns
     std::vector<AttackPattern> patterns;
     AttackPattern rotatedPattern;
@@ -282,6 +309,8 @@ public:
 
     // Spawn a floating damage number at a world position
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
+    void SpawnElite1Projectile(EliteEnemy1* elite1);
+    void SpawnElite2Projectile(int centerRow, int centerCol);
     bool IsWalkable(int row, int col) const;
 
     void SpawnBossSummon();

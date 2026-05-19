@@ -3,14 +3,14 @@
 // Sprite sheet rows (adjust frame counts to match your actual asset):
 static constexpr int E1_ROW_IDLE   = 0;
 static constexpr int E1_ROW_WALK   = 0; // use idle row while moving
-static constexpr int E1_ROW_ATTACK = 2;
-static constexpr int E1_ROW_DAMAGE = 3;
-static constexpr int E1_ROW_DEATH  = 4;
+static constexpr int E1_ROW_ATTACK = 3;
+static constexpr int E1_ROW_DAMAGE = 4;
+static constexpr int E1_ROW_DEATH  = 5;
 
 static constexpr int E1_FRAMES_IDLE   = 12;
-static constexpr int E1_FRAMES_ATTACK = 8;
-static constexpr int E1_FRAMES_DAMAGE = 6;
-static constexpr int E1_FRAMES_DEATH  = 10;
+static constexpr int E1_FRAMES_ATTACK = 4;
+static constexpr int E1_FRAMES_DAMAGE = 4;
+static constexpr int E1_FRAMES_DEATH  = 12;
 
 EliteEnemy1::EliteEnemy1()
     : EliteEnemy(EliteType::Row)

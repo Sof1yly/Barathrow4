@@ -7,9 +7,9 @@ static constexpr int E2_ROW_DAMAGE = 2;
 static constexpr int E2_ROW_DEATH  = 3;
 
 static constexpr int E2_FRAMES_IDLE   = 6;
-static constexpr int E2_FRAMES_ATTACK = 6;
-static constexpr int E2_FRAMES_DAMAGE = 6;
-static constexpr int E2_FRAMES_DEATH  = 6;
+static constexpr int E2_FRAMES_ATTACK = 7;
+static constexpr int E2_FRAMES_DAMAGE = 3;
+static constexpr int E2_FRAMES_DEATH  = 7;
 
 EliteEnemy2::EliteEnemy2()
     : EliteEnemy(EliteType::Pattern)
@@ -107,35 +107,43 @@ void EliteEnemy2::BuildPatterns()
     patterns.clear();
 
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "..X..",
-        "XXOXX",
-        "..X..",
-        "..X..",
+        ".......",
+        ".......",
+        "..XXX..",
+        "..XOX..",
+        "..XXX..",
+        ".......",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "X...X",
-        ".X.X.",
-        "..O..",
-        ".X.X.",
-        "X...X",
+		".......",
+        "...X...",
+        "..XXX..",
+        ".XXOXX.",
+        "..XXX..",
+        "...X...",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "XXXXX",
-        ".....",
-        "X.O.X",
-        ".....",
-        "XXXXX",
+		".......",
+        ".XXXXX.",
+        ".XXXXX.",
+        ".XXOXX.",
+        ".XXXXX.",
+        ".XXXXX.",
+		".......",
     }, 'X'));
 
     patterns.push_back(AttackPattern::fromGrid({
-        "..X..",
-        "XXXXX",
-        "XXOXX",
-        "XXXXX",
-        "..X..",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXOXXX",
+        "XXXXXXX",
+        "XXXXXXX",
+        "XXXXXXX",
     }, 'X'));
 }
 

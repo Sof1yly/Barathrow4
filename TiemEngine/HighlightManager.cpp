@@ -8,7 +8,7 @@ void HighlightManager::Init(std::vector<DrawableObject*>& sceneObjects,
 
     attackHighlights.reserve(20);
     moveHighlights.reserve(10);
-    enemyHighlights.reserve(20);
+    enemyHighlights.reserve(60);
 
     // Attack highlights (white)
     for (int i = 0; i < 20; i++)
@@ -33,7 +33,8 @@ void HighlightManager::Init(std::vector<DrawableObject*>& sceneObjects,
     }
 
     // Enemy highlight (red)
-    for (int i = 0; i < 20; i++)
+    // Pool must cover worst case: Elite1 col (9) + Elite1 col (9) + Elite2 pattern3 (≤35) + Boss = 60
+    for (int i = 0; i < 60; i++)
     {
         GameObject* h = new GameObject();
         h->SetSize(gridWide, gridHigh);
