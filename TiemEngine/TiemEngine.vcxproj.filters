@@ -171,6 +171,15 @@
     <ClCompile Include="EliteEnemy2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MapScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EventPage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingPage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Action.h">
@@ -338,6 +347,15 @@
     <ClInclude Include="EliteEnemy2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EventPage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingPage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Resource\Shader\fragment.shd">
@@ -357,13 +375,13 @@
     <Text Include="..\Resource\GameData\CardDesc.txt">
       <Filter>Resource Files</Filter>
     </Text>
-    <Text Include="..\Resource\GameData\CardDesc_filled.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
     <Text Include="..\Resource\GameData\EnemyData.txt">
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="..\Resource\GameData\EnemyPattern.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\Resource\GameData\CardAction_filled.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

@@ -140,10 +140,10 @@
     <None Include="..\Resource\Shader\vertext.shd" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="..\Resource\GameData\CardAction_filled.txt" />
     <Text Include="..\Resource\GameData\Pattern.txt" />
     <Text Include="..\Resource\GameData\CardActionStandard.txt" />
     <Text Include="..\Resource\GameData\CardDesc.txt" />
-    <Text Include="..\Resource\GameData\CardDesc_filled.txt" />
     <Text Include="..\Resource\GameData\EnemyData.txt" />
     <Text Include="..\Resource\GameData\EnemyPattern.txt" />
   </ItemGroup>
