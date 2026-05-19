@@ -129,6 +129,18 @@ void Level::LevelInit()
         }
     }
 
+    // Determine elite flags before setting spawn position so SetPlayerSpawnPosition uses them
+    {
+        LevelConfig cfg = levelManager.GetCurrentConfig();
+        elite1 = (cfg.type == LevelConfig::Type::Elite1);
+        elite2 = (cfg.type == LevelConfig::Type::Elite2);
+        if (cfg.type == LevelConfig::Type::EliteRandom)
+        {
+            if (rand() % 2 == 0) elite1 = true;
+            else                  elite2 = true;
+        }
+    }
+
     if (!hasSave)
         SetPlayerSpawnPosition();
 
@@ -3000,7 +3012,7 @@ void Level::SpawnEnemiesForLevel()
     }
     if (cfg.type == LevelConfig::Type::EliteRandom)
     {
-        if (rand() % 2 == 0)
+        if (elite1)
         {
             SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
             SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
@@ -3097,9 +3109,21 @@ void Level::ResetForNextCombat()
     currentPatternIndex  = 0;
     currentRotation      = 0;
 
-    // Reset boss state — enemies were not cleared yet here but pointers need refresh
+    // Reset boss/elite state before SetPlayerSpawnPosition so spawn uses correct flags
     bossActed = false;
-    boss = levelManager.IsBossLevel();
+    boss   = levelManager.IsBossLevel();
+    elite1 = false;
+    elite2 = false;
+    {
+        LevelConfig cfg = levelManager.GetCurrentConfig();
+        if (cfg.type == LevelConfig::Type::Elite1) elite1 = true;
+        else if (cfg.type == LevelConfig::Type::Elite2) elite2 = true;
+        else if (cfg.type == LevelConfig::Type::EliteRandom)
+        {
+            if (rand() % 2 == 0) elite1 = true;
+            else                  elite2 = true;
+        }
+    }
 
     // Reset walkable array for the new level, then apply boss constraints if needed
     for (int r = 0; r < GRID_ROWS; r++)
@@ -3456,7 +3480,7 @@ void Level::SetPlayerSpawnPosition()
     if (elite1)
     {
         nowRow = 4;
-        nowCol = 3;
+        nowCol = 2;
         return;
     }
 
