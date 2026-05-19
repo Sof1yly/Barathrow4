@@ -53,7 +53,9 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	boss = false; //Set boss level, for testing ** change later ** 
+	boss   = false; //Set boss level,   for testing ** change later **
+	elite1 = false; //Set elite1 level, for testing ** change later **
+	elite2 = false; //Set elite2 level, for testing ** change later **
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
@@ -2910,10 +2912,84 @@ void Level::SpawnEnemiesForLevel()
                   << spawnRow << ", " << spawnCol << ") [fixed]\n";
     };
 
-    // Elite1 x2: one on the left edge, one on the right edge; random col each.
-    SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,      1);
-    SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1,    2);
-    SpawnElite(new EliteEnemy2(), 3);
+    // ── Decide which enemy set to spawn ─────────────────────────────────────
+    if (elite1 && elite2)
+    {
+        // Both elite types present
+        SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
+        SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
+        SpawnElite(new EliteEnemy2(), 3);
+    }
+    else if (elite1)
+    {
+        // Elite1 only
+        SpawnEliteAtRow(new EliteEnemy1(), GridStartRow,   1);
+        SpawnEliteAtRow(new EliteEnemy1(), GridEndRow - 1, 2);
+    }
+    else if (elite2)
+    {
+        // Elite2 only
+        SpawnElite(new EliteEnemy2(), 1);
+    }
+    else
+    {
+        // Normal combat: spawn 3 random enemies from the pool
+        static const Enemy::EnemyType pool[] = {
+            Enemy::EnemyType::A,
+            Enemy::EnemyType::B,
+            Enemy::EnemyType::C,
+            Enemy::EnemyType::D,
+            Enemy::EnemyType::E,
+            Enemy::EnemyType::F,
+            Enemy::EnemyType::G
+        };
+
+        for (int i = 0; i < 3; i++)
+        {
+            std::vector<std::pair<int, int>> validTiles;
+            for (int r = GridStartRow; r < GridEndRow; r++)
+            {
+                for (int c = GridStartCol; c < GridEndCol; c++)
+                {
+                    if (!walkable[r][c]) continue;
+                    if (abs(r - nowRow) + abs(c - nowCol) <= 1) continue;
+                    bool occupied = false;
+                    for (auto* ex : enemies)
+                    {
+                        if (!ex || ex->getIsDead()) continue;
+                        if (ex->OccupiesTile(r, c)) { occupied = true; break; }
+                    }
+                    if (occupied) continue;
+                    validTiles.push_back({ r, c });
+                }
+            }
+
+            if (validTiles.empty())
+            {
+                std::cout << "[Spawn] No valid tile for enemy " << i + 1 << "\n";
+                break;
+            }
+
+            int idx      = rand() % (int)validTiles.size();
+            int spawnRow = validTiles[idx].first;
+            int spawnCol = validTiles[idx].second;
+            Enemy::EnemyType type = pool[rand() % 7];
+
+            Enemy* e = new Enemy(type);
+            e->setNowPosition(spawnRow, spawnCol);
+            e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+
+            enemies.push_back(e);
+            objectsList.push_back(e->getObject());
+            objectsList.push_back(e->getHPText());
+            objectsList.push_back(e->getCorruptText());
+            objectsList.push_back(e->getDebuffText());
+
+            std::cout << "[Spawn] Normal enemy " << i + 1
+                      << " (type " << (int)type << ") at ("
+                      << spawnRow << ", " << spawnCol << ")\n";
+        }
+    }
 }
 
 void Level::AdvanceToNextRound()

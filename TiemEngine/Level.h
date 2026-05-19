@@ -96,6 +96,8 @@ private:
     /////////////
     //Set Boss //
     bool boss = false;
+    bool elite1 = false;
+    bool elite2 = false;
     Boss* bossEnemy = nullptr;
     bool bossActed = false;
     ImageObject* bossHpBg = nullptr;
