@@ -53,7 +53,7 @@ void Level::LevelLoad()
 
 void Level::LevelInit()
 {
-	boss = false; //Set boss level, for testing ** change later ** 
+	boss = true; //Set boss level, for testing ** change later ** 
 	srand((unsigned int)time(NULL));
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);

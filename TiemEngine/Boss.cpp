@@ -14,7 +14,7 @@ Boss::Boss()
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }
 
-    objSprite = new SpriteObject("../Resource/Texture/Boss/Boss1.png", 4, 11);
+    objSprite = new SpriteObject("../Resource/Texture/Boss/Boss1.png", 8, 11);
     objSprite->SetAnimationLoop(0, 0, 5, 250);
     objSprite->SetSize(224.0f * 3, -160.0f * 3);
 }
