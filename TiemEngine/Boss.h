@@ -22,6 +22,7 @@ public:
     void PlayAttackAnimation(glm::vec3 playerPos) override;
     void getDamage(int damage) override;
     void setPreparingAttack(bool value) override;
+    int  getAttackDamage() const override;
 
     void setPlayerPosition(int row, int col)
     {

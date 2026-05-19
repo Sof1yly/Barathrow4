@@ -133,7 +133,7 @@ public:
 
     void decrementWeaken();
 
-    int getAttackDamage() const;
+    virtual int getAttackDamage() const;
 
     bool isPreparingAttack() const;
 

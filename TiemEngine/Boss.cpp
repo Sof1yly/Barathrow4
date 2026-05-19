@@ -286,6 +286,41 @@ AttackPattern Boss::GetRotatedPatternTowardPlayer(int playerRow, int playerCol) 
     //////////////////////////////
 }
 
+int Boss::getAttackDamage() const
+{
+    // Per-pattern damage values (weaken multiplier still applied via base class logic)
+    int baseDamage;
+    switch (attackPatternChoice)
+    {
+    case 2:
+    case 3:
+        baseDamage = 10; // checkerboard patterns
+        break;
+
+    case 1:
+    case 6:
+    case 7:
+        baseDamage = 20; // sweep / half-field patterns
+        break;
+
+    case 8:
+        // Cross attack: 5 normally, 20 when enhanced (HP < 50% → 3-wide bars)
+        baseDamage = (health * 2 < maxHealth) ? 20 : 5;
+        break;
+
+    default:
+        baseDamage = damage; // fallback to base damage field
+        break;
+    }
+
+    // Respect the weaken debuff the same way the base class does
+    if (weakenTurns <= 0)
+        return baseDamage;
+
+    const float weakened = baseDamage * 0.75f;
+    return std::max(0, static_cast<int>(std::ceil(weakened)));
+}
+
 int Boss::TryGetSummon()
 {
     int count = 0;
