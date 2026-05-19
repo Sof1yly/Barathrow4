@@ -467,7 +467,7 @@ void Level::LevelUpdate()
         glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * t;
         pos.z = 6.0f;
         proj.sprite->SetPosition(pos);
-        proj.sprite->Update(deltaTime);
+        proj.sprite->Update((float)deltaTime);
 
         if (t >= 1.0f)
         {
@@ -495,7 +495,7 @@ void Level::LevelUpdate()
         glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * et;
         pos.z = 6.0f;
         proj.sprite->SetPosition(pos);
-        proj.sprite->Update(deltaTime);
+        proj.sprite->Update((float)deltaTime);
 
         if (t >= 1.0f)
         {
@@ -537,7 +537,7 @@ void Level::LevelUpdate()
         glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * t;
         pos.z = 6.0f;
         proj.sprite->SetPosition(pos);
-        proj.sprite->Update(deltaTime);
+        proj.sprite->Update((float)deltaTime);
 
         if (t >= 1.0f)
         {
@@ -595,7 +595,7 @@ void Level::LevelUpdate()
         if (winDelay >= 2500.0f)
         {
             winDelayActive = false;
-            rewardBoxScene.Open(pendingCoinsEarned, objectsList);
+            rewardBoxScene.Open(pendingCoinsEarned, objectsList, boss || elite1 || elite2);
             rewardPickedAfterWin = true;
         }
     }
@@ -1595,6 +1595,7 @@ void Level::HandleMouse(int type, int x, int y)
             }
             if (clicked == 2)
             {
+                cardRewardSystem.SetForceLegendary(boss || elite1 || elite2);
                 cardRewardSystem.Open(objectsList);
                 if (!cardRewardSystem.IsActive())
                 {
@@ -1997,11 +1998,11 @@ void Level::HandleMouse(int type, int x, int y)
                         }
                         else if (attackType == 1)
                         {
-                            playerData.SetPlayerAttackAoe((int)playerDir);
+                            playerData.SetPlayerAttackAoe(ConvertDir(playerDir));
                         }
-                        else if (attackType ==2)
+                        else if (attackType == 2)
                         {
-                            playerData.SetPlayerAttackRange((int)playerDir);
+                            playerData.SetPlayerAttackRange(ConvertDir(playerDir));
                         }
 
                         std::cout << "[Attack Animation Started]\n";

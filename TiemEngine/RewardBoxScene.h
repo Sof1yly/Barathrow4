@@ -143,7 +143,7 @@ public:
         ApplyRowHover(cardRow, !cardRow.claimed && IsInRow(cardRow, x, y));
     }
 
-    void Open(int coins, std::vector<DrawableObject*>& objectsList)
+    void Open(int coins, std::vector<DrawableObject*>& objectsList, bool isEliteBoss = false)
     {
         if (active) return;
         active = true;
@@ -182,9 +182,9 @@ public:
         const float cardRowY = coinRowY - kBtnH - rowGap;
 
         const char* currencyPath;
-        if      (coins >= 500) currencyPath = "../Resource/Texture/UI/RewardScene/currency_3.png";
-        else if (coins >= 150) currencyPath = "../Resource/Texture/UI/RewardScene/currency_2.png";
-        else                   currencyPath = "../Resource/Texture/UI/RewardScene/currency_1.png";
+        if      (coins > 90) currencyPath = "../Resource/Texture/UI/RewardScene/currency_3.png";
+        else if (coins > 44) currencyPath = "../Resource/Texture/UI/RewardScene/currency_2.png";
+        else                 currencyPath = "../Resource/Texture/UI/RewardScene/currency_1.png";
 
         SDL_Color gold     = { 255, 215,   0, 255 };
         SDL_Color cardBlue = { 160, 210, 255, 255 };
@@ -192,8 +192,12 @@ public:
         BuildRow(coinRow, coinRowY, currencyPath,
                  std::to_string(coins) + " Gold", gold, objectsList);
 
+        const char* cardIconPath = isEliteBoss
+            ? "../Resource/Texture/UI/RewardScene/rare_card.png"
+            : "../Resource/Texture/UI/RewardScene/normal_card.png";
+
         BuildRow(cardRow, cardRowY,
-                 "../Resource/Texture/UI/RewardScene/normal_card.png",
+                 cardIconPath,
                  "Choose Card", cardBlue, objectsList);
 
         // Skip button — outside the backboard, bottom-right

@@ -48,6 +48,7 @@ private:
 
     bool poolLoaded = false;
     bool active = false;
+    bool forceLegendary = false;
 
     std::mt19937 rng;
 
@@ -90,8 +91,10 @@ private:
         for (auto& b : buckets)
             std::shuffle(b.begin(), b.end(), rng);
 
-        // Weighted roll: com = 60, rar = 30, leg = 10
-        std::discrete_distribution<int> dist({ 60.0, 30.0, 10.0 });
+        // Weighted roll: com = 60, rar = 30, leg = 10  (or 100% legendary for elite/boss)
+        std::discrete_distribution<int> dist(
+            forceLegendary ? std::initializer_list<double>{ 0.0, 0.0, 100.0 }
+                           : std::initializer_list<double>{ 60.0, 30.0, 10.0 });
 
         std::unordered_set<std::string> usedNames;
 
@@ -406,6 +409,8 @@ public:
     }
 
     GameDataLoader& GetRewardLoader() { return rewardLoader; }
+
+    void SetForceLegendary(bool v) { forceLegendary = v; }
 
     ~CardRewardSystem()
     {
