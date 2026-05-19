@@ -147,6 +147,13 @@ void EliteEnemy2::BuildPatterns()
     }, 'X'));
 }
 
+int EliteEnemy2::getAttackDamage() const
+{
+    // In-range pattern damage scales with phase
+    static const int phaseDamage[] = { 10, 20, 30, 40 };
+    return phaseDamage[currentPhase];
+}
+
 void EliteEnemy2::AdvancePattern()
 {
     currentPhase        = (currentPhase + 1) % 4;

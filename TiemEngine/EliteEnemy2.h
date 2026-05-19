@@ -31,6 +31,9 @@ public:
 
     bool IsPlayerInPatternRange(int playerRow, int playerCol) const;
 
+    // Returns per-phase damage: 10 / 20 / 30 / 40
+    int getAttackDamage() const override;
+
     std::vector<std::pair<int, int>> GetCrossAttackTiles(
         int playerRow, int playerCol) const;
 
