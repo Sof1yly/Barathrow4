@@ -3453,6 +3453,20 @@ void Level::SetPlayerSpawnPosition()
         return;
     }
 
+    if (elite1)
+    {
+        nowRow = 4;
+        nowCol = 3;
+        return;
+    }
+
+    if (elite2)
+    {
+        nowRow = 1;
+        nowCol = 2;
+        return;
+    }
+
     std::vector<std::pair<int, int>> validTiles;
 
     for (int r = GridStartRow + 1; r < GridEndRow - 1; r++)
