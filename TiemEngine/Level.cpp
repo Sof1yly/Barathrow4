@@ -530,6 +530,48 @@ void Level::LevelUpdate()
         elite2Projectiles.end()
     );
 
+    // ---- Update BossAttack1 tile-flash effects ----
+    // Animation is already ticked by the objectsList update below; just watch for finish.
+    for (auto& fx : bossAttack1Effects)
+    {
+        if (fx.done) continue;
+        if (fx.sprite && fx.sprite->IsFinished())
+        {
+            fx.done = true;
+            fx.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    bossAttack1Effects.erase(
+        std::remove_if(bossAttack1Effects.begin(), bossAttack1Effects.end(),
+            [](const BossAttack1Effect& f) { return f.done; }),
+        bossAttack1Effects.end()
+    );
+
+    // ---- Update BossAttack2 travelling projectiles ----
+    for (auto& proj : bossAttack2Projectiles)
+    {
+        if (proj.done) continue;
+
+        proj.timer += deltaTime;
+        float t = std::min(proj.timer / proj.duration, 1.0f);
+
+        glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * t;
+        pos.z = 6.0f;
+        proj.sprite->SetPosition(pos);
+        proj.sprite->Update(deltaTime);
+
+        if (t >= 1.0f)
+        {
+            proj.done = true;
+            proj.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    bossAttack2Projectiles.erase(
+        std::remove_if(bossAttack2Projectiles.begin(), bossAttack2Projectiles.end(),
+            [](const BossAttack2Projectile& p) { return p.done; }),
+        bossAttack2Projectiles.end()
+    );
+
     if (winDelayActive)
     {
         winDelay += deltaTime;
@@ -977,6 +1019,8 @@ void Level::LevelFree()
     // Leaving these vectors non-empty causes a dangling-pointer crash on the next LevelUpdate.
     elite1Projectiles.clear();
     elite2Projectiles.clear();
+    bossAttack1Effects.clear();
+    bossAttack2Projectiles.clear();
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;
@@ -2109,6 +2153,36 @@ void Level::ApplyEnemyAttack(Enemy* e)
         if (nowRow == x && nowCol == y)
             PlayerTakeDamage(e->getAttackDamage());
     }
+
+    // ---- Boss attack visual effects ----
+    if (Boss* b = dynamic_cast<Boss*>(e))
+    {
+        int choice = b->getAttackPatternChoice();
+
+        // Collect in-bounds hit tiles
+        std::vector<std::pair<int,int>> hitTiles;
+        for (auto& cell : attacks)
+        {
+            int r = cell.first.x, c = cell.first.y;
+            if (r >= GridStartRow && r < GridEndRow && c >= GridStartCol && c < GridEndCol)
+                hitTiles.push_back({ r, c });
+        }
+
+        if (choice == 1 || choice == 2 || choice == 3)
+        {
+            SpawnBossAttack1(hitTiles);
+        }
+        else if (choice == 6 || choice == 7)
+        {
+            SpawnBossAttack2Falling(hitTiles);
+        }
+        else if (choice == 8)
+        {
+            bool enhanced = (b->getHealth() * 2 < b->getMaxHealth());
+            SpawnBossAttackCross(b->getLockedPlayerRow(), b->getLockedPlayerCol(), enhanced);
+        }
+        // choice 9 (summon): no tile-attack visual
+    }
 }
 
 bool Level::EnemyCanAttackPlayer(Enemy* e)
@@ -2938,6 +3012,15 @@ void Level::ResetForNextCombat()
         if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
     elite2Projectiles.clear();
 
+    // Hide lingering Boss attack effects
+    for (auto& fx : bossAttack1Effects)
+        if (!fx.done && fx.sprite) fx.sprite->SetSize(0.0f, 0.0f);
+    bossAttack1Effects.clear();
+
+    for (auto& proj : bossAttack2Projectiles)
+        if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
+    bossAttack2Projectiles.clear();
+
     std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 
     // Shop-only levels (4 and 9): open shop, skip combat setup
@@ -3035,6 +3118,109 @@ void Level::SpawnBossSummon()
     objectsList.push_back(e->getDebuffText());
 
     std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+}
+
+// -----------------------------------------------------------------------
+// Boss attack visuals
+// -----------------------------------------------------------------------
+
+// Grid 1 / 2 / 3 — stationary tile-flash effect (BossAttack1.PNG, 1 row × 7 cols)
+void Level::SpawnBossAttack1(const std::vector<std::pair<int,int>>& tiles)
+{
+    for (auto& tile : tiles)
+    {
+        int r = tile.first, c = tile.second;
+
+        // Skip tiles covered by the boss hitbox
+        if (bossEnemy && bossEnemy->OccupiesTile(r, c)) continue;
+
+        glm::vec3 pos = GridToWorld(r, c);
+        pos.z = 7.0f;
+
+        BossAttack1Effect fx;
+        fx.sprite = new SpriteObject("../Resource/Texture/Boss/BossAttack1.PNG", 1, 7);
+        fx.sprite->SetSize(GridWide * 1.5f, -GridHigh * 1.5f);
+        fx.sprite->SetAnimationOnce(0, 0, 7, 100);     // 7 frames × 100 ms
+        fx.sprite->SetPosition(pos);
+        fx.done = false;
+
+        objectsList.push_back(fx.sprite);
+        bossAttack1Effects.push_back(fx);
+    }
+}
+
+// Grid 6 / 7 — projectiles fall from the sky (BossAttack2.PNG, rotated CCW 90°)
+void Level::SpawnBossAttack2Falling(const std::vector<std::pair<int,int>>& tiles)
+{
+    for (auto& tile : tiles)
+    {
+        int r = tile.first, c = tile.second;
+
+        glm::vec3 target = GridToWorld(r, c);
+        glm::vec3 start  = glm::vec3(target.x, 650.0f, 6.0f);
+        glm::vec3 end    = glm::vec3(target.x, target.y, 6.0f);
+
+        BossAttack2Projectile proj;
+        proj.sprite = new SpriteObject("../Resource/Texture/Boss/BossAttack2.PNG", 1, 7);
+        float sz = 135.0f;
+        proj.sprite->SetSize(sz, -sz);
+        proj.sprite->SetRotate(90.0f);              // CCW 90° — sprite faces downward
+        proj.sprite->SetAnimationLoop(0, 0, 4, 80);
+        proj.sprite->SetPosition(start);
+        proj.startPos = start;
+        proj.endPos   = end;
+        proj.timer    = 0.0f;
+        proj.duration = 700.0f;
+        proj.done     = false;
+
+        objectsList.push_back(proj.sprite);
+        bossAttack2Projectiles.push_back(proj);
+    }
+}
+
+// Cross attack (choice 8) — projectiles travel from player center to each grid edge.
+// Default sprite faces LEFT; rotated per direction.  Enhanced mode (HP < 50%) is 3× bigger.
+void Level::SpawnBossAttackCross(int centerRow, int centerCol, bool enhanced)
+{
+    float sz = enhanced ? 405.0f : 135.0f;  // enhanced = x3, normal = x1.5 base size
+
+    glm::vec3 center = GridToWorld(centerRow, centerCol);
+    center.z = 6.0f;
+
+    // Helper — create one arm travelling from center to endWorld
+    auto spawnArm = [&](glm::vec3 endWorld, float sizeX, float sizeY, float rotDeg)
+    {
+        endWorld.z = 6.0f;
+        BossAttack2Projectile proj;
+        proj.sprite = new SpriteObject("../Resource/Texture/Boss/BossAttack2.PNG", 1, 7);
+        proj.sprite->SetSize(sizeX, sizeY);
+        proj.sprite->SetRotate(rotDeg);
+        proj.sprite->SetAnimationLoop(0, 0, 4, 80);
+        proj.sprite->SetPosition(center);
+        proj.startPos = center;
+        proj.endPos   = endWorld;
+        proj.timer    = 0.0f;
+        proj.duration = 600.0f;
+        proj.done     = false;
+        objectsList.push_back(proj.sprite);
+        bossAttack2Projectiles.push_back(proj);
+    };
+
+    // Row axis = x axis.  Left = smaller row (smaller x), Right = larger row (larger x).
+    glm::vec3 leftEdge  = GridToWorld(GridStartRow, centerCol);
+    glm::vec3 rightEdge = GridToWorld(GridEndRow - 1, centerCol);
+    // Col axis = y axis.  Up = smaller col (larger y), Down = larger col (smaller y).
+    glm::vec3 upEdge    = GridToWorld(centerRow, GridStartCol);
+    glm::vec3 downEdge  = GridToWorld(centerRow, GridEndCol - 1);
+
+    // Left arm  — sprite already faces left, keep x positive
+    spawnArm(glm::vec3(leftEdge.x,  center.y, 6.0f),  sz, -sz,    0.0f);
+    // Right arm — flip x so sprite faces right
+    spawnArm(glm::vec3(rightEdge.x, center.y, 6.0f), -sz, -sz,    0.0f);
+    // Up arm    — rotate CW 90° so sprite faces upward (y-up space)
+    spawnArm(glm::vec3(center.x, upEdge.y,   6.0f),   sz, -sz,  -90.0f);
+    // Down arm  — rotate CCW 90° so sprite faces downward
+    spawnArm(glm::vec3(center.x, downEdge.y, 6.0f),   sz, -sz,   90.0f);
 }
 
 bool Level::AnyBatteryAlive() const

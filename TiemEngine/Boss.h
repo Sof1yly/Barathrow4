@@ -48,6 +48,7 @@ public:
 	}
 
     int TryGetSummon();
+    int getAttackPatternChoice() const { return attackPatternChoice; }
 
     // Returns true (exactly once) when boss HP drops to ≤50% and batteries haven't been spawned yet.
     bool ShouldSpawnBatteries();

@@ -62,6 +62,22 @@ struct Elite2Projectile {
     bool          done     = false;
 };
 
+// BossAttack1.png — stationary tile flash for boss patterns 1/2/3
+struct BossAttack1Effect {
+    SpriteObject* sprite = nullptr;
+    bool          done   = false;
+};
+
+// BossAttack2.png — travelling projectile for boss patterns 6/7 (falling) and 8 (cross arms)
+struct BossAttack2Projectile {
+    SpriteObject* sprite   = nullptr;
+    glm::vec3     startPos;
+    glm::vec3     endPos;
+    float         timer    = 0.0f;
+    float         duration = 700.0f;
+    bool          done     = false;
+};
+
 class Level
 {
 private:
@@ -233,6 +249,10 @@ private:
     // Elite2 falling projectiles
     std::vector<Elite2Projectile> elite2Projectiles;
 
+    // Boss attack visuals
+    std::vector<BossAttack1Effect>    bossAttack1Effects;
+    std::vector<BossAttack2Projectile> bossAttack2Projectiles;
+
     // Patterns
     std::vector<AttackPattern> patterns;
     AttackPattern rotatedPattern;
@@ -316,6 +336,11 @@ public:
 
     void SpawnBossSummon();
     void SpawnBatteries();
+
+    // Boss attack visual effects
+    void SpawnBossAttack1(const std::vector<std::pair<int,int>>& tiles);
+    void SpawnBossAttack2Falling(const std::vector<std::pair<int,int>>& tiles);
+    void SpawnBossAttackCross(int centerRow, int centerCol, bool enhanced);
 
     // Returns true if any Battery is still alive in the enemies list
     bool AnyBatteryAlive() const;
