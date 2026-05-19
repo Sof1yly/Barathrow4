@@ -456,6 +456,34 @@ void Level::LevelUpdate()
         elite1Projectiles.end()
     );
 
+    // ---- Update Elite2 falling projectiles ----
+    for (auto& proj : elite2Projectiles)
+    {
+        if (proj.done) continue;
+
+        proj.timer += deltaTime;
+        float t = proj.timer / proj.duration;
+        if (t >= 1.0f) t = 1.0f;
+
+        // ease-in: accelerates as it falls (t^2)
+        float et = t * t;
+        glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * et;
+        pos.z = 6.0f;
+        proj.sprite->SetPosition(pos);
+        proj.sprite->Update(deltaTime);
+
+        if (t >= 1.0f)
+        {
+            proj.done = true;
+            proj.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    elite2Projectiles.erase(
+        std::remove_if(elite2Projectiles.begin(), elite2Projectiles.end(),
+            [](const Elite2Projectile& p) { return p.done; }),
+        elite2Projectiles.end()
+    );
+
     if (winDelayActive)
     {
         winDelay += deltaTime;
@@ -1878,9 +1906,14 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         std::vector<std::pair<int, int>> hitTiles;
         if (elite2->IsPlayerInPatternRange(lockedRow, lockedCol))
+        {
             hitTiles = elite2->GetCurrentPatternTiles();
+        }
         else
+        {
             hitTiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
+            SpawnElite2Projectile(lockedRow, lockedCol);
+        }
 
         for (auto& tile : hitTiles)
         {
@@ -2444,6 +2477,31 @@ void Level::SpawnElite1Projectile(EliteEnemy1* elite1)
     elite1Projectiles.push_back(proj);
 }
 
+void Level::SpawnElite2Projectile(int centerRow, int centerCol)
+{
+    glm::vec3 target = GridToWorld(centerRow, centerCol);
+
+    // Drop from well above the top of the visible grid
+    glm::vec3 start = glm::vec3(target.x, 650.0f, 6.0f);
+    glm::vec3 end   = glm::vec3(target.x, target.y, 6.0f);
+
+    Elite2Projectile proj;
+    proj.sprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy2Shoot.png", 2, 6);
+    float sz = 150.0f;
+    proj.sprite->SetSize(sz, -sz);
+    proj.sprite->SetRotate(90.0f); // 90° CCW so the sprite faces downward
+    proj.sprite->SetAnimationLoop(0, 0, 4, 80);
+    proj.sprite->SetPosition(start);
+    proj.startPos = start;
+    proj.endPos   = end;
+    proj.timer    = 0.0f;
+    proj.duration = 1200.0f; // ms to reach the target
+    proj.done     = false;
+
+    objectsList.push_back(proj.sprite);
+    elite2Projectiles.push_back(proj);
+}
+
 void Level::LoadEnemyData()
 {
     EnemyDatabase::LoadFromFile(PATH_ENEMY_DATA);
@@ -2701,6 +2759,11 @@ void Level::ResetForNextCombat()
     for (auto& proj : elite1Projectiles)
         if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
     elite1Projectiles.clear();
+
+    // Hide lingering Elite2 projectiles
+    for (auto& proj : elite2Projectiles)
+        if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
+    elite2Projectiles.clear();
 
     std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 

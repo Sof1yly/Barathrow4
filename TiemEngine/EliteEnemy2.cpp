@@ -7,9 +7,9 @@ static constexpr int E2_ROW_DAMAGE = 2;
 static constexpr int E2_ROW_DEATH  = 3;
 
 static constexpr int E2_FRAMES_IDLE   = 6;
-static constexpr int E2_FRAMES_ATTACK = 6;
-static constexpr int E2_FRAMES_DAMAGE = 6;
-static constexpr int E2_FRAMES_DEATH  = 6;
+static constexpr int E2_FRAMES_ATTACK = 7;
+static constexpr int E2_FRAMES_DAMAGE = 3;
+static constexpr int E2_FRAMES_DEATH  = 7;
 
 EliteEnemy2::EliteEnemy2()
     : EliteEnemy(EliteType::Pattern)
