@@ -572,6 +572,42 @@ void Level::LevelUpdate()
         bossAttack2Projectiles.end()
     );
 
+    // ---- Update boss summon portals ----
+    for (auto& portal : bossSummonPortals)
+    {
+        if (portal.done) continue;
+
+        portal.timer += deltaTime;
+
+        // On the 4th frame (after 3 × 150 ms), spawn the enemy
+        if (!portal.enemySpawned && portal.timer >= portal.spawnDelay)
+        {
+            Enemy* ne = new Enemy(portal.enemyType);
+            ne->setNowPosition(portal.spawnRow, portal.spawnCol);
+            ne->SetWorldPosition(GridToWorld(portal.spawnRow, portal.spawnCol));
+            enemies.push_back(ne);
+            objectsList.push_back(ne->getObject());
+            objectsList.push_back(ne->getHPText());
+            objectsList.push_back(ne->getCorruptText());
+            objectsList.push_back(ne->getDebuffText());
+            portal.enemySpawned = true;
+            std::cout << "[Boss] Summoned enemy at ("
+                      << portal.spawnRow << ", " << portal.spawnCol << ")\n";
+        }
+
+        // Portal disappears when animation finishes (6 frames × 300 ms = 1800 ms)
+        if (portal.sprite && portal.sprite->IsFinished())
+        {
+            portal.done = true;
+            portal.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    bossSummonPortals.erase(
+        std::remove_if(bossSummonPortals.begin(), bossSummonPortals.end(),
+            [](const BossSummonPortal& p) { return p.done; }),
+        bossSummonPortals.end()
+    );
+
     if (winDelayActive)
     {
         winDelay += deltaTime;
@@ -1021,6 +1057,7 @@ void Level::LevelFree()
     elite2Projectiles.clear();
     bossAttack1Effects.clear();
     bossAttack2Projectiles.clear();
+    bossSummonPortals.clear();
     nowRow = startRow;
     nowCol = startCol;
     turnCount = 0;
@@ -3021,6 +3058,10 @@ void Level::ResetForNextCombat()
         if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
     bossAttack2Projectiles.clear();
 
+    for (auto& portal : bossSummonPortals)
+        if (!portal.done && portal.sprite) portal.sprite->SetSize(0.0f, 0.0f);
+    bossSummonPortals.clear();
+
     std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 
     // Shop-only levels (4 and 9): open shop, skip combat setup
@@ -3107,17 +3148,28 @@ void Level::SpawnBossSummon()
     };
     Enemy::EnemyType type = pool[rand() % 7];
 
-    Enemy* e = new Enemy(type);
-    e->setNowPosition(spawnRow, spawnCol);
-    e->SetWorldPosition(GridToWorld(spawnRow, spawnCol));
+    // Spawn the portal — the enemy will appear on frame 4 (deferred in LevelUpdate)
+    glm::vec3 portalPos = GridToWorld(spawnRow, spawnCol);
+    portalPos.z = 6.0f;
 
-    enemies.push_back(e);
-    objectsList.push_back(e->getObject());
-    objectsList.push_back(e->getHPText());
-    objectsList.push_back(e->getCorruptText());
-    objectsList.push_back(e->getDebuffText());
+    BossSummonPortal portal;
+    portal.sprite    = new SpriteObject("../Resource/Texture/Boss/Summon.png", 1, 6);
+    portal.sprite->SetSize(GridWide * 4.5f, -GridHigh * 4.5f); // 1.5 × 3 = 4.5× tile size
+    portal.sprite->SetAnimationOnce(0, 0, 6, 300);   // 6 frames × 300 ms (half speed)
+    portal.sprite->SetPosition(portalPos);
+    portal.spawnRow    = spawnRow;
+    portal.spawnCol    = spawnCol;
+    portal.enemyType   = type;
+    portal.timer       = 0.0f;
+    portal.spawnDelay  = 3 * 300.0f;  // frame 4 starts after 3 frame-delays = 900 ms
+    portal.enemySpawned = false;
+    portal.done        = false;
 
-    std::cout << "[Boss] Summoned enemy at (" << spawnRow << ", " << spawnCol << ")\n";
+    objectsList.push_back(portal.sprite);
+    bossSummonPortals.push_back(portal);
+
+    std::cout << "[Boss] Portal opening at (" << spawnRow << ", " << spawnCol
+              << ") — enemy appears on frame 4\n";
 }
 
 // -----------------------------------------------------------------------

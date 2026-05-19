@@ -78,6 +78,18 @@ struct BossAttack2Projectile {
     bool          done     = false;
 };
 
+// Summon.png portal (1 row × 6 cols) — plays before the enemy appears on the 4th frame
+struct BossSummonPortal {
+    SpriteObject*    sprite       = nullptr;
+    int              spawnRow     = 0;
+    int              spawnCol     = 0;
+    Enemy::EnemyType enemyType    = Enemy::EnemyType::A;
+    float            timer        = 0.0f;
+    float            spawnDelay   = 3 * 300.0f; // 3 frame-delays × 300 ms before frame 4 shows
+    bool             enemySpawned = false;
+    bool             done         = false;
+};
+
 class Level
 {
 private:
@@ -250,8 +262,9 @@ private:
     std::vector<Elite2Projectile> elite2Projectiles;
 
     // Boss attack visuals
-    std::vector<BossAttack1Effect>    bossAttack1Effects;
+    std::vector<BossAttack1Effect>     bossAttack1Effects;
     std::vector<BossAttack2Projectile> bossAttack2Projectiles;
+    std::vector<BossSummonPortal>      bossSummonPortals;
 
     // Patterns
     std::vector<AttackPattern> patterns;
