@@ -430,6 +430,32 @@ void Level::LevelUpdate()
         damagePopups.end()
     );
 
+    // ---- Update Elite1 projectiles ----
+    for (auto& proj : elite1Projectiles)
+    {
+        if (proj.done) continue;
+
+        proj.timer += deltaTime;
+        float t = proj.timer / proj.duration;
+        if (t >= 1.0f) t = 1.0f;
+
+        glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * t;
+        pos.z = 6.0f;
+        proj.sprite->SetPosition(pos);
+        proj.sprite->Update(deltaTime);
+
+        if (t >= 1.0f)
+        {
+            proj.done = true;
+            proj.sprite->SetSize(0.0f, 0.0f); // hide at destination
+        }
+    }
+    elite1Projectiles.erase(
+        std::remove_if(elite1Projectiles.begin(), elite1Projectiles.end(),
+            [](const Elite1Projectile& p) { return p.done; }),
+        elite1Projectiles.end()
+    );
+
     if (winDelayActive)
     {
         winDelay += deltaTime;
@@ -1818,6 +1844,8 @@ void Level::ApplyEnemyAttack(Enemy* e)
     // EliteEnemy1: full-row attack; heals friendly Elite1s it hits
     if (EliteEnemy1* elite1 = dynamic_cast<EliteEnemy1*>(e))
     {
+        SpawnElite1Projectile(elite1);
+
         auto rowTiles = elite1->GetRowAttackTiles(GridStartRow, GridEndRow);
         for (auto& tile : rowTiles)
         {
@@ -2385,6 +2413,37 @@ void Level::SpawnDamagePopup(glm::vec3 worldPos, int damage)
     damagePopups.push_back(popup);
 }
 
+void Level::SpawnElite1Projectile(EliteEnemy1* elite1)
+{
+    if (!elite1 || !elite1->getObject()) return;
+
+    // Determine travel direction: shoot toward the opposite edge
+    int midRow  = (GridStartRow + GridEndRow) / 2;
+    bool goRight = (elite1->getNowRow() < midRow);
+    int endRow   = goRight ? (GridEndRow - 1) : GridStartRow;
+
+    glm::vec3 start = GridToWorld(elite1->getNowRow(), elite1->getNowCol());
+    glm::vec3 end   = GridToWorld(endRow,              elite1->getNowCol());
+    start.z = 6.0f;
+    end.z   = 6.0f;
+
+    Elite1Projectile proj;
+    proj.sprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy1Shoot.png", 1, 7);
+    // Sprite faces left by default; flip when going right (same convention as EliteEnemy1)
+    float sz = 120.0f; 
+    proj.sprite->SetSize(goRight ? -sz : sz, -sz);
+    proj.sprite->SetAnimationLoop(0, 0, 4, 80);
+    proj.sprite->SetPosition(start);
+    proj.startPos = start;
+    proj.endPos   = end;
+    proj.timer    = 0.0f;
+    proj.duration = 1200.0f;
+    proj.done     = false;
+
+    objectsList.push_back(proj.sprite);
+    elite1Projectiles.push_back(proj);
+}
+
 void Level::LoadEnemyData()
 {
     EnemyDatabase::LoadFromFile(PATH_ENEMY_DATA);
@@ -2637,6 +2696,11 @@ void Level::ResetForNextCombat()
     for (auto& p : damagePopups)
         if (!p.expired && p.text) p.text->SetSize(0.0f, 0.0f);
     damagePopups.clear();
+
+    // Hide lingering Elite1 projectiles
+    for (auto& proj : elite1Projectiles)
+        if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
+    elite1Projectiles.clear();
 
     std::cout << "=== " << levelManager.GetLevelText() << " ===" << std::endl;
 
