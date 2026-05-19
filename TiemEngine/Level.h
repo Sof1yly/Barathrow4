@@ -184,7 +184,8 @@ private:
     TextObject* levelText = nullptr;
 
     bool fastMode = false;
-    TextObject* fastModeText = nullptr;
+    ImageObject* speedBtnIcon = nullptr;
+    TextObject*  speedBtnText = nullptr;
 
     // Event scene (shown once at the start of a run)
     EventScene eventScene;

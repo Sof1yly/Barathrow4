@@ -377,11 +377,17 @@ void Level::LevelInit()
     }
 
     {
-        fastModeText = new TextObject();
-        SDL_Color color = { 100, 220, 255, 255 };
-        fastModeText->LoadText("3x mode", color, 24);
-        fastModeText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f)); // hidden until toggled
-        objectsList.push_back(fastModeText);
+        speedBtnIcon = new ImageObject();
+        speedBtnIcon->SetTexture("../Resource/Texture/UI/f1.png");
+        speedBtnIcon->SetSize(60.0f, -60.0f);
+        speedBtnIcon->SetPosition(glm::vec3(-900.0f, 310.0f, 10.0f));
+        objectsList.push_back(speedBtnIcon);
+
+        speedBtnText = new TextObject();
+        SDL_Color c = { 255, 255, 255, 255 };
+        speedBtnText->LoadText("1x", c, 22);
+        speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+        objectsList.push_back(speedBtnText);
     }
 
     // Open remove scene last so its overlay renders on top of all other UI
@@ -401,7 +407,7 @@ void Level::LevelUpdate()
     anyEnemyDied = false;
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
-    if (fastMode) deltaTime *= 3;
+    if (fastMode) deltaTime *= 2;
 
     if (pauseMenuActive)
         return;
@@ -945,7 +951,8 @@ void Level::LevelFree()
     Background = nullptr;
     levelText = nullptr;
     fastMode = false;
-    fastModeText = nullptr;
+    speedBtnIcon = nullptr;
+    speedBtnText = nullptr;
     viewDeckButton.Reset();
     skipTurnButton.Reset();
     viewMapIcon = nullptr;
@@ -985,10 +992,16 @@ void Level::HandleKey(char key)
     if (key == 'f')
     {
         fastMode = !fastMode;
-        if (fastModeText)
-            fastModeText->SetPosition(fastMode
-                ? glm::vec3(-880.0f, 430.0f, 10.0f)
-                : glm::vec3(0.0f, 10000.0f, 10.0f));
+        if (speedBtnIcon)
+            speedBtnIcon->SetTexture(fastMode
+                ? "../Resource/Texture/UI/f2.png"
+                : "../Resource/Texture/UI/f1.png");
+        if (speedBtnText)
+        {
+            SDL_Color c = { 255, 255, 255, 255 };
+            speedBtnText->LoadText(fastMode ? "2x" : "1x", c, 22);
+            speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+        }
         return;
     }
 
@@ -1254,6 +1267,34 @@ void Level::HandleMouse(int type, int x, int y)
                 settingPageActive = false;
         }
         return;
+    }
+
+    // Speed toggle button — always active outside pause/setting
+    {
+        static const float BTN_X = -900.0f, BTN_Y = 310.0f, BTN_R = 35.0f;
+        bool hit = speedBtnIcon
+                && realX >= BTN_X - BTN_R && realX <= BTN_X + BTN_R
+                && realY >= BTN_Y - BTN_R && realY <= BTN_Y + BTN_R;
+
+        if (type == 3 && speedBtnIcon)
+        {
+            float s = hit ? 75.0f : 60.0f;
+            speedBtnIcon->SetSize(s, -s);
+        }
+        else if (type == 0 && hit)
+        {
+            fastMode = !fastMode;
+            speedBtnIcon->SetTexture(fastMode
+                ? "../Resource/Texture/UI/f2.png"
+                : "../Resource/Texture/UI/f1.png");
+            if (speedBtnText)
+            {
+                SDL_Color c = { 255, 255, 255, 255 };
+                speedBtnText->LoadText(fastMode ? "2x" : "1x", c, 22);
+                speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+            }
+            return;
+        }
     }
 
     if (mapSceneActive)
