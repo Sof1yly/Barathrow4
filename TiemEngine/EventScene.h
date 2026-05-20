@@ -9,6 +9,7 @@
 #include "DrawableObject.h"
 #include "ImageObject.h"
 #include "TextObject.h"
+#include "SpriteObject.h"
 
 class EventScene
 {
@@ -50,12 +51,13 @@ private:
     std::vector<DrawableObject*> uiObjects;
     std::vector<ChoiceBox>       choiceBoxes;
 
-    bool       active        = false;
-    int        hoveredIdx    = -1;
-    int        selectedIdx   = -1;
-    float      selectTimer   = 0.0f;
-    bool       pendingClose  = false;
-    EffectType pendingEffect = EffectType::EXTRA_DRAW;
+    bool        active        = false;
+    int         hoveredIdx    = -1;
+    int         selectedIdx   = -1;
+    float       selectTimer   = 0.0f;
+    bool        pendingClose  = false;
+    EffectType  pendingEffect = EffectType::EXTRA_DRAW;
+    SpriteObject* bossSprite  = nullptr;
 
     std::mt19937 rng;
 
@@ -79,6 +81,13 @@ private:
 
     void BuildUI(std::vector<DrawableObject*>& objectsList)
     {
+        // Boss pushed first so everything else draws on top of it
+        bossSprite = new SpriteObject("../Resource/Texture/Boss/Boss1.png", 8, 11);
+        bossSprite->SetAnimationLoop(0, 0, 5, 250);
+        bossSprite->SetSize(800.0f, -571.0f);
+        bossSprite->SetPosition(glm::vec3(0.0f, 320.0f, 699.0f));
+        Push(bossSprite, objectsList);
+
         // Speech bubble / text box (upper center)
         {
             ImageObject* bg = new ImageObject();
@@ -230,7 +239,9 @@ public:
 
     void Update(float dt)
     {
-        if (!active || selectedIdx < 0 || pendingClose) return;
+        if (!active) return;
+        if (bossSprite) bossSprite->Update(dt);
+        if (selectedIdx < 0 || pendingClose) return;
         selectTimer += dt;
         if (selectTimer >= SELECT_DELAY)
             pendingClose = true;
@@ -243,6 +254,7 @@ public:
     {
         if (!active && uiObjects.empty()) return;
         ClearUI(objectsList);
+        bossSprite   = nullptr;  // deleted by ClearUI via uiObjects
         offered.clear();
         hoveredIdx   = -1;
         selectedIdx  = -1;
