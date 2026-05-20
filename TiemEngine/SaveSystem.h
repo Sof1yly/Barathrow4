@@ -10,6 +10,7 @@ struct EnemySaveData {
     int delayTurns       = 0;
     int corruptionStacks = 0;
     int weakenTurns      = 0;
+    int stunTurns        = 0;
 };
 
 struct SaveData {

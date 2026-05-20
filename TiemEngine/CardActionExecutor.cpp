@@ -180,8 +180,9 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
     // ---- Apply "all enemy" debuffs first ----
     if (result.pendingWeakenAllTurns > 0 ||
-        result.pendingDelayAllTurns > 0 ||
-        result.pendingCorruptAllStacks > 0)
+        result.pendingDelayAllTurns  > 0 ||
+        result.pendingCorruptAllStacks > 0 ||
+        result.pendingStunAllTurns   > 0)
     {
         for (auto* e : ctx.enemies)
         {
@@ -195,6 +196,9 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
             if (result.pendingCorruptAllStacks > 0)
                 e->addCorruption(result.pendingCorruptAllStacks);
+
+            if (result.pendingStunAllTurns > 0)
+                e->addStun(result.pendingStunAllTurns);
         }
     }
 
@@ -262,6 +266,9 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
 
                     if (result.pendingWeakenTurns > 0)
                         e->addWeaken(result.pendingWeakenTurns);
+
+                    if (result.pendingStunTurns > 0)
+                        e->addStun(result.pendingStunTurns);
 
                     if (!corruptionApplied && result.pendingCorruptionStacks > 0)
                     {

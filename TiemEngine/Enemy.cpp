@@ -513,16 +513,59 @@ void Enemy::decrementDelay()
     }
 }
 
+void Enemy::addStun(int turns)
+{
+    if (turns <= 0) return;
+    stunTurns += turns;
+    std::cout << "[Stun] Enemy stunned for +" << turns << " turn(s). Total: " << stunTurns << std::endl;
+    RefreshDebuffText();
+}
+
+bool Enemy::isStunned() const
+{
+    return stunTurns > 0;
+}
+
+void Enemy::decrementStun()
+{
+    if (stunTurns > 0) {
+        stunTurns--;
+        std::cout << "[Stun] Enemy stun decremented. Remaining: " << stunTurns << std::endl;
+        RefreshDebuffText();
+    }
+}
+
+bool Enemy::ShouldSkipTurn()
+{
+    if (stunTurns > 0) {
+        stunTurns--;
+        RefreshDebuffText();
+        return true;
+    }
+    if (delayTurns > 0) {
+        delayTurns--;
+        RefreshDebuffText();
+        return true;
+    }
+    return false;
+}
+
 void Enemy::RefreshDebuffText()
 {
     if (!debuffText) return;
-    if (delayTurns <= 0)
+    if (stunTurns > 0)
     {
-        debuffText->SetSize(0, 0);
+        SDL_Color cyan = { 100, 200, 255, 255 };
+        debuffText->LoadText("STN: " + std::to_string(stunTurns), cyan, 20);
         return;
     }
-    SDL_Color yellow = { 255, 255, 0 };
-    debuffText->LoadText("DLY: " + std::to_string(delayTurns), yellow, 20);
+    if (delayTurns > 0)
+    {
+        SDL_Color yellow = { 255, 255, 0, 255 };
+        debuffText->LoadText("DLY: " + std::to_string(delayTurns), yellow, 20);
+        return;
+    }
+    debuffText->SetSize(0, 0);
 }
 
 void Enemy::RefreshWeakenText()

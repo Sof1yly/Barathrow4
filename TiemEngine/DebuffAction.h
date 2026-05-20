@@ -2,10 +2,11 @@
 #include "Action.h"
 
 enum class DebuffSubType {
-    Weaken,  // wk - reduce enemy attack
-    Delay,   // dl - delay enemy turn or action
-    Lag, // lag - skip player next turn
+    Weaken,  // wk  - reduce enemy attack
+    Delay,   // dl  - delay enemy turn
+    Lag,     // lag - skip player next turn
     Corrupt, // cor - apply corruption, enemy takes extra damage
+    Stun,    // st  - enemy skips N turns entirely
     Unknown
 };
 
@@ -35,6 +36,7 @@ public:
         if (code == "dl" || code == "de") return DebuffSubType::Delay;
         if (code == "lag") return DebuffSubType::Lag;
         if (code == "cor") return DebuffSubType::Corrupt;
+        if (code == "st")  return DebuffSubType::Stun;
         return DebuffSubType::Unknown;
     }
 

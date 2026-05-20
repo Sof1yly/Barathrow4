@@ -32,10 +32,13 @@ struct CardPlayResult {
     int pendingCorruptionStacks = 0;
     int pendingWeakenTurns = 0;
 
+    int pendingStunTurns = 0;
+
     // "all enemy" variants — applied to every living enemy regardless of attack pattern
     int pendingWeakenAllTurns    = 0;
     int pendingDelayAllTurns     = 0;
     int pendingCorruptAllStacks  = 0;
+    int pendingStunAllTurns      = 0;
 
     int energyGenerated = 0;
 

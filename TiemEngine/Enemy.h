@@ -106,15 +106,18 @@ public:
     void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
-
     bool isDelayed() const;
-
-    int getDelayTurns() const
-    {
-        return delayTurns;
-    }
-
+    int getDelayTurns() const { return delayTurns; }
     void decrementDelay();
+
+    void addStun(int turns);
+    bool isStunned() const;
+    int getStunTurns() const { return stunTurns; }
+    void decrementStun();
+
+    // Returns true (and decrements the counter) if the enemy should skip its turn.
+    // Stun takes priority over delay when both are active.
+    bool ShouldSkipTurn();
 
     virtual void PlayAttackAnimation(glm::vec3 playerPos);
 
@@ -293,6 +296,8 @@ protected:
     float attackTextTimer = 0.0f;
 
     int delayTurns = 0;
+
+    int stunTurns = 0;
 
     int corruptionStacks = 0;
 

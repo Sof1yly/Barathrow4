@@ -46,6 +46,19 @@ void DebuffAction::execute(CardPlayContext& ctx, CardPlayResult& result)
         }
         break;
 
+    case DebuffSubType::Stun:
+        if (applyToAll)
+        {
+            result.pendingStunAllTurns += getValue();
+            std::cout << "  StunAction (ALL): " << getValue() << std::endl;
+        }
+        else
+        {
+            result.pendingStunTurns += getValue();
+            std::cout << "  StunAction: " << getValue() << std::endl;
+        }
+        break;
+
     default:
         std::cout << "  Debuff [" << getActionCode() << "] " << getValue() << std::endl;
         break;

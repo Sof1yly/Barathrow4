@@ -42,7 +42,7 @@ bool SaveSystem::Save(const SaveData& d)
     for (const auto& e : d.enemies)
         f << "ENEMY " << e.typeIndex << " " << e.row << " " << e.col << " "
           << e.health << " " << e.delayTurns << " " << e.corruptionStacks << " "
-          << e.weakenTurns << "\n";
+          << e.weakenTurns << " " << e.stunTurns << "\n";
 
     f << "CARD_COUNT=" << d.cardNames.size() << "\n";
     for (const auto& name : d.cardNames)
@@ -93,7 +93,7 @@ bool SaveSystem::Load(SaveData& d)
             std::istringstream ss(line.substr(6));
             EnemySaveData e;
             ss >> e.typeIndex >> e.row >> e.col >> e.health
-               >> e.delayTurns >> e.corruptionStacks >> e.weakenTurns;
+               >> e.delayTurns >> e.corruptionStacks >> e.weakenTurns >> e.stunTurns;
             d.enemies.push_back(e);
         } else if (line.substr(0, 5) == "CARD ") {
             d.cardNames.push_back(line.substr(5));

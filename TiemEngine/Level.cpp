@@ -1496,6 +1496,7 @@ void Level::HandleMouse(int type, int x, int y)
                     esd.delayTurns       = e->getDelayTurns();
                     esd.corruptionStacks = e->getCorruption();
                     esd.weakenTurns      = e->getWeakenTurns();
+                    esd.stunTurns        = e->getStunTurns();
                     sd.enemies.push_back(esd);
                 }
 
@@ -2520,9 +2521,8 @@ void Level::UpdateTurn()
             enemyActing = true;
             e->stepsRemaining = e->getMoveRange();
 
-            if (e->isDelayed())
+            if (e->ShouldSkipTurn())
             {
-                e->decrementDelay();
                 enemyActing = false;
                 currentEnemyIndex++;
                 return;
@@ -3172,6 +3172,7 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
         if (esd.delayTurns       > 0) e->addDelay(esd.delayTurns);
         if (esd.corruptionStacks > 0) e->addCorruption(esd.corruptionStacks);
         if (esd.weakenTurns      > 0) e->addWeaken(esd.weakenTurns);
+        if (esd.stunTurns        > 0) e->addStun(esd.stunTurns);
 
         enemies.push_back(e);
         objectsList.push_back(e->getObject());
