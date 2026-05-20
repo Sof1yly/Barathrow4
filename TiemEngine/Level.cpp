@@ -135,12 +135,12 @@ void Level::LevelInit()
         LevelConfig cfg = levelManager.GetCurrentConfig();
         elite1 = (cfg.type == LevelConfig::Type::Elite1);
         elite2 = (cfg.type == LevelConfig::Type::Elite2);
+        elite3 = (cfg.type == LevelConfig::Type::Elite3);
         if (cfg.type == LevelConfig::Type::EliteRandom)
         {
             if (rand() % 2 == 0) elite1 = true;
             else                  elite2 = true;
         }
-        elite3 = true; // DEBUG: force Elite3 encounter for testing
     }
 
     if (!hasSave)
@@ -3220,8 +3220,7 @@ void Level::SpawnEnemiesForLevel()
         return;
     }
 
-    // Elite3 is currently triggered by the debug flag set in LevelInit.
-    if (elite3)
+    if (cfg.type == LevelConfig::Type::Elite3)
     {
         // Spawn at top-left (0,0), top-right (8,0), and center-bottom (4,4).
         auto SpawnElite3At = [&](int row, int col)
@@ -3349,10 +3348,12 @@ void Level::ResetForNextCombat()
     boss   = levelManager.IsBossLevel();
     elite1 = false;
     elite2 = false;
+    elite3 = false;
     {
         LevelConfig cfg = levelManager.GetCurrentConfig();
-        if (cfg.type == LevelConfig::Type::Elite1) elite1 = true;
+        if      (cfg.type == LevelConfig::Type::Elite1) elite1 = true;
         else if (cfg.type == LevelConfig::Type::Elite2) elite2 = true;
+        else if (cfg.type == LevelConfig::Type::Elite3) elite3 = true;
         else if (cfg.type == LevelConfig::Type::EliteRandom)
         {
             if (rand() % 2 == 0) elite1 = true;
@@ -3724,10 +3725,17 @@ void Level::SetPlayerSpawnPosition()
         return;
     }
 
-    if (elite1 || elite3)
+    if (elite1)
     {
         nowRow = 4;
-        nowCol = 2;
+        nowCol = 3;
+        return;
+    }
+
+    if (elite3)
+    {
+        nowRow = 4;
+        nowCol = 3;
         return;
     }
 

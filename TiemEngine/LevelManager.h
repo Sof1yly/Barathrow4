@@ -11,7 +11,7 @@ struct EnemyGroup
 
 struct LevelConfig
 {
-    enum class Type { Combat, Shop, Elite1, Elite2, EliteRandom, Boss };
+    enum class Type { Combat, Shop, Elite1, Elite2, Elite3, EliteRandom, Boss };
 
     Type                    type = Type::Combat;
     std::vector<EnemyGroup> groups; // populated for Combat levels only

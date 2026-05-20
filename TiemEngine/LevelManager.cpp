@@ -90,7 +90,7 @@ LevelConfig LevelManager::BuildConfig(int level)
         cfg.type = LevelConfig::Type::Shop;
         break;
     case 15:
-        cfg.type = LevelConfig::Type::EliteRandom;
+        cfg.type = LevelConfig::Type::Elite3;
         break;
 
     // ---- Act 4: mixed pools ------------------------------------------------
