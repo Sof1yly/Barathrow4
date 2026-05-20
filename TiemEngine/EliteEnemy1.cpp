@@ -15,10 +15,11 @@ static constexpr int E1_FRAMES_DEATH  = 12;
 EliteEnemy1::EliteEnemy1()
     : EliteEnemy(EliteType::Row)
 {
-    maxHealth = 30;
-    health    = maxHealth;
-    damage    = 10;
-    moveRange = 2;
+    maxHealth  = 30;
+    health     = maxHealth;
+    damage     = 10;
+    moveRange  = 1;
+    countdown  = 2;
     spriteSize = 150.0f;
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }
@@ -134,6 +135,13 @@ bool EliteEnemy1::TryMoveTowardPlayer(
     std::cout << "[Elite1] TryMove — pos(" << nowRow << "," << nowCol
               << ") player(" << playerRow << "," << playerCol << ")\n";
 
+    if (moveCooldown > 0)
+    {
+        std::cout << "[Elite1] Move cooldown: " << moveCooldown << " turn(s) remaining.\n";
+        moveCooldown--;
+        return false;
+    }
+
     if (nowCol == playerCol)
     {
         std::cout << "[Elite1] Aligned with player col " << playerCol << "\n";
@@ -154,6 +162,7 @@ bool EliteEnemy1::TryMoveTowardPlayer(
             return false;
     }
 
+    moveCooldown = moveCooldownMax;
     outR = targetR;
     outC = targetC;
     return true;
