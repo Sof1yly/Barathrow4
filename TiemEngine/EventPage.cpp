@@ -1,5 +1,6 @@
 #include "EventPage.h"
 #include "SquareMeshVbo.h"
+#include "SpriteMeshVbo.h"
 #include "GameStateList.h"
 #include "GameData.h"
 #include "SaveSystem.h"
@@ -25,6 +26,10 @@ void EventPage::LevelLoad()
     auto* square = new SquareMeshVbo();
     square->LoadData();
     GameEngine::GetInstance()->AddMesh(SquareMeshVbo::MESH_NAME, square);
+
+    auto* sprite = new SpriteMeshVbo();
+    sprite->LoadData();
+    GameEngine::GetInstance()->AddMesh(SpriteMeshVbo::MESH_NAME, sprite);
 }
 
 void EventPage::LevelInit()

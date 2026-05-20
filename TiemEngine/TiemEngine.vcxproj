@@ -41,7 +41,6 @@
     <ClCompile Include="EliteEnemy.cpp" />
     <ClCompile Include="EliteEnemy1.cpp" />
     <ClCompile Include="EliteEnemy2.cpp" />
-    <ClCompile Include="EliteEnemy3.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyData.cpp" />
     <ClCompile Include="EnergyAction.cpp" />
@@ -102,7 +101,6 @@
     <ClInclude Include="EliteEnemy.h" />
     <ClInclude Include="EliteEnemy1.h" />
     <ClInclude Include="EliteEnemy2.h" />
-    <ClInclude Include="EliteEnemy3.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="EnemyData.h" />
     <ClInclude Include="EnemyLoadPattern.h" />

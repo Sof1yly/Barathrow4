@@ -36,6 +36,14 @@ void PauseMenu::AddPauseObject(DrawableObject* obj, glm::vec3 visiblePos,
     pauseObjects.push_back({ obj, visiblePos });
 }
 
+void PauseMenu::AddGameOverObject(DrawableObject* obj, glm::vec3 visiblePos,
+                                   std::vector<DrawableObject*>& objectsList)
+{
+    obj->SetPosition(HIDDEN);
+    objectsList.push_back(obj);
+    gameOverObjects.push_back({ obj, visiblePos });
+}
+
 void PauseMenu::InitButton(PauseButton& btn, const std::string& labelStr,
     SDL_Color color,
     glm::vec3 pos, glm::vec2 size,
@@ -132,11 +140,93 @@ void PauseMenu::Reset()
     btnQuitDesktop = PauseButton{};
     pauseObjects.clear();
     visible = false;
+
+    goPanel        = nullptr;
+    goTitleText    = nullptr;
+    btnRetry       = PauseButton{};
+    btnGoMain      = PauseButton{};
+    gameOverObjects.clear();
+    gameOverVisible = false;
+}
+
+// ---------------------------------------------------------------------------
+void PauseMenu::InitGameOver(std::vector<DrawableObject*>& objectsList)
+{
+    SDL_Color white = { 240, 240, 240, 255 };
+    SDL_Color red   = { 220,  60,  60, 255 };
+
+    // Full-screen dim overlay
+    goPanel = new ImageObject();
+    goPanel->SetColor(0.0f, 0.0f, 0.0f);
+    goPanel->SetAlpha(0.75f);
+    goPanel->SetSize(1920.0f, -1080.0f);
+    AddGameOverObject(goPanel, glm::vec3(0.0f, 0.0f, OVL_Z), objectsList);
+
+    // "GAME OVER" title
+    goTitleText = new TextObject();
+    goTitleText->LoadText("GAME OVER", red, 80);
+    AddGameOverObject(goTitleText, glm::vec3(0.0f, 200.0f, TXT_Z), objectsList);
+
+    // "Retry" button
+    const float TOP_Y  = 30.0f;
+    const float MAIN_Y = TOP_Y - BTN_STEP;
+
+    btnRetry.pos     = glm::vec3(0.0f, TOP_Y, 0.0f);
+    btnRetry.size    = glm::vec2(BTN_W, BTN_H);
+    btnRetry.enabled = true;
+    btnRetry.bg = new ImageObject();
+    btnRetry.bg->SetTexture(DIR + "button_icon.png");
+    btnRetry.bg->SetSize(BTN_W, -BTN_H);
+    AddGameOverObject(btnRetry.bg, glm::vec3(0.0f, TOP_Y, BTN_Z), objectsList);
+    btnRetry.label = new TextObject();
+    btnRetry.label->LoadText("Retry", white, 34);
+    AddGameOverObject(btnRetry.label, glm::vec3(0.0f, TOP_Y, TXT_Z), objectsList);
+
+    // "Back to Main Menu" button
+    btnGoMain.pos     = glm::vec3(0.0f, MAIN_Y, 0.0f);
+    btnGoMain.size    = glm::vec2(BTN_W, BTN_H);
+    btnGoMain.enabled = true;
+    btnGoMain.bg = new ImageObject();
+    btnGoMain.bg->SetTexture(DIR + "button_icon.png");
+    btnGoMain.bg->SetSize(BTN_W, -BTN_H);
+    AddGameOverObject(btnGoMain.bg, glm::vec3(0.0f, MAIN_Y, BTN_Z), objectsList);
+    btnGoMain.label = new TextObject();
+    btnGoMain.label->LoadText("Back to Main Menu", white, 34);
+    AddGameOverObject(btnGoMain.label, glm::vec3(0.0f, MAIN_Y, TXT_Z), objectsList);
+
+    gameOverVisible = false;
+}
+
+void PauseMenu::ShowGameOver(std::vector<DrawableObject*>& objectsList)
+{
+    gameOverVisible = true;
+    for (auto& pair : gameOverObjects) {
+        if (!pair.first) continue;
+        auto it = std::find(objectsList.begin(), objectsList.end(), pair.first);
+        if (it != objectsList.end()) objectsList.erase(it);
+        objectsList.push_back(pair.first);
+        pair.first->SetPosition(pair.second);
+    }
+}
+
+void PauseMenu::HideGameOver()
+{
+    gameOverVisible = false;
+    for (auto& pair : gameOverObjects)
+        if (pair.first) pair.first->SetPosition(HIDDEN);
+
+    if (btnRetry.bg)  { btnRetry.bg->SetColor(1.0f, 1.0f, 1.0f);  btnRetry.bg->SetAlpha(1.0f); }
+    if (btnGoMain.bg) { btnGoMain.bg->SetColor(1.0f, 1.0f, 1.0f); btnGoMain.bg->SetAlpha(1.0f); }
 }
 
 // ---------------------------------------------------------------------------
 PauseMenu::Action PauseMenu::HandleClick(float wx, float wy)
 {
+    if (gameOverVisible) {
+        if (btnRetry.IsClicked(wx, wy))  return Action::RETRY;
+        if (btnGoMain.IsClicked(wx, wy)) return Action::GAME_OVER_MAIN;
+        return Action::NONE;
+    }
     if (!visible) return Action::NONE;
     if (btnResume.IsClicked(wx, wy))      return Action::RESUME;
     if (btnSetting.IsClicked(wx, wy))     return Action::SETTING;
@@ -148,6 +238,20 @@ PauseMenu::Action PauseMenu::HandleClick(float wx, float wy)
 
 void PauseMenu::HandleHover(float wx, float wy)
 {
+    if (gameOverVisible) {
+        PauseButton* btns[] = { &btnRetry, &btnGoMain };
+        for (auto* btn : btns) {
+            if (!btn->bg) continue;
+            if (btn->IsClicked(wx, wy)) {
+                btn->bg->SetAlpha(1.0f);
+                btn->bg->SetColor(4.0f, 3.0f, 1.5f);
+            } else {
+                btn->bg->SetAlpha(1.0f);
+                btn->bg->SetColor(1.0f, 1.0f, 1.0f);
+            }
+        }
+        return;
+    }
     if (!visible) return;
     PauseButton* buttons[] = { &btnResume, &btnSetting, &btnAbandon, &btnSaveQuit, &btnQuitDesktop };
     for (auto* btn : buttons) {

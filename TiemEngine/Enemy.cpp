@@ -411,6 +411,12 @@ void Enemy::UpdateTextPosition()
 
     if (debuffText)
         debuffText->SetPosition(glm::vec3(pos.x, pos.y + 35.0f, 200));
+
+    if (countdownIcon)
+        countdownIcon->SetPosition(glm::vec3(pos.x + 55.0f, pos.y - 55.0f, 100.0f));
+
+    if (countdownText)
+        countdownText->SetPosition(glm::vec3(pos.x + 55.0f, pos.y - 55.0f, 105.0f));
 }
 
 void Enemy::rotatePattern() {
@@ -631,15 +637,17 @@ void Enemy::RefreshCountdownIcon()
         return;
     }
 
-    // Show icon — attack.png when 1 turn remains (warning), debuffT.png otherwise
-    bool warning = (countdownRemaning <= 1);
+    bool warning = (countdownRemaning <= 0);
     countdownIcon->SetTexture(warning
         ? "../Resource/Texture/Vfx/attack.png"
         : "../Resource/Texture/Vfx/debuffT.png");
     countdownIcon->SetSize(55.0f, -55.0f);
 
     SDL_Color white = { 255, 255, 255, 255 };
-    countdownText->LoadText(std::to_string(countdownRemaning), white, 22);
+    if (warning)
+        countdownText->LoadText(std::to_string(getAttackDamage()), white, 22);
+    else
+        countdownText->LoadText(std::to_string(countdownRemaning), white, 22);
 }
 
 void Enemy::LockAttackPattern(int playerRow, int playerCol)

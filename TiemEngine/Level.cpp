@@ -2,7 +2,6 @@
 #include "EliteEnemy.h"
 #include "EliteEnemy1.h"
 #include "EliteEnemy2.h"
-#include "EliteEnemy3.h"
 #include "SaveSystem.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
@@ -296,11 +295,13 @@ void Level::LevelInit()
 
         cardSystem.ShuffleDeck();
 
-        if (eventSceneDone)
+        if (!pendingRemoveCards)
             cardSystem.DealNewHand(baseHandSize, objectsList);
 
         cardSystem.InitUI(objectsList);
     }
+
+    UpdateHPBar();
 
     // Apply start-of-combat buffs from event effects (mirrors AdvanceToNextRound)
     if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
@@ -392,6 +393,7 @@ void Level::LevelInit()
 
     settingPage.Init(objectsList);
     pauseMenu.Init(objectsList);
+    pauseMenu.InitGameOver(objectsList);
 
     std::cout << "Init Level" << std::endl;
 }
@@ -637,7 +639,7 @@ void Level::LevelUpdate()
         if (winDelay >= 2500.0f)
         {
             winDelayActive = false;
-            rewardBoxScene.Open(pendingCoinsEarned, objectsList, boss || elite1 || elite2 || elite3);
+            rewardBoxScene.Open(pendingCoinsEarned, objectsList, boss || elite1 || elite2);
             rewardPickedAfterWin = true;
         }
     }
@@ -985,6 +987,11 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (gameOverScreenActive)
+    {
+        pauseMenu.HideGameOver();
+        gameOverScreenActive = false;
+    }
     if (pauseMenuActive)
     {
         pauseMenu.Hide();
@@ -1399,6 +1406,37 @@ void Level::HandleMouse(int type, int x, int y)
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
 
+    // Route all input to the game-over screen while it is active
+    if (gameOverScreenActive)
+    {
+        if (type == 3)
+        {
+            pauseMenu.HandleHover(realX, realY);
+        }
+        else if (type == 0)
+        {
+            auto action = pauseMenu.HandleClick(realX, realY);
+            switch (action)
+            {
+            case PauseMenu::Action::RETRY:
+                pauseMenu.HideGameOver();
+                gameOverScreenActive = false;
+                SaveSystem::DeleteSave();
+                LevelRestart();
+                break;
+            case PauseMenu::Action::GAME_OVER_MAIN:
+                pauseMenu.HideGameOver();
+                gameOverScreenActive = false;
+                SaveSystem::DeleteSave();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+                break;
+            default:
+                break;
+            }
+        }
+        return;
+    }
+
     // Route all input to the pause menu while it is open
     if (pauseMenuActive)
     {
@@ -1449,7 +1487,6 @@ void Level::HandleMouse(int type, int x, int y)
                     if (!e || e->getIsDead()) continue;
                     EnemySaveData esd;
                     if      (dynamic_cast<Boss*>(e))        esd.typeIndex = 11;
-                    else if (dynamic_cast<EliteEnemy3*>(e)) esd.typeIndex = 12;
                     else if (dynamic_cast<EliteEnemy2*>(e)) esd.typeIndex = 10;
                     else if (dynamic_cast<EliteEnemy1*>(e)) esd.typeIndex = 9;
                     else                                     esd.typeIndex = (int)e->getType();
@@ -1649,7 +1686,7 @@ void Level::HandleMouse(int type, int x, int y)
             }
             if (clicked == 2)
             {
-                cardRewardSystem.SetForceLegendary(boss || elite1 || elite2 || elite3);
+                cardRewardSystem.SetForceLegendary(boss || elite1 || elite2);
                 cardRewardSystem.Open(objectsList);
                 if (!cardRewardSystem.IsActive())
                 {
@@ -2312,6 +2349,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
         return;
     }
 
+
     // Regular enemies (including Boss)
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
@@ -2376,10 +2414,6 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
     // Elite2 always attacks from any position (pattern caster)
     if (dynamic_cast<EliteEnemy2*>(e))
         return true;
-
-    // Elite3 attacks when the player is within its pattern reach (Manhattan distance <= 3)
-    if (dynamic_cast<EliteEnemy3*>(e))
-        return (abs(e->getNowRow() - nowRow) + abs(e->getNowCol() - nowCol)) <= 3;
 
     int er = e->getNowRow();
     int ec = e->getNowCol();
@@ -2468,9 +2502,6 @@ void Level::UpdateTurn()
 
         if (EnemyCanAttackPlayer(e) && !e->isPreparingAttack())
         {
-            if (EliteEnemy3* e3 = dynamic_cast<EliteEnemy3*>(e))
-                e3->SelectPattern(nowRow, nowCol);
-
             e->setPreparingAttack(true);
             e->setCountDownR();
             e->LockAttackPattern(nowRow, nowCol);
@@ -2728,12 +2759,6 @@ void Level::PreviewAllEnemyAttacks()
                 tiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
             cells = toHighlightCells(tiles);
         }
-        else if (EliteEnemy3* elite3e = dynamic_cast<EliteEnemy3*>(e))
-        {
-            int lockedRow = elite3e->getLockedPlayerRow();
-            int lockedCol = elite3e->getLockedPlayerCol();
-            cells = toHighlightCells(elite3e->GetPatternTiles(lockedRow, lockedCol));
-        }
         else
         {
             int centerRow = e->getNowRow();
@@ -2848,10 +2873,8 @@ void Level::HandlePlayerDeath()
     playerMoving = false;
     playerAttacking = false;
 
-    if (gameOverText)
-    {
-        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
-    }
+    pauseMenu.ShowGameOver(objectsList);
+    gameOverScreenActive = true;
 
     turnState = TurnState::GAME_OVER;
 }
@@ -3077,8 +3100,6 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
                 bossEnemy->setHealth(esd.health);
             continue;
         }
-        else if (esd.typeIndex == 12)
-            e = new EliteEnemy3();
         else if (esd.typeIndex == 10)
             e = new EliteEnemy2();
         else if (esd.typeIndex == 9)
@@ -3262,6 +3283,7 @@ void Level::SpawnEnemiesForLevel()
         SpawnElite3At(4, 4); // center-bottom
         return;
     }
+
 
     if (cfg.type == LevelConfig::Type::EliteRandom)
     {
