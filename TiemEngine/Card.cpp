@@ -269,3 +269,12 @@ int Card::getGenerateCount() const
     }
     return 0;
 }
+
+int Card::GetJumpValue() const
+{
+    for (Action* a : actions) {
+        if (a->getActionCode() == "jmp")
+            return a->getValue();
+    }
+    return 0;
+}

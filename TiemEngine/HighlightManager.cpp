@@ -165,6 +165,18 @@ void HighlightManager::ShowMovePreview(
     }
 }
 
+void HighlightManager::ShowTeleportPreview(glm::vec3 worldPos)
+{
+    Hide(moveHighlights);
+    if (moveHighlights.empty()) return;
+
+    GameObject* obj = moveHighlights[0];
+    obj->SetColor(0.2f, 0.5f, 1.0f, 0.55f);
+    obj->SetSize(gridWide - 10.0f, gridHigh - 10.0f);
+    worldPos.z = 5.0f;
+    obj->SetPosition(worldPos);
+}
+
 void HighlightManager::ShowEnemyAttack(
     const std::vector<std::pair<IVec2, int>>& cells,
     int gridStartRow, int gridEndRow,

@@ -1967,6 +1967,34 @@ void Level::HandleMouse(int type, int x, int y)
                         PreviewMovePath(retreatSteps, retreatDir);
                     else if (moveSteps > 0)
                         PreviewMovePath(moveSteps, dz);
+
+                    // Teleport destination preview (blue tile)
+                    int jumpVal = cardData->GetJumpValue();
+                    if (jumpVal > 0)
+                    {
+                        int destRow = nowRow, destCol = nowCol;
+                        switch (dz)
+                        {
+                        case 0: destRow -= jumpVal; break;
+                        case 3: destRow += jumpVal; break;
+                        case 1: destCol -= jumpVal; break;
+                        case 2: destCol += jumpVal; break;
+                        }
+                        bool destValid =
+                            destRow >= GridStartRow && destRow < GridEndRow &&
+                            destCol >= GridStartCol && destCol < GridEndCol &&
+                            IsWalkable(destRow, destCol);
+                        if (destValid)
+                        {
+                            for (auto* e : enemies)
+                            {
+                                if (!e || e->getIsDead()) continue;
+                                if (e->OccupiesTile(destRow, destCol)) { destValid = false; break; }
+                            }
+                        }
+                        if (destValid)
+                            highlightManager.ShowTeleportPreview(GridToWorld(destRow, destCol));
+                    }
                 }
                 else
                 {
@@ -2035,6 +2063,56 @@ void Level::HandleMouse(int type, int x, int y)
                     }
 
                     std::cout << "[Card] " << cardData->getName() << std::endl;
+
+                    // Teleport: validate destination and snap instantly before execution
+                    int jumpVal = cardData->GetJumpValue();
+                    if (jumpVal > 0)
+                    {
+                        int destRow = nowRow, destCol = nowCol;
+                        switch (dz)
+                        {
+                        case 0: destRow -= jumpVal; break;
+                        case 3: destRow += jumpVal; break;
+                        case 1: destCol -= jumpVal; break;
+                        case 2: destCol += jumpVal; break;
+                        }
+
+                        bool destValid =
+                            destRow >= GridStartRow && destRow < GridEndRow &&
+                            destCol >= GridStartCol && destCol < GridEndCol &&
+                            IsWalkable(destRow, destCol);
+
+                        if (destValid)
+                        {
+                            for (auto* e : enemies)
+                            {
+                                if (!e || e->getIsDead()) continue;
+                                if (e->OccupiesTile(destRow, destCol)) { destValid = false; break; }
+                            }
+                        }
+
+                        if (!destValid)
+                        {
+                            std::cout << "[Teleport Blocked] Destination (" << destRow << "," << destCol << ") is unavailable.\n";
+                            cardSystem.EndDragCancel(mousePos, objectsList);
+                            cardSystem.SetPendingCard(nullptr);
+                            cardSystem.UpdateHover(mousePos, false, objectsList);
+                            highlightManager.HideAllPlayer();
+                            return;
+                        }
+
+                        switch (dz)
+                        {
+                        case 0: playerDir = PlayerDir::LEFT;  break;
+                        case 1: playerDir = PlayerDir::UP;    break;
+                        case 2: playerDir = PlayerDir::DOWN;  break;
+                        case 3: playerDir = PlayerDir::RIGHT; break;
+                        }
+                        nowRow = destRow;
+                        nowCol = destCol;
+                        playerData.SetPosition(GridToWorld(destRow, destCol));
+                        std::cout << "[Teleport] Snapped to (" << destRow << "," << destCol << ")\n";
+                    }
 
                     // Build context and execute all card actions via OOP dispatch
                     CardPlayContext ctx {

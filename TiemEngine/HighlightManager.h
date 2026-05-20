@@ -30,6 +30,8 @@ public:
         std::function<glm::vec3(int, int)> gridToWorld,
         const std::vector<std::pair<int, int>>& enemyPositions);
 
+    void ShowTeleportPreview(glm::vec3 worldPos);
+
     void ShowEnemyAttack(
         const std::vector<std::pair<IVec2, int>>& cells,
         int gridStartRow, int gridEndRow,

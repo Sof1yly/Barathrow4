@@ -68,6 +68,7 @@ public:
     bool isEnergyCard() const;
     int getConsumeRequirement() const;
     int getGenerateCount() const;
+    int GetJumpValue() const;
 
     const vector<Action*>& getActions() const;
     void addAction(Action* action);
