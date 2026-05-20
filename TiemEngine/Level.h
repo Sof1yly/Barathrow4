@@ -18,6 +18,7 @@
 #include "Boss.h"
 #include "Battery.h"
 #include "EliteEnemy1.h"
+#include "EliteEnemy3.h"
 #include "HighlightManager.h"
 #include "Player.h"
 #include "DeckViewer.h"
@@ -99,6 +100,7 @@ private:
     bool boss = false;
     bool elite1 = false;
     bool elite2 = false;
+    bool elite3 = false;
     Boss* bossEnemy = nullptr;
     bool bossActed = false;
     ImageObject* bossHpBg = nullptr;
