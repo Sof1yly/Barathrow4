@@ -184,6 +184,16 @@ void Level::LevelInit()
         objectsList.push_back(hpMask);
     }
 
+    {
+        hpBarText = new TextObject();
+        SDL_Color black = { 0, 0, 0, 255 };
+        hpBarText->LoadText(
+            std::to_string(playerData.getHp()) + " / " + std::to_string(playerData.getMaxHp()),
+            black, 22);
+        hpBarText->SetPosition(glm::vec3(-770.0f, 495.0f, 10.0f));
+        objectsList.push_back(hpBarText);
+    }
+
     playerData.InitShieldUI(objectsList);
 
     {
@@ -1127,8 +1137,9 @@ void Level::LevelFree()
     player = nullptr;
     playersprite = nullptr;
     mainMenu = nullptr;
-    hpBar = nullptr;
-    hpMask = nullptr;
+    hpBar     = nullptr;
+    hpMask    = nullptr;
+    hpBarText = nullptr;
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
     viewMapHintText  = nullptr;
@@ -2766,6 +2777,14 @@ void Level::UpdateHPBar()
     float maskX = barLeftX + (fullWidth - missingWidth) / 2.0f;
 
     hpMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
+
+    if (hpBarText)
+    {
+        SDL_Color black = { 0, 0, 0, 255 };
+        hpBarText->LoadText(
+            std::to_string(hp) + " / " + std::to_string(maxHp),
+            black, 22);
+    }
 }
 
 void Level::EndTurn()

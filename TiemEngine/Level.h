@@ -134,8 +134,9 @@ private:
     bool levelBannerActive = false;
 
     // UI HP bar
-    ImageObject* hpBar = nullptr;
-    ImageObject* hpMask = nullptr;
+    ImageObject* hpBar     = nullptr;
+    ImageObject* hpMask    = nullptr;
+    TextObject*  hpBarText = nullptr;
     TextObject* skipTurnHintText = nullptr;
     TextObject* viewDeckHintText = nullptr;
     TextObject* viewMapHintText  = nullptr;
