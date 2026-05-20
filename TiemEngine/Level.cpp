@@ -2,7 +2,6 @@
 #include "EliteEnemy.h"
 #include "EliteEnemy1.h"
 #include "EliteEnemy2.h"
-#include "EliteEnemy3.h"
 #include "SaveSystem.h"
 #include "SquareMeshVbo.h"
 #include "SpriteMeshVbo.h"
@@ -140,7 +139,6 @@ void Level::LevelInit()
             if (rand() % 2 == 0) elite1 = true;
             else                  elite2 = true;
         }
-        elite3 = true; // DEBUG: force Elite3 encounter for testing
     }
 
     if (!hasSave)
@@ -601,7 +599,7 @@ void Level::LevelUpdate()
         if (winDelay >= 2500.0f)
         {
             winDelayActive = false;
-            rewardBoxScene.Open(pendingCoinsEarned, objectsList, boss || elite1 || elite2 || elite3);
+            rewardBoxScene.Open(pendingCoinsEarned, objectsList, boss || elite1 || elite2);
             rewardPickedAfterWin = true;
         }
     }
@@ -1411,7 +1409,6 @@ void Level::HandleMouse(int type, int x, int y)
                     if (!e || e->getIsDead()) continue;
                     EnemySaveData esd;
                     if      (dynamic_cast<Boss*>(e))        esd.typeIndex = 11;
-                    else if (dynamic_cast<EliteEnemy3*>(e)) esd.typeIndex = 12;
                     else if (dynamic_cast<EliteEnemy2*>(e)) esd.typeIndex = 10;
                     else if (dynamic_cast<EliteEnemy1*>(e)) esd.typeIndex = 9;
                     else                                     esd.typeIndex = (int)e->getType();
@@ -1611,7 +1608,7 @@ void Level::HandleMouse(int type, int x, int y)
             }
             if (clicked == 2)
             {
-                cardRewardSystem.SetForceLegendary(boss || elite1 || elite2 || elite3);
+                cardRewardSystem.SetForceLegendary(boss || elite1 || elite2);
                 cardRewardSystem.Open(objectsList);
                 if (!cardRewardSystem.IsActive())
                 {
@@ -2225,53 +2222,6 @@ void Level::ApplyEnemyAttack(Enemy* e)
         return;
     }
 
-    // EliteEnemy3: alternating sweep / line-charge patterns
-    if (EliteEnemy3* elite3e = dynamic_cast<EliteEnemy3*>(e))
-    {
-        int lockedRow = elite3e->getLockedPlayerRow();
-        int lockedCol = elite3e->getLockedPlayerCol();
-
-        auto hitTiles = elite3e->GetPatternTiles(lockedRow, lockedCol);
-
-        if (elite3e->IsLineAttack())
-        {
-            // Pattern 1 (line charge): farthest tile is the landing spot.
-            auto lastCell = elite3e->GetLineEndCell(lockedRow, lockedCol);
-            bool playerOnLastCell = (nowRow == lastCell.first && nowCol == lastCell.second);
-
-            for (auto& tile : hitTiles)
-            {
-                if (nowRow == tile.first && nowCol == tile.second)
-                {
-                    int dmg = elite3e->getAttackDamage();
-                    if (playerOnLastCell) dmg *= 2; // player blocked the charge
-                    PlayerTakeDamage(dmg);
-                }
-            }
-
-            if (!playerOnLastCell &&
-                lastCell.first  >= GridStartRow && lastCell.first  < GridEndRow &&
-                lastCell.second >= GridStartCol && lastCell.second < GridEndCol)
-            {
-                // Move the enemy to the end of the line
-                elite3e->setNowPosition(lastCell.first, lastCell.second);
-                elite3e->StartMove(GridToWorld(lastCell.first, lastCell.second));
-            }
-        }
-        else
-        {
-            // Pattern 0 (sweep): standard directional hit
-            for (auto& tile : hitTiles)
-            {
-                if (nowRow == tile.first && nowCol == tile.second)
-                    PlayerTakeDamage(elite3e->getAttackDamage());
-            }
-        }
-
-        elite3e->AdvancePattern();
-        return;
-    }
-
     // Regular enemies (including Boss)
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
@@ -2336,10 +2286,6 @@ bool Level::EnemyCanAttackPlayer(Enemy* e)
     // Elite2 always attacks from any position (pattern caster)
     if (dynamic_cast<EliteEnemy2*>(e))
         return true;
-
-    // Elite3 attacks when the player is within its pattern reach (Manhattan distance <= 3)
-    if (dynamic_cast<EliteEnemy3*>(e))
-        return (abs(e->getNowRow() - nowRow) + abs(e->getNowCol() - nowCol)) <= 3;
 
     int er = e->getNowRow();
     int ec = e->getNowCol();
@@ -2428,9 +2374,6 @@ void Level::UpdateTurn()
 
         if (EnemyCanAttackPlayer(e) && !e->isPreparingAttack())
         {
-            if (EliteEnemy3* e3 = dynamic_cast<EliteEnemy3*>(e))
-                e3->SelectPattern(nowRow, nowCol);
-
             e->setPreparingAttack(true);
             e->setCountDownR();
             e->LockAttackPattern(nowRow, nowCol);
@@ -2687,12 +2630,6 @@ void Level::PreviewAllEnemyAttacks()
             else
                 tiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
             cells = toHighlightCells(tiles);
-        }
-        else if (EliteEnemy3* elite3e = dynamic_cast<EliteEnemy3*>(e))
-        {
-            int lockedRow = elite3e->getLockedPlayerRow();
-            int lockedCol = elite3e->getLockedPlayerCol();
-            cells = toHighlightCells(elite3e->GetPatternTiles(lockedRow, lockedCol));
         }
         else
         {
@@ -2980,8 +2917,6 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
                 bossEnemy->setHealth(esd.health);
             continue;
         }
-        else if (esd.typeIndex == 12)
-            e = new EliteEnemy3();
         else if (esd.typeIndex == 10)
             e = new EliteEnemy2();
         else if (esd.typeIndex == 9)
@@ -3141,32 +3076,6 @@ void Level::SpawnEnemiesForLevel()
         SpawnElite2Fixed(1);
         return;
     }
-
-    // Elite3 is currently triggered by the debug flag set in LevelInit.
-    if (elite3)
-    {
-        // Spawn at top-left (0,0), top-right (8,0), and center-bottom (4,4).
-        auto SpawnElite3At = [&](int row, int col)
-        {
-            auto* e = new EliteEnemy3();
-            e->setNowPosition(row, col);
-            e->SetWorldPosition(GridToWorld(row, col));
-            enemies.push_back(e);
-            objectsList.push_back(e->getObject());
-            objectsList.push_back(e->getHPText());
-            objectsList.push_back(e->getCorruptText());
-            objectsList.push_back(e->getWeakenText());
-            objectsList.push_back(e->getDebuffText());
-            objectsList.push_back(e->getCountdownIcon());
-            objectsList.push_back(e->getCountdownText());
-            std::cout << "[Spawn] Elite3 at (" << row << ", " << col << ")\n";
-        };
-        SpawnElite3At(0, 0); // top-left
-        SpawnElite3At(8, 0); // top-right
-        SpawnElite3At(4, 4); // center-bottom
-        return;
-    }
-
     if (cfg.type == LevelConfig::Type::EliteRandom)
     {
         if (elite1)
@@ -3641,7 +3550,7 @@ void Level::SetPlayerSpawnPosition()
         return;
     }
 
-    if (elite1 || elite3)
+    if (elite1)
     {
         nowRow = 4;
         nowCol = 2;

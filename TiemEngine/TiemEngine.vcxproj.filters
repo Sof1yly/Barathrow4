@@ -171,9 +171,6 @@
     <ClCompile Include="EliteEnemy2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EliteEnemy3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MapScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -348,9 +345,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EliteEnemy2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EliteEnemy3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventPage.h">
