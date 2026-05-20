@@ -33,17 +33,14 @@ ShopSystem::ShopSystem(): rng(std::random_device{}())
 
 ShopSystem::~ShopSystem()
 {
-    for (Card* c : ownedShopCards) {
+    for (Card* c : ownedShopCards)
         if (c) delete c;
-        ownedShopCards.clear();
-    }
+    ownedShopCards.clear();
+    boughtActionPatterns.clear();
 
-
-    for (DrawableObject* obj : uiObjects) {
+    for (DrawableObject* obj : uiObjects)
         if (obj) delete obj;
-        uiObjects.clear();
-    }
-
+    uiObjects.clear();
 }
 
 
@@ -382,7 +379,7 @@ Action* ShopSystem::CloneAction(const Action* src) const
     return copy;
 }
 
-Card* ShopSystem::CloneCard(const Card* src, const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const
+Card* ShopSystem::CloneCard(const Card* src, const GameDataLoader& srcLoader, GameDataLoader& dstLoader)
 {
     if (!src) return nullptr;
 
@@ -410,6 +407,7 @@ Card* ShopSystem::CloneCard(const Card* src, const GameDataLoader& srcLoader,Gam
             if (pat)
             {
                 dstLoader.linkPatternToAction(ac, pat);
+                boughtActionPatterns[ac] = pat;
             }
             copy->addAction(ac);
         }
@@ -649,11 +647,28 @@ void ShopSystem::ApplyRemovals(CardSystem& cardSystem)
         cardSystem.RemoveOneCard(name);
 }
 
+void ShopSystem::ApplyOwnedCards(CardSystem& cardSystem)
+{
+    GameDataLoader& dstLoader = cardSystem.GetDataLoader();
+    for (Card* c : ownedShopCards)
+    {
+        if (!c) continue;
+        for (Action* a : c->getActions())
+        {
+            auto it = boughtActionPatterns.find(a);
+            if (it != boughtActionPatterns.end() && it->second)
+                dstLoader.linkPatternToAction(a, it->second);
+        }
+        cardSystem.AddCardToDeck(c);
+    }
+}
+
 void ShopSystem::Reset()
 {
     for (Card* c : ownedShopCards)
         if (c) delete c;
     ownedShopCards.clear();
+    boughtActionPatterns.clear();
     permanentlyRemovedNames.clear();
     shopVisitCount = 0;
     healEverUsed = false;
@@ -836,7 +851,8 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             if (copy)
             {
                 ownedShopCards.push_back(copy);
-                cardSystem.AddCardToDeck(copy);
+                // Do NOT call AddCardToDeck here — ApplyOwnedCards re-adds
+                // all bought cards to every fresh deck (like cardRewardSystem).
             }
 
             slot.sold = true;

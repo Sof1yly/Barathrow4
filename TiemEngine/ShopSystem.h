@@ -3,8 +3,10 @@
 
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
+#include "AttackPattern.h"
 #include "Button.h"
 #include "CardSystem.h"
 #include "DrawableObject.h"
@@ -34,6 +36,7 @@ private:
     GameDataLoader shopLoader;
     std::vector<Card*> shopPool;
     std::vector<Card*> ownedShopCards;
+    std::unordered_map<Action*, const AttackPattern*> boughtActionPatterns;
     std::vector<DrawableObject*> uiObjects;
     std::vector<ShopSlot> shopSlots;
     Button closeButton;
@@ -95,7 +98,7 @@ private:
     void   BuildUI(std::vector<DrawableObject*>& objectsList);
     void   ClearUI(std::vector<DrawableObject*>& objectsList);
     Action* CloneAction(const Action* src) const;
-    Card*   CloneCard(const Card* src,const GameDataLoader& srcLoader,GameDataLoader& dstLoader) const;
+    Card*   CloneCard(const Card* src, const GameDataLoader& srcLoader, GameDataLoader& dstLoader);
 
 public:
     ShopSystem();
@@ -113,6 +116,7 @@ public:
     bool HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSystem,Player& player,std::vector<DrawableObject*>& objectsList);
 
     void ApplyRemovals(CardSystem& cardSystem);
+    void ApplyOwnedCards(CardSystem& cardSystem);
     void Reset();
 
     bool IsActive() const;

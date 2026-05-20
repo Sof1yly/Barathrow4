@@ -276,6 +276,7 @@ void Level::LevelInit()
     {
         // Normal new-game path
         cardRewardSystem.ApplyOwnedRewards(cardSystem);
+        shopSystem.ApplyOwnedCards(cardSystem);
 
         if (GameData::GetInstance()->eventEffectType >= 0)
         {
@@ -3579,6 +3580,7 @@ void Level::ResetForNextCombat()
     cardSystem.LoadData(PATH_PATTERN, PATH_CARDS_STARTER, PATH_CARD_DESC, &err);
     cardSystem.SetComboFallbackLoader(&cardRewardSystem.GetRewardLoader());
     cardRewardSystem.ApplyOwnedRewards(cardSystem);
+    shopSystem.ApplyOwnedCards(cardSystem);
     shopSystem.ApplyRemovals(cardSystem);
     cardSystem.InitUI(objectsList);
     cardSystem.ShuffleDeck();
