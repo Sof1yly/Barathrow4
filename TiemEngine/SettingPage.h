@@ -34,6 +34,7 @@ private:
 
     ImageObject* overlay   = nullptr;
     ImageObject* backboard = nullptr;
+    TextObject*  titleLabel = nullptr;
 
     // Row labels (left side)
     TextObject* musicLabel = nullptr;

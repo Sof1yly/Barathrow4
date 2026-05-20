@@ -106,6 +106,12 @@ void SettingPage::Init(std::vector<DrawableObject*>& objectsList) {
     backboard->SetSize(1121.0f, -748.0f);
     AddObj(backboard, glm::vec3(0.0f, 0.0f, PNL_Z), objectsList);
 
+    // ── Title ─────────────────────────────────────────────────────────────────
+    titleLabel = new TextObject();
+    SDL_Color titleCol = { 240, 240, 240, 255 };
+    titleLabel->LoadText("SETTING", titleCol, 65);
+    AddObj(titleLabel, glm::vec3(0.0f, 290.0f, TOP_Z), objectsList);
+
     // ── Row labels (left side) ────────────────────────────────────────────────
     musicLabel = new TextObject();
     musicLabel->LoadText("Music", labelCol, 28);
@@ -251,6 +257,7 @@ void SettingPage::Hide() {
 void SettingPage::Reset() {
     overlay    = nullptr;
     backboard  = nullptr;
+    titleLabel = nullptr;
     musicLabel = soundLabel = resLabel = nullptr;
     musicIcon  = soundIcon  = nullptr;
     musicBarBg = soundBarBg = nullptr;
