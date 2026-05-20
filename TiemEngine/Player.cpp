@@ -353,10 +353,10 @@ void Player::SetPlayerAttack(int dir) //punch attack
 
     switch (dir)
     {
-    case 0: sprite->SetAnimationLoop(2, 0, 8, 100); break;
-    case 1: sprite->SetAnimationLoop(2, 8, 8, 100); break;
-    case 2: sprite->SetAnimationLoop(3, 0, 8, 100); break;
-    case 3: sprite->SetAnimationLoop(3, 8, 8, 100); break;
+    case 0: sprite->SetAnimationOnce(2, 0, 8, 100); break;
+    case 1: sprite->SetAnimationOnce(2, 8, 8, 100); break;
+    case 2: sprite->SetAnimationOnce(3, 0, 8, 100); break;
+    case 3: sprite->SetAnimationOnce(3, 8, 8, 100); break;
     }
 }
 
@@ -365,21 +365,34 @@ void Player::SetPlayerAttackAoe(int dir) //sword attack
     if (!sprite || isDead) return;
     switch (dir)
     {
-    case 0: sprite->SetAnimationLoop(5, 0, 8, 100); break;
-    case 3: sprite->SetAnimationLoop(5, 8, 8, 100); break;
-    case 2: sprite->SetAnimationLoop(6, 0, 8, 100); break;
-    case 1: sprite->SetAnimationLoop(6, 8, 8, 100); break;
+    case 0: sprite->SetAnimationOnce(5, 0, 8, 100); break;
+    case 3: sprite->SetAnimationOnce(5, 8, 8, 100); break;
+    case 2: sprite->SetAnimationOnce(6, 0, 8, 100); break;
+    case 1: sprite->SetAnimationOnce(6, 8, 8, 100); break;
 	}
 }
 void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
 {
     int patNum = patternId.size() > 1 ? std::stoi(patternId.substr(1)) : 0;
-    if ((patNum >= 5 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+    // A1-A3: small single-target (punch)
+    // A4-A13, A18-A22: multi-tile spread (AOE/sword)
+    // A14-A17: long-range projectile (gun)
+    std::cout << "[Anim] patternId='" << patternId << "' patNum=" << patNum << " dir=" << dir;
+    if ((patNum >= 4 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+    {
+        std::cout << " -> AOE (row 5/6)\n";
         SetPlayerAttackAoe(dir);
+    }
     else if (patNum >= 14 && patNum <= 17)
+    {
+        std::cout << " -> RANGE (row 4)\n";
         SetPlayerAttackRange(dir);
+    }
     else
+    {
+        std::cout << " -> PUNCH (row 2/3)\n";
         SetPlayerAttack(dir);
+    }
 }
 
 void Player::SetPlayerAttackRange(int dir) //gun attack
@@ -387,10 +400,10 @@ void Player::SetPlayerAttackRange(int dir) //gun attack
     if (!sprite || isDead) return;
     switch (dir)
     {
-    case 0: sprite->SetAnimationLoop(4, 0, 4, 100); break;
-    case 3: sprite->SetAnimationLoop(4, 4, 4, 100); break;
-    case 2: sprite->SetAnimationLoop(4, 8, 4, 100); break;
-    case 1: sprite->SetAnimationLoop(4, 12, 4, 100); break;
+    case 0: sprite->SetAnimationOnce(4, 0, 4, 100); break;
+    case 3: sprite->SetAnimationOnce(4, 4, 4, 100); break;
+    case 2: sprite->SetAnimationOnce(4, 8, 4, 100); break;
+    case 1: sprite->SetAnimationOnce(4, 12, 4, 100); break;
     }
 }
 
