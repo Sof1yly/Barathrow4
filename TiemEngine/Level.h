@@ -340,14 +340,11 @@ public:
 
     void UpdatePlayerAnimation();
 
-    void SetPlayerIdle(PlayerDir dir);
-    void SetPlayerWalk(PlayerDir dir);
-	void SetPlayerGetDamage(PlayerDir dir);
-    void SetPlayerDie(PlayerDir dir);
+
 
     void PreviewAttackPattern(Card* cardData, int dz);
     void PreviewMovePath(int steps, int dir);
-	void PreviewEnemyAttack(Enemy* e);
+
 
     void PreviewAllEnemyAttacks();
 

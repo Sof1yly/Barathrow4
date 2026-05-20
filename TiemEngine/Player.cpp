@@ -371,6 +371,17 @@ void Player::SetPlayerAttackAoe(int dir) //sword attack
     case 1: sprite->SetAnimationLoop(6, 8, 8, 100); break;
 	}
 }
+void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
+{
+    int patNum = patternId.size() > 1 ? std::stoi(patternId.substr(1)) : 0;
+    if ((patNum >= 5 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+        SetPlayerAttackAoe(dir);
+    else if (patNum >= 14 && patNum <= 17)
+        SetPlayerAttackRange(dir);
+    else
+        SetPlayerAttack(dir);
+}
+
 void Player::SetPlayerAttackRange(int dir) //gun attack
 {
     if (!sprite || isDead) return;

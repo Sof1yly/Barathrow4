@@ -101,6 +101,7 @@ public:
     void SetPlayerAttack(int dir);
 	void SetPlayerAttackAoe(int dir);
 	void SetPlayerAttackRange(int dir);
+    void SetPlayerAttackByPatternId(const std::string& patternId, int dir);
     void SetPlayerGetDamage(int dir);
     void SetPlayerDie(int dir);
 };

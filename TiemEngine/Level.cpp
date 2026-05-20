@@ -2075,26 +2075,7 @@ void Level::HandleMouse(int type, int x, int y)
                         attackTimer = 0;
 
                         const std::string& pid = result.pendingAttacks[0].patternId;
-                        int patNum = pid.size() > 1 ? std::stoi(pid.substr(1)) : 0;
-                        int attackType = 0; // 0 = normal, 1 = aoe, 2 = range
-                        if ((patNum >= 5 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
-                            attackType = 1;
-                        else if (patNum >= 14 && patNum <= 17)
-                            attackType = 2;
-
-                        // Choose attack type
-                        if (attackType == 0)
-                        {
-                            playerData.SetPlayerAttack(ConvertDir(playerDir));
-                        }
-                        else if (attackType == 1)
-                        {
-                            playerData.SetPlayerAttackAoe(ConvertDir(playerDir));
-                        }
-                        else if (attackType == 2)
-                        {
-                            playerData.SetPlayerAttackRange(ConvertDir(playerDir));
-                        }
+                        playerData.SetPlayerAttackByPatternId(pid, ConvertDir(playerDir));
 
                         std::cout << "[Attack Animation Started]\n";
 
