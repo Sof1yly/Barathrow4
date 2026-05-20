@@ -553,6 +553,29 @@ void Level::LevelUpdate()
         elite3Projectiles.end()
     );
 
+    // ---- Update player range-attack bullets ----
+    for (auto& proj : playerBullets)
+    {
+        if (proj.done) continue;
+
+        proj.timer += deltaTime;
+        float t = std::min(proj.timer / proj.duration, 1.0f);
+        glm::vec3 pos = proj.startPos + t * (proj.endPos - proj.startPos);
+        pos.z = 6.0f;
+        proj.sprite->SetPosition(pos);
+
+        if (proj.timer >= proj.duration)
+        {
+            proj.done = true;
+            proj.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    playerBullets.erase(
+        std::remove_if(playerBullets.begin(), playerBullets.end(),
+            [](const PlayerBullet& p) { return p.done; }),
+        playerBullets.end()
+    );
+
     // ---- Update BossAttack1 tile-flash effects ----
     // Animation is already ticked by the objectsList update below; just watch for finish.
     for (auto& fx : bossAttack1Effects)
@@ -1113,6 +1136,7 @@ void Level::LevelFree()
     elite1Projectiles.clear();
     elite2Projectiles.clear();
     elite3Projectiles.clear();
+    playerBullets.clear();
     bossAttack1Effects.clear();
     bossAttack2Projectiles.clear();
     bossSummonPortals.clear();
@@ -2157,6 +2181,27 @@ void Level::HandleMouse(int type, int x, int y)
                         const std::string& pid = result.pendingAttacks[0].patternId;
                         playerData.SetPlayerAttackByPatternId(pid, ConvertDir(playerDir));
 
+                        // Spawn player bullets for range attack cards (A14–A17)
+                        int patNum = (pid.size() > 1) ? std::stoi(pid.substr(1)) : 0;
+                        if (patNum >= 14 && patNum <= 17)
+                        {
+                            const PendingAttackInfo& pa = result.pendingAttacks[0];
+                            if (pa.pattern)
+                            {
+                                AttackPattern oriented = CardActionExecutor::OrientPattern(*pa.pattern, dz);
+                                auto cells = oriented.applyTo(nowRow, nowCol);
+                                std::vector<std::pair<int,int>> targetCells;
+                                for (auto& cell : cells)
+                                {
+                                    int gr = cell.first.x, gc = cell.first.y;
+                                    if (gr >= GridStartRow && gr < GridEndRow &&
+                                        gc >= GridStartCol && gc < GridEndCol)
+                                        targetCells.push_back({ gr, gc });
+                                }
+                                SpawnPlayerBullets(targetCells);
+                            }
+                        }
+
                         std::cout << "[Attack Animation Started]\n";
 
                         if (result.retreatSteps > 0)
@@ -3074,6 +3119,41 @@ void Level::SpawnElite3Projectile(EliteEnemy3* elite3e)
 
     objectsList.push_back(proj.sprite);
     elite3Projectiles.push_back(proj);
+}
+
+void Level::SpawnPlayerBullets(const std::vector<std::pair<int,int>>& targetCells)
+{
+    glm::vec3 origin = GridToWorld(nowRow, nowCol);
+    origin.z = 6.0f;
+
+    for (auto& cell : targetCells)
+    {
+        glm::vec3 target = GridToWorld(cell.first, cell.second);
+        target.z = 6.0f;
+
+        // Compute angle from player to this target cell
+        float dx = target.x - origin.x;
+        float dy = target.y - origin.y;
+        float angleDeg = std::atan2(dy, dx) * (180.0f / 3.14159265f);
+        // Sprite row 3 (0-indexed) faces LEFT; subtract 180° to align with travel direction
+        float rotation = angleDeg - 180.0f;
+
+        PlayerBullet proj;
+        proj.sprite = new SpriteObject("../Resource/Texture/PlayerBullet.png", 4, 4);
+        float sz = 80.0f;
+        proj.sprite->SetSize(sz, -sz);
+        proj.sprite->SetAnimationLoop(3, 0, 4, 60); // row 3 = left-facing direction
+        proj.sprite->SetRotate(rotation);
+        proj.sprite->SetPosition(origin);
+        proj.startPos = origin;
+        proj.endPos   = target;
+        proj.timer    = 0.0f;
+        proj.duration = 600.0f;
+        proj.done     = false;
+
+        objectsList.push_back(proj.sprite);
+        playerBullets.push_back(proj);
+    }
 }
 
 void Level::LoadEnemyData()

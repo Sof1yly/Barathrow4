@@ -75,6 +75,16 @@ struct Elite3Projectile {
     bool          done     = false;
 };
 
+// Bullet fired by the player when using a range-attack card (PlayerBullet.png)
+struct PlayerBullet {
+    SpriteObject* sprite   = nullptr;
+    glm::vec3     startPos;
+    glm::vec3     endPos;
+    float         timer    = 0.0f;
+    float         duration = 600.0f;
+    bool          done     = false;
+};
+
 // BossAttack1.png — stationary tile flash for boss patterns 1/2/3
 struct BossAttack1Effect {
     SpriteObject* sprite = nullptr;
@@ -281,6 +291,9 @@ private:
     // Elite3 directional bullets
     std::vector<Elite3Projectile> elite3Projectiles;
 
+    // Player range-attack bullets
+    std::vector<PlayerBullet> playerBullets;
+
     // Boss attack visuals
     std::vector<BossAttack1Effect>     bossAttack1Effects;
     std::vector<BossAttack2Projectile> bossAttack2Projectiles;
@@ -364,6 +377,7 @@ public:
     void SpawnElite1Projectile(EliteEnemy1* elite1);
     void SpawnElite2Projectile(int centerRow, int centerCol);
     void SpawnElite3Projectile(EliteEnemy3* elite3e);
+    void SpawnPlayerBullets(const std::vector<std::pair<int,int>>& targetCells);
     bool IsWalkable(int row, int col) const;
 
     void SpawnBossSummon();
