@@ -182,6 +182,13 @@ void Level::LevelInit()
         objectsList.push_back(hpMask);
     }
 
+    {
+        playerHpText = new TextObject();
+        playerHpText->SetSize(0, 0);
+        playerHpText->SetPosition(glm::vec3(-650.0f, 460.0f, 10.0f));
+        objectsList.push_back(playerHpText);
+    }
+
     playerData.InitShieldUI(objectsList);
 
     {
@@ -289,6 +296,8 @@ void Level::LevelInit()
 
         cardSystem.InitUI(objectsList);
     }
+
+    UpdateHPBar();
 
     // Apply start-of-combat buffs from event effects (mirrors AdvanceToNextRound)
     if (startCombatBarrier   > 0) playerData.AddBarrier(startCombatBarrier);
@@ -1100,6 +1109,7 @@ void Level::LevelFree()
     mainMenu = nullptr;
     hpBar = nullptr;
     hpMask = nullptr;
+    playerHpText = nullptr;
     skipTurnHintText = nullptr;
     viewDeckHintText = nullptr;
     viewMapHintText  = nullptr;
@@ -2674,6 +2684,12 @@ void Level::UpdateHPBar()
     float maskX = barLeftX + (fullWidth - missingWidth) / 2.0f;
 
     hpMask->SetPosition(glm::vec3(maskX, 500.0f, 5.0f));
+
+    if (playerHpText)
+    {
+        SDL_Color white = { 255, 255, 255, 255 };
+        playerHpText->LoadText(std::to_string(hp) + "/" + std::to_string(maxHp), white, 20);
+    }
 }
 
 void Level::EndTurn()

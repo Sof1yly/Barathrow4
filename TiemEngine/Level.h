@@ -124,6 +124,7 @@ private:
     // UI HP bar
     ImageObject* hpBar = nullptr;
     ImageObject* hpMask = nullptr;
+    TextObject* playerHpText = nullptr;
     TextObject* skipTurnHintText = nullptr;
     TextObject* viewDeckHintText = nullptr;
     TextObject* viewMapHintText  = nullptr;
