@@ -291,7 +291,7 @@ void Level::LevelInit()
 
         cardSystem.ShuffleDeck();
 
-        if (eventSceneDone)
+        if (!pendingRemoveCards)
             cardSystem.DealNewHand(baseHandSize, objectsList);
 
         cardSystem.InitUI(objectsList);
@@ -389,6 +389,7 @@ void Level::LevelInit()
 
     settingPage.Init(objectsList);
     pauseMenu.Init(objectsList);
+    pauseMenu.InitGameOver(objectsList);
 
     std::cout << "Init Level" << std::endl;
 }
@@ -956,6 +957,11 @@ void Level::LevelDraw()
 
 void Level::LevelFree()
 {
+    if (gameOverScreenActive)
+    {
+        pauseMenu.HideGameOver();
+        gameOverScreenActive = false;
+    }
     if (pauseMenuActive)
     {
         pauseMenu.Hide();
@@ -1368,6 +1374,37 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    // Route all input to the game-over screen while it is active
+    if (gameOverScreenActive)
+    {
+        if (type == 3)
+        {
+            pauseMenu.HandleHover(realX, realY);
+        }
+        else if (type == 0)
+        {
+            auto action = pauseMenu.HandleClick(realX, realY);
+            switch (action)
+            {
+            case PauseMenu::Action::RETRY:
+                pauseMenu.HideGameOver();
+                gameOverScreenActive = false;
+                SaveSystem::DeleteSave();
+                LevelRestart();
+                break;
+            case PauseMenu::Action::GAME_OVER_MAIN:
+                pauseMenu.HideGameOver();
+                gameOverScreenActive = false;
+                SaveSystem::DeleteSave();
+                GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+                break;
+            default:
+                break;
+            }
+        }
+        return;
+    }
 
     // Route all input to the pause menu while it is open
     if (pauseMenuActive)
@@ -2753,10 +2790,8 @@ void Level::HandlePlayerDeath()
     playerMoving = false;
     playerAttacking = false;
 
-    if (gameOverText)
-    {
-        gameOverText->SetPosition(glm::vec3(0.0f, 100.0f, 10.0f));
-    }
+    pauseMenu.ShowGameOver(objectsList);
+    gameOverScreenActive = true;
 
     turnState = TurnState::GAME_OVER;
 }

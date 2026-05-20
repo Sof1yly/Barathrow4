@@ -298,7 +298,8 @@ protected:
 
 private:
     PauseMenu pauseMenu;
-    bool pauseMenuActive = false;
+    bool pauseMenuActive     = false;
+    bool gameOverScreenActive = false;
 
 public:
     virtual void LevelLoad();
