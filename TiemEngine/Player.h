@@ -12,6 +12,7 @@ private:
 	int maxHp = 50;
 	int shield = 0;
 	int maxShield = 0;
+	int shieldTurnsRemaining = 0;
     int barrierCount = 0;
     int jumpCharges = 0;
     int coins = 100;

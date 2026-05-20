@@ -34,7 +34,7 @@ Lazer Beam	atk:1x3	A16	1	rar	atk	Deal {atk} Damage 3 times
 Double Attack	atk:4x2	A2	1	leg	atk	Deal {atk} Damage twice
 Leap of Faith	jmp:3;atk:10	A2	1	rar	atk	Jump {jmp} Deal {atk} Damage
 Offensive Stance	oc:10;cor:5;del	A1	1	leg	buf	Overclock 10 Corrupt Self 5 Delete
-Smoke Bomb	wek:3;st:1;re:1	A1	1	rar	dbuf	Weaken 3 Stun 1 Retreat 1
+Smoke Bomb	wek:3;st:1;re:1	A12	1	rar	dbuf	Weaken 3 Stun 1 Retreat 1
 Freeze	atk:1;st:3;del	A2	1	leg	dbuf	Deal {atk} Damage Stun 3 Delete
 Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
 Hack	cor:3:all;wek:1:all;del	A24	1	leg	dbuf	Corrupt All 3 Weaken All Enemy Delete
@@ -43,7 +43,7 @@ Alpha	atk:5;con:1;combo:Beta	A4	1	leg	atk	Deal {atk} Damage Consume 1 Combo Beta
 Beta	atk:10;con:1;combo:Omega;te	A6	1	misc	atk	Deal {atk} Damage Consume 1 Combo Omega Temp
 Omega	atk:15;con:1;te	A9	1	misc	atk	Deal {atk} Damage Consume 1 Temp
 Strategic Retreat	re:2;shi:7	A1	1	com	buf	Retreat 2 Shield 7
-Teleport	jmp:8	A1	1	leg	mov	Jump {jmp}
+Teleport	jmp:7	A1	1	leg	mov	Jump {jmp}
 
 
 

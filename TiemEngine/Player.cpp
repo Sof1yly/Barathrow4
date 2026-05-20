@@ -13,6 +13,7 @@ void Player::AddShield(int amount)
 {
     shield += amount;
     maxShield = shield;
+    shieldTurnsRemaining = 2;
     UpdateShieldBar();
 
     std::cout << "  Shield: +" << amount
@@ -146,12 +147,16 @@ void Player::HealHp(int amount)
 
 void Player::ResetShield()
 {
-    if (shield > 0)
+    if (shield <= 0) return;
+    if (shieldTurnsRemaining > 1)
     {
-        shield = 0;
-        maxShield = 0;
-        UpdateShieldBar();
+        shieldTurnsRemaining--;
+        return;
     }
+    shield = 0;
+    maxShield = 0;
+    shieldTurnsRemaining = 0;
+    UpdateShieldBar();
 }
 
 int Player::AbsorbDamage(int damage)
@@ -375,13 +380,13 @@ void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
 {
     int patNum = patternId.size() > 1 ? std::stoi(patternId.substr(1)) : 0;
     // A1-A3: small single-target (punch)
-    // A4-A13, A18-A22: multi-tile spread (AOE/sword)
-    // A14-A17: long-range projectile (gun)
-    if ((patNum >= 4 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
+    // A4-A10, A12-A13, A18-A22: multi-tile spread (AOE/sword)
+    // A11, A14-A17: long-range projectile (gun)
+    if ((patNum >= 4 && patNum <= 13 && patNum != 11) || (patNum >= 18 && patNum <= 22))
     {
         SetPlayerAttackAoe(dir);
     }
-    else if (patNum >= 14 && patNum <= 17)
+    else if (patNum == 11 || (patNum >= 14 && patNum <= 17))
     {
         SetPlayerAttackRange(dir);
     }

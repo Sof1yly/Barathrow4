@@ -2181,9 +2181,9 @@ void Level::HandleMouse(int type, int x, int y)
                         const std::string& pid = result.pendingAttacks[0].patternId;
                         playerData.SetPlayerAttackByPatternId(pid, ConvertDir(playerDir));
 
-                        // Spawn player bullets for range attack cards (A14–A17)
+                        // Spawn player bullets for range attack cards (A11, A14–A17)
                         int patNum = (pid.size() > 1) ? std::stoi(pid.substr(1)) : 0;
-                        if (patNum >= 14 && patNum <= 17)
+                        if (patNum == 11 || (patNum >= 14 && patNum <= 17))
                         {
                             const PendingAttackInfo& pa = result.pendingAttacks[0];
                             if (pa.pattern)
