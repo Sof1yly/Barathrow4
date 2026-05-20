@@ -514,6 +514,32 @@ void Level::LevelUpdate()
         elite2Projectiles.end()
     );
 
+    // ---- Update Elite3 directional bullets ----
+    for (auto& proj : elite3Projectiles)
+    {
+        if (proj.done) continue;
+
+        proj.timer += deltaTime;
+        float t = proj.timer / proj.duration;
+        if (t >= 1.0f) t = 1.0f;
+
+        glm::vec3 pos = proj.startPos + (proj.endPos - proj.startPos) * t;
+        pos.z = 6.0f;
+        proj.sprite->SetPosition(pos);
+        proj.sprite->Update((float)deltaTime);
+
+        if (t >= 1.0f)
+        {
+            proj.done = true;
+            proj.sprite->SetSize(0.0f, 0.0f);
+        }
+    }
+    elite3Projectiles.erase(
+        std::remove_if(elite3Projectiles.begin(), elite3Projectiles.end(),
+            [](const Elite3Projectile& p) { return p.done; }),
+        elite3Projectiles.end()
+    );
+
     // ---- Update BossAttack1 tile-flash effects ----
     // Animation is already ticked by the objectsList update below; just watch for finish.
     for (auto& fx : bossAttack1Effects)
@@ -1068,6 +1094,7 @@ void Level::LevelFree()
     // Leaving these vectors non-empty causes a dangling-pointer crash on the next LevelUpdate.
     elite1Projectiles.clear();
     elite2Projectiles.clear();
+    elite3Projectiles.clear();
     bossAttack1Effects.clear();
     bossAttack2Projectiles.clear();
     bossSummonPortals.clear();
@@ -2235,7 +2262,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         if (elite3e->IsLineAttack())
         {
-            // Pattern 1 (line charge): farthest tile is the landing spot.
+            // Pattern 2 (line charge): farthest tile is the landing spot.
             auto lastCell = elite3e->GetLineEndCell(lockedRow, lockedCol);
             bool playerOnLastCell = (nowRow == lastCell.first && nowCol == lastCell.second);
 
@@ -2260,7 +2287,9 @@ void Level::ApplyEnemyAttack(Enemy* e)
         }
         else
         {
-            // Pattern 0 (sweep): standard directional hit
+            // Pattern 0 (sweep): spawn bullet + standard directional hit
+            SpawnElite3Projectile(elite3e);
+
             for (auto& tile : hitTiles)
             {
                 if (nowRow == tile.first && nowCol == tile.second)
@@ -2896,6 +2925,55 @@ void Level::SpawnElite2Projectile(int centerRow, int centerCol)
     elite2Projectiles.push_back(proj);
 }
 
+void Level::SpawnElite3Projectile(EliteEnemy3* elite3e)
+{
+    if (!elite3e || !elite3e->getObject()) return;
+
+    int dir  = elite3e->getAttackDir();
+    int eRow = elite3e->getNowRow();
+    int eCol = elite3e->getNowCol();
+
+    glm::vec3 start = GridToWorld(eRow, eCol);
+    glm::vec3 end;
+
+    switch (dir)
+    {
+    case 0: end = GridToWorld(GridStartRow,   eCol);           break; // left
+    case 1: end = GridToWorld(GridEndRow - 1, eCol);           break; // right
+    case 2: end = GridToWorld(eRow,           GridStartCol);   break; // up
+    case 3: end = GridToWorld(eRow,           GridEndCol - 1); break; // down
+    default: end = start; break;
+    }
+
+    start.z = 6.0f;
+    end.z   = 6.0f;
+
+    float sz = 120.0f;
+    Elite3Projectile proj;
+    proj.sprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy4Shoot.PNG", 1, 7);
+    proj.sprite->SetAnimationLoop(0, 0, 7, 80);
+    proj.sprite->SetPosition(start);
+
+    // Orient the bullet toward its travel direction.
+    // The sprite faces LEFT by default (consistent with other enemy sprites).
+    switch (dir)
+    {
+    case 0: proj.sprite->SetSize( sz, -sz);                               break; // left
+    case 1: proj.sprite->SetSize(-sz, -sz);                               break; // right (flip X)
+    case 2: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate(-90.0f); break; // up
+    case 3: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate( 90.0f); break; // down
+    }
+
+    proj.startPos = start;
+    proj.endPos   = end;
+    proj.timer    = 0.0f;
+    proj.duration = 1000.0f;
+    proj.done     = false;
+
+    objectsList.push_back(proj.sprite);
+    elite3Projectiles.push_back(proj);
+}
+
 void Level::LoadEnemyData()
 {
     EnemyDatabase::LoadFromFile(PATH_ENEMY_DATA);
@@ -3359,6 +3437,11 @@ void Level::ResetForNextCombat()
     for (auto& proj : elite2Projectiles)
         if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
     elite2Projectiles.clear();
+
+    // Hide lingering Elite3 projectiles
+    for (auto& proj : elite3Projectiles)
+        if (!proj.done && proj.sprite) proj.sprite->SetSize(0.0f, 0.0f);
+    elite3Projectiles.clear();
 
     // Hide lingering Boss attack effects
     for (auto& fx : bossAttack1Effects)

@@ -118,10 +118,33 @@ void EliteEnemy3::PlayIdleAnimation()
 void EliteEnemy3::PlayAttackAnimation(glm::vec3 playerPos)
 {
     if (!objSprite) return;
-    facingRight = (playerPos.x > objSprite->GetPosition().x);
+
+    // Facing (left/right only; up/down don't flip the sprite)
+    facingRight = (attackDir == 1);
     float sx = facingRight ? -spriteSize : spriteSize;
     objSprite->SetSize(sx, -spriteSize);
-    objSprite->SetAnimationOnce(E3_ROW_ATTACK, 0, E3_FRAMES_ATTACK, 120);
+
+    if (patternPhase == 0)
+    {
+        // Pattern 1 — sweep (stand still), row 3, start col depends on direction, 4 frames
+        switch (attackDir)
+        {
+        case 2:  objSprite->SetAnimationOnce(3, 4, 4, 120); break; // up
+        case 3:  objSprite->SetAnimationOnce(3, 8, 4, 120); break; // down
+        default: objSprite->SetAnimationOnce(3, 0, 4, 120); break; // left / right
+        }
+    }
+    else
+    {
+        // Pattern 2 — line charge (move), direction-specific row, 12 frames
+        switch (attackDir)
+        {
+        case 2:  objSprite->SetAnimationOnce(1, 0, 12, 120); break; // up
+        case 3:  objSprite->SetAnimationOnce(2, 0, 12, 120); break; // down
+        default: objSprite->SetAnimationOnce(0, 0, 12, 120); break; // left / right
+        }
+    }
+
     isAttacking = true;
     attackTimer = 0.0f;
 }
@@ -130,14 +153,14 @@ void EliteEnemy3::PlayAttackAnimation(glm::vec3 playerPos)
 void EliteEnemy3::PlayDamageAnimation()
 {
     if (!objSprite) return;
-    objSprite->SetAnimationOnce(E3_ROW_DAMAGE, 0, E3_FRAMES_DAMAGE, 100);
+    objSprite->SetAnimationOnce(4, 0, 4, 100);
 }
 
 // ── Death ─────────────────────────────────────────────────────────────────────
 void EliteEnemy3::PlayDeathAnimation()
 {
     if (!objSprite) return;
-    objSprite->SetAnimationOnce(E3_ROW_DEATH, 0, E3_FRAMES_DEATH, 120);
+    objSprite->SetAnimationOnce(5, 0, 12, 120);
 }
 
 // ── Pattern selection ─────────────────────────────────────────────────────────
@@ -146,6 +169,15 @@ void EliteEnemy3::SelectPattern(int playerRow, int playerCol)
     bool aligned = (playerRow == nowRow) || (playerCol == nowCol);
     patternPhase        = aligned ? (rand() % 2) : 0;
     currentPatternIndex = patternPhase;
+
+    // Compute attack direction from grid offset
+    int dr = playerRow - nowRow; // positive = player is to the right
+    int dc = playerCol - nowCol; // positive = player is below
+
+    if (std::abs(dr) >= std::abs(dc))
+        attackDir = (dr >= 0) ? 1 : 0; // right or left
+    else
+        attackDir = (dc > 0) ? 3 : 2;  // down or up
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────

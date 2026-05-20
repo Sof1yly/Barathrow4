@@ -44,6 +44,10 @@ protected:
 
 private:
     int patternPhase = 0;   // 0 = sweep, 1 = line charge
+    int attackDir    = 0;   // 0=left 1=right 2=up 3=down (set by SelectPattern)
 
     void BuildPatterns();
+
+public:
+    int getAttackDir() const { return attackDir; }
 };

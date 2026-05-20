@@ -64,6 +64,16 @@ struct Elite2Projectile {
     bool          done     = false;
 };
 
+// Bullet fired by EliteEnemy3 pattern 2 (line charge) in the attack direction
+struct Elite3Projectile {
+    SpriteObject* sprite   = nullptr;
+    glm::vec3     startPos;
+    glm::vec3     endPos;
+    float         timer    = 0.0f;
+    float         duration = 1000.0f;
+    bool          done     = false;
+};
+
 // BossAttack1.png — stationary tile flash for boss patterns 1/2/3
 struct BossAttack1Effect {
     SpriteObject* sprite = nullptr;
@@ -266,6 +276,9 @@ private:
     // Elite2 falling projectiles
     std::vector<Elite2Projectile> elite2Projectiles;
 
+    // Elite3 directional bullets
+    std::vector<Elite3Projectile> elite3Projectiles;
+
     // Boss attack visuals
     std::vector<BossAttack1Effect>     bossAttack1Effects;
     std::vector<BossAttack2Projectile> bossAttack2Projectiles;
@@ -350,6 +363,7 @@ public:
     void SpawnDamagePopup(glm::vec3 worldPos, int damage);
     void SpawnElite1Projectile(EliteEnemy1* elite1);
     void SpawnElite2Projectile(int centerRow, int centerCol);
+    void SpawnElite3Projectile(EliteEnemy3* elite3e);
     bool IsWalkable(int row, int col) const;
 
     void SpawnBossSummon();
