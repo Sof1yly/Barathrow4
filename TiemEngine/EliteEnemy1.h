@@ -47,7 +47,7 @@ protected:
     void PlayDamageAnimation() override;
 
 private:
-    int healAmount = 10;
+    int healAmount = 3;
 
     int moveCooldown    = 0;  // turns remaining before this elite can move again
     int moveCooldownMax = 1;  // turns to wait after each move
