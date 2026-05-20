@@ -42,9 +42,17 @@ void GameStateController::Update()
 			return;
 		}
 
-		// Handle quit
+		// Handle quit — clean up current level before the context is destroyed
 		if (nextState == GameState::GS_QUIT)
 		{
+			if (currentLevel)
+			{
+				currentLevel->LevelFree();
+				currentLevel->LevelUnload();
+				delete currentLevel;
+				currentLevel = nullptr;
+			}
+			GameData::GetInstance()->gGameStateCurr = GameState::GS_QUIT;
 			return;
 		}
 
