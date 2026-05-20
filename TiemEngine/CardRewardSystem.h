@@ -315,6 +315,7 @@ private:
             const auto* attack = dynamic_cast<const AttackAction*>(src);
             auto* attackCopy = new AttackAction();
             attackCopy->setSubType(attack->getSubType());
+            attackCopy->setPatternId(attack->getPatternId());
             copy = attackCopy;
         }
         else if (const auto* move = dynamic_cast<const MoveAction*>(src))

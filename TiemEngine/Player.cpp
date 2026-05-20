@@ -377,20 +377,16 @@ void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
     // A1-A3: small single-target (punch)
     // A4-A13, A18-A22: multi-tile spread (AOE/sword)
     // A14-A17: long-range projectile (gun)
-    std::cout << "[Anim] patternId='" << patternId << "' patNum=" << patNum << " dir=" << dir;
     if ((patNum >= 4 && patNum <= 13) || (patNum >= 18 && patNum <= 22))
     {
-        std::cout << " -> AOE (row 5/6)\n";
         SetPlayerAttackAoe(dir);
     }
     else if (patNum >= 14 && patNum <= 17)
     {
-        std::cout << " -> RANGE (row 4)\n";
         SetPlayerAttackRange(dir);
     }
     else
     {
-        std::cout << " -> PUNCH (row 2/3)\n";
         SetPlayerAttack(dir);
     }
 }
