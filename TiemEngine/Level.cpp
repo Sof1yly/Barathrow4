@@ -3348,7 +3348,7 @@ void Level::ResetForNextCombat()
     boss   = levelManager.IsBossLevel();
     elite1 = false;
     elite2 = false;
-    elite3 = false;
+	elite3 = false;
     {
         LevelConfig cfg = levelManager.GetCurrentConfig();
         if      (cfg.type == LevelConfig::Type::Elite1) elite1 = true;
@@ -3728,14 +3728,14 @@ void Level::SetPlayerSpawnPosition()
     if (elite1)
     {
         nowRow = 4;
-        nowCol = 3;
+        nowCol = 2;
         return;
     }
 
     if (elite3)
     {
         nowRow = 4;
-        nowCol = 3;
+        nowCol = 2;
         return;
     }
 
