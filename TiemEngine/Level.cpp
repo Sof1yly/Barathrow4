@@ -188,7 +188,7 @@ void Level::LevelInit()
         SDL_Color black = { 0, 0, 0, 255 };
         hpBarText->LoadText(
             std::to_string(playerData.getHp()) + " / " + std::to_string(playerData.getMaxHp()),
-            black, 22);
+            black, 26);
         hpBarText->SetPosition(glm::vec3(-770.0f, 495.0f, 10.0f));
         objectsList.push_back(hpBarText);
     }
@@ -1456,7 +1456,7 @@ void Level::HandleMouse(int type, int x, int y)
             case PauseMenu::Action::SETTING:
                 pauseMenu.Hide();
                 pauseMenuActive = false;
-                settingPage.Show();
+                settingPage.Show(objectsList);
                 settingPageActive = true;
                 break;
             case PauseMenu::Action::SAVE_QUIT_MAIN:
@@ -2867,7 +2867,7 @@ void Level::UpdateHPBar()
         SDL_Color black = { 0, 0, 0, 255 };
         hpBarText->LoadText(
             std::to_string(hp) + " / " + std::to_string(maxHp),
-            black, 22);
+            black, 26);
     }
 }
 

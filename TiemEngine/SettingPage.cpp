@@ -225,10 +225,15 @@ void SettingPage::Init(std::vector<DrawableObject*>& objectsList) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-void SettingPage::Show() {
+void SettingPage::Show(std::vector<DrawableObject*>& objectsList) {
     visible = true;
-    for (auto& p : settingObjects)
+    for (auto& p : settingObjects) {
+        if (!p.first) continue;
+        auto it = std::find(objectsList.begin(), objectsList.end(), p.first);
+        if (it != objectsList.end()) objectsList.erase(it);
+        objectsList.push_back(p.first);
         p.first->SetPosition(p.second);
+    }
     UpdateMusicIcon();
     UpdateSoundIcon();
     UpdateMusicPieces();

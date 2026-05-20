@@ -176,7 +176,7 @@ void MainMenu::HandleMouse(int type, int x, int y)
     }
     else if (btnSettings.IsClicked(rx, ry))
     {
-        settingPage.Show();
+        settingPage.Show(objectsList);
         settingPageActive = true;
     }
     else if (btnQuit.IsClicked(rx, ry))

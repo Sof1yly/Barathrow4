@@ -159,7 +159,7 @@ void Card::CreateVisuals()
     // 6. Card Name Text 
     nameText = new TextObject();
     SDL_Color textColor = { 255, 255, 255, 255 }; 
-    nameText->LoadText(name, textColor, 18);
+    nameText->LoadText(name, textColor, 22);
     nameText->SetParent(background);
     nameText->SetLocalPosition(glm::vec3(0.31f, 0.34f, 0)); // Normalized: 0.354 of parent height
 
@@ -179,7 +179,7 @@ void Card::CreateVisuals()
 
         descriptionText = new TextObject();
         SDL_Color descColor = { 220, 220, 220, 255 };
-        descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
+        descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
         descriptionText->SetParent(background);
         descriptionText->SetLocalPosition(glm::vec3(0.21f, -0.235f, 0)); // Normalized: -0.256 of parent height
     }
@@ -220,7 +220,7 @@ void Card::RefreshDescriptionText()
 
     if (descriptionText) {
         SDL_Color descColor = { 220, 220, 220, 255 };
-        descriptionText->LoadTextWrapped(resolved, descColor, 16, 240);
+        descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
     }
 }
 

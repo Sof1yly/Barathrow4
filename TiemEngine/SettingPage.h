@@ -10,7 +10,7 @@ public:
 
     void Init(std::vector<DrawableObject*>& objectsList);
     void Reset();
-    void Show();
+    void Show(std::vector<DrawableObject*>& objectsList);
     void Hide();
     bool IsVisible() const { return visible; }
 
