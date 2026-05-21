@@ -145,7 +145,7 @@ public:
 
     virtual void setPreparingAttack(bool value);
 
-    void LockAttackPattern(int playerRow, int playerCol);
+    virtual void LockAttackPattern(int playerRow, int playerCol);
     const AttackPattern& getLockedAttackPattern() const { return lockedAttackPattern; }
     int getLockedPlayerRow() const { return lockedPlayerRow; }
     int getLockedPlayerCol() const { return lockedPlayerCol; }

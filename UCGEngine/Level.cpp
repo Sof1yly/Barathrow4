@@ -1532,6 +1532,7 @@ void Level::HandleMouse(int type, int x, int y)
                     if (!e || e->getIsDead()) continue;
                     EnemySaveData esd;
                     if      (dynamic_cast<Boss*>(e))        esd.typeIndex = 11;
+                    else if (dynamic_cast<EliteEnemy3*>(e)) esd.typeIndex = 12;
                     else if (dynamic_cast<EliteEnemy2*>(e)) esd.typeIndex = 10;
                     else if (dynamic_cast<EliteEnemy1*>(e)) esd.typeIndex = 9;
                     else                                     esd.typeIndex = (int)e->getType();
@@ -2377,7 +2378,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
     if (!playersprite)
         return;
 
-    e->PlayAttackAnimation(playersprite->GetPosition());
+    e->PlayAttackAnimation(GridToWorld(e->getLockedPlayerRow(), e->getLockedPlayerCol()));
     e->showAttackText();
 
     // EliteEnemy1: full-row attack; heals friendly Elite1s it hits
@@ -3153,8 +3154,8 @@ void Level::SpawnElite3Projectile(EliteEnemy3* elite3e)
     {
     case 0: proj.sprite->SetSize( sz, -sz);                               break; // left
     case 1: proj.sprite->SetSize(-sz, -sz);                               break; // right (flip X)
-    case 2: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate(-90.0f); break; // up
-    case 3: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate( 90.0f); break; // down
+    case 2: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate( 90.0f); break; // up
+    case 3: proj.sprite->SetSize( sz, -sz); proj.sprite->SetRotate(-90.0f); break; // down
     }
 
     proj.startPos = start;
@@ -3286,6 +3287,8 @@ void Level::RestoreEnemiesFromSave(const SaveData& sd)
                 bossEnemy->setHealth(esd.health);
             continue;
         }
+        else if (esd.typeIndex == 12)
+            e = new EliteEnemy3();
         else if (esd.typeIndex == 10)
             e = new EliteEnemy2();
         else if (esd.typeIndex == 9)

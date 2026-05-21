@@ -29,7 +29,10 @@ public:
     void AdvancePattern();
     bool IsLineAttack() const { return patternPhase == 1; }
 
-    // Called from Level before LockAttackPattern: picks sweep always, or random when aligned.
+    // Overrides base: calls SelectPattern to set attackDir, then locks pattern.
+    void LockAttackPattern(int playerRow, int playerCol) override;
+
+    // Picks sweep always, or random when aligned.
     void SelectPattern(int playerRow, int playerCol);
 
     // Returns world-space hit tiles for the current pattern rotated toward (playerRow, playerCol).

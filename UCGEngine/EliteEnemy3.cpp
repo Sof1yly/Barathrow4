@@ -119,15 +119,25 @@ void EliteEnemy3::PlayAttackAnimation(glm::vec3 playerPos)
 {
     if (!objSprite) return;
 
-    // Facing (left/right only; up/down don't flip the sprite)
-    facingRight = (attackDir == 1);
+    // Convert world delta to grid-space units (row=101/unit, col=105/unit, col Y-inverted)
+    // so the dominant-axis comparison matches SelectPattern's grid-space logic exactly
+    glm::vec3 enemyPos = objSprite->GetPosition();
+    float dRow =  (playerPos.x - enemyPos.x) / 101.0f;
+    float dCol = -(playerPos.y - enemyPos.y) / 105.0f; // positive = player is below
+
+    int dir; // 0=left, 1=right, 2=up, 3=down
+    if (std::abs(dRow) >= std::abs(dCol))
+        dir = (dRow >= 0) ? 1 : 0;
+    else
+        dir = (dCol > 0) ? 3 : 2; // dCol>0 = player below = down
+
+    facingRight = (dir == 1);
     float sx = facingRight ? -spriteSize : spriteSize;
     objSprite->SetSize(sx, -spriteSize);
 
     if (patternPhase == 0)
     {
-        // Pattern 1 — sweep (stand still), row 3, start col depends on direction, 4 frames
-        switch (attackDir)
+        switch (dir)
         {
         case 2:  objSprite->SetAnimationOnce(3, 4, 4, 120); break; // up
         case 3:  objSprite->SetAnimationOnce(3, 8, 4, 120); break; // down
@@ -136,8 +146,7 @@ void EliteEnemy3::PlayAttackAnimation(glm::vec3 playerPos)
     }
     else
     {
-        // Pattern 2 — line charge (move), direction-specific row, 12 frames
-        switch (attackDir)
+        switch (dir)
         {
         case 2:  objSprite->SetAnimationOnce(1, 0, 12, 120); break; // up
         case 3:  objSprite->SetAnimationOnce(2, 0, 12, 120); break; // down
@@ -161,6 +170,13 @@ void EliteEnemy3::PlayDeathAnimation()
 {
     if (!objSprite) return;
     objSprite->SetAnimationOnce(5, 0, 12, 120);
+}
+
+// ── LockAttackPattern override ────────────────────────────────────────────────
+void EliteEnemy3::LockAttackPattern(int playerRow, int playerCol)
+{
+    SelectPattern(playerRow, playerCol);
+    Enemy::LockAttackPattern(playerRow, playerCol);
 }
 
 // ── Pattern selection ─────────────────────────────────────────────────────────
