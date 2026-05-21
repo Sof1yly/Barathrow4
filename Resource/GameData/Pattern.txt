@@ -84,3 +84,7 @@ A21	.XXX.
 A22	…XXX
 	O..XXX
 	…XXX
+
+A23	...X
+	O.XXX
+	...X
