@@ -46,6 +46,11 @@ void DebuffAction::execute(CardPlayContext& ctx, CardPlayResult& result)
         }
         break;
 
+    case DebuffSubType::CorruptSelf:
+        result.pendingSelfCorruptDamage += getValue();
+        std::cout << "  CorruptSelf: " << getValue() << std::endl;
+        break;
+
     case DebuffSubType::Stun:
         if (applyToAll)
         {

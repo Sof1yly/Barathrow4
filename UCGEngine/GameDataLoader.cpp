@@ -407,7 +407,7 @@ Action* GameDataLoader::createAction(const std::string& code, int value, float m
         a->setActionCode(code);
         newAction = a;
     }
-    else if (code == "wk" || code == "wek" || code == "dl" || code == "de" || code == "cor" || code == "st") {
+    else if (code == "wk" || code == "wek" || code == "dl" || code == "de" || code == "cor" || code == "cors" || code == "st") {
         auto* a = new DebuffAction(DebuffAction::codeToSubType(code));
         a->setValue(value);
         a->setBaseValue(value);

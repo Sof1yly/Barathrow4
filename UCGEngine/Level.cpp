@@ -2182,6 +2182,11 @@ void Level::HandleMouse(int type, int x, int y)
                     // Apply attack patterns to the grid (damage + debuffs)
                     CardActionExecutor::ApplyAttackPatterns(result, ctx);
 
+                    if (result.pendingSelfCorruptDamage > 0)
+                    {
+                        PlayerTakeDamage(result.pendingSelfCorruptDamage);
+                    }
+
                     // Spawn a floating damage number for every hit
                     // Multi-hit cards (repeatCount > 1) push one HitInfo per repeat,
                     // staggered upward so they fan out instead of stacking
