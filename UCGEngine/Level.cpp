@@ -2400,7 +2400,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
         {
             int r = tile.first, c = tile.second;
             if (nowRow == r && nowCol == c)
-                PlayerTakeDamage(elite1->getAttackDamage());
+                PlayerTakeDamage(elite1->getAttackDamage(), elite1);
 
             for (auto* other : enemies)
             {
@@ -2443,7 +2443,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
         for (auto& tile : hitTiles)
         {
             if (nowRow == tile.first && nowCol == tile.second)
-                PlayerTakeDamage(elite2->getAttackDamage());
+                PlayerTakeDamage(elite2->getAttackDamage(), elite2);
         }
         return;
     }
@@ -2469,7 +2469,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
                 {
                     int dmg = elite3e->getAttackDamage();
                     if (playerOnLastCell) dmg *= 2; // player blocked the charge
-                    PlayerTakeDamage(dmg);
+                    PlayerTakeDamage(dmg, elite3e);
                 }
             }
 
@@ -2491,7 +2491,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
             for (auto& tile : hitTiles)
             {
                 if (nowRow == tile.first && nowCol == tile.second)
-                    PlayerTakeDamage(elite3e->getAttackDamage());
+                    PlayerTakeDamage(elite3e->getAttackDamage(), elite3e);
             }
         }
 
@@ -2516,7 +2516,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
         int x = cell.first.x;
         int y = cell.first.y;
         if (nowRow == x && nowCol == y)
-            PlayerTakeDamage(e->getAttackDamage());
+            PlayerTakeDamage(e->getAttackDamage(), e);
     }
 
     // ---- Boss attack visual effects ----
@@ -2991,7 +2991,7 @@ void Level::EndTurn()
         turnState = TurnState::PLAYER_TURN;
     }
 }
-void Level::PlayerTakeDamage(int damage)
+void Level::PlayerTakeDamage(int damage, Enemy* attacker)
 {
     if (playerData.HasBarrier())
     {
@@ -3006,7 +3006,18 @@ void Level::PlayerTakeDamage(int damage)
     playerAnimTimer = 0;
     playerAnimDuration = 400;
 
-    playerData.SetPlayerGetDamage((int)playerDir);
+    // Determine damage direction: face toward the attacker, or keep current dir for self-damage
+    PlayerDir damageDir = playerDir;
+    if (attacker)
+    {
+        int dr = attacker->getNowRow() - nowRow;
+        int dc = attacker->getNowCol() - nowCol;
+        if (std::abs(dr) >= std::abs(dc))
+            damageDir = (dr > 0) ? PlayerDir::LEFT : PlayerDir::UP;
+        else
+            damageDir = (dc > 0) ? PlayerDir::DOWN : PlayerDir::RIGHT;
+    }
+    playerData.SetPlayerGetDamage((int)damageDir);
 
     playerData.setHp(playerData.getHp() - damage);
     SoundManager::Get().Play(SoundManager::SFX::PLAYER_TAKE_DAMAGE);
