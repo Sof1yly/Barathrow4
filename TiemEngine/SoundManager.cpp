@@ -67,8 +67,19 @@ void SoundManager::Init(AudioEngine& audio)
     {
         m_sfx[i] = audio.loadSoundEffect(FILE_PATHS[i]);
     }
+
+    // Load and start BGM — loops forever (-1)
+    m_bgm = audio.loadMusic(BGM_FILE);
+    m_bgm.play(-1);
+
+    // Apply the volume/mute state already stored in GameData
+    // (in case settings were loaded/persisted before Init is called)
+    auto* gd = GameData::GetInstance();
+    int vol = gd->musicEnabled ? (gd->musicVolume * MIX_MAX_VOLUME / 10) : 0;
+    Mix_VolumeMusic(vol);
+
     m_ready = true;
-    std::cout << "[SoundManager] Loaded " << SFX_COUNT << " sound effects.\n";
+    std::cout << "[SoundManager] Loaded " << SFX_COUNT << " sound effects. BGM started.\n";
 }
 
 void SoundManager::Play(SFX id)
