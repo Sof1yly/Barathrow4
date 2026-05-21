@@ -1224,6 +1224,23 @@ void Level::HandleKey(char key)
         return;
     }
 
+    if (key == '\x1b')  // ESC toggles pause menu
+    {
+        if (pauseMenuActive)
+        {
+            pauseMenu.Hide();
+            pauseMenuActive = false;
+        }
+        else
+        {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
+            cardSystem.UpdateHover(glm::vec3(0, 0, 0), true, objectsList);
+            pauseMenu.Show(objectsList);
+            pauseMenuActive = true;
+        }
+        return;
+    }
+
     if (key == 'o')
     {
         levelManager.SetLevel(17); // SetLevel(17) so Advance() brings it to 18
