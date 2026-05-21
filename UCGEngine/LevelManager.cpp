@@ -25,8 +25,8 @@ LevelConfig LevelManager::BuildConfig(int level)
 {
     using T = Enemy::EnemyType;
 
-    const std::vector<T> abc = { T::A, T::B, T::C };
-    const std::vector<T> def = { T::D, T::E, T::F };
+    const std::vector<T> abc = { T::A, T::B, T::E };
+    const std::vector<T> def = { T::C, T::D, T::F };
     const std::vector<T> gh  = { T::G, T::H };
 
     LevelConfig cfg;
