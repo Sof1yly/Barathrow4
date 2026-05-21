@@ -33,6 +33,7 @@ public:
 
     bool ShouldHealInstead(const Enemy* other) const;
     int  GetHealAmount() const { return healAmount; }
+    void TickMoveCooldown() { if (moveCooldown > 0) moveCooldown--; }
 
     bool TryMoveTowardPlayer(
         int playerRow, int playerCol,
