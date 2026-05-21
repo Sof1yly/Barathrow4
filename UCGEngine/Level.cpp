@@ -189,8 +189,8 @@ void Level::LevelInit()
         SDL_Color black = { 0, 0, 0, 255 };
         hpBarText->LoadText(
             std::to_string(playerData.getHp()) + " / " + std::to_string(playerData.getMaxHp()),
-            black, 26);
-        hpBarText->SetPosition(glm::vec3(-770.0f, 495.0f, 10.0f));
+            black, 22);
+        hpBarText->SetPosition(glm::vec3(-770.0f, 494.0f, 10.0f));
         objectsList.push_back(hpBarText);
     }
 
@@ -2958,7 +2958,7 @@ void Level::UpdateHPBar()
         SDL_Color black = { 0, 0, 0, 255 };
         hpBarText->LoadText(
             std::to_string(hp) + " / " + std::to_string(maxHp),
-            black, 26);
+            black, 22);
     }
 }
 
@@ -3236,6 +3236,12 @@ void Level::InitBossLevel()
     removeObj(bossHpBg);
     removeObj(bossHpBar);
     removeObj(bossHpMask);
+    if (bossHpText)
+    {
+        objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), bossHpText), objectsList.end());
+        delete bossHpText;
+        bossHpText = nullptr;
+    }
 
     // Spawn boss
     bossEnemy = new Boss();
@@ -3271,6 +3277,15 @@ void Level::InitBossLevel()
         bossHpMask->SetPosition(glm::vec3(0.0f, 490.0f, 5.0f));
         bossHpMask->SetTexture("../Resource/Texture/UI/HPbarmask.png");
         objectsList.push_back(bossHpMask);
+    }
+    {
+        bossHpText = new TextObject();
+        SDL_Color black = { 0, 0, 0, 255 };
+        int hp = bossEnemy->getHealth();
+        int maxHp = bossEnemy->getMaxHealth();
+        bossHpText->LoadText(std::to_string(hp) + " / " + std::to_string(maxHp), black, 24);
+        bossHpText->SetPosition(glm::vec3(0.0f, 489.0f, 10.0f));
+        objectsList.push_back(bossHpText);
     }
 }
 
@@ -4015,4 +4030,10 @@ void Level::UpdateBossHPBar()
 
     bossHpBar->SetSize(fullWidth * percent, -100.0f);
     bossHpBar->SetPosition(glm::vec3(0.0f, barY, 1.0f));
+
+    if (bossHpText)
+    {
+        SDL_Color black = { 0, 0, 0, 255 };
+        bossHpText->LoadText(std::to_string(hp) + " / " + std::to_string(maxHp), black, 24);
+    }
 }
