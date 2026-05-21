@@ -73,7 +73,7 @@ public:
     static SoundManager& Get();
 
     // ---- BGM file path — change this to swap the background music ----
-    static constexpr const char* BGM_FILE = "../Resource/Sound/beat.wav";
+    static constexpr const char* BGM_FILE = "../Resource/Sound/BGM/BGM.mp3";
 
     // Call once in Main.cpp after audio.init()
     void Init(AudioEngine& audio);
