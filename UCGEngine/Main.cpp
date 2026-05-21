@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
 					case SDLK_w:	gameStateController->currentLevel->HandleKey('w'); break;
 					case SDLK_DOWN:
 					case SDLK_s:	gameStateController->currentLevel->HandleKey('s'); break;
-					case SDLK_ESCAPE: gameStateController->currentLevel->HandleKey('q'); break;
+					case SDLK_ESCAPE: gameStateController->currentLevel->HandleKey('\x1b'); break;
 					case SDLK_r: gameStateController->currentLevel->HandleKey('r'); break;
 					case SDLK_e: gameStateController->currentLevel->HandleKey('e'); break;
 					case SDLK_c: gameStateController->currentLevel->HandleKey('c'); break;
