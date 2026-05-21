@@ -1,5 +1,6 @@
 #include "PauseMenu.h"
 #include "Button.h"
+#include "SoundManager.h"
 #include <SDL.h>
 #include <algorithm>
 
@@ -223,16 +224,16 @@ void PauseMenu::HideGameOver()
 PauseMenu::Action PauseMenu::HandleClick(float wx, float wy)
 {
     if (gameOverVisible) {
-        if (btnRetry.IsClicked(wx, wy))  return Action::RETRY;
-        if (btnGoMain.IsClicked(wx, wy)) return Action::GAME_OVER_MAIN;
+        if (btnRetry.IsClicked(wx, wy))  { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::RETRY; }
+        if (btnGoMain.IsClicked(wx, wy)) { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::GAME_OVER_MAIN; }
         return Action::NONE;
     }
     if (!visible) return Action::NONE;
-    if (btnResume.IsClicked(wx, wy))      return Action::RESUME;
-    if (btnSetting.IsClicked(wx, wy))     return Action::SETTING;
-    if (btnAbandon.IsClicked(wx, wy))     return Action::ABANDON;
-    if (btnSaveQuit.IsClicked(wx, wy))    return Action::SAVE_QUIT_MAIN;
-    if (btnQuitDesktop.IsClicked(wx, wy)) return Action::SAVE_QUIT_DESKTOP;
+    if (btnResume.IsClicked(wx, wy))      { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::RESUME; }
+    if (btnSetting.IsClicked(wx, wy))     { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::SETTING; }
+    if (btnAbandon.IsClicked(wx, wy))     { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::ABANDON; }
+    if (btnSaveQuit.IsClicked(wx, wy))    { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::SAVE_QUIT_MAIN; }
+    if (btnQuitDesktop.IsClicked(wx, wy)) { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); return Action::SAVE_QUIT_DESKTOP; }
     return Action::NONE;
 }
 

@@ -1578,6 +1578,7 @@ void Level::HandleMouse(int type, int x, int y)
         }
         else if (type == 0 && hit)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             fastMode = !fastMode;
             speedBtnIcon->SetTexture(fastMode
                 ? "../Resource/Texture/UI/f2.png"
@@ -1594,8 +1595,10 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (mapSceneActive)
     {
-        if (mapScene.IsViewOnly() && type == 0)
+        if (mapScene.IsViewOnly() && type == 0) {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             mapScene.HandleClick(realX, realY);
+        }
         return;
     }
 
@@ -1686,6 +1689,7 @@ void Level::HandleMouse(int type, int x, int y)
         }
         else if (type == 0)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             cardInspect.Hide(objectsList);
             if (cardRewardSystem.HandleMouseClick(mousePos, cardSystem, objectsList))
             {
@@ -1705,11 +1709,13 @@ void Level::HandleMouse(int type, int x, int y)
         }
         else if (type == 0)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             int clicked = rewardBoxScene.HandleClick(mousePos.x, mousePos.y, objectsList);
             if (clicked == 1 || clicked == 3)
             {
                 // Coin row kept or skipped — grant coins now
                 playerData.AddCoins(pendingCoinsEarned);
+                SoundManager::Get().Play(SoundManager::SFX::UI_LOOT_COIN);
                 std::cout << "[" << levelManager.GetLevelText() << "] Earned "
                           << pendingCoinsEarned << " coins." << std::endl;
             }
@@ -1762,6 +1768,7 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (type == 0 && viewMapIconHit())
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         if (!mapSceneActive)
         {
             cardInspect.Hide(objectsList);
@@ -1775,6 +1782,7 @@ void Level::HandleMouse(int type, int x, int y)
     // ViewDeck button
     if (type == 0 && viewDeckButton.IsClicked(realX, realY))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         cardInspect.Hide(objectsList);
 
         if (deckViewer.IsActive())
@@ -1903,15 +1911,17 @@ void Level::HandleMouse(int type, int x, int y)
         // Pause button (world pos 900,500, size 80x80)
         if (realX >= 860.0f && realX <= 940.0f && realY >= 460.0f && realY <= 540.0f)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             cardSystem.UpdateHover(mousePos, true, objectsList);
             pauseMenu.Show(objectsList);
             pauseMenuActive = true;
             return;
         }
 
-        // SKIP TURN BUTTON 
+        // SKIP TURN BUTTON
         if (skipTurnButton.IsClicked(realX, realY))
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             cardSystem.UpdateHover(mousePos, false, objectsList);
             highlightManager.HideAllPlayer();
             turnState = TurnState::ENEMY_TURN;

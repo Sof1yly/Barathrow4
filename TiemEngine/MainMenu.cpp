@@ -3,6 +3,7 @@
 #include "GameStateList.h"
 #include "SaveSystem.h"
 #include "SettingPage.h"
+#include "SoundManager.h"
 #include <iostream>
 
 static const char* TEX_BG       = "../Resource/Texture/UI/Menu/BG.png";
@@ -155,6 +156,11 @@ void MainMenu::HandleMouse(int type, int x, int y)
     }
 
     if (type != 0) return;
+
+    // Play UI click for any button press
+    MenuButton* buttons2[] = { &btnStart, &btnContinue, &btnAbandon, &btnSettings, &btnQuit };
+    for (auto* btn : buttons2)
+        if (btn->IsClicked(rx, ry)) { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); break; }
 
     if (btnStart.IsClicked(rx, ry))
     {
