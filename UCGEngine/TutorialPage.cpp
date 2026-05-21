@@ -26,11 +26,11 @@ void TutorialPage::ShowPage(int index)
     {
         SDL_Color c = { 220, 220, 220, 200 };
         if (index == PAGE_COUNT - 1)
-            hintText->LoadText("Click right to start game  |  Click left to go back", c, 22);
+            hintText->LoadText("Click on the left side to go back  |  Click on the right side to start the game", c, 45);
         else if (index == 0)
-            hintText->LoadText("Click right to continue", c, 22);
+            hintText->LoadText("Click on the right side to continue", c, 45);
         else
-            hintText->LoadText("Click left to go back  |  Click right to continue", c, 22);
+            hintText->LoadText("Click on the left side to go back  |  Click on the right side to continue", c, 45);
     }
 }
 
@@ -60,7 +60,7 @@ void TutorialPage::LevelInit()
     // Navigation hint at bottom of screen
     hintText = new TextObject();
     SDL_Color c = { 220, 220, 220, 200 };
-    hintText->LoadText("Click right to continue", c, 22);
+    hintText->LoadText("Click on the right side to continue", c, 45);
     hintText->SetPosition(glm::vec3(0.0f, -490.0f, 2.0f));
     objectsList.push_back(hintText);
 
