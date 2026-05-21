@@ -42,6 +42,14 @@ static const char* FILE_PATHS[] =
     /* BOSS_BOARD_WIDE */ "../Resource/Sound/medium.wav",
     /* BOSS_SUMMON     */ "../Resource/Sound/scratch.wav",
     /* BOSS_LASER      */ "../Resource/Sound/high.wav",
+
+    // ---- Player ----
+    /* PLAYER_ATTACK_MELEE      */ "../Resource/Sound/medium.wav",
+    /* PLAYER_ATTACK_MELEE_SPIN */ "../Resource/Sound/medium.wav",
+    /* PLAYER_ATTACK_RANGE      */ "../Resource/Sound/high.wav",
+    /* PLAYER_MOVE              */ "../Resource/Sound/low.wav",
+    /* PLAYER_TAKE_DAMAGE       */ "../Resource/Sound/scratch.wav",
+    /* PLAYER_DIES              */ "../Resource/Sound/scratch.wav",
 };
 static_assert(sizeof(FILE_PATHS) / sizeof(FILE_PATHS[0]) == static_cast<int>(SoundManager::SFX::COUNT),
               "FILE_PATHS size must match SoundManager::SFX::COUNT");
@@ -59,8 +67,19 @@ void SoundManager::Init(AudioEngine& audio)
     {
         m_sfx[i] = audio.loadSoundEffect(FILE_PATHS[i]);
     }
+
+    // Load and start BGM — loops forever (-1)
+    m_bgm = audio.loadMusic(BGM_FILE);
+    m_bgm.play(-1);
+
+    // Apply the volume/mute state already stored in GameData
+    // (in case settings were loaded/persisted before Init is called)
+    auto* gd = GameData::GetInstance();
+    int vol = gd->musicEnabled ? (gd->musicVolume * MIX_MAX_VOLUME / 10) : 0;
+    Mix_VolumeMusic(vol);
+
     m_ready = true;
-    std::cout << "[SoundManager] Loaded " << SFX_COUNT << " sound effects.\n";
+    std::cout << "[SoundManager] Loaded " << SFX_COUNT << " sound effects. BGM started.\n";
 }
 
 void SoundManager::Play(SFX id)

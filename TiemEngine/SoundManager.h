@@ -1,6 +1,8 @@
 #pragma once
 #include "Audio.h"
 #include "Enemy.h"
+#include "GameData.h"
+#include <SDL_mixer.h>
 
 // ============================================================
 // SoundManager — central registry for all in-game sound effects
@@ -51,10 +53,21 @@ public:
         BOSS_SUMMON,       // pattern 9            (summon minions)
         BOSS_LASER,        // patterns 6 / 7 (falling) + 8 (cross laser)
 
+        // ---- Player ----
+        PLAYER_ATTACK_MELEE,       // punch  (SetPlayerAttack)
+        PLAYER_ATTACK_MELEE_SPIN,  // AOE / sword  (SetPlayerAttackAoe)
+        PLAYER_ATTACK_RANGE,       // gun  (SetPlayerAttackRange)
+        PLAYER_MOVE,               // one step on the grid
+        PLAYER_TAKE_DAMAGE,        // hit by an enemy
+        PLAYER_DIES,               // HP reaches 0
+
         COUNT   // keep last
     };
 
     static SoundManager& Get();
+
+    // ---- BGM file path — change this to swap the background music ----
+    static constexpr const char* BGM_FILE = "../Resource/Sound/beat.wav";
 
     // Call once in Main.cpp after audio.init()
     void Init(AudioEngine& audio);
@@ -71,5 +84,6 @@ private:
 
     static constexpr int SFX_COUNT = static_cast<int>(SFX::COUNT);
     SoundEffect m_sfx[SFX_COUNT];
+    Music       m_bgm;
     bool        m_ready = false;
 };

@@ -880,6 +880,7 @@ void Level::LevelUpdate()
 
 
         playerMoving = true;
+        SoundManager::Get().Play(SoundManager::SFX::PLAYER_MOVE);
         highlightManager.HideAllPlayer();
         playerMoveTimer = 0.0f;
 
@@ -2972,6 +2973,7 @@ void Level::PlayerTakeDamage(int damage)
     playerData.SetPlayerGetDamage((int)playerDir);
 
     playerData.setHp(playerData.getHp() - damage);
+    SoundManager::Get().Play(SoundManager::SFX::PLAYER_TAKE_DAMAGE);
     UpdateHPBar();
 
     std::cout << "[Player] Took " << damage
@@ -2989,6 +2991,7 @@ void Level::HandlePlayerDeath()
 
     isGameOver = true;
 
+    SoundManager::Get().Play(SoundManager::SFX::PLAYER_DIES);
     playerData.SetPlayerDie((int)playerDir);
 
     playerMoving = false;
