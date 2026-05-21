@@ -36,15 +36,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 1: A-C enemies ------------------------------------------------
     case 1:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 3 } };
+        cfg.groups = { { abc, 2 } };
         break;
     case 2:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 4 } };
+        cfg.groups = { { abc, 3 } };
         break;
     case 3:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 5 } };
+        cfg.groups = { { abc, 4 } };
         break;
     case 4:
         cfg.type = LevelConfig::Type::Shop;
@@ -56,15 +56,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 2: D-F enemies ------------------------------------------------
     case 6:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 3 } };
+        cfg.groups = { { def, 2 } };
         break;
     case 7:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 4 } };
+        cfg.groups = { { def, 3 } };
         break;
     case 8:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 5 } };
+        cfg.groups = { { def, 4 } };
         break;
     case 9:
         cfg.type = LevelConfig::Type::Shop;

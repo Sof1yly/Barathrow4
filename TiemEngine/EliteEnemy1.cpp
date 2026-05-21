@@ -15,11 +15,11 @@ static constexpr int E1_FRAMES_DEATH  = 12;
 EliteEnemy1::EliteEnemy1()
     : EliteEnemy(EliteType::Row)
 {
-    maxHealth  = 30;
+    maxHealth  = 25;
     health     = maxHealth;
-    damage     = 10;
+    damage     = 5;
     moveRange  = 1;
-    countdown  = 2;
+    countdown  = 3;
     spriteSize = 150.0f;
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }
