@@ -3,6 +3,7 @@
 #include "MoveAction.h"
 #include "AttackAction.h"
 #include "TextObject.h"
+#include "SoundManager.h"
 #include <iostream>
 #include <cmath>
 
@@ -566,6 +567,7 @@ void Hand::UpdateHover(const glm::vec3& mouseWorld, bool isDragging, vector<Draw
     }
 
     if (hit) {
+        SoundManager::Get().Play(SoundManager::SFX::UI_HOVER_CARD);
         hoveredView = hit;
         liftForHover(hit, objectsList);
 

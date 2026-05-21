@@ -4,6 +4,7 @@
 #include "GameStateList.h"
 #include "GameData.h"
 #include "SaveSystem.h"
+#include "SoundManager.h"
 
 void EventPage::GetRealMousePos(int x, int y, float& rx, float& ry) const
 {
@@ -101,8 +102,9 @@ void EventPage::HandleMouse(int type, int x, int y)
     float rx, ry;
     GetRealMousePos(x, y, rx, ry);
 
-    if (type == 0)
+    if (type == 0) {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         eventScene.HandleMouseClick(rx, ry);
-    else if (type == 3)
+    } else if (type == 3)
         eventScene.HandleMouseHover(rx, ry);
 }

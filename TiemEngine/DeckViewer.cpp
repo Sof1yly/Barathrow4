@@ -1,5 +1,6 @@
 #include "DeckViewer.h"
 #include "GameEngine.h"
+#include "SoundManager.h"
 #include <cmath>
 
 DeckViewer::DeckViewer()
@@ -303,18 +304,21 @@ bool DeckViewer::HandleClick(const glm::vec3& mousePos, vector<DrawableObject*>&
 
     if (closeButton.IsClicked(mousePos.x, mousePos.y))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         Hide(objectsList);
         return true;
     }
 
     if (leftNavButton.IsClicked(mousePos.x, mousePos.y))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         PrevPage(objectsList);
         return true;
     }
 
     if (rightNavButton.IsClicked(mousePos.x, mousePos.y))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         NextPage(objectsList);
         return true;
     }

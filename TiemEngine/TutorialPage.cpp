@@ -3,6 +3,7 @@
 #include "GameStateList.h"
 #include "GameData.h"
 #include "SaveSystem.h"
+#include "SoundManager.h"
 #include <iostream>
 
 void TutorialPage::GetRealMousePos(int x, int y, float& rx, float& ry) const
@@ -109,12 +110,14 @@ void TutorialPage::HandleMouse(int type, int x, int y)
         // Right half -> next page
         if (currentPage < PAGE_COUNT - 1)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             currentPage++;
             ShowPage(currentPage);
         }
         else
         {
             // Last page, right click -> tutorial done, go straight to level (skip blessing)
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             SaveSystem::MarkPlayed();
             GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL1;
         }
@@ -124,6 +127,7 @@ void TutorialPage::HandleMouse(int type, int x, int y)
         // Left half -> previous page (nothing on page 0)
         if (currentPage > 0)
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             currentPage--;
             ShowPage(currentPage);
         }

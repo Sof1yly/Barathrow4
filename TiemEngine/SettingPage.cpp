@@ -2,6 +2,7 @@
 #include "GameData.h"
 #include "GameEngine.h"
 #include "GLRenderer.h"
+#include "SoundManager.h"
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -277,68 +278,61 @@ void SettingPage::Reset() {
 SettingPage::Action SettingPage::HandleClick(float wx, float wy) {
     if (!visible) return Action::NONE;
 
+    auto click = [](){ SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); };
+
     // ── Music row ─────────────────────────────────────────────────────────────
     if (areaMusicToggle.Hit(wx, wy)) {
-        musicEnabled = !musicEnabled;
-        UpdateMusicIcon();
-        ApplyMusicVolume();
+        click(); musicEnabled = !musicEnabled;
+        UpdateMusicIcon(); ApplyMusicVolume();
         return Action::NONE;
     }
     if (areaMusicLeft.Hit(wx, wy) && musicVolume > 0) {
-        musicVolume--;
-        UpdateMusicPieces();
-        ApplyMusicVolume();
+        click(); musicVolume--;
+        UpdateMusicPieces(); ApplyMusicVolume();
         return Action::NONE;
     }
     if (areaMusicRight.Hit(wx, wy) && musicVolume < 10) {
-        musicVolume++;
-        UpdateMusicPieces();
-        ApplyMusicVolume();
+        click(); musicVolume++;
+        UpdateMusicPieces(); ApplyMusicVolume();
         return Action::NONE;
     }
 
     // ── Sound row ─────────────────────────────────────────────────────────────
     if (areaSoundToggle.Hit(wx, wy)) {
-        soundEnabled = !soundEnabled;
-        UpdateSoundIcon();
-        ApplySoundVolume();
+        click(); soundEnabled = !soundEnabled;
+        UpdateSoundIcon(); ApplySoundVolume();
         return Action::NONE;
     }
     if (areaSoundLeft.Hit(wx, wy) && soundVolume > 0) {
-        soundVolume--;
-        UpdateSoundPieces();
-        ApplySoundVolume();
+        click(); soundVolume--;
+        UpdateSoundPieces(); ApplySoundVolume();
         return Action::NONE;
     }
     if (areaSoundRight.Hit(wx, wy) && soundVolume < 10) {
-        soundVolume++;
-        UpdateSoundPieces();
-        ApplySoundVolume();
+        click(); soundVolume++;
+        UpdateSoundPieces(); ApplySoundVolume();
         return Action::NONE;
     }
 
     // ── Resolution row ────────────────────────────────────────────────────────
     if (areaResLeft.Hit(wx, wy)) {
-        resolutionIndex = (resolutionIndex + 2) % 3;
-        UpdateResText();
-        return Action::NONE;
+        click(); resolutionIndex = (resolutionIndex + 2) % 3;
+        UpdateResText(); return Action::NONE;
     }
     if (areaResRight.Hit(wx, wy)) {
-        resolutionIndex = (resolutionIndex + 1) % 3;
-        UpdateResText();
-        return Action::NONE;
+        click(); resolutionIndex = (resolutionIndex + 1) % 3;
+        UpdateResText(); return Action::NONE;
     }
 
     // ── Back ──────────────────────────────────────────────────────────────────
     if (areaBack.Hit(wx, wy)) {
-        Hide();
+        click(); Hide();
         return Action::CLOSE;
     }
 
     // ── Apply ─────────────────────────────────────────────────────────────────
     if (areaApply.Hit(wx, wy)) {
-        ApplyResolution();
-        Hide();
+        click(); ApplyResolution(); Hide();
         return Action::CLOSE;
     }
 

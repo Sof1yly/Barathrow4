@@ -61,6 +61,12 @@ public:
         PLAYER_TAKE_DAMAGE,        // hit by an enemy
         PLAYER_DIES,               // HP reaches 0
 
+        // ---- UI ----
+        UI_CLICK,          // any button press
+        UI_HOVER_CARD,     // mouse enters a hand card
+        UI_SHOP_BUY,       // purchase in shop (card / heal / remove)
+        UI_LOOT_COIN,      // player collects coins from reward box
+
         COUNT   // keep last
     };
 

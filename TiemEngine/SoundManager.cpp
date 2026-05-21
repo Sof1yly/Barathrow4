@@ -50,6 +50,12 @@ static const char* FILE_PATHS[] =
     /* PLAYER_MOVE              */ "../Resource/Sound/low.wav",
     /* PLAYER_TAKE_DAMAGE       */ "../Resource/Sound/scratch.wav",
     /* PLAYER_DIES              */ "../Resource/Sound/scratch.wav",
+
+    // ---- UI ----
+    /* UI_CLICK      */ "../Resource/Sound/low.wav",
+    /* UI_HOVER_CARD */ "../Resource/Sound/low.wav",
+    /* UI_SHOP_BUY   */ "../Resource/Sound/high.wav",
+    /* UI_LOOT_COIN  */ "../Resource/Sound/high.wav",
 };
 static_assert(sizeof(FILE_PATHS) / sizeof(FILE_PATHS[0]) == static_cast<int>(SoundManager::SFX::COUNT),
               "FILE_PATHS size must match SoundManager::SFX::COUNT");

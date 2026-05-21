@@ -1,4 +1,5 @@
 #include "ShopSystem.h"
+#include "SoundManager.h"
 
 #include <algorithm>
 #include <iostream>
@@ -723,6 +724,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
     {
         if (removeCancelButton.IsClicked(mousePos.x, mousePos.y))
         {
+            SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
             CloseRemoveOverlay(objectsList);
             return true;
         }
@@ -731,6 +733,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
         {
             if (removeCurrentPage > 0)
             {
+                SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
                 removeCurrentPage--;
                 RebuildRemoveOverlayPage(objectsList);
             }
@@ -741,6 +744,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
         {
             if (removeCurrentPage < removeTotalPages - 1)
             {
+                SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
                 removeCurrentPage++;
                 RebuildRemoveOverlayPage(objectsList);
             }
@@ -761,6 +765,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
                     return true;
                 }
                 player.SpendCoins(cost);
+                SoundManager::Get().Play(SoundManager::SFX::UI_SHOP_BUY);
                 permanentlyRemovedNames.push_back(slot.card->getName());
                 cardSystem.RemoveOneCard(slot.card->getName());
                 removeUsedThisShop = true;
@@ -784,6 +789,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
 
     if (closeButton.IsClicked(mousePos.x, mousePos.y))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         Close(objectsList);
         return true;
     }
@@ -799,6 +805,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
         }
         int healAmount = std::max(1, player.getMaxHp() * HEAL_PERCENT / 100);
         if (cost > 0) player.SpendCoins(cost);
+        SoundManager::Get().Play(SoundManager::SFX::UI_SHOP_BUY);
         player.HealHp(healAmount);
         healEverUsed = true;
         healUsesThisShop++;
@@ -820,6 +827,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
     // Remove card button
     if (removeButton.IsClicked(mousePos.x, mousePos.y))
     {
+        SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
         if (removeUsedThisShop)
         {
             std::cout << "[Shop] Remove already used this visit.\n";
@@ -843,6 +851,7 @@ bool ShopSystem::HandleMouseClick(const glm::vec3& mousePos,CardSystem& cardSyst
             }
 
             player.SpendCoins(slot.price);
+            SoundManager::Get().Play(SoundManager::SFX::UI_SHOP_BUY);
             std::cout << "[Shop] Bought '" << slot.card->getName()<< "' for " << slot.price<< " coins. Remaining: " << player.GetCoins() << "\n";
 
             Card* copy = CloneCard(slot.card,
