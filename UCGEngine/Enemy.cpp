@@ -160,7 +160,7 @@ Enemy::Enemy(EnemyType type)
             2,   // end frame
             200  // ms per frame
         );
-        objSprite->SetSize(200.0f, -200.0f);
+        objSprite->SetSize(110.0f, -110.0f);
 		break;
     }
 
@@ -527,6 +527,11 @@ void Enemy::addStun(int turns)
 {
     if (turns <= 0) return;
     stunTurns += turns;
+    if (preparingAttack)
+    {
+        countdownRemaning += turns;
+        RefreshCountdownIcon();
+    }
     std::cout << "[Stun] Enemy stunned for +" << turns << " turn(s). Total: " << stunTurns << std::endl;
     RefreshDebuffText();
 }
@@ -602,28 +607,16 @@ void Enemy::PlayAttackAnimation(glm::vec3 playerPos)
     if (abs(dx) > abs(dy))
     {
         if (dx > 0)
-        {
-			cout << "Enemy attacks right!" << endl;
-            objSprite->SetAnimationLoop(2, 7, 6, 200);
-        }
+            objSprite->SetAnimationLoop(2, 7, 6, 200); // player right → attack right
         else
-        {
-			cout << "Enemy attacks left!" << endl;
-            objSprite->SetAnimationLoop(2, 0, 6, 200);
-        }
+            objSprite->SetAnimationLoop(2, 0, 6, 200); // player left → attack left
     }
     else
     {
         if (dy > 0)
-        {
-			cout << "Enemy attacks down!" << endl;
-            objSprite->SetAnimationLoop(1, 7, 6, 200);
-        }
+            objSprite->SetAnimationLoop(1, 7, 6, 200); // player above → attack up
         else
-        {
-			cout << "Enemy attacks up!" << endl;
-            objSprite->SetAnimationLoop(1, 0, 6, 200);
-        }
+            objSprite->SetAnimationLoop(1, 0, 6, 200); // player below → attack down
     }
     isAttacking = true;
     attackTimer = 0.0f;

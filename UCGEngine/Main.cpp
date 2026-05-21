@@ -14,6 +14,9 @@
 
 #include "Audio.h"
 #include "SoundManager.h"
+#include "SaveSystem.h"
+#include "GameData.h"
+#include <SDL_mixer.h>
 
 using namespace std;
 
@@ -100,6 +103,31 @@ int main(int argc, char* argv[])
 	engine = GameEngine::GetInstance();
 	engine->Init(WIDTH, HEIGHT);
 
+	// Load persisted settings into GameData BEFORE any scene init reads them
+	{
+		SettingsData cfg;
+		if (SaveSystem::LoadSettings(cfg))
+		{
+			gameData->musicVolume     = cfg.musicVolume;
+			gameData->musicEnabled    = cfg.musicEnabled;
+			gameData->soundVolume     = cfg.soundVolume;
+			gameData->soundEnabled    = cfg.soundEnabled;
+			gameData->resolutionIndex = cfg.resolutionIndex;
+
+			// Apply saved resolution (window already exists)
+			const int resW[] = { 1920, 1600, 1280 };
+			const int resH[] = { 1080,  900,  720 };
+			int idx = cfg.resolutionIndex;
+			if (idx >= 0 && idx < 3)
+			{
+				SDL_SetWindowSize(window, resW[idx], resH[idx]);
+				SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+				GameEngine::GetInstance()->GetRenderer()->SetViewPort(0, 0, resW[idx], resH[idx]);
+				GameEngine::GetInstance()->SetWindowSize(resW[idx], resH[idx]);
+			}
+		}
+	}
+
 	gameStateController = new GameStateController();
 	gameStateController->Init(GameState::GS_MAIN_MENU);
 
@@ -109,6 +137,14 @@ int main(int argc, char* argv[])
 
 	// Register all game sound effects with the central manager
 	SoundManager::Get().Init(audio);
+
+	// Apply saved audio volumes now that SDL_mixer is ready
+	{
+		int musicVol = gameData->musicEnabled ? (gameData->musicVolume * MIX_MAX_VOLUME / 10) : 0;
+		int soundVol = gameData->soundEnabled ? (gameData->soundVolume * MIX_MAX_VOLUME / 10) : 0;
+		Mix_VolumeMusic(musicVol);
+		Mix_Volume(-1, soundVol);
+	}
 
 	Music music = audio.loadMusic("../Resource/Sound/beat.wav");
 	SoundEffect sound_1 = audio.loadSoundEffect("../Resource/Sound/high.wav");

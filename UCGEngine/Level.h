@@ -124,9 +124,10 @@ private:
     bool elite3 = false;
     Boss* bossEnemy = nullptr;
     bool bossActed = false;
-    ImageObject* bossHpBg = nullptr;
-    ImageObject* bossHpBar = nullptr;
+    ImageObject* bossHpBg   = nullptr;
+    ImageObject* bossHpBar  = nullptr;
     ImageObject* bossHpMask = nullptr;
+    TextObject*  bossHpText = nullptr;
     void UpdateBossHPBar();
 	/// ///////////
 

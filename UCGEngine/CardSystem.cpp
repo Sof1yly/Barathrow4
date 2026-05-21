@@ -359,14 +359,13 @@ void CardSystem::DiscardTempCardsFromHand(std::vector<DrawableObject*>& objectsL
         if (bg) {
             hand.RemoveView(bg, objectsList);
         }
+        c->DestroyVisuals();
+        deletePile.push_back(c);
         if (c->isEnergyCard()) {
-            c->DestroyVisuals();
-            deletePile.push_back(c);
             std::cout << "[Energy] " << c->getName() << " deleted (unplayed energy card)." << std::endl;
         }
         else {
-            discard.push_back(c);
-            std::cout << "[Temp] " << c->getName() << " discarded (unplayed temp card)." << std::endl;
+            std::cout << "[Temp] " << c->getName() << " deleted (unplayed temp card)." << std::endl;
         }
     }
 

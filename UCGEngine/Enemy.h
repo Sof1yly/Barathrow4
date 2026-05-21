@@ -103,7 +103,7 @@ public:
 
     void UpdateTextPosition();
 
-    void SetWorldPosition(glm::vec3 pos);
+    virtual void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
     bool isDelayed() const;
@@ -145,7 +145,7 @@ public:
 
     virtual void setPreparingAttack(bool value);
 
-    void LockAttackPattern(int playerRow, int playerCol);
+    virtual void LockAttackPattern(int playerRow, int playerCol);
     const AttackPattern& getLockedAttackPattern() const { return lockedAttackPattern; }
     int getLockedPlayerRow() const { return lockedPlayerRow; }
     int getLockedPlayerCol() const { return lockedPlayerCol; }
@@ -205,7 +205,7 @@ public:
         int playerRow,
         int playerCol) const;
 
-    void StartMove(glm::vec3 targetWorld);
+    virtual void StartMove(glm::vec3 targetWorld);
 
     int highlightIndex;
 

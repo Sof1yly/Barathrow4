@@ -7,6 +7,7 @@ enum class DebuffSubType {
     Lag,     // lag - skip player next turn
     Corrupt, // cor - apply corruption, enemy takes extra damage
     Stun,    // st  - enemy skips N turns entirely
+    CorruptSelf, // cors - player takes damage after playing card
     Unknown
 };
 
@@ -35,6 +36,7 @@ public:
         if (code == "wk" || code == "wek") return DebuffSubType::Weaken;
         if (code == "dl" || code == "de") return DebuffSubType::Delay;
         if (code == "lag") return DebuffSubType::Lag;
+        if (code == "cors") return DebuffSubType::CorruptSelf;
         if (code == "cor") return DebuffSubType::Corrupt;
         if (code == "st")  return DebuffSubType::Stun;
         return DebuffSubType::Unknown;
