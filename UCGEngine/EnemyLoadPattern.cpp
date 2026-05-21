@@ -17,6 +17,10 @@ void EnemyLoadPattern::LoadFromFile(const std::string& filename)
 
     while (std::getline(file, line))
     {
+        // Strip trailing whitespace (tabs, spaces, carriage returns)
+        while (!line.empty() && (line.back() == ' ' || line.back() == '\t' || line.back() == '\r'))
+            line.pop_back();
+
         if (line.empty()) continue;
 
         if (line[0] == 'A') // new pattern
