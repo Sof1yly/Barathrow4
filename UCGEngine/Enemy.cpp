@@ -527,6 +527,11 @@ void Enemy::addStun(int turns)
 {
     if (turns <= 0) return;
     stunTurns += turns;
+    if (preparingAttack)
+    {
+        countdownRemaning += turns;
+        RefreshCountdownIcon();
+    }
     std::cout << "[Stun] Enemy stunned for +" << turns << " turn(s). Total: " << stunTurns << std::endl;
     RefreshDebuffText();
 }

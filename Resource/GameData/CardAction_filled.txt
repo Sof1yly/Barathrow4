@@ -33,7 +33,7 @@ Charged Strike	atk:3;oc:2	A2	1	rar	atk	Deal {atk} Damage Overclock twice
 Lazer Beam	atk:1x3	A14	1	rar	atk	Deal {atk} Damage 3 times
 Double Attack	atk:4x2	A2	1	leg	atk	Deal {atk} Damage twice
 Leap of Faith	jmp:3;atk:10	A23	1	rar	atk	Jump {jmp} Deal {atk} Damage
-Offensive Stance	oc:10;cor:5;del	A1	1	leg	buf	Overclock 10 Corrupt Self 5 Delete
+Offensive Stance	oc:10;cors:5;del	A1	1	leg	buf	Overclock 10 Corrupt Self 5 Delete
 Smoke Bomb	wek:3;st:1;re:1	A12	1	rar	dbuf	Weaken 3 Stun 1 Retreat 1
 Freeze	atk:1;st:3;del	A2	1	leg	dbuf	Deal {atk} Damage Stun 3 Delete
 Defensive Stance	bar:3;lag;del	A1	1	leg	buf	Gain 3 Barrier Lag Delete
