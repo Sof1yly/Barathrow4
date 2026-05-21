@@ -955,6 +955,7 @@ void Level::LevelUpdate()
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
 
             SoundManager::Get().Play(SoundManager::SFX::ENEMY_DIES);
+            if (e == bossEnemy) bossEnemy = nullptr;
             delete e;
             it = enemies.erase(it);
 
@@ -987,7 +988,9 @@ void Level::LevelUpdate()
         }
         PreviewAllEnemyAttacks();
     }
-    if(enemies.empty() && !isGameOver && !inShopOnlyLevel)
+    bool playerWins = boss ? (bossEnemy == nullptr || bossEnemy->getIsDead())
+                           : enemies.empty();
+    if(playerWins && !isGameOver && !inShopOnlyLevel)
     {
         if (winText)
         {
