@@ -3,6 +3,7 @@
 #include "GameEngine.h"
 #include "GLRenderer.h"
 #include "SoundManager.h"
+#include "SaveSystem.h"
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -409,4 +410,12 @@ void SettingPage::SaveToGameData() {
     gd->soundVolume     = soundVolume;
     gd->soundEnabled    = soundEnabled;
     gd->resolutionIndex = resolutionIndex;
+
+    SettingsData s;
+    s.musicVolume     = musicVolume;
+    s.musicEnabled    = musicEnabled;
+    s.soundVolume     = soundVolume;
+    s.soundEnabled    = soundEnabled;
+    s.resolutionIndex = resolutionIndex;
+    SaveSystem::SaveSettings(s);
 }
