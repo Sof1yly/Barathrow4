@@ -31,6 +31,7 @@ public:
         const std::vector<std::pair<int, int>>& enemyPositions);
 
     void ShowTeleportPreview(glm::vec3 worldPos);
+    void HideTeleportPreview();
 
     void ShowEnemyAttack(
         const std::vector<std::pair<IVec2, int>>& cells,

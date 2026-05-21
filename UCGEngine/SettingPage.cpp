@@ -222,7 +222,7 @@ void SettingPage::Init(std::vector<DrawableObject*>& objectsList) {
     SDL_Color lightCol = { 240, 240, 240, 255 };
 
     backLabel = new TextObject();
-    backLabel->LoadText("Back", darkCol, 32);
+    backLabel->LoadText("Back", lightCol, 32);
     AddObj(backLabel, glm::vec3(BACKX, BTN_Y, TOP_Z), objectsList);
 
     applyLabel = new TextObject();

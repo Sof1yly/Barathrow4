@@ -1282,6 +1282,18 @@ void Level::HandleKey(char key)
         return;
     }
 
+    if (key == 'i')
+    {
+        playerData.setHp(playerData.getMaxHp());
+        UpdateHPBar();
+        return;
+    }
+
+    if (key == '1') { levelManager.SetLevel(4);  AdvanceToNextRound(); return; }
+    if (key == '2') { levelManager.SetLevel(9);  AdvanceToNextRound(); return; }
+    if (key == '3') { levelManager.SetLevel(14); AdvanceToNextRound(); return; }
+    if (key == '4') { levelManager.SetLevel(19); AdvanceToNextRound(); return; }
+
     if (key == 'o')
     {
         levelManager.SetLevel(17); // SetLevel(17) so Advance() brings it to 18
@@ -2154,6 +2166,8 @@ void Level::HandleMouse(int type, int x, int y)
                         }
                         if (destValid)
                             highlightManager.ShowTeleportPreview(GridToWorld(destRow, destCol));
+                        else
+                            highlightManager.HideTeleportPreview();
                     }
                 }
                 else
@@ -2224,8 +2238,11 @@ void Level::HandleMouse(int type, int x, int y)
 
                     std::cout << "[Card] " << cardData->getName() << std::endl;
 
-                    // Teleport: validate destination and snap instantly before execution
+                    // Teleport: validate destination, defer snap until after attack resolves
                     int jumpVal = cardData->GetJumpValue();
+                    int teleportDestRow = -1, teleportDestCol = -1;
+                    bool pendingTeleport = false;
+
                     if (jumpVal > 0)
                     {
                         int destRow = nowRow, destCol = nowCol;
@@ -2268,13 +2285,12 @@ void Level::HandleMouse(int type, int x, int y)
                         case 2: playerDir = PlayerDir::DOWN;  break;
                         case 3: playerDir = PlayerDir::RIGHT; break;
                         }
-                        nowRow = destRow;
-                        nowCol = destCol;
-                        playerData.SetPosition(GridToWorld(destRow, destCol));
-                        std::cout << "[Teleport] Snapped to (" << destRow << "," << destCol << ")\n";
+                        teleportDestRow = destRow;
+                        teleportDestCol = destCol;
+                        pendingTeleport = true;
                     }
 
-                    // Build context and execute all card actions via OOP dispatch
+                    // Build context with original position so attack fires from here
                     CardPlayContext ctx {
                         playerData, enemies, cardSystem, objectsList,
                         dz, nowRow, nowCol,
@@ -2285,6 +2301,15 @@ void Level::HandleMouse(int type, int x, int y)
 
                     // Apply attack patterns to the grid (damage + debuffs)
                     CardActionExecutor::ApplyAttackPatterns(result, ctx);
+
+                    // Apply deferred teleport after attack has resolved
+                    if (pendingTeleport)
+                    {
+                        nowRow = teleportDestRow;
+                        nowCol = teleportDestCol;
+                        playerData.SetPosition(GridToWorld(nowRow, nowCol));
+                        std::cout << "[Teleport] Snapped to (" << nowRow << "," << nowCol << ") after attack\n";
+                    }
 
                     if (result.pendingSelfCorruptDamage > 0)
                     {
