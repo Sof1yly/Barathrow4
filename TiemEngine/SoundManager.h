@@ -46,6 +46,11 @@ public:
         ELITE_C_ATTACK1,
         ELITE_C_ATTACK2,
 
+        // ---- Boss ----
+        BOSS_BOARD_WIDE,   // patterns 1 / 2 / 3  (grid-wide sweep)
+        BOSS_SUMMON,       // pattern 9            (summon minions)
+        BOSS_LASER,        // patterns 6 / 7 (falling) + 8 (cross laser)
+
         COUNT   // keep last
     };
 
