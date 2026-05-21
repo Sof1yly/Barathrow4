@@ -36,11 +36,20 @@ struct SaveData {
     std::vector<std::string> handCardNames;
 };
 
+struct SettingsData {
+    int  musicVolume     = 8;
+    bool musicEnabled    = true;
+    int  soundVolume     = 8;
+    bool soundEnabled    = true;
+    int  resolutionIndex = 2;
+};
+
 class SaveSystem {
 public:
     static const std::string SAVE_DIR;
     static const std::string SAVE_FILE;
-    static const std::string PLAYED_FILE;  // marks that the player has seen the tutorial
+    static const std::string PLAYED_FILE;
+    static const std::string SETTINGS_FILE;
 
     // Set true before transitioning to a level to trigger save loading in LevelInit.
     static bool pendingLoad;
@@ -50,9 +59,13 @@ public:
     static bool HasSaveFile();
     static void DeleteSave();
 
+    // Settings persistence
+    static bool SaveSettings(const SettingsData& s);
+    static bool LoadSettings(SettingsData& s);
+
     // Tutorial / first-time-play tracking
-    static bool HasPlayedBefore();   // true if played.dat exists
-    static void MarkPlayed();        // creates played.dat
+    static bool HasPlayedBefore();
+    static void MarkPlayed();
 
 private:
     static bool EnsureSaveDir();

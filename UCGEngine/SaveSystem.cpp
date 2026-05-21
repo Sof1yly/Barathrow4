@@ -5,10 +5,11 @@
 #include <cstdio>     // std::remove
 #include <direct.h>   // _mkdir on Windows
 
-const std::string SaveSystem::SAVE_DIR    = "../Resource/GameData/Save";
-const std::string SaveSystem::SAVE_FILE   = "../Resource/GameData/Save/save.dat";
-const std::string SaveSystem::PLAYED_FILE = "../Resource/GameData/Save/played.dat";
-bool              SaveSystem::pendingLoad = false;
+const std::string SaveSystem::SAVE_DIR      = "../Resource/GameData/Save";
+const std::string SaveSystem::SAVE_FILE     = "../Resource/GameData/Save/save.dat";
+const std::string SaveSystem::PLAYED_FILE   = "../Resource/GameData/Save/played.dat";
+const std::string SaveSystem::SETTINGS_FILE = "../Resource/GameData/Save/settings.dat";
+bool              SaveSystem::pendingLoad   = false;
 
 bool SaveSystem::EnsureSaveDir()
 {
@@ -134,4 +135,39 @@ void SaveSystem::MarkPlayed()
         f << "played\n";
         std::cout << "[Save] Marked as played.\n";
     }
+}
+
+bool SaveSystem::SaveSettings(const SettingsData& s)
+{
+    EnsureSaveDir();
+    std::ofstream f(SETTINGS_FILE);
+    if (!f.is_open()) return false;
+
+    f << "MUSIC_VOL="     << s.musicVolume     << "\n";
+    f << "MUSIC_ON="      << (s.musicEnabled ? 1 : 0) << "\n";
+    f << "SOUND_VOL="     << s.soundVolume     << "\n";
+    f << "SOUND_ON="      << (s.soundEnabled ? 1 : 0) << "\n";
+    f << "RESOLUTION="    << s.resolutionIndex << "\n";
+    return true;
+}
+
+bool SaveSystem::LoadSettings(SettingsData& s)
+{
+    std::ifstream f(SETTINGS_FILE);
+    if (!f.is_open()) return false;
+
+    std::string line;
+    while (std::getline(f, line))
+    {
+        auto eq = line.find('=');
+        if (eq == std::string::npos) continue;
+        std::string key = line.substr(0, eq);
+        std::string val = line.substr(eq + 1);
+        if      (key == "MUSIC_VOL")  s.musicVolume     = std::stoi(val);
+        else if (key == "MUSIC_ON")   s.musicEnabled    = std::stoi(val) != 0;
+        else if (key == "SOUND_VOL")  s.soundVolume     = std::stoi(val);
+        else if (key == "SOUND_ON")   s.soundEnabled    = std::stoi(val) != 0;
+        else if (key == "RESOLUTION") s.resolutionIndex = std::stoi(val);
+    }
+    return true;
 }

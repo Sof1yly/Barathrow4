@@ -8,6 +8,7 @@ Boss::Boss()
 
     SDL_Color white = { 255, 255, 255 };
     hpText->LoadText("HP: " + std::to_string(health), white, 24);
+    hpText->SetAlpha(0.0f);
 
     damage = 25;
     moveRange = 0;
