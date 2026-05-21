@@ -78,6 +78,55 @@ void MainMenu::LevelInit()
     InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-699.0f,-255.0f, 3.0f), glm::vec2(193.5f, 29.0f));
     InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-704.0f,-330.0f, 3.0f), glm::vec2(179.5f, 29.0f));
 
+    // Credits button (text-only, no texture image)
+    {
+        btnCredits.pos  = glm::vec3(-699.0f, -181.0f, 3.0f);
+        btnCredits.size = glm::vec2(193.5f, 29.0f);
+        btnCredits.bg   = nullptr;
+        SDL_Color white = { 255, 255, 255, 255 };
+        btnCredits.label = new TextObject();
+        btnCredits.label->LoadText("CREDITS", white, 24);
+        btnCredits.label->SetSize(193.5f, -29.0f);
+        btnCredits.label->SetPosition(btnCredits.pos);
+        objectsList.push_back(btnCredits.label);
+    }
+
+    // Credits overlay — black full-screen cover + text lines (hidden initially)
+    {
+        creditsOverlay = new ImageObject();
+        creditsOverlay->SetTexture(TEX_BG);
+        creditsOverlay->SetColor(0.0f, 0.0f, 0.0f);
+        creditsOverlay->SetSize(1920.0f, -1080.0f);
+        creditsOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 8.0f));
+        creditsOverlay->SetAlpha(0.0f);
+        objectsList.push_back(creditsOverlay);
+
+        SDL_Color white = { 255, 255, 255, 255 };
+
+        auto addLine = [&](const char* text, float y, int fontSize) {
+            auto* t = new TextObject();
+            t->LoadText(text, white, fontSize);
+            t->SetPosition(glm::vec3(0.0f, y, 9.0f));
+            t->SetAlpha(0.0f);
+            creditTexts.push_back(t);
+            objectsList.push_back(t);
+        };
+
+        addLine("- CREDITS -",          500.0f, 36);
+        addLine("Game Designer & Game Director - Thanpat Pathomkasikul",           400.0f, 28);
+        addLine("Producer & Programmer - Pupa Thapanapongpaiboon",            350.0f, 28);
+        addLine("Lead Programmer  - Puri Ngamrumyong",             300.0f, 28);
+        addLine("Art Director - Nichapa Boonjaiyai",           250.0f, 28);
+        addLine("Concept & Environment Artist - Natthaya Deepichan",          200.0f, 28);
+        addLine("Concept & Character Artist - Chayapol Chotivanich",          150.0f, 28);
+        addLine("- Sound -", 50.0f, 36);
+        addLine("BGM - Cyberpunk Synthwave - Alan Souls", 0.0f, 28);
+        addLine("SFX - Pixabay - Various Artist", -50.0f, 28);
+		addLine("The Game is made as an in-class project for DD290 Digital Design Project and DT230 Advance Project.", -200.0f, 28);
+		addLine(" The project in its entirety belongs to ©COPYRIGHT 2026 DIGITAL DESIGN AND CREATIVE TECHNOLOGY. All Rights Reserved.", -250.0f, 28);
+        addLine("Press any key to return", -360.0f, 22);
+    }
+
     settingPage.Init(objectsList);
 }
 
@@ -100,8 +149,12 @@ void MainMenu::LevelFree()
     btnStart    = MenuButton{};
     btnContinue = MenuButton{};
     btnAbandon  = MenuButton{};
+    btnCredits  = MenuButton{};
     btnSettings = MenuButton{};
     btnQuit     = MenuButton{};
+    creditsActive  = false;
+    creditsOverlay = nullptr;
+    creditTexts.clear();
 }
 
 void MainMenu::LevelUnload()
@@ -111,6 +164,13 @@ void MainMenu::LevelUnload()
 
 void MainMenu::HandleKey(char key)
 {
+    if (creditsActive)
+    {
+        creditsActive = false;
+        if (creditsOverlay) creditsOverlay->SetAlpha(0.0f);
+        for (auto* t : creditTexts) t->SetAlpha(0.0f);
+        return;
+    }
     if (key == 'q')
         GameData::GetInstance()->gGameStateNext = GameState::GS_QUIT;
 }
@@ -119,6 +179,18 @@ void MainMenu::HandleMouse(int type, int x, int y)
 {
     float rx, ry;
     GetRealMousePos(x, y, rx, ry);
+
+    // Block all input while credits screen is shown (any click also dismisses it)
+    if (creditsActive)
+    {
+        if (type == 0)
+        {
+            creditsActive = false;
+            if (creditsOverlay) creditsOverlay->SetAlpha(0.0f);
+            for (auto* t : creditTexts) t->SetAlpha(0.0f);
+        }
+        return;
+    }
 
     // Route all input to the setting page while it is open
     if (settingPageActive)
@@ -133,24 +205,26 @@ void MainMenu::HandleMouse(int type, int x, int y)
         return;
     }
 
-    MenuButton* buttons[] = { &btnStart, &btnContinue, &btnAbandon, &btnSettings, &btnQuit };
+    MenuButton* buttons[] = { &btnStart, &btnContinue, &btnAbandon, &btnCredits, &btnSettings, &btnQuit };
 
     if (type == 3) // hover — dim non-hovered buttons
     {
         bool anyHovered = false;
         for (auto* btn : buttons)
         {
-            if (btn->IsClicked(rx, ry)) {
-                if (btn->bg) btn->bg->SetAlpha(1.0f);
-                anyHovered = true;
-            } else {
-                if (btn->bg) btn->bg->SetAlpha(0.65f);
-            }
+            bool hov = btn->IsClicked(rx, ry);
+            if (hov) anyHovered = true;
+            float a = hov ? 1.0f : 0.65f;
+            if (btn->bg)    btn->bg->SetAlpha(a);
+            if (btn->label) btn->label->SetAlpha(a);
         }
         if (!anyHovered)
         {
             for (auto* btn : buttons)
-                if (btn->bg) btn->bg->SetAlpha(1.0f);
+            {
+                if (btn->bg)    btn->bg->SetAlpha(1.0f);
+                if (btn->label) btn->label->SetAlpha(1.0f);
+            }
         }
         return;
     }
@@ -158,8 +232,7 @@ void MainMenu::HandleMouse(int type, int x, int y)
     if (type != 0) return;
 
     // Play UI click for any button press
-    MenuButton* buttons2[] = { &btnStart, &btnContinue, &btnAbandon, &btnSettings, &btnQuit };
-    for (auto* btn : buttons2)
+    for (auto* btn : buttons)
         if (btn->IsClicked(rx, ry)) { SoundManager::Get().Play(SoundManager::SFX::UI_CLICK); break; }
 
     if (btnStart.IsClicked(rx, ry))
@@ -184,6 +257,12 @@ void MainMenu::HandleMouse(int type, int x, int y)
     {
         SaveSystem::DeleteSave();
         std::cout << "[MainMenu] Run abandoned. Save deleted.\n";
+    }
+    else if (btnCredits.IsClicked(rx, ry))
+    {
+        creditsActive = true;
+        if (creditsOverlay) creditsOverlay->SetAlpha(1.0f);
+        for (auto* t : creditTexts) t->SetAlpha(1.0f);
     }
     else if (btnSettings.IsClicked(rx, ry))
     {
