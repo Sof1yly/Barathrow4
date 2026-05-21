@@ -207,6 +207,7 @@ int main(int argc, char* argv[])
 					case SDLK_l: gameStateController->currentLevel->HandleKey('l'); break;
 					case SDLK_v: gameStateController->currentLevel->HandleKey('v'); break;
 					case SDLK_f: gameStateController->currentLevel->HandleKey('f'); break;
+					case SDLK_i: gameStateController->currentLevel->HandleKey('i'); break;
 					case SDLK_1: gameStateController->currentLevel->HandleKey('1'); break;
 					case SDLK_2: gameStateController->currentLevel->HandleKey('2'); break;
 					case SDLK_3: gameStateController->currentLevel->HandleKey('3'); break;
