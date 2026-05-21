@@ -165,6 +165,11 @@ void HighlightManager::ShowMovePreview(
     }
 }
 
+void HighlightManager::HideTeleportPreview()
+{
+    Hide(moveHighlights);
+}
+
 void HighlightManager::ShowTeleportPreview(glm::vec3 worldPos)
 {
     Hide(moveHighlights);

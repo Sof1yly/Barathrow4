@@ -383,9 +383,9 @@ void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
 {
     int patNum = patternId.size() > 1 ? std::stoi(patternId.substr(1)) : 0;
     // A1-A3: small single-target (punch)
-    // A4-A10, A12-A13, A18-A22: multi-tile spread (AOE/sword)
+    // A4-A10, A12-A13, A18-A23: multi-tile spread (AOE/sword)
     // A11, A14-A17: long-range projectile (gun)
-    if ((patNum >= 4 && patNum <= 13 && patNum != 11) || (patNum >= 18 && patNum <= 22))
+    if ((patNum >= 4 && patNum <= 13 && patNum != 11) || (patNum >= 18 && patNum <= 23))
     {
         SetPlayerAttackAoe(dir);
     }
