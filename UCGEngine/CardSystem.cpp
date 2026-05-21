@@ -283,26 +283,23 @@ void CardSystem::DiscardHandAndDraw(int cardCount,std::vector<DrawableObject*>& 
     int needed = cardCount - (int)persistCards.size();
     if (needed < 0) needed = 0;
 
-    // If deck can't fill the hand, recycle the entire discard pile back into the deck
-    if ((int)deck.size() < needed && !discard.empty())
-    {
-        cout << "  Deck has " << deck.size() << " card(s), need " << needed
-             << ". Recycling " << discard.size() << " discard card(s) into deck." << endl;
-        deck.insert(deck.end(), discard.begin(), discard.end());
-        discard.clear();
-        ShuffleDeck();
-    }
-
-    // 6) Draw new hand
-    int drawCount = std::min(needed, (int)deck.size());
-
+    // 6) Draw new hand, pulling from deck first, then recycling discard when deck runs out
     std::vector<Card*> drawn;
-    if (drawCount > 0)
+    while (needed > 0 && (!deck.empty() || !discard.empty()))
     {
-        for (int i = 0; i < drawCount; ++i)
+        while (needed > 0 && !deck.empty())
         {
             drawn.push_back(deck.back());
             deck.pop_back();
+            --needed;
+        }
+
+        if (needed > 0 && deck.empty() && !discard.empty())
+        {
+            cout << "  Deck empty. Recycling " << discard.size() << " discard card(s) into deck." << endl;
+            deck.insert(deck.end(), discard.begin(), discard.end());
+            discard.clear();
+            ShuffleDeck();
         }
     }
 
