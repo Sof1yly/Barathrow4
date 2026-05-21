@@ -199,7 +199,7 @@ void Level::LevelInit()
     {
         ImageObject* Setting = new ImageObject();
         Setting->SetSize(80.0f, -80.0f);
-        Setting->SetPosition(glm::vec3(900.0f, 500.0f, 0.0f));
+        Setting->SetPosition(glm::vec3(900.0f, 500.0f, 850.0f));
         Setting->SetTexture("../Resource/Texture/UI/Setting.PNG");
         objectsList.push_back(Setting);
     }
@@ -207,13 +207,15 @@ void Level::LevelInit()
     {
         viewMapIcon = new ImageObject();
         viewMapIcon->SetSize(80.0f, -80.0f);
-        viewMapIcon->SetPosition(glm::vec3(805.0f, 500.0f, 0.0f));
+        viewMapIcon->SetPosition(glm::vec3(805.0f, 500.0f, 850.0f));
         viewMapIcon->SetTexture("../Resource/Texture/UI/Info.PNG");
         objectsList.push_back(viewMapIcon);
     }
 
     {
         viewDeckButton.InitPreset(Button::Preset::ViewDeck, objectsList);
+        if (viewDeckButton.GetImage())
+            viewDeckButton.GetImage()->SetPosition(glm::vec3(710.0f, 500.0f, 850.0f));
     }
 
     {
@@ -1683,6 +1685,57 @@ void Level::HandleMouse(int type, int x, int y)
 
     if (shopSystem.IsActive())
     {
+        // DeckViewer opened from shop takes priority over shop input
+        if (deckViewer.IsActive())
+        {
+            if (type == 3)
+                deckViewer.HandleHover(mousePos);
+            else if (type == 0)
+                deckViewer.HandleClick(mousePos, objectsList);
+            return;
+        }
+
+        // The three navigation icons remain clickable in front of the shop overlay
+        if (type == 0)
+        {
+            // ViewDeck button
+            if (viewDeckButton.IsClicked(realX, realY))
+            {
+                SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
+                cardInspect.Hide(objectsList);
+                const vector<Card*>& allCards = cardSystem.GetFullCollection();
+                deckViewer.SetDeck(allCards);
+                deckViewer.Show(objectsList);
+                return;
+            }
+
+            // Info / View-Map button
+            if (viewMapIcon
+                && realX >= 805.0f - 40.0f && realX <= 805.0f + 40.0f
+                && realY >= 500.0f - 40.0f && realY <= 500.0f + 40.0f)
+            {
+                SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
+                cardInspect.Hide(objectsList);
+                if (!mapSceneActive)
+                {
+                    mapScene.OpenViewOnly(levelManager.GetLevel(), objectsList);
+                    mapSceneActive = true;
+                }
+                return;
+            }
+
+            // Setting / Pause button
+            if (realX >= 900.0f - 40.0f && realX <= 900.0f + 40.0f
+                && realY >= 500.0f - 40.0f && realY <= 500.0f + 40.0f)
+            {
+                SoundManager::Get().Play(SoundManager::SFX::UI_CLICK);
+                cardSystem.UpdateHover(glm::vec3(0, 0, 0), true, objectsList);
+                pauseMenu.Show(objectsList);
+                pauseMenuActive = true;
+                return;
+            }
+        }
+
         if (type == 3)
         {
             shopSystem.HandleHover(mousePos.x, mousePos.y);
@@ -2616,6 +2669,14 @@ void Level::UpdateTurn()
         {
             turnBannerState = static_cast<int>(turnState);
             turnBannerTimer = turnBannerDuration;
+
+            // Re-insert at the back so the banner renders over every other object
+            auto moveLast = [&](DrawableObject* obj) {
+                auto it = std::find(objectsList.begin(), objectsList.end(), obj);
+                if (it != objectsList.end()) { objectsList.erase(it); objectsList.push_back(obj); }
+            };
+            moveLast(turnBannerBg);
+            moveLast(turnBannerText);
         }
 
         const char* label = nullptr;
