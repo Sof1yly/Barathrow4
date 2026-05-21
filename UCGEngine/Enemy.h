@@ -103,7 +103,7 @@ public:
 
     void UpdateTextPosition();
 
-    void SetWorldPosition(glm::vec3 pos);
+    virtual void SetWorldPosition(glm::vec3 pos);
 
     void addDelay(int turns);
     bool isDelayed() const;
@@ -205,7 +205,7 @@ public:
         int playerRow,
         int playerCol) const;
 
-    void StartMove(glm::vec3 targetWorld);
+    virtual void StartMove(glm::vec3 targetWorld);
 
     int highlightIndex;
 

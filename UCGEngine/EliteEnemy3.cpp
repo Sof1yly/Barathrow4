@@ -17,7 +17,7 @@ EliteEnemy3::EliteEnemy3()
     health     = maxHealth;
     damage     = 20;
     moveRange  = 4;
-    spriteSize = 150.0f;
+    spriteSize = 175.0f;
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }
     objSprite = new SpriteObject("../Resource/Texture/Enemy/EliteEnemy4.png", 8, 12);
@@ -28,6 +28,19 @@ EliteEnemy3::EliteEnemy3()
 
     BuildPatterns();
     currentPatternIndex = patternPhase;
+}
+
+// ── Position offset (+10 px up) ───────────────────────────────────────────────
+static constexpr float E3_Y_OFFSET = 30.0f;
+
+void EliteEnemy3::SetWorldPosition(glm::vec3 pos)
+{
+    Enemy::SetWorldPosition(glm::vec3(pos.x, pos.y + E3_Y_OFFSET, pos.z));
+}
+
+void EliteEnemy3::StartMove(glm::vec3 targetWorld)
+{
+    Enemy::StartMove(glm::vec3(targetWorld.x, targetWorld.y + E3_Y_OFFSET, targetWorld.z));
 }
 
 // ── Pattern construction ──────────────────────────────────────────────────────

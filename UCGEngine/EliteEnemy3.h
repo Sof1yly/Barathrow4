@@ -26,6 +26,9 @@ public:
     void PlayIdleAnimation()               override;
     void PlayAttackAnimation(glm::vec3 playerPos) override;
 
+    void SetWorldPosition(glm::vec3 pos) override;
+    void StartMove(glm::vec3 targetWorld) override;
+
     void AdvancePattern();
     bool IsLineAttack() const { return patternPhase == 1; }
 

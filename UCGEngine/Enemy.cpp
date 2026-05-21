@@ -160,7 +160,7 @@ Enemy::Enemy(EnemyType type)
             2,   // end frame
             200  // ms per frame
         );
-        objSprite->SetSize(120.0f, -120.0f);
+        objSprite->SetSize(110.0f, -110.0f);
 		break;
     }
 

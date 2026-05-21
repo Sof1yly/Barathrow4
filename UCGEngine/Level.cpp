@@ -148,7 +148,7 @@ void Level::LevelInit()
 
     LoadEnemyData();
 
-    if (hasSave)
+    if (hasSave && !pendingSave.enemies.empty())
         RestoreEnemiesFromSave(pendingSave);
     else
         SpawnEnemiesForLevel();
