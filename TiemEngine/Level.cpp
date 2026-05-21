@@ -2498,14 +2498,17 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         if (choice == 1 || choice == 2 || choice == 3)
         {
+            SoundManager::Get().Play(SoundManager::SFX::BOSS_BOARD_WIDE);
             SpawnBossAttack1(hitTiles);
         }
         else if (choice == 6 || choice == 7)
         {
+            SoundManager::Get().Play(SoundManager::SFX::BOSS_LASER);
             SpawnBossAttack2Falling(hitTiles);
         }
         else if (choice == 8)
         {
+            SoundManager::Get().Play(SoundManager::SFX::BOSS_LASER);
             bool enhanced = (b->getHealth() * 2 < b->getMaxHealth());
             SpawnBossAttackCross(b->getLockedPlayerRow(), b->getLockedPlayerCol(), enhanced);
         }
@@ -2598,6 +2601,8 @@ void Level::UpdateTurn()
                 if (Boss* b = dynamic_cast<Boss*>(e))
                 {
                     int summons = b->TryGetSummon();
+                    if (summons > 0)
+                        SoundManager::Get().Play(SoundManager::SFX::BOSS_SUMMON);
                     for (int i = 0; i < summons; i++)
                         SpawnBossSummon();
                 }

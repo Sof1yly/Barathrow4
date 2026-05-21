@@ -37,6 +37,11 @@ static const char* FILE_PATHS[] =
     /* ELITE_B_ATTACK2 */ "../Resource/Sound/scratch.wav",
     /* ELITE_C_ATTACK1 */ "../Resource/Sound/medium.wav",
     /* ELITE_C_ATTACK2 */ "../Resource/Sound/scratch.wav",
+
+    // ---- Boss ----
+    /* BOSS_BOARD_WIDE */ "../Resource/Sound/medium.wav",
+    /* BOSS_SUMMON     */ "../Resource/Sound/scratch.wav",
+    /* BOSS_LASER      */ "../Resource/Sound/high.wav",
 };
 static_assert(sizeof(FILE_PATHS) / sizeof(FILE_PATHS[0]) == static_cast<int>(SoundManager::SFX::COUNT),
               "FILE_PATHS size must match SoundManager::SFX::COUNT");
