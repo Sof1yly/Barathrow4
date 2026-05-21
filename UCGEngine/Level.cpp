@@ -2297,6 +2297,10 @@ void Level::HandleMouse(int type, int x, int y)
                     {
                         std::cout << "[Fast] Will not consume player turn.\n";
                     }
+                    else
+                    {
+                        cardSystem.DiscardTempCardsFromHand(objectsList);
+                    }
 
                     if (result.isLagCard)
                     {
