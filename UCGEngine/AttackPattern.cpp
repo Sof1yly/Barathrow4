@@ -19,8 +19,20 @@ AttackPattern AttackPattern::fromGrid(const std::vector<std::string>& grid,
     int rows = static_cast<int>(grid.size());
     if (rows == 0) return p;
     int cols = static_cast<int>(grid[0].size());
-    if (originCol < 0) originCol = cols / 2;
-    if (originRow < 0) originRow = rows / 2;
+
+    // When origin is unspecified, prefer the explicit 'O' marker in the grid
+    if (originCol < 0 || originRow < 0)
+    {
+        bool found = false;
+        for (int r = 0; r < rows && !found; r++)
+            for (int c = 0; c < (int)grid[r].size() && !found; c++)
+                if (grid[r][c] == 'O') { originRow = r; originCol = c; found = true; }
+        if (!found)
+        {
+            if (originCol < 0) originCol = cols / 2;
+            if (originRow < 0) originRow = rows / 2;
+        }
+    }
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < static_cast<int>(grid[r].size()); ++c) {
             if (grid[r][c] == markChar) {
