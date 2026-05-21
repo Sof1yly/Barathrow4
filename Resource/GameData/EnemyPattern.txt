@@ -1,13 +1,37 @@
 A1
-XX...
+XO.
 
 A2
-X..
+XXO..
 
 A3
-OXX
+X..
+XO.
+X..
 
 A4
+.X.
+XOX
+.X.
+
+A5
 XXX
+XOX
 XXX
-XXX
+
+A6
+XX.XX
+XXOXX
+XX.XX
+	
+A7
+..X..
+.XXX.
+XXOXX
+.XXX.
+..X..
+	
+A8
+XXX....
+XXXO...
+XXX....

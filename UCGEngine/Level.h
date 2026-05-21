@@ -368,7 +368,7 @@ public:
 
     void PreviewAllEnemyAttacks();
 
-    void PlayerTakeDamage(int damage);
+    void PlayerTakeDamage(int damage, Enemy* attacker = nullptr);
     void HandlePlayerDeath();
 
 	int ConvertDir(PlayerDir dir);

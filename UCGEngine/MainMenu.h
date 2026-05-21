@@ -29,8 +29,13 @@ private:
     MenuButton btnStart;
     MenuButton btnContinue;
     MenuButton btnAbandon;
+    MenuButton btnCredits;
     MenuButton btnSettings;
     MenuButton btnQuit;
+
+    bool         creditsActive  = false;
+    ImageObject* creditsOverlay = nullptr;
+    std::vector<TextObject*> creditTexts;
 
     void InitButton(MenuButton& btn, const std::string& texPath,glm::vec3 pos, glm::vec2 size);
 
