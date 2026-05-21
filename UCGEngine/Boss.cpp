@@ -3,13 +3,13 @@
 Boss::Boss()
     : Enemy(EnemyType::C)
 {
-    maxHealth = 50;
+    maxHealth = 80;
     health = maxHealth;
 
     SDL_Color white = { 255, 255, 255 };
     hpText->LoadText("HP: " + std::to_string(health), white, 24);
 
-    damage = 25;
+    damage = 5;
     moveRange = 0;
 
     if (objSprite) { delete objSprite; objSprite = nullptr; }

@@ -13,9 +13,9 @@ static constexpr int E3_FRAMES_DEATH  = 7;
 EliteEnemy3::EliteEnemy3()
     : EliteEnemy(EliteType::Pattern)
 {
-    maxHealth  = 45;
+    maxHealth  = 25;
     health     = maxHealth;
-    damage     = 20;
+    damage     = 8;
     moveRange  = 4;
     spriteSize = 150.0f;
 
