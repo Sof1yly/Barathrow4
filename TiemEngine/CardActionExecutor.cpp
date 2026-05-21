@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "AttackAction.h"
+#include "SoundManager.h"
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
@@ -135,6 +136,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
                 if (e->OccupiesTile(gx, gy))
                 {
                     e->getDamage(attackDamage);
+                    SoundManager::Get().Play(SoundManager::SFX::ENEMY_TAKE_DAMAGE);
 
                     // Spawn one popup per hit (repeatCount times), each showing the
                     // per-hit damage so e.g. atk:4x2 shows two "4"s instead of one "8"
@@ -254,6 +256,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
                     }
 
                     e->getDamage(attackDamage);
+                    SoundManager::Get().Play(SoundManager::SFX::ENEMY_TAKE_DAMAGE);
                     hitThisAttack.insert(e);
                     cellHit = true;
 

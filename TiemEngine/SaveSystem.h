@@ -40,6 +40,7 @@ class SaveSystem {
 public:
     static const std::string SAVE_DIR;
     static const std::string SAVE_FILE;
+    static const std::string PLAYED_FILE;  // marks that the player has seen the tutorial
 
     // Set true before transitioning to a level to trigger save loading in LevelInit.
     static bool pendingLoad;
@@ -48,6 +49,10 @@ public:
     static bool Load(SaveData& outData);
     static bool HasSaveFile();
     static void DeleteSave();
+
+    // Tutorial / first-time-play tracking
+    static bool HasPlayedBefore();   // true if played.dat exists
+    static void MarkPlayed();        // creates played.dat
 
 private:
     static bool EnsureSaveDir();

@@ -82,6 +82,11 @@ void GameStateController::Update()
 			currentLevel->LevelLoad();
 			currentLevel->LevelInit();
 			break;
+		case GameState::GS_TUTORIAL:
+			currentLevel = new TutorialPage();
+			currentLevel->LevelLoad();
+			currentLevel->LevelInit();
+			break;
 		case GameState::GS_LEVEL1:
 			currentLevel = new Level();
 			currentLevel->LevelLoad();
@@ -116,6 +121,11 @@ void GameStateController::Update()
 				break;
 			case GameState::GS_EVENT_PAGE:
 				currentLevel = new EventPage();
+				currentLevel->LevelLoad();
+				currentLevel->LevelInit();
+				break;
+			case GameState::GS_TUTORIAL:
+				currentLevel = new TutorialPage();
 				currentLevel->LevelLoad();
 				currentLevel->LevelInit();
 				break;

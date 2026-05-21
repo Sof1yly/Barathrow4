@@ -8,6 +8,7 @@
 #include "Level3.h"
 #include "MainMenu.h"
 #include "EventPage.h"
+#include "TutorialPage.h"
 
 using namespace std;
 class GameStateController

@@ -158,7 +158,12 @@ void MainMenu::HandleMouse(int type, int x, int y)
 
     if (btnStart.IsClicked(rx, ry))
     {
-        GameData::GetInstance()->gGameStateNext = GameState::GS_EVENT_PAGE;
+        // First-time player: show tutorial and skip blessing.
+        // Returning player: go straight to the blessing (event) page.
+        if (!SaveSystem::HasPlayedBefore())
+            GameData::GetInstance()->gGameStateNext = GameState::GS_TUTORIAL;
+        else
+            GameData::GetInstance()->gGameStateNext = GameState::GS_EVENT_PAGE;
     }
     else if (btnContinue.IsClicked(rx, ry))
     {

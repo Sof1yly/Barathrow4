@@ -8,6 +8,7 @@ enum GameState
 	GS_LEVEL3     = 2,
 	GS_MAIN_MENU  = 3,
 	GS_EVENT_PAGE = 4,
+	GS_TUTORIAL   = 5,
 
 	// special game state. Do not change
 	GS_RESTART,
