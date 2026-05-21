@@ -152,6 +152,16 @@ Enemy::Enemy(EnemyType type)
         );
         objSprite->SetSize(200.0f, -200.0f);
         break;
+	case EnemyType::H:
+        objSprite = new SpriteObject("../Resource/Texture/Enemy/Enemy8.png", 4, 12);
+        objSprite->SetAnimationLoop(
+            0,   // start frame
+            0,   // row
+            2,   // end frame
+            200  // ms per frame
+        );
+        objSprite->SetSize(200.0f, -200.0f);
+		break;
     }
 
     setNowPosition(8, 0);
