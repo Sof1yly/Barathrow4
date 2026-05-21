@@ -79,7 +79,7 @@ void MainMenu::LevelInit()
     InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-699.0f,-255.0f, 3.0f), glm::vec2(193.5f, 29.0f));
     InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-704.0f,-330.0f, 3.0f), glm::vec2(179.5f, 29.0f));
 
-    InitButton(btnCredits, TEX_CREDITS, glm::vec3(-699.0f, -181.0f, 3.0f), glm::vec2(210.5f, 29.0f));
+    InitButton(btnCredits, TEX_CREDITS, glm::vec3(-699.0f, -181.0f, 3.0f), glm::vec2(193.5f, 29.0f));
 
     // Credits overlay — black full-screen cover + text lines (hidden initially)
     {
