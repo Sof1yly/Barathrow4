@@ -1429,7 +1429,7 @@ void Level::HandleKey(char key)
 
     int targetRow = nowRow;
     int targetCol = nowCol;
-
+    
     if (key == 'w' && nowCol > GridStartCol) {
         targetCol--;
         playerDir = PlayerDir::UP;
@@ -1449,6 +1449,7 @@ void Level::HandleKey(char key)
     else {
         return;
     }
+    
 
     if (!IsWalkable(targetRow, targetCol))
     {

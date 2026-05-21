@@ -189,13 +189,13 @@ int main(int argc, char* argv[])
 					switch (sdlEvent.key.keysym.sym)
 					{
 					case SDLK_LEFT:
-					case SDLK_a:	gameStateController->currentLevel->HandleKey('a'); break;
+					//case SDLK_a:	gameStateController->currentLevel->HandleKey('a'); break;
 					case SDLK_RIGHT:
-					case SDLK_d:	gameStateController->currentLevel->HandleKey('d'); break;
+					//case SDLK_d:	gameStateController->currentLevel->HandleKey('d'); break;
 					case SDLK_UP:
-					case SDLK_w:	gameStateController->currentLevel->HandleKey('w'); break;
+					//case SDLK_w:	gameStateController->currentLevel->HandleKey('w'); break;
 					case SDLK_DOWN:
-					case SDLK_s:	gameStateController->currentLevel->HandleKey('s'); break;
+					//case SDLK_s:	gameStateController->currentLevel->HandleKey('s'); break;
 					case SDLK_ESCAPE: gameStateController->currentLevel->HandleKey('\x1b'); break;
 					case SDLK_r: gameStateController->currentLevel->HandleKey('r'); break;
 					case SDLK_e: gameStateController->currentLevel->HandleKey('e'); break;
