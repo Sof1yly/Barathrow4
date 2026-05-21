@@ -1,4 +1,5 @@
 ﻿#include "Level.h"
+#include "SoundManager.h"
 #include "EliteEnemy.h"
 #include "EliteEnemy1.h"
 #include "EliteEnemy2.h"
@@ -952,6 +953,7 @@ void Level::LevelUpdate()
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownIcon()), objectsList.end());
             objectsList.erase(std::remove(objectsList.begin(), objectsList.end(), e->getCountdownText()), objectsList.end());
 
+            SoundManager::Get().Play(SoundManager::SFX::ENEMY_DIES);
             delete e;
             it = enemies.erase(it);
 
@@ -2353,6 +2355,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
     // EliteEnemy1: full-row attack; heals friendly Elite1s it hits
     if (EliteEnemy1* elite1 = dynamic_cast<EliteEnemy1*>(e))
     {
+        SoundManager::Get().Play(SoundManager::SFX::ELITE_A_ATTACK);
         SpawnElite1Projectile(elite1);
 
         auto rowTiles = elite1->GetRowAttackTiles(GridStartRow, GridEndRow);
@@ -2388,11 +2391,13 @@ void Level::ApplyEnemyAttack(Enemy* e)
         std::vector<std::pair<int, int>> hitTiles;
         if (elite2->IsPlayerInPatternRange(lockedRow, lockedCol))
         {
+            SoundManager::Get().Play(SoundManager::SFX::ELITE_B_ATTACK1);
             hitTiles = elite2->GetCurrentPatternTiles();
             elite2->AdvancePattern(); // only advance when in-range pattern fires
         }
         else
         {
+            SoundManager::Get().Play(SoundManager::SFX::ELITE_B_ATTACK2);
             hitTiles = elite2->GetCrossAttackTiles(lockedRow, lockedCol);
             SpawnElite2Projectile(lockedRow, lockedCol);
             // pattern phase stays unchanged — waits for player to step into range
@@ -2416,6 +2421,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
         if (elite3e->IsLineAttack())
         {
+            SoundManager::Get().Play(SoundManager::SFX::ELITE_C_ATTACK2);
             // Pattern 2 (line charge): farthest tile is the landing spot.
             auto lastCell = elite3e->GetLineEndCell(lockedRow, lockedCol);
             bool playerOnLastCell = (nowRow == lastCell.first && nowCol == lastCell.second);
@@ -2442,6 +2448,7 @@ void Level::ApplyEnemyAttack(Enemy* e)
         else
         {
             // Pattern 0 (sweep): spawn bullet + standard directional hit
+            SoundManager::Get().Play(SoundManager::SFX::ELITE_C_ATTACK1);
             SpawnElite3Projectile(elite3e);
 
             for (auto& tile : hitTiles)
@@ -2457,6 +2464,9 @@ void Level::ApplyEnemyAttack(Enemy* e)
 
 
     // Regular enemies (including Boss)
+    if (!dynamic_cast<Boss*>(e))
+        SoundManager::Get().PlayEnemyAttack(e->getType());
+
     int centerRow = e->getNowRow();
     int centerCol = e->getNowCol();
     if (dynamic_cast<Boss*>(e))
@@ -2636,6 +2646,7 @@ void Level::UpdateTurn()
 
                 glm::vec3 world = GridToWorld(newR, newC);
                 e->StartMove(world);
+                SoundManager::Get().PlayEnemyMove(e->getType());
 
                 e->stepsRemaining--;
                 return;

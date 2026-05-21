@@ -59,6 +59,7 @@
     <ClCompile Include="MapScene.cpp" />
     <ClCompile Include="EventPage.cpp" />
     <ClCompile Include="TutorialPage.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Level3.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="LevelManager.cpp" />
@@ -120,6 +121,7 @@
     <ClInclude Include="HighlightManager.h" />
     <ClInclude Include="EventPage.h" />
     <ClInclude Include="TutorialPage.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="Level3.h" />
     <ClInclude Include="MainMenu.h" />
     <ClInclude Include="LevelManager.h" />

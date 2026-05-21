@@ -13,6 +13,7 @@
 #include "LevelManager.h"
 
 #include "Audio.h"
+#include "SoundManager.h"
 
 using namespace std;
 
@@ -105,6 +106,9 @@ int main(int argc, char* argv[])
 	//Sound
 	AudioEngine audio;
 	audio.init();
+
+	// Register all game sound effects with the central manager
+	SoundManager::Get().Init(audio);
 
 	Music music = audio.loadMusic("../Resource/Sound/beat.wav");
 	SoundEffect sound_1 = audio.loadSoundEffect("../Resource/Sound/high.wav");
