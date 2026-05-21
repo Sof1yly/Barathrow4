@@ -153,6 +153,12 @@ private:
     TextObject* viewDeckHintText = nullptr;
     TextObject* viewMapHintText  = nullptr;
 
+    GameObject* turnBannerBg = nullptr;
+    TextObject* turnBannerText = nullptr;
+    int turnBannerState = -1;
+    float turnBannerTimer = 0.0f;
+    float turnBannerDuration = 2000.0f;
+
     Player playerData;
 
     // Render list

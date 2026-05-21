@@ -341,7 +341,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, const GameDataLoa
     {
         TextObject* nameOnCard = new TextObject();
         SDL_Color cardNameColor = { 245, 245, 245, 255 };
-        nameOnCard->LoadText(cardData->getName(), cardNameColor, 22);
+        nameOnCard->LoadText(cardData->getName(), cardNameColor, 28);
 
         glm::vec3 local = cardData->GetNameText()->GetLocalPosition();
         float leftAnchorX = (inspectCardPos.x - (inspectCardW * 0.5f)) + (local.x * inspectCardW);
@@ -356,10 +356,17 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, const GameDataLoa
     if (cardData->GetDescriptionText())
     {
         std::string cardDesc = cardData->getDescription();
+        bool usedGreenTag = false;
         for (Action* a : cardData->getActions())
         {
             if (!a) continue;
-            cardDesc = ReplaceToken(cardDesc, "{" + a->getActionCode() + "}", std::to_string(a->getValue()));
+            const std::string code = a->getActionCode();
+            if (code == "atk" && cardSystem.GetOverclockBonus() > 0) {
+                cardDesc = ReplaceToken(cardDesc, "{atk}", "<green>" + std::to_string(a->getValue()) + "</green>");
+                usedGreenTag = true;
+            } else {
+                cardDesc = ReplaceToken(cardDesc, "{" + code + "}", std::to_string(a->getValue()));
+            }
         }
 
         if (cardData->getOverclockValue() > 0)
@@ -371,7 +378,10 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, const GameDataLoa
 
         TextObject* descOnCard = new TextObject();
         SDL_Color cardDescColor = { 220, 220, 220, 255 };
-        descOnCard->LoadTextWrapped(cardDesc, cardDescColor, 18, 300);
+        if (usedGreenTag)
+            descOnCard->LoadTextWrappedTagged(cardDesc, cardDescColor, 24, 300);
+        else
+            descOnCard->LoadTextWrapped(cardDesc, cardDescColor, 24, 300);
 
         glm::vec3 local = cardData->GetDescriptionText()->GetLocalPosition();
         float leftAnchorX = (inspectCardPos.x - (inspectCardW * 0.5f)) + (local.x * inspectCardW);
@@ -396,7 +406,7 @@ void CardInspect::Show(Card* cardData, CardSystem& cardSystem, const GameDataLoa
         TextObject* body = new TextObject();
         body->SetPosition(glm::vec3(-80.0f, 105.0f, 920.0f));
         SDL_Color bodyColor = { 230, 230, 230, 255 };
-        body->LoadTextWrapped(keywordText, bodyColor, 28, 700);
+        body->LoadTextWrapped(keywordText, bodyColor, 38, 700);
         inspectObjects.push_back(body);
         objectsList.push_back(body);
     }

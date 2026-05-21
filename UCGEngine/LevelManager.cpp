@@ -25,8 +25,8 @@ LevelConfig LevelManager::BuildConfig(int level)
 {
     using T = Enemy::EnemyType;
 
-    const std::vector<T> abc = { T::A, T::B, T::C };
-    const std::vector<T> def = { T::D, T::E, T::F };
+    const std::vector<T> abe = { T::A, T::B, T::E };
+    const std::vector<T> cdf = { T::C, T::D, T::F };
     const std::vector<T> gh  = { T::G, T::H };
 
     LevelConfig cfg;
@@ -36,15 +36,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 1: A-C enemies ------------------------------------------------
     case 1:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 2 } };
+        cfg.groups = { { abe, 2 } };
         break;
     case 2:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 3 } };
+        cfg.groups = { { abe, 3 } };
         break;
     case 3:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 4 } };
+        cfg.groups = { { abe, 4 } };
         break;
     case 4:
         cfg.type = LevelConfig::Type::Shop;
@@ -56,15 +56,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 2: D-F enemies ------------------------------------------------
     case 6:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 2 } };
+        cfg.groups = { { cdf, 2 } };
         break;
     case 7:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 3 } };
+        cfg.groups = { { cdf, 3 } };
         break;
     case 8:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { def, 4 } };
+        cfg.groups = { { cdf, 4 } };
         break;
     case 9:
         cfg.type = LevelConfig::Type::Shop;
@@ -76,15 +76,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 3: G-H + one D-F enemy ----------------------------------------
     case 11:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { gh, 2 }, { def, 1 } };
+        cfg.groups = { { gh, 2 }, { cdf, 1 } };
         break;
     case 12:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { gh, 3 }, { def, 1 } };
+        cfg.groups = { { gh, 3 }, { cdf, 1 } };
         break;
     case 13:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { gh, 4 }, { def, 1 } };
+        cfg.groups = { { gh, 4 }, { cdf, 1 } };
         break;
     case 14:
         cfg.type = LevelConfig::Type::Shop;
@@ -96,15 +96,15 @@ LevelConfig LevelManager::BuildConfig(int level)
     // ---- Act 4: mixed pools ------------------------------------------------
     case 16:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 3 }, { def, 2 }, { gh, 1 } };
+        cfg.groups = { { abe, 3 }, { cdf, 2 }, { gh, 1 } };
         break;
     case 17:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 2 }, { def, 2 }, { gh, 2 } };
+        cfg.groups = { { abe, 2 }, { cdf, 2 }, { gh, 2 } };
         break;
     case 18:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 1 }, { def, 2 }, { gh, 3 } };
+        cfg.groups = { { abe, 1 }, { cdf, 2 }, { gh, 3 } };
         break;
     case 19:
         cfg.type = LevelConfig::Type::Shop;
@@ -115,7 +115,7 @@ LevelConfig LevelManager::BuildConfig(int level)
 
     default:
         cfg.type   = LevelConfig::Type::Combat;
-        cfg.groups = { { abc, 3 } };
+        cfg.groups = { { abe, 3 } };
         break;
     }
 

@@ -366,10 +366,26 @@ void Level::LevelInit()
     }
 
     {
+        turnBannerBg = new GameObject();
+        turnBannerBg->SetSize(1920.0f, 140.0f);
+        turnBannerBg->SetPosition(glm::vec3(0.0f, 320.0f, 9000.0f));
+        turnBannerBg->SetColor(0.45f, 0.1f, 0.65f, 0.7f);
+        objectsList.push_back(turnBannerBg);
+
+        turnBannerText = new TextObject();
+        SDL_Color color = { 255, 255, 255, 255 };
+        turnBannerText->LoadText("PLAYER TURN", color, 64);
+        turnBannerText->SetPosition(glm::vec3(0.0f, 320.0f, 9001.0f));
+        objectsList.push_back(turnBannerText);
+
+        turnBannerTimer = turnBannerDuration;
+    }
+
+    {
         levelText = new TextObject();
         SDL_Color color = { 255, 230, 100, 255 };
         levelText->LoadText(levelManager.GetLevelText(), color, 30);
-        levelText->SetPosition(glm::vec3(750.0f, 460.0f, 10.0f));
+        levelText->SetPosition(glm::vec3(750.0f, 440.0f, 10.0f));
         objectsList.push_back(levelText);
     }
 
@@ -383,7 +399,7 @@ void Level::LevelInit()
         speedBtnText = new TextObject();
         SDL_Color c = { 255, 255, 255, 255 };
         speedBtnText->LoadText("1x", c, 22);
-        speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+        speedBtnText->SetPosition(glm::vec3(-845.0f, 307.0f, 10.0f));
         objectsList.push_back(speedBtnText);
     }
 
@@ -406,6 +422,15 @@ void Level::LevelUpdate()
 
     int deltaTime = GameEngine::GetInstance()->GetDeltaTime();
     if (fastMode) deltaTime *= 2;
+
+    if (turnBannerTimer > 0.0f)
+    {
+        turnBannerTimer -= static_cast<float>(deltaTime);
+        if (turnBannerTimer < 0.0f)
+        {
+            turnBannerTimer = 0.0f;
+        }
+    }
 
     if (pauseMenuActive)
         return;
@@ -1259,7 +1284,7 @@ void Level::HandleKey(char key)
         {
             SDL_Color c = { 255, 255, 255, 255 };
             speedBtnText->LoadText(fastMode ? "2x" : "1x", c, 22);
-            speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+            speedBtnText->SetPosition(glm::vec3(-845.0f, 307.0f, 10.0f));
         }
         return;
     }
@@ -1605,7 +1630,7 @@ void Level::HandleMouse(int type, int x, int y)
             {
                 SDL_Color c = { 255, 255, 255, 255 };
                 speedBtnText->LoadText(fastMode ? "2x" : "1x", c, 22);
-                speedBtnText->SetPosition(glm::vec3(-855.0f, 307.0f, 10.0f));
+                speedBtnText->SetPosition(glm::vec3(-840.0f, 307.0f, 10.0f));
             }
             return;
         }
@@ -2581,6 +2606,43 @@ void Level::UpdateTurn()
 {
     if (turnState == TurnState::PLAYER_MOVING)
         return;
+
+    if (turnBannerText && turnBannerBg)
+    {
+        if (static_cast<int>(turnState) != turnBannerState)
+        {
+            turnBannerState = static_cast<int>(turnState);
+            turnBannerTimer = turnBannerDuration;
+        }
+
+        const char* label = nullptr;
+        switch (turnState)
+        {
+        case TurnState::PLAYER_TURN:
+            label = "PLAYER TURN";
+            break;
+        case TurnState::ENEMY_TURN:
+            label = "ENEMY TURN";
+            break;
+        default:
+            break;
+        }
+
+        if (label && turnBannerTimer > 0.0f)
+        {
+            SDL_Color white = { 255, 255, 255, 255 };
+            turnBannerText->LoadText(label, white, 64);
+            turnBannerBg->SetSize(1920.0f, 140.0f);
+            turnBannerBg->SetPosition(glm::vec3(0.0f, 320.0f, 9000.0f));
+            turnBannerBg->SetColor(0.45f, 0.1f, 0.65f, 0.7f);
+            turnBannerText->SetPosition(glm::vec3(0.0f, 320.0f, 9001.0f));
+        }
+        else
+        {
+            turnBannerBg->SetSize(0.0f, 0.0f);
+            turnBannerText->SetSize(0.0f, 0.0f);
+        }
+    }
 
     switch (turnState)
     {

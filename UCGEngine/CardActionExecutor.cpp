@@ -223,6 +223,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
         // Track who already got hit in THIS attack
         std::unordered_set<Enemy*> hitThisAttack;
         std::vector<std::pair<int, int>> hitCells;
+        std::vector<int> hitCorrupts;
 
         for (const auto& cell : cells)
         {
@@ -239,6 +240,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
             std::cout << "  Attack cell (" << gx << ", " << gy << ")\n";
 
             bool cellHit = false;
+            int cellCorruptBonus = 0;
             for (auto* e : ctx.enemies)
             {
                 if (!e || e->getIsDead()) continue;
@@ -255,6 +257,7 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
                         continue;
                     }
 
+                    cellCorruptBonus = e->getCorruption();
                     e->getDamage(attackDamage);
                     SoundManager::Get().Play(SoundManager::SFX::ENEMY_TAKE_DAMAGE);
                     hitThisAttack.insert(e);
@@ -285,18 +288,24 @@ void CardActionExecutor::ApplyAttackPatterns(CardPlayResult& result, CardPlayCon
             }
 
             if (cellHit)
+            {
                 hitCells.push_back({ gx, gy });
+                hitCorrupts.push_back(cellCorruptBonus);
+            }
         }
 
         // Spawn hit visuals only for cells that actually hit an enemy
         int perHit = pa.resolvedPerHitDamage;
         int repeats = atk->getRepeatCount();
 
-        for (const auto& hc : hitCells)
+        for (int i = 0; i < (int)hitCells.size(); i++)
         {
+            const auto& hc = hitCells[i];
+            int corruptBonus = hitCorrupts[i];
             for (int r = 0; r < repeats; r++)
             {
-                result.hits.push_back({ hc.first, hc.second, perHit, r });
+                int popupDmg = perHit + (r == 0 ? corruptBonus : 0);
+                result.hits.push_back({ hc.first, hc.second, popupDmg, r });
             }
         }
     }

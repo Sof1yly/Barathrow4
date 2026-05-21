@@ -20,6 +20,7 @@ public:
 	void Update(float deltaTime);
 	void LoadText(string text, SDL_Color textColor, int fontSize);
 	void LoadTextWrapped(string text, SDL_Color textColor, int fontSize, int maxWidth);
+	void LoadTextWrappedTagged(const string& taggedText, SDL_Color defaultColor, int fontSize, int maxWidth);
 	unsigned int GetTextureId() const { return texture; }
 	void SetTextureId(unsigned int id) { 
 		if (texture != 0 && ownsTexture) { glDeleteTextures(1, &texture); }

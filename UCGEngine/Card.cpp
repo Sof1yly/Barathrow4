@@ -78,6 +78,18 @@ static string replacePlaceholder(const string& text, const string& token, int va
     return result;
 }
 
+static string replacePlaceholderStr(const string& text, const string& token, const string& value)
+{
+    string result = text;
+    string placeholder = "{" + token + "}";
+    size_t pos = 0;
+    while ((pos = result.find(placeholder, pos)) != string::npos) {
+        result.replace(pos, placeholder.size(), value);
+        pos += value.size();
+    }
+    return result;
+}
+
 Card::Card(const string& n)
     : name(n), description(""), level(0), rarityCode("sta"), typeCode("atk")  
 {
@@ -163,12 +175,20 @@ void Card::CreateVisuals()
     nameText->SetParent(background);
     nameText->SetLocalPosition(glm::vec3(0.31f, 0.34f, 0)); // Normalized: 0.354 of parent height
 
-    // 7. Description Text 
+    // 7. Description Text
     if (!description.empty()) {
         string resolved = description;
+        bool hasAtkBoost = false;
         for (Action* a : actions) {
             const string& code = a->getActionCode();
-            if (code == "atk" || code == "mov" || code == "re" || code == "oc" || code == "jmp") {
+            if (code == "atk") {
+                if (a->getValue() > a->getBaseValue()) {
+                    resolved = replacePlaceholderStr(resolved, "atk", "<green>" + to_string(a->getValue()) + "</green>");
+                    hasAtkBoost = true;
+                } else {
+                    resolved = replacePlaceholder(resolved, "atk", a->getValue());
+                }
+            } else if (code == "mov" || code == "re" || code == "oc" || code == "jmp") {
                 resolved = replacePlaceholder(resolved, code, a->getValue());
             }
         }
@@ -179,9 +199,12 @@ void Card::CreateVisuals()
 
         descriptionText = new TextObject();
         SDL_Color descColor = { 220, 220, 220, 255 };
-        descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
+        if (hasAtkBoost)
+            descriptionText->LoadTextWrappedTagged(resolved, descColor, 20, 240);
+        else
+            descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
         descriptionText->SetParent(background);
-        descriptionText->SetLocalPosition(glm::vec3(0.21f, -0.235f, 0)); // Normalized: -0.256 of parent height
+        descriptionText->SetLocalPosition(glm::vec3(0.21f, -0.235f, 0));
     }
 
     visualsCreated = true;
@@ -207,9 +230,17 @@ void Card::RefreshDescriptionText()
     if (!visualsCreated || description.empty()) return;
 
     string resolved = description;
+    bool hasAtkBoost = false;
     for (Action* a : actions) {
         const string& code = a->getActionCode();
-        if (code == "atk" || code == "mov" || code == "re" || code == "oc") {
+        if (code == "atk") {
+            if (a->getValue() > a->getBaseValue()) {
+                resolved = replacePlaceholderStr(resolved, "atk", "<green>" + to_string(a->getValue()) + "</green>");
+                hasAtkBoost = true;
+            } else {
+                resolved = replacePlaceholder(resolved, "atk", a->getValue());
+            }
+        } else if (code == "mov" || code == "re" || code == "oc") {
             resolved = replacePlaceholder(resolved, code, a->getValue());
         }
     }
@@ -220,7 +251,10 @@ void Card::RefreshDescriptionText()
 
     if (descriptionText) {
         SDL_Color descColor = { 220, 220, 220, 255 };
-        descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
+        if (hasAtkBoost)
+            descriptionText->LoadTextWrappedTagged(resolved, descColor, 20, 240);
+        else
+            descriptionText->LoadTextWrapped(resolved, descColor, 20, 240);
     }
 }
 
