@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "SoundManager.h"
 
 int Player::getHp() const { return hp; }
 void Player::setHp(int value) { hp = value; }
@@ -355,6 +356,7 @@ void Player::SetPlayerWalk(int dir)
 void Player::SetPlayerAttack(int dir) //punch attack
 {
     if (!sprite || isDead) return;
+    SoundManager::Get().Play(SoundManager::SFX::PLAYER_ATTACK_MELEE);
 
     switch (dir)
     {
@@ -368,6 +370,7 @@ void Player::SetPlayerAttack(int dir) //punch attack
 void Player::SetPlayerAttackAoe(int dir) //sword attack
 {
     if (!sprite || isDead) return;
+    SoundManager::Get().Play(SoundManager::SFX::PLAYER_ATTACK_MELEE_SPIN);
     switch (dir)
     {
     case 0: sprite->SetAnimationOnce(5, 0, 8, 100); break;
@@ -399,6 +402,7 @@ void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
 void Player::SetPlayerAttackRange(int dir) //gun attack
 {
     if (!sprite || isDead) return;
+    SoundManager::Get().Play(SoundManager::SFX::PLAYER_ATTACK_RANGE);
     switch (dir)
     {
     case 0: sprite->SetAnimationOnce(4, 0, 4, 100); break;
