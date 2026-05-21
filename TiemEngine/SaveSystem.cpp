@@ -5,8 +5,9 @@
 #include <cstdio>     // std::remove
 #include <direct.h>   // _mkdir on Windows
 
-const std::string SaveSystem::SAVE_DIR  = "../Resource/GameData/Save";
-const std::string SaveSystem::SAVE_FILE = "../Resource/GameData/Save/save.dat";
+const std::string SaveSystem::SAVE_DIR    = "../Resource/GameData/Save";
+const std::string SaveSystem::SAVE_FILE   = "../Resource/GameData/Save/save.dat";
+const std::string SaveSystem::PLAYED_FILE = "../Resource/GameData/Save/played.dat";
 bool              SaveSystem::pendingLoad = false;
 
 bool SaveSystem::EnsureSaveDir()
@@ -116,4 +117,21 @@ void SaveSystem::DeleteSave()
 {
     std::remove(SAVE_FILE.c_str());
     std::cout << "[Save] Save file deleted.\n";
+}
+
+bool SaveSystem::HasPlayedBefore()
+{
+    std::ifstream f(PLAYED_FILE);
+    return f.good();
+}
+
+void SaveSystem::MarkPlayed()
+{
+    EnsureSaveDir();
+    std::ofstream f(PLAYED_FILE);
+    if (f.is_open())
+    {
+        f << "played\n";
+        std::cout << "[Save] Marked as played.\n";
+    }
 }
