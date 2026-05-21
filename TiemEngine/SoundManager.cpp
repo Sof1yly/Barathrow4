@@ -53,7 +53,7 @@ static const char* FILE_PATHS[] =
 
     // ---- UI ----
     /* UI_CLICK      */ "../Resource/Sound/UI_Sound/UI_Click.mp3",
-    /* UI_HOVER_CARD */ "../Resource/Sound/low.wav",
+    /* UI_HOVER_CARD */ "../Resource/Sound/UI_Sound/Card_OnHover.mp3",
     /* UI_SHOP_BUY   */ "../Resource/Sound/UI_Sound/Shop_Buy.mp3",
     /* UI_LOOT_COIN  */ "../Resource/Sound/UI_Sound/Collecting_Loot.mp3",
 };
