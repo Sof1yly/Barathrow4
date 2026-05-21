@@ -13,6 +13,7 @@ static const char* TEX_START    = "../Resource/Texture/UI/Menu/START GAME.png";
 static const char* TEX_CONT     = "../Resource/Texture/UI/Menu/CONTINUE.png";
 static const char* TEX_ABANDON  = "../Resource/Texture/UI/Menu/ABANDON RUN.png";
 static const char* TEX_SETTINGS = "../Resource/Texture/UI/Menu/SETTINGS.png";
+static const char* TEX_CREDITS  = "../Resource/Texture/UI/Menu/CREDITS.png";
 static const char* TEX_QUIT     = "../Resource/Texture/UI/Menu/QUIT GAME.png";
 
 void MainMenu::InitButton(MenuButton& btn, const std::string& texPath,glm::vec3 pos, glm::vec2 size)
@@ -78,18 +79,7 @@ void MainMenu::LevelInit()
     InitButton(btnSettings, TEX_SETTINGS, glm::vec3(-699.0f,-255.0f, 3.0f), glm::vec2(193.5f, 29.0f));
     InitButton(btnQuit,     TEX_QUIT,     glm::vec3(-704.0f,-330.0f, 3.0f), glm::vec2(179.5f, 29.0f));
 
-    // Credits button (text-only, no texture image)
-    {
-        btnCredits.pos  = glm::vec3(-699.0f, -181.0f, 3.0f);
-        btnCredits.size = glm::vec2(193.5f, 29.0f);
-        btnCredits.bg   = nullptr;
-        SDL_Color white = { 255, 255, 255, 255 };
-        btnCredits.label = new TextObject();
-        btnCredits.label->LoadText("CREDITS", white, 24);
-        btnCredits.label->SetSize(193.5f, -29.0f);
-        btnCredits.label->SetPosition(btnCredits.pos);
-        objectsList.push_back(btnCredits.label);
-    }
+    InitButton(btnCredits, TEX_CREDITS, glm::vec3(-699.0f, -181.0f, 3.0f), glm::vec2(210.5f, 29.0f));
 
     // Credits overlay — black full-screen cover + text lines (hidden initially)
     {

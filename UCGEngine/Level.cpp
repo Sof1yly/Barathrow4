@@ -1209,6 +1209,9 @@ void Level::LevelFree()
     rewardPickedAfterWin = false;
     shopOpenedAfterWin = false;
     inShopOnlyLevel = false;
+    endCreditsActive  = false;
+    endCreditsOverlay = nullptr;
+    endCreditTexts.clear();
     levelManager.Reset();
     gridTiles.clear();
     Background = nullptr;
@@ -1239,6 +1242,14 @@ void Level::LevelUnload()
 
 void Level::HandleKey(char key)
 {
+    // End credits: any key clears save and returns to main menu
+    if (endCreditsActive)
+    {
+        SaveSystem::DeleteSave();
+        GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+        return;
+    }
+
     // Restart and quit are always allowed, regardless of turn state
     if (key == 'r')
     {
@@ -1478,6 +1489,17 @@ void Level::HandleMouse(int type, int x, int y)
     float realX = (x - winW / 2.0f) * (scaleW / winW);
     float realY = (winH / 2.0f - y) * (scaleH / winH);
     glm::vec3 mousePos(realX, realY, 0.0f);
+
+    // End credits: click dismisses and returns to main menu
+    if (endCreditsActive)
+    {
+        if (type == 0)
+        {
+            SaveSystem::DeleteSave();
+            GameData::GetInstance()->gGameStateNext = GameState::GS_MAIN_MENU;
+        }
+        return;
+    }
 
     // Route all input to the game-over screen while it is active
     if (gameOverScreenActive)
@@ -3605,6 +3627,17 @@ void Level::SpawnEnemiesForLevel()
 void Level::AdvanceToNextRound()
 {
     int fromLevel = levelManager.GetLevel();
+
+    // Boss level complete — show end credits instead of the map
+    if (fromLevel == 20)
+    {
+        rewardBoxScene.Close(objectsList);
+        cardInspect.Hide(objectsList);
+        if (deckViewer.IsActive()) deckViewer.Hide(objectsList);
+        ShowEndCredits();
+        return;
+    }
+
     levelManager.Advance();
     int toLevel = levelManager.GetLevel();
 
@@ -3616,6 +3649,41 @@ void Level::AdvanceToNextRound()
     // Show the map scene with fade-in, player walk, fade-out
     mapScene.Open(fromLevel, toLevel, objectsList);
     mapSceneActive = true;
+}
+
+void Level::ShowEndCredits()
+{
+    endCreditsActive = true;
+
+    endCreditsOverlay = new ImageObject();
+    endCreditsOverlay->SetTexture("../Resource/Texture/UI/Menu/BG.png");
+    endCreditsOverlay->SetColor(0.0f, 0.0f, 0.0f);
+    endCreditsOverlay->SetSize(1920.0f, -1080.0f);
+    endCreditsOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 50.0f));
+    objectsList.push_back(endCreditsOverlay);
+
+    SDL_Color white = { 255, 255, 255, 255 };
+    auto addLine = [&](const char* text, float y, int fontSize) {
+        auto* t = new TextObject();
+        t->LoadText(text, white, fontSize);
+        t->SetPosition(glm::vec3(0.0f, y, 51.0f));
+        endCreditTexts.push_back(t);
+        objectsList.push_back(t);
+    };
+
+    addLine("- CREDITS -",                                                               500.0f, 36);
+    addLine("Game Designer & Game Director - Thanpat Pathomkasikul",                    400.0f, 28);
+    addLine("Producer & Programmer - Pupa Thapanapongpaiboon",                          350.0f, 28);
+    addLine("Lead Programmer  - Puri Ngamrumyong",                                      300.0f, 28);
+    addLine("Art Director - Nichapa Boonjaiyai",                                         250.0f, 28);
+    addLine("Concept & Environment Artist - Natthaya Deepichan",                         200.0f, 28);
+    addLine("Concept & Character Artist - Chayapol Chotivanich",                         150.0f, 28);
+    addLine("- Sound -",                                                                  50.0f, 36);
+    addLine("BGM - Cyberpunk Synthwave - Alan Souls",                                      0.0f, 28);
+    addLine("SFX - Pixabay - Various Artist",                                            -50.0f, 28);
+    addLine("The Game is made as an in-class project for DD290 Digital Design Project and DT230 Advance Project.", -200.0f, 28);
+    addLine("The project in its entirety belongs to (C) COPYRIGHT 2026 DIGITAL DESIGN AND CREATIVE TECHNOLOGY. All Rights Reserved.", -250.0f, 28);
+    addLine("Press any key to return to main menu",                                     -360.0f, 22);
 }
 
 void Level::ResetForNextCombat()

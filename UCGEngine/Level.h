@@ -401,7 +401,14 @@ public:
     void SetPlayerSpawnPosition();
 
     void UpdateBossPlayerPos();
+
+    void ShowEndCredits();
+
 private:
+    bool endCreditsActive = false;
+    ImageObject* endCreditsOverlay = nullptr;
+    std::vector<TextObject*> endCreditTexts;
+
     void InitBossLevel();
     void SpawnEnemiesForLevel();
     void RestoreEnemiesFromSave(const SaveData& sd);
