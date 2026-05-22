@@ -1443,7 +1443,7 @@ void Level::HandleKey(char key)
 
     int targetRow = nowRow;
     int targetCol = nowCol;
-
+    
     if (key == 'w' && nowCol > GridStartCol) {
         targetCol--;
         playerDir = PlayerDir::UP;
@@ -1463,6 +1463,7 @@ void Level::HandleKey(char key)
     else {
         return;
     }
+    
 
     if (!IsWalkable(targetRow, targetCol))
     {
@@ -2833,6 +2834,11 @@ void Level::UpdateTurn()
 
         if (EnemyCanAttackPlayer(e) && !e->isPreparingAttack())
         {
+            // Elite1: tick move cooldown so the turn spent entering attack prep
+            // doesn't later cause a wasted idle turn when resuming movement.
+            if (EliteEnemy1* e1 = dynamic_cast<EliteEnemy1*>(e))
+                e1->TickMoveCooldown();
+
             e->setPreparingAttack(true);
             e->setCountDownR();
             e->LockAttackPattern(nowRow, nowCol);
