@@ -389,7 +389,7 @@ void Player::SetPlayerAttackByPatternId(const std::string& patternId, int dir)
     {
         SetPlayerAttackAoe(dir);
     }
-    else if (patNum == 11 || (patNum >= 14 && patNum <= 17))
+    else if (patNum == 11 || (patNum >= 14 && patNum <= 17) || patNum == 22 || patNum == 24)
     {
         SetPlayerAttackRange(dir);
     }
