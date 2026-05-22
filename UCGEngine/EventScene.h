@@ -101,9 +101,19 @@ private:
         {
             TextObject* title = new TextObject();
             SDL_Color white = { 245, 245, 245, 255 };
-            title->LoadText("Choose a Blessing", white, 38);
-            title->SetPosition(glm::vec3(0.0f, 130.0f, 705.0f));
+            title->LoadText("Back again so soon?", white, 30);
+            title->SetPosition(glm::vec3(0.0f, 85.0f, 705.0f));
             Push(title, objectsList);
+
+            TextObject* title1 = new TextObject();
+            title1->LoadText("A pity", white, 30);
+            title1->SetPosition(glm::vec3(0.0f, 35.0f, 705.0f));
+            Push(title1, objectsList);
+
+            TextObject* title2 = new TextObject();
+            title2->LoadText("Here's a little something so you won't quit", white, 30);
+            title2->SetPosition(glm::vec3(0.0f, -15.0f, 705.0f));
+            Push(title2, objectsList);
         }
 
         const float BOX_W  = 735.0f;
@@ -180,12 +190,12 @@ public:
 
         static const Option ALL_OPTIONS[] = {
             { EffectType::EXTRA_DRAW,      "Extra Draw",  "Draw an extra card at the start of each turn"   },
-            { EffectType::GOLD_BONUS,      "Gold Rush",   "Gain bonus gold at the end of each round"       },
-            { EffectType::START_BARRIER,   "Fortified",   "Begin each level with a protective barrier"     },
-            { EffectType::START_OVERCLOCK, "Overclock",   "Start each level in an overclocked state"       },
-            { EffectType::MAX_HP,          "Vitality",    "Increase your maximum health permanently"       },
-            { EffectType::CURRENCY,        "Windfall",    "Receive a windfall of bonus currency"           },
-            { EffectType::REMOVE_CARDS,    "Purge",       "Remove unwanted cards from your deck"           },
+            { EffectType::GOLD_BONUS,      "Gold Rush",   "Gain 15% bonus gold at the end of each combat"       },
+            { EffectType::START_BARRIER,   "Fortified",   "Begin each level with a barrier"     },
+            { EffectType::START_OVERCLOCK, "Overclock",   "Start each level with 3 overclock"       },
+            { EffectType::MAX_HP,          "Vitality",    "Increase your maximum health by 10 permanently"       },
+            { EffectType::CURRENCY,        "Windfall",    "Receive a 300 extra starting currency"           },
+            { EffectType::REMOVE_CARDS,    "Purge",       "Remove 2 cards from your deck"           },
         };
         static constexpr int N = (int)(sizeof(ALL_OPTIONS) / sizeof(ALL_OPTIONS[0]));
 
