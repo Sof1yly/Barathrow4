@@ -437,7 +437,7 @@ void Level::LevelInit()
             tutDragHint->LoadText("Drag a card toward a direction!", yellow, 30);
             tutDragBaseW = std::abs(tutDragHint->GetSize().x);
             tutDragBaseH = std::abs(tutDragHint->GetSize().y);
-            tutDragHint->SetPosition(glm::vec3(0.0f, -195.0f, 850.0f));
+            tutDragHint->SetPosition(glm::vec3(0.0f, -195.0f, 100.0f));
             objectsList.push_back(tutDragHint);
         }
         // Step 1: One card per turn (hidden until step 0 done)
@@ -458,7 +458,7 @@ void Level::LevelInit()
             tutEnemyZoneHint->LoadText("Red tiles = enemy attack zone!", red, 24);
             tutEnemyZoneBaseW = std::abs(tutEnemyZoneHint->GetSize().x);
             tutEnemyZoneBaseH = std::abs(tutEnemyZoneHint->GetSize().y);
-            tutEnemyZoneHint->SetPosition(glm::vec3(-180.0f, 475.0f, 850.0f));
+            tutEnemyZoneHint->SetPosition(glm::vec3(0.0f, 475.0f, 850.0f));
             tutEnemyZoneHint->SetAlpha(0.0f);
             objectsList.push_back(tutEnemyZoneHint);
         }
@@ -469,7 +469,7 @@ void Level::LevelInit()
             tutEnemyCountHint->LoadText("Number = turns before enemy attacks", orange, 22);
             tutEnemyCountBaseW = std::abs(tutEnemyCountHint->GetSize().x);
             tutEnemyCountBaseH = std::abs(tutEnemyCountHint->GetSize().y);
-            tutEnemyCountHint->SetPosition(glm::vec3(180.0f, 475.0f, 850.0f));
+            tutEnemyCountHint->SetPosition(glm::vec3(0.0f, 430.0f, 850.0f));
             tutEnemyCountHint->SetAlpha(0.0f);
             objectsList.push_back(tutEnemyCountHint);
         }
@@ -545,13 +545,20 @@ void Level::LevelUpdate()
 
     // Tutorial hint pulse (bigger/smaller to catch player's eye)
     if (tutStep >= 0 && tutStep <= 5)
-        tutPulseTimer += deltaTime * 0.004f;
+        tutPulseTimer += deltaTime * 0.0015f;
 
     auto tutPulse = [&](TextObject* h, float bW, float bH, float amp) {
         if (h && bW > 0.0f) { float s = 1.0f + amp * sinf(tutPulseTimer); h->SetSize(bW * s, -bH * s); }
     };
     switch (tutStep) {
-    case 0: tutPulse(tutDragHint,       tutDragBaseW,       tutDragBaseH,       0.22f); break;
+    case 0: {
+        // Hide drag hints while EventRemoveScene is open (overlay doesn't fully cover them)
+        float a = eventRemoveScene.IsActive() ? 0.0f : 1.0f;
+        if (tutDragHint)  tutDragHint->SetAlpha(a);
+        if (tutArrowDrag) tutArrowDrag->SetAlpha(a);
+        tutPulse(tutDragHint, tutDragBaseW, tutDragBaseH, 0.22f);
+        break;
+    }
     case 1: tutPulse(tutOneCardHint,    tutOneCardBaseW,    tutOneCardBaseH,    0.18f); break;
     case 2:
         // Sub-phase: when any preparing enemy countdown hits 0, switch hint text to "damage"
@@ -566,7 +573,7 @@ void Level::LevelUpdate()
                         tutEnemyCountBaseW = std::abs(tutEnemyCountHint->GetSize().x);
                         tutEnemyCountBaseH = std::abs(tutEnemyCountHint->GetSize().y);
                         // Recenter now that zone hint is gone
-                        tutEnemyCountHint->SetPosition(glm::vec3(0.0f, 475.0f, 850.0f));
+                        tutEnemyCountHint->SetPosition(glm::vec3(0.0f, 430.0f, 850.0f));
                     }
                     break;
                 }
