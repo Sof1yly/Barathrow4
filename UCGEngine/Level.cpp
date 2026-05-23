@@ -56,10 +56,26 @@ void Level::LevelInit()
 {
 	boss = levelManager.IsBossLevel();
 	srand((unsigned int)time(NULL));
+
+	// Pick floor textures based on level
+	// Floor3: levels 5, 10, 15, 20
+	// Floor2: levels 11-14, 16-19
+	// Floor1: levels 1-4, 6-9
+	int lv = levelManager.GetLevel();
+	const char* bgTex   = "../Resource/Texture/BG/Floor1_FHD.PNG";
+	const char* gridTex = "../Resource/Texture/BG/F1Grid.png";
+	if (lv == 5 || lv == 10 || lv == 15 || lv == 20) {
+		bgTex   = "../Resource/Texture/BG/Floor3_FHD.PNG";
+		gridTex = "../Resource/Texture/BG/F3Grid.png";
+	} else if (lv >= 11 && lv <= 19) {
+		bgTex   = "../Resource/Texture/BG/Floor2_FHD.PNG";
+		gridTex = "../Resource/Texture/BG/F2Grid.png";
+	}
+
 	Background = new ImageObject();
 	Background->SetSize(1920.0f, -1080.0f);
 	Background->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	Background->SetTexture("../Resource/Texture/BG/Floor1_FHD.PNG");
+	Background->SetTexture(bgTex);
 	objectsList.push_back(Background);
 
 	// Initialize player state
@@ -93,7 +109,7 @@ void Level::LevelInit()
                 continue;
 
             ImageObject* tile = new ImageObject();
-            tile->SetTexture("../Resource/Texture/BG/F1Grid.png");
+            tile->SetTexture(gridTex);
             tile->SetSize(GridWide, GridHigh);
             tile->SetPosition(glm::vec3(
                 i * 101.0f - 404.0f,
@@ -122,6 +138,7 @@ void Level::LevelInit()
             nowRow              = pendingSave.playerRow;
             nowCol              = pendingSave.playerCol;
             levelManager.SetLevel(pendingSave.currentLevel);
+            UpdateFloorTextures(); // fix textures now that level is known
             baseHandSize        = pendingSave.baseHandSize;
             goldBonusActive     = pendingSave.goldBonusActive;
             startCombatBarrier  = pendingSave.startCombatBarrier;
@@ -3778,8 +3795,27 @@ void Level::ShowEndCredits()
     addLine("Press any key to return to main menu",                                     -360.0f, 22);
 }
 
+void Level::UpdateFloorTextures()
+{
+    int lv = levelManager.GetLevel();
+    const char* bgTex   = "../Resource/Texture/BG/Floor1_FHD.PNG";
+    const char* gridTex = "../Resource/Texture/BG/F1Grid.png";
+    if (lv == 5 || lv == 10 || lv == 15 || lv == 20) {
+        bgTex   = "../Resource/Texture/BG/Floor3_FHD.PNG";
+        gridTex = "../Resource/Texture/BG/F3Grid.png";
+    } else if (lv >= 11 && lv <= 19) {
+        bgTex   = "../Resource/Texture/BG/Floor2_FHD.PNG";
+        gridTex = "../Resource/Texture/BG/F2Grid.png";
+    }
+    if (Background) Background->SetTexture(bgTex);
+    for (auto* tile : gridTiles) tile->SetTexture(gridTex);
+}
+
 void Level::ResetForNextCombat()
 {
+    // Update floor background and grid tile textures for the new level
+    UpdateFloorTextures();
+
     // Update level indicator UI
     if (winText)   winText->SetPosition(glm::vec3(0.0f, 10000.0f, 10.0f));
     if (levelText)

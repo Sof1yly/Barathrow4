@@ -414,5 +414,6 @@ private:
     void RestoreEnemiesFromSave(const SaveData& sd);
     void LoadEnemyData();
     void ResetForNextCombat();
+    void UpdateFloorTextures();
 
 };
