@@ -428,6 +428,95 @@ void Level::LevelInit()
         ApplyEventEffect(EventScene::EffectType::REMOVE_CARDS);
     }
 
+    // Level-1 tutorial hints (new game only, not shown on continue) — sequential steps 0-5
+    if (levelManager.GetLevel() == 1 && !SaveSystem::pendingLoad) {
+        // Step 0: Drag hint
+        {
+            SDL_Color yellow = { 255, 220, 60, 255 };
+            tutDragHint = new TextObject();
+            tutDragHint->LoadText("Drag a card toward a direction!", yellow, 30);
+            tutDragBaseW = std::abs(tutDragHint->GetSize().x);
+            tutDragBaseH = std::abs(tutDragHint->GetSize().y);
+            tutDragHint->SetPosition(glm::vec3(0.0f, -195.0f, 850.0f));
+            objectsList.push_back(tutDragHint);
+        }
+        // Step 1: One card per turn (hidden until step 0 done)
+        {
+            SDL_Color white = { 255, 255, 255, 255 };
+            tutOneCardHint = new TextObject();
+            tutOneCardHint->LoadText("You can only play 1 card per turn!", white, 26);
+            tutOneCardBaseW = std::abs(tutOneCardHint->GetSize().x);
+            tutOneCardBaseH = std::abs(tutOneCardHint->GetSize().y);
+            tutOneCardHint->SetPosition(glm::vec3(0.0f, -195.0f, 850.0f));
+            tutOneCardHint->SetAlpha(0.0f);
+            objectsList.push_back(tutOneCardHint);
+        }
+        // Step 2: Enemy attack zone hint — left of centre, above grid (hidden until step 1 done)
+        {
+            SDL_Color red = { 255, 100, 100, 255 };
+            tutEnemyZoneHint = new TextObject();
+            tutEnemyZoneHint->LoadText("Red tiles = enemy attack zone!", red, 24);
+            tutEnemyZoneBaseW = std::abs(tutEnemyZoneHint->GetSize().x);
+            tutEnemyZoneBaseH = std::abs(tutEnemyZoneHint->GetSize().y);
+            tutEnemyZoneHint->SetPosition(glm::vec3(-180.0f, 475.0f, 850.0f));
+            tutEnemyZoneHint->SetAlpha(0.0f);
+            objectsList.push_back(tutEnemyZoneHint);
+        }
+        // Step 2: Countdown / damage hint — right of centre (text changes when countdown hits 0)
+        {
+            SDL_Color orange = { 255, 180, 50, 255 };
+            tutEnemyCountHint = new TextObject();
+            tutEnemyCountHint->LoadText("Number = turns before enemy attacks", orange, 22);
+            tutEnemyCountBaseW = std::abs(tutEnemyCountHint->GetSize().x);
+            tutEnemyCountBaseH = std::abs(tutEnemyCountHint->GetSize().y);
+            tutEnemyCountHint->SetPosition(glm::vec3(180.0f, 475.0f, 850.0f));
+            tutEnemyCountHint->SetAlpha(0.0f);
+            objectsList.push_back(tutEnemyCountHint);
+        }
+        // Step 3: Draw pile hint — above draw pile button (hidden until step 2 done)
+        {
+            SDL_Color cyan = { 100, 220, 255, 255 };
+            tutDrawPileHint = new TextObject();
+            tutDrawPileHint->LoadTextWrapped(
+                "Click draw pile: costs 1 turn. At 0: draw FREE!", cyan, 20, 240);
+            tutDrawBaseW = std::abs(tutDrawPileHint->GetSize().x);
+            tutDrawBaseH = std::abs(tutDrawPileHint->GetSize().y);
+            tutDrawPileHint->SetPosition(glm::vec3(810.0f, -200.0f, 850.0f));
+            tutDrawPileHint->SetAlpha(0.0f);
+            objectsList.push_back(tutDrawPileHint);
+        }
+        // Step 4: View deck guide — below VIEW DECK button (hidden until step 3 done)
+        {
+            SDL_Color green = { 100, 255, 150, 255 };
+            tutViewDeckGuide = new TextObject();
+            tutViewDeckGuide->LoadText("Click VIEW DECK to see all your cards!", green, 22);
+            tutViewDeckGuideW = std::abs(tutViewDeckGuide->GetSize().x);
+            tutViewDeckGuideH = std::abs(tutViewDeckGuide->GetSize().y);
+            tutViewDeckGuide->SetPosition(glm::vec3(710.0f, 448.0f, 855.0f));
+            tutViewDeckGuide->SetAlpha(0.0f);
+            objectsList.push_back(tutViewDeckGuide);
+        }
+        // Step 5: Inspect hint — above deck viewer cards (z=2000 renders above viewer)
+        {
+            SDL_Color cyan = { 100, 220, 255, 255 };
+            tutInspectHint = new TextObject();
+            tutInspectHint->LoadText("Right click any card to inspect it!", cyan, 26);
+            tutInspectBaseW = std::abs(tutInspectHint->GetSize().x);
+            tutInspectBaseH = std::abs(tutInspectHint->GetSize().y);
+            tutInspectHint->SetPosition(glm::vec3(0.0f, 420.0f, 2000.0f));
+            tutInspectHint->SetAlpha(0.0f);
+            objectsList.push_back(tutInspectHint);
+        }
+        // Arrow for step 0 only — "V" below drag hint pointing at cards
+        {
+            SDL_Color yellow = { 255, 220, 60, 255 };
+            tutArrowDrag = new TextObject();
+            tutArrowDrag->LoadText("V", yellow, 42);
+            tutArrowDrag->SetPosition(glm::vec3(0.0f, -240.0f, 850.0f));
+            objectsList.push_back(tutArrowDrag);
+        }
+    }
+
     settingPage.Init(objectsList);
     pauseMenu.Init(objectsList);
     pauseMenu.InitGameOver(objectsList);
@@ -453,6 +542,43 @@ void Level::LevelUpdate()
 
     if (pauseMenuActive)
         return;
+
+    // Tutorial hint pulse (bigger/smaller to catch player's eye)
+    if (tutStep >= 0 && tutStep <= 5)
+        tutPulseTimer += deltaTime * 0.004f;
+
+    auto tutPulse = [&](TextObject* h, float bW, float bH, float amp) {
+        if (h && bW > 0.0f) { float s = 1.0f + amp * sinf(tutPulseTimer); h->SetSize(bW * s, -bH * s); }
+    };
+    switch (tutStep) {
+    case 0: tutPulse(tutDragHint,       tutDragBaseW,       tutDragBaseH,       0.22f); break;
+    case 1: tutPulse(tutOneCardHint,    tutOneCardBaseW,    tutOneCardBaseH,    0.18f); break;
+    case 2:
+        // Sub-phase: when any preparing enemy countdown hits 0, switch hint text to "damage"
+        if (!tutEnemyDamagePhase) {
+            for (auto* e : enemies) {
+                if (e && !e->getIsDead() && e->isPreparingAttack() && e->getCountDownR() == 0) {
+                    tutEnemyDamagePhase = true;
+                    if (tutEnemyZoneHint)  { tutEnemyZoneHint->SetAlpha(0.0f); }
+                    if (tutEnemyCountHint) {
+                        SDL_Color orange = { 255, 140, 0, 255 };
+                        tutEnemyCountHint->LoadText("Enemy attacks! Number = damage they deal", orange, 22);
+                        tutEnemyCountBaseW = std::abs(tutEnemyCountHint->GetSize().x);
+                        tutEnemyCountBaseH = std::abs(tutEnemyCountHint->GetSize().y);
+                        // Recenter now that zone hint is gone
+                        tutEnemyCountHint->SetPosition(glm::vec3(0.0f, 475.0f, 850.0f));
+                    }
+                    break;
+                }
+            }
+        }
+        tutPulse(tutEnemyZoneHint,  tutEnemyZoneBaseW,  tutEnemyZoneBaseH,  0.15f);
+        tutPulse(tutEnemyCountHint, tutEnemyCountBaseW, tutEnemyCountBaseH, 0.15f);
+        break;
+    case 3: tutPulse(tutDrawPileHint,   tutDrawBaseW,       tutDrawBaseH,       0.18f); break;
+    case 4: tutPulse(tutViewDeckGuide,  tutViewDeckGuideW,  tutViewDeckGuideH,  0.18f); break;
+    case 5: tutPulse(tutInspectHint,    tutInspectBaseW,    tutInspectBaseH,    0.20f); break;
+    }
 
     if (settingPageActive)
     {
@@ -1231,6 +1357,17 @@ void Level::LevelFree()
     endCreditsActive  = false;
     endCreditsOverlay = nullptr;
     endCreditTexts.clear();
+    tutStep              = 0;
+    tutPulseTimer        = 0.0f;
+    tutDragHint          = nullptr; tutDragBaseW       = 0.0f; tutDragBaseH       = 0.0f;
+    tutOneCardHint       = nullptr; tutOneCardBaseW    = 0.0f; tutOneCardBaseH    = 0.0f;
+    tutEnemyZoneHint     = nullptr; tutEnemyZoneBaseW  = 0.0f; tutEnemyZoneBaseH  = 0.0f;
+    tutEnemyCountHint    = nullptr; tutEnemyCountBaseW = 0.0f; tutEnemyCountBaseH = 0.0f;
+    tutEnemyDamagePhase  = false;
+    tutDrawPileHint      = nullptr; tutDrawBaseW       = 0.0f; tutDrawBaseH       = 0.0f;
+    tutViewDeckGuide     = nullptr; tutViewDeckGuideW  = 0.0f; tutViewDeckGuideH  = 0.0f;
+    tutInspectHint       = nullptr; tutInspectBaseW    = 0.0f; tutInspectBaseH    = 0.0f;
+    tutArrowDrag = nullptr;
     levelManager.Reset();
     gridTiles.clear();
     Background = nullptr;
@@ -1313,7 +1450,7 @@ void Level::HandleKey(char key)
 
     if (key == 'o')
     {
-        levelManager.SetLevel(17); // SetLevel(17) so Advance() brings it to 18
+        levelManager.SetLevel(17);
         AdvanceToNextRound();
         return;
     }
@@ -1367,6 +1504,7 @@ void Level::HandleKey(char key)
         if (deckViewer.IsActive())
         {
             deckViewer.Hide(objectsList);
+            if (tutStep == 5) { tutStep = 6; if (tutInspectHint) tutInspectHint->SetAlpha(0.0f); }
         }
         else
         {
@@ -1374,6 +1512,7 @@ void Level::HandleKey(char key)
             const vector<Card*>& allCards = cardSystem.GetFullCollection();
             deckViewer.SetDeck(allCards);
             deckViewer.Show(objectsList);
+            if (tutStep == 4) { tutStep = 5; if (tutViewDeckGuide) tutViewDeckGuide->SetAlpha(0.0f); if (tutInspectHint) tutInspectHint->SetAlpha(1.0f); }
         }
         return;
     }
@@ -1758,6 +1897,7 @@ void Level::HandleMouse(int type, int x, int y)
                 const vector<Card*>& allCards = cardSystem.GetFullCollection();
                 deckViewer.SetDeck(allCards);
                 deckViewer.Show(objectsList);
+                if (tutStep == 4) { tutStep = 5; if (tutViewDeckGuide) tutViewDeckGuide->SetAlpha(0.0f); if (tutInspectHint) tutInspectHint->SetAlpha(1.0f); }
                 return;
             }
 
@@ -1939,12 +2079,14 @@ void Level::HandleMouse(int type, int x, int y)
         if (deckViewer.IsActive())
         {
             deckViewer.Hide(objectsList);
+            if (tutStep == 5) { tutStep = 6; if (tutInspectHint) tutInspectHint->SetAlpha(0.0f); }
         }
         else
         {
             const vector<Card*>& allCards = cardSystem.GetFullCollection();
             deckViewer.SetDeck(allCards);
             deckViewer.Show(objectsList);
+            if (tutStep == 4) { tutStep = 5; if (tutViewDeckGuide) tutViewDeckGuide->SetAlpha(0.0f); if (tutInspectHint) tutInspectHint->SetAlpha(1.0f); }
         }
         return;
     }
@@ -1996,6 +2138,11 @@ void Level::HandleMouse(int type, int x, int y)
                 }
                 else {
                     cardInspect.Show(cardData, cardSystem, objectsList);
+                    // Tutorial step 5: player inspected a card — dismiss the inspect hint
+                    if (tutStep == 5) {
+                        tutStep = 6;
+                        if (tutInspectHint) tutInspectHint->SetAlpha(0.0f);
+                    }
                 }
             }
             else
@@ -2088,6 +2235,14 @@ void Level::HandleMouse(int type, int x, int y)
             {
                 tempDiscardDone = true;
                 turnState = TurnState::ENEMY_TURN;
+            }
+            // Tutorial step 3→4: after player uses draw pile, show view deck hint
+            if (tutStep == 3) {
+                tutStep = 4;
+                if (tutDrawPileHint)  { tutDrawPileHint->SetAlpha(0.0f); }
+                if (tutViewDeckGuide) { tutViewDeckGuide->SetAlpha(1.0f); }
+            } else {
+                if (tutDrawPileHint) { tutDrawPileHint->SetAlpha(0.0f); }
             }
             return;
         }
@@ -2458,6 +2613,14 @@ void Level::HandleMouse(int type, int x, int y)
                 {
                     std::cout << "[Warning] No Card* bound to this image" << std::endl;
                     cardSystem.EndDragConfirm(dragCard, objectsList);
+                }
+
+                // Tutorial step 0→1: first card drop, show "1 card per turn" hint
+                if (tutStep == 0) {
+                    tutStep = 1;
+                    if (tutDragHint)    { tutDragHint->SetAlpha(0.0f); }
+                    if (tutArrowDrag)   { tutArrowDrag->SetAlpha(0.0f); }
+                    if (tutOneCardHint) { tutOneCardHint->SetAlpha(1.0f); }
                 }
 
                 std::cout << "----------------------------------------" << std::endl;
@@ -2839,6 +3002,15 @@ void Level::UpdateTurn()
 
                 e->setPreparingAttack(false);
 
+                // Tutorial step 2→3: after enemy attack fires, show draw pile hint
+                if (tutStep == 2) {
+                    tutStep = 3;
+                    tutEnemyDamagePhase = false;
+                    if (tutEnemyZoneHint)  { tutEnemyZoneHint->SetAlpha(0.0f); }
+                    if (tutEnemyCountHint) { tutEnemyCountHint->SetAlpha(0.0f); }
+                    if (tutDrawPileHint)   { tutDrawPileHint->SetAlpha(1.0f); }
+                }
+
                 enemyActing = false;
                 currentEnemyIndex++;
                 e->addDamage();
@@ -3134,6 +3306,19 @@ void Level::PreviewAllEnemyAttacks()
             },
             enemyHighlightIndex
         );
+    }
+
+    // Tutorial step 1→2: first time an enemy enters preparing state, show attack hints
+    if (tutStep == 1) {
+        for (auto* e : enemies) {
+            if (e && !e->getIsDead() && e->isPreparingAttack()) {
+                tutStep = 2;
+                if (tutOneCardHint)    { tutOneCardHint->SetAlpha(0.0f); }
+                if (tutEnemyZoneHint)  { tutEnemyZoneHint->SetAlpha(1.0f); }
+                if (tutEnemyCountHint) { tutEnemyCountHint->SetAlpha(1.0f); }
+                break;
+            }
+        }
     }
 }
 void Level::UpdateHPBar()

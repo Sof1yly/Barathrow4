@@ -50,6 +50,15 @@ void EventPage::LevelInit()
     objectsList.push_back(bg);
 
     eventScene.Open(objectsList);
+
+    // Fade overlay — above all EventScene objects (max z ~715), starts invisible
+    fadeOverlay = new ImageObject();
+    fadeOverlay->SetTexture("../Resource/Texture/UI/Menu/Fade.png");
+    fadeOverlay->SetColor(0.0f, 0.0f, 0.0f);
+    fadeOverlay->SetSize(1920.0f, -1080.0f);
+    fadeOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 800.0f));
+    fadeOverlay->SetAlpha(0.0f);
+    objectsList.push_back(fadeOverlay);
 }
 
 void EventPage::LevelUpdate()
@@ -62,12 +71,25 @@ void EventPage::LevelUpdate()
     if (eventScene.IsActive())
     {
         eventScene.Update((float)dt);
-        if (eventScene.IsReadyToClose())
+        if (!fadingOut && eventScene.IsReadyToClose())
         {
-            EventScene::EffectType effect = eventScene.GetPendingEffect();
-            eventScene.Close(objectsList);
-            TransitionToLevel(effect);
+            capturedEffect = eventScene.GetPendingEffect();
+            fadingOut = true;
         }
+    }
+
+    if (fadingOut && fadeOverlay)
+    {
+        fadeAlpha += (float)dt / 600.0f;
+        if (fadeAlpha >= 1.0f)
+        {
+            fadeAlpha = 1.0f;
+            fadeOverlay->SetAlpha(fadeAlpha);
+            eventScene.Close(objectsList);
+            TransitionToLevel(capturedEffect);
+            return;
+        }
+        fadeOverlay->SetAlpha(fadeAlpha);
     }
 }
 
@@ -82,6 +104,9 @@ void EventPage::LevelFree()
     for (DrawableObject* obj : objectsList)
         delete obj;
     objectsList.clear();
+    fadeOverlay = nullptr;
+    fadingOut   = false;
+    fadeAlpha   = 0.0f;
 }
 
 void EventPage::LevelUnload()

@@ -146,22 +146,6 @@ int main(int argc, char* argv[])
 		Mix_Volume(-1, soundVol);
 	}
 
-	Music music = audio.loadMusic("../Resource/Sound/beat.wav");
-	SoundEffect sound_1 = audio.loadSoundEffect("../Resource/Sound/high.wav");
-	SoundEffect sound_2 = audio.loadSoundEffect("../Resource/Sound/low.wav");
-	SoundEffect sound_3 = audio.loadSoundEffect("../Resource/Sound/medium.wav");
-	SoundEffect sound_4 = audio.loadSoundEffect("../Resource/Sound/scratch.wav");
-
-	cout << "Sound Example" << endl;
-	cout << "Press 1 to play SoundEffect 1" << endl;
-	cout << "Press 2 to play SoundEffect 2" << endl;
-	cout << "Press 3 to play SoundEffect 3" << endl;
-	cout << "Press 4 to play SoundEffect 4" << endl;
-	cout << "Press 5 to play Music" << endl;
-	cout << "Press 6 to pause Music" << endl;
-	cout << "Press 7 to resume Music" << endl;
-	cout << "Press 8 to stop Music" << endl;
-
 	LevelManager levelMap;//dubug map
 	// Game Loop
 	while (GameData::GetInstance()->gGameStateCurr != GameState::GS_QUIT)

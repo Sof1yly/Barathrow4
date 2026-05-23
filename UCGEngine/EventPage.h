@@ -11,6 +11,12 @@ private:
     std::vector<DrawableObject*> objectsList;
     EventScene eventScene;
 
+    // Fade-to-black before transitioning to the level
+    ImageObject*          fadeOverlay    = nullptr;
+    bool                  fadingOut      = false;
+    float                 fadeAlpha      = 0.0f;
+    EventScene::EffectType capturedEffect = EventScene::EffectType::EXTRA_DRAW;
+
     void GetRealMousePos(int x, int y, float& rx, float& ry) const;
     void TransitionToLevel(EventScene::EffectType effect);
 

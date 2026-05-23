@@ -118,10 +118,29 @@ void MainMenu::LevelInit()
     }
 
     settingPage.Init(objectsList);
+
+    // Fade overlay — drawn on top of everything; starts invisible
+    fadeOverlay = new ImageObject();
+    fadeOverlay->SetTexture(TEX_BG);
+    fadeOverlay->SetColor(0.0f, 0.0f, 0.0f);
+    fadeOverlay->SetSize(1920.0f, -1080.0f);
+    fadeOverlay->SetPosition(glm::vec3(0.0f, 0.0f, 10.0f));
+    fadeOverlay->SetAlpha(0.0f);
+    objectsList.push_back(fadeOverlay);
 }
 
 void MainMenu::LevelUpdate()
 {
+    if (!fadeOut || !fadeOverlay) return;
+
+    int dt = GameEngine::GetInstance()->GetDeltaTime();
+    fadeAlpha += (float)dt / 600.0f;
+    if (fadeAlpha >= 1.0f)
+    {
+        fadeAlpha = 1.0f;
+        GameData::GetInstance()->gGameStateNext = pendingState;
+    }
+    fadeOverlay->SetAlpha(fadeAlpha);
 }
 
 void MainMenu::LevelDraw()
@@ -145,6 +164,9 @@ void MainMenu::LevelFree()
     creditsActive  = false;
     creditsOverlay = nullptr;
     creditTexts.clear();
+    fadeOverlay = nullptr;
+    fadeOut     = false;
+    fadeAlpha   = 0.0f;
 }
 
 void MainMenu::LevelUnload()
@@ -167,6 +189,8 @@ void MainMenu::HandleKey(char key)
 
 void MainMenu::HandleMouse(int type, int x, int y)
 {
+    if (fadeOut) return;
+
     float rx, ry;
     GetRealMousePos(x, y, rx, ry);
 
@@ -227,18 +251,17 @@ void MainMenu::HandleMouse(int type, int x, int y)
 
     if (btnStart.IsClicked(rx, ry))
     {
-        // First-time player: show tutorial and skip blessing.
-        // Returning player: go straight to the blessing (event) page.
-        if (!SaveSystem::HasPlayedBefore())
-            GameData::GetInstance()->gGameStateNext = GameState::GS_TUTORIAL;
-        else
-            GameData::GetInstance()->gGameStateNext = GameState::GS_EVENT_PAGE;
+        fadeOut = true;
+        fadeAlpha = 0.0f;
+        pendingState = SaveSystem::HasPlayedBefore() ? GameState::GS_EVENT_PAGE : GameState::GS_TUTORIAL;
     }
     else if (btnContinue.IsClicked(rx, ry))
     {
         if (SaveSystem::HasSaveFile()) {
             SaveSystem::pendingLoad = true;
-            GameData::GetInstance()->gGameStateNext = GameState::GS_LEVEL1;
+            fadeOut = true;
+            fadeAlpha = 0.0f;
+            pendingState = GameState::GS_LEVEL1;
         } else {
             std::cout << "[MainMenu] No save file found.\n";
         }

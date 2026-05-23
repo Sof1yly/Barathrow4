@@ -37,6 +37,12 @@ private:
     ImageObject* creditsOverlay = nullptr;
     std::vector<TextObject*> creditTexts;
 
+    // Fade-to-black transition
+    ImageObject* fadeOverlay  = nullptr;
+    bool         fadeOut      = false;
+    float        fadeAlpha    = 0.0f;
+    GameState    pendingState = GS_NONE;
+
     void InitButton(MenuButton& btn, const std::string& texPath,glm::vec3 pos, glm::vec2 size);
 
     void GetRealMousePos(int x, int y, float& rx, float& ry) const;

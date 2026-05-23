@@ -404,6 +404,40 @@ public:
 
     void ShowEndCredits();
 
+    // Tutorial hints (level 1 new-game only) — sequential steps 0-5
+    int         tutStep              = 0;
+    float       tutPulseTimer        = 0.0f;
+    // Step 0: drag card
+    TextObject* tutDragHint          = nullptr;
+    float       tutDragBaseW         = 0.0f;
+    float       tutDragBaseH         = 0.0f;
+    // Step 1: one card per turn
+    TextObject* tutOneCardHint       = nullptr;
+    float       tutOneCardBaseW      = 0.0f;
+    float       tutOneCardBaseH      = 0.0f;
+    // Step 2: enemy attack preview
+    TextObject* tutEnemyZoneHint     = nullptr;
+    float       tutEnemyZoneBaseW    = 0.0f;
+    float       tutEnemyZoneBaseH    = 0.0f;
+    TextObject* tutEnemyCountHint    = nullptr;
+    float       tutEnemyCountBaseW   = 0.0f;
+    float       tutEnemyCountBaseH   = 0.0f;
+    bool        tutEnemyDamagePhase  = false;
+    // Step 3: draw pile
+    TextObject* tutDrawPileHint      = nullptr;
+    float       tutDrawBaseW         = 0.0f;
+    float       tutDrawBaseH         = 0.0f;
+    // Step 4: view deck
+    TextObject* tutViewDeckGuide     = nullptr;
+    float       tutViewDeckGuideW    = 0.0f;
+    float       tutViewDeckGuideH    = 0.0f;
+    // Step 5: inspect card
+    TextObject* tutInspectHint       = nullptr;
+    float       tutInspectBaseW      = 0.0f;
+    float       tutInspectBaseH      = 0.0f;
+    // Arrow companion for step 0 only
+    TextObject* tutArrowDrag         = nullptr;
+
 private:
     bool endCreditsActive = false;
     ImageObject* endCreditsOverlay = nullptr;
